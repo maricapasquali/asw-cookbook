@@ -1,0 +1,7 @@
+.idea
+design
+node_modules
+cookbook-app/dist
+
+modules/**/*.js
+modules/**/*.js.map
