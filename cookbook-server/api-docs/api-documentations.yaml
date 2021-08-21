@@ -4,4 +4,1902 @@ info:
   version: "1.0"
 servers:
   - url: https://localhost:3000/api
+
+components:
+  schemas:
+    country:
+      type: object
+      properties:
+        flag:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+      required:
+        - name
+        - code
+
+    user:
+      type: object
+      properties:
+        img:
+          type: string
+        name:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        tel_number:
+          type: string
+        birth_date:
+          type: string    
+        sex:
+          type: string
+          enum:
+            - female
+            - male
+            - other
+        country:
+          $ref: "#/components/schemas/country"
+        occupation:
+          type: string
+      required:
+        - name
+        - lastname
+        - email
+
+    recipe:
+      type: object
+      properties:
+        img:
+          type: string
+        tutorial:
+          type: string
+        owner:
+          description: user owner's identifier
+          type: string
+        name:
+          type: string
+        ingredients:
+          type: array
+          items:
+            type: object
+            properties:
+              foodID:
+                description: identifier of food
+                type: string 
+              name:
+                type: string
+              quantity:
+                type: number
+                minimum: 0.01
+        
+        preparation:
+          type: string     
+        note:
+          type: string
+        shared:
+          oneOf:
+            - type: boolean
+            - type: array
+          default: false
+          example:
+           oneOf:
+            - false
+            - ["my_id_user", "mario_id_user", "..."]
+            - true
+        timestamp: 
+          type: string
+        country:
+          $ref: "#/components/schemas/country"
+        category:
+          type: string
+          enum:
+            - appetizers
+            - first courses
+            - second courses
+            - desserts
+            - drink
+            - side dish
+        diet:
+          type: string
+          enum:
+           - gluten free
+           - lactose free
+           - light
+           - vegetarian
+           - vegan
+        likes:
+          type: array
+          items:
+            $ref: "#/components/schemas/like"
+          default: []
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/comment"
+          default: []
+              
+      required:
+        - owner
+        - name
+        - ingredients
+        - preparation
+        - type
+        - timestamp
+        - category
+        # - country
+
+    food:
+      type: object
+      properties:
+        img:
+          type: string
+        barcode:
+          type: string
+        name:
+          type: string
+        nutritial_values:
+          type: object
+          properties:
+            protein: 
+              type: number
+            fat:
+              type: object
+              properties:
+                unsaturated:
+                  type: number
+                saturated:
+                  type: number
+            carbohydrates:
+              type: object
+              properties:
+                complex:
+                  type: number
+                sugars:
+                  type: number
+            salt:
+              type: number
+        owner:
+          type: object
+          properties:
+            user:
+              type: string
+            timestamp: 
+              type: string
+        
+    comment:
+      type: object
+      properties:
+        user: 
+          type: string
+          default: anonymous
+          example:
+            "anonymous, 231313123"
+        timestamp:
+          type: string
+        content:
+          type: string
+        likes: 
+          type: array
+          items:
+            type: string
+          default: []
+          example:
+            - "anonymous"
+            - "231313123"
+        response:
+          type: object
+          default: {}
+          properties:
+            user_owner_recipe: 
+              type: string
+              example:
+                "231313123"
+            timestamp:
+              type: string
+            content:
+              type: string
+            likes: 
+              type: array
+              items:
+                type: string
+          required:
+          - user_owner_recipe
+          - timestamp
+          - content
+      required:
+        - user
+        - timestamp
+        - content
+     
+    like:
+      type: object
+      properties:
+        user:
+          type: string
+          description: user's identifier
+          default: anonymous
+        timestamp:
+          type: string
+      required:
+        - user
+        - timestamp
+
+    chat:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            type: string
+          maxLength: 2
+          minLength: 2
+        messages:
+          type: array
+          default: []
+          items:
+            $ref: "#/components/schemas/message"
+    
+    message:
+      type: object
+      properties:
+        sender:
+          type: string
+        receiver:
+          type: string
+        timestamp: 
+          type: string
+        content:
+          type: string
+          description: Encrypted message
+        read:
+          type: boolean
+          default: false
+
+    notifications:
+      type: object
+      properties:
+        user: 
+          type: string
+        from:
+          type: string
+          enum:
+            - server
+            - admin
+            - user
+            - friend
+            - me
+        content:
+          type: string
+        timestamp:
+          type: string
+        read:
+          type: boolean
+          default: false
+
+  responses:
+    general_error:
+      description: Something Wrong
+      content:
+        application/json:
+          schema:
+            type: object
+            properties :
+              code: 
+                type: number        
+              description: 
+                type: string
+    bad_request:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              description:
+                type: string
+    forbidden_get_error:
+      description: User is not authorized to access this resource
+    forbidden_post_error:
+      description: User is not authorized to create this resource
+    forbidden_patch_put_error:
+      description: User is not allowed to update this resource
+    forbidden_delete_error:
+      description: User is not authorized to delete this resource
+    unauthorized_error:
+      description: User is not authenticated
+
+  parameters:
+    nickname:
+      name: nickname
+      in: query
+      description: user's nickname 
+      required: true
+      schema:
+        type: string    
+    userIdentifier:
+      name: id
+      in: path
+      description: user's identifier 
+      required: true
+      schema:
+        type: string  
+    chatIdentifier:   
+      name: chatID
+      in: path
+      required: true
+      description: chat's identifier
+      schema:
+        type: string 
+    messageIdentifier:   
+      name: messageID
+      in: path
+      required: true
+      description: message's identifier
+      schema:
+        type: string 
+    page:
+      name: page
+      in: query
+      description: ""
+      required: false
+      schema:
+        type: integer
+    limit:
+      name: limit
+      in: query
+      description: ""
+      required: false
+      schema:
+        type: integer   
+
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  
+  
 paths:
+
+
+#USERS
+  /users:          
+    post:
+      description: Signing up of a user on the platform
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  $ref: "#/components/schemas/user"
+                credential:
+                  type: object
+                  properties:
+                    userID:
+                      type: string
+                    hash_password:
+                      type: string
+                      description: hash code of password (use algorithm bcrypt)
+                  required:
+                    - userID
+                    - hash_password
+                    - salt
+      responses:
+        201:
+          description: User has been signed up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                    default: Riceverai un'email di verifica
+        400:
+          $ref: "#/components/responses/bad_request"
+        500:
+          $ref: "#/components/responses/general_error" 
+    
+    head:
+      description: It checks if an user exists with the nickname entered (for reset password)
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/nickname"
+      responses:
+        200:
+          description: User exists
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: User not exists
+    
+    patch:
+      description: Resets the password of the user with the 'nickname' entered
+      operationId: changePassword
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/nickname"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hash_password:
+                  type: string
+      responses:
+        200:
+          description: User's password has been updated 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description: 
+                    type: string
+                    default: Cambio password avvenuto correttamente
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: User not exists
+        500:    
+          $ref: "#/components/responses/general_error"
+
+  /users/authentication:
+    post:
+      tags:
+        - Users
+      security:
+        - BasicAuth: [] #TODO: security in /users/authentication
+  
+      # requestBody:
+      #   required: true
+      #   content:
+      #     application/json:
+      #       schema:
+      #         type: object
+      #         properties:
+      #           userID:
+      #             type: string
+      #           hash_password:
+      #             type: string
+      responses:
+        200:
+          description: User is logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: 
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      refresh_token:
+                        type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        403: 
+          description: User not authorized
+        404: 
+          description: User not exists
+        500:
+          $ref: "#/components/responses/general_error" 
+    
+  /users/{id}:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier" 
+    
+    head:
+      description: Check if user is active
+      tags:
+        - Users
+      responses:
+        200:
+          description: User is active
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: User is not active
+
+    get:
+      description: ""
+      tags:
+        - Users   
+      responses:
+        200:
+          description: User's information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: User not exists
+        500:
+          $ref: "#/components/responses/general_error"
+   
+    put:
+      description: "Change user's informations"
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:   
+              $ref: "#/components/schemas/user"
+                  
+      responses:
+        200:
+          description: User's information or credentials has been updated
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: "User not exists"
+        500:
+          $ref: "#/components/responses/general_error"
+
+    delete:
+      description: ""
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: User has been deleted
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: "User not exists"
+        500:
+          $ref: "#/components/responses/general_error"
+  
+  /users/{id}/credentials:
+    patch: 
+      description: Change user's credentials
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userID:
+                  type: string
+                new_hash_password:
+                  type: string
+                  default: ""
+                  description: use bcrypt
+                old_hash_password:
+                  default: ""
+                  type: string
+                  description: use bcrypt
+      responses:
+        200:
+          description: User's credentials has been updated
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: "User not exists"
+        500:
+          $ref: "#/components/responses/general_error"
+                    
+  /users/{id}/logout:
+    get:
+      tags:
+        - Users
+      security:
+        - BearerAuth: []  
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+      responses:
+        200:
+          description: User is logged out
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        500:
+          $ref: "#/components/responses/general_error"
+
+#RECIPES
+  /users/{id}/recipes:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+    post:
+      description: "Crete a new recipe"
+      tags:
+       - Recipes
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/recipe"
+      responses:
+        201:
+          description: "New recipe has been created"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recipeID: 
+                    type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          description: User is not allowed to create this resource
+        500:
+          $ref: "#/components/responses/general_error"
+
+    get:
+      # description: A specific user's recipes
+      description: A specific user's shared recipes
+      tags:
+        - Recipes      
+      parameters:
+        # - name : shared
+        #   in: query
+        #   description: only recipes shared
+        #   required: false          
+        #   schema:
+        #     type: boolean
+        #     default: true
+
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/recipe"
+        400:
+          $ref: "#/components/responses/bad_request"
+        # 401:
+        #   description: User is not authorized to access this resource (when the parameter 'shared' is not set or is false and user is not authenticated)
+        # 403:
+        #   description: User is not authorized to access this resource (when the parameter 'shared' is not set or is false and user is authenticated but it is not the recipes' owner)
+        404:
+          description: "Recipes are not found"
+        500:
+          $ref: "#/components/responses/general_error" 
+
+  /users/{id}/recipes/saved:
+    get:
+      description: A specific user's saved recipes
+      tags:
+        - Recipes
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/recipe"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Favorites recipes are not found
+        500:
+          $ref: "#/components/responses/general_error" 
+
+  /users/{id}/recipes/shared_in_chat:
+    get:
+      description: A specific user's shared in chat recipes
+      tags:
+        - Recipes
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/recipe"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Favorites recipes are not found
+        500:
+          $ref: "#/components/responses/general_error" 
+
+  /users/{id}/recipes/favorites:
+    get:
+      description: A specific user's favorites recipes
+      tags:
+        - Recipes
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/recipe"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Favorites recipes are not found
+        500:
+          $ref: "#/components/responses/general_error" 
+
+  /users/{id}/recipes/{type}/{recipesID}:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      - name: "recipesID"
+        in: "path"
+        description: "recipe's identifier"
+        required: true
+        schema:
+          type: string
+      - name: type
+        in: path
+        description: type of recipe
+        required: true
+        schema:
+          type: string
+          enum:
+            - ''
+            - saved
+            - shared_in_chat         
+    get:
+      description: ""
+      tags:
+        - Recipes  
+      security:
+        - BearerAuth: []
+      
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/recipe"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: "Recipe not found"
+        500:
+          $ref: "#/components/responses/general_error" 
+    put:
+      description: ""
+      tags:
+        - Recipes
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              #$ref: "#/components/schemas/recipe"
+              type: object
+              properties:
+                name: 
+                  type: string
+                ingredients:
+                  type: object
+                  properties:
+                    foodID:
+                      type: string
+                    name:
+                      type: string
+                    quantity:
+                      type: number
+                preparation:
+                  type: string
+                note:
+                  type: string
+                shared:
+                  type: boolean
+                country:
+                  $ref: "#/components/schemas/country"
+                category: 
+                  type: string
+                diet:
+                  type: string
+      responses:
+        200:
+          description: Recipe has been updated
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: Recipe not exist
+        500:
+          $ref: "#/components/responses/general_error"        
+    delete:
+      description: ""
+      tags:
+        - Recipes
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Recipe has been deleted    
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: Recipe not exist
+        500:
+          $ref: "#/components/responses/general_error"       
+
+  /recipes-for-country:
+    get:
+      tags:
+        - Recipes
+      description: Number of shared recipes for country
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    country:
+                      $ref: "#/components/schemas/country"
+                    number:
+                      type: number
+        500:
+          $ref: "#/components/responses/general_error" 
+
+#FOODS 
+  /foods:
+   post:
+      tags:
+        - Foods
+      security:
+          - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/food"
+      responses:
+        201:
+            description: New food has been created
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    foodID: 
+                      type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        500:
+          $ref: "#/components/responses/general_error"
+
+   get:
+    tags:
+      - Foods
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/limit"
+    responses:
+      200:
+        description: ""
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/food"
+      400:
+        $ref: "#/components/responses/bad_request"
+      401:
+        $ref: "#/components/responses/unauthorized_error"
+      500:
+          $ref: "#/components/responses/general_error"
+
+
+  /foods/{id}:
+    get:
+      tags:
+        - Foods
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: food's identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/food"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        404:
+          description: "Food not found"           
+        500:
+          $ref: "#/components/responses/general_error"
+
+#COMMENTS
+  /users/{id}/recipes/{recipesID}/comments:
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - name: "recipesID"
+          in: "path"
+          description: "recipe's identifier"
+          required: true
+          schema:
+            type: string
+      
+      post:
+        description: ""
+        tags:
+          - Comments
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                #$ref: "#/components/schemas/comment"
+                type: object
+                properties:
+                  user:
+                    type: string
+                  timestamp:
+                    type: string
+                  content:
+                    type: string
+                  
+        responses:
+          200:
+            description: New comment of the recipe has been created
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/comment"
+          400:
+            $ref: "#/components/responses/bad_request"
+          404:
+            description: Recipe not exist
+          500:
+            $ref: "#/components/responses/general_error"        
+    
+      get:
+        description: ""
+        tags:
+          - Comments
+        responses:
+          200:
+            description: ""
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/comment"
+          400:
+            $ref: "#/components/responses/bad_request"
+          404:
+            description: Comments are not found
+          500:
+            $ref: "#/components/responses/general_error"
+
+  /users/{id}/recipes/{recipesID}/comments/{commentID}:
+      patch:
+        description: "User who owns the recipe replies to a comment"
+        tags:
+          - Comments
+        security:
+        - BearerAuth: []
+        parameters:
+          - $ref: "#/components/parameters/userIdentifier"
+          - name: "recipesID"
+            in: "path"
+            description: "recipe's identifier"
+            required: true
+            schema:
+              type: string
+          - name: "commentID"
+            in: "path"
+            description: "comment's identifier"
+            required: true
+            schema:
+              type: string
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: object
+                    properties:
+                      user_owner_recipe: 
+                        type: string
+                        example:
+                          "231313123"
+                      timestamp:
+                        type: string
+                      content:
+                        type: string
+        responses:
+          200:
+            description: Comment of the recipe has been updated
+          400:
+            $ref: "#/components/responses/bad_request"
+          403:
+            description: > 
+              User is not allowed to update this resource, 
+              becase she/he is not the owner
+          404:
+            description: Recipe not exist
+          500:
+            $ref: "#/components/responses/general_error"        
+    
+#LIKES
+  /users/{id}/recipes/{recipesID}/likes:
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - name: "recipesID"
+          in: "path"
+          description: "recipe's identifier"
+          required: true
+          schema:
+            type: string
+      
+      post:
+        description: "User likes a recipe"
+        tags:
+          - Likes
+    
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/like"
+                   
+        responses:
+          200:
+            description: New like of the recipe has been created
+          400:
+            $ref: "#/components/responses/bad_request"
+          404:
+            description: Recipe not exist
+          500:
+            $ref: "#/components/responses/general_error"          
+      
+      get:
+        description: ""
+        tags:
+          - Likes
+        responses:
+          200:
+            description: ""
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/like"
+          400:
+            $ref: "#/components/responses/bad_request"
+          404:
+            description: Likes are not found
+          500:
+            $ref: "#/components/responses/general_error"
+  
+  /users/{id}/recipes/{recipesID}/likes/{likeID}:
+    delete:
+      description: ""
+      tags:
+      - Likes
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Like has been deleted
+        400:
+          $ref: "#/components/responses/bad_request"   
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: Like not exist
+        500:
+          $ref: "#/components/responses/general_error"  
+
+#FRINEDS
+  /users/{id}/friends:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier" 
+    
+    post:
+      description: ""
+      tags:
+        - Friends
+      security:
+        - BearerAuth: []
+      requestBody:
+       required: true
+       content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              user:
+                type: string
+      responses:
+        201:
+          description: "Friendship request has been sent"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  from:
+                    description: user that has made the request
+                    type: string
+                  to:
+                    description: recipient user 
+                    type: string
+                  timestamp:
+                    type: string
+                  state:
+                    type: string
+                    default: pending
+                    enum: 
+                      - pending
+                      - accepted
+                      - rejected
+          links:
+            acceptOrRejectFriendship:
+              operationId: acceptOrRejectFriendship
+              parameters:
+                id: $response.body#/to
+                friendID: $response.body#/from
+              description: >
+                The `from` and `to` values returned in the response must be used as
+                the `friendID` and `id` parameters in
+                `PUT /users/{id}/friends/{friendID}` respectively.
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        404:
+          description: "User not exists"    
+        500:
+          $ref: "#/components/responses/general_error"
+
+    get:
+      description: "User's circle of friends"
+      tags:
+        - Friends
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+
+      responses:
+        200:
+          description: "Friends' circle"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/user"
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: "User not exists"
+        500:
+          $ref: "#/components/responses/general_error"  
+    
+  /users/{id}/friends/{friendID}:    
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier" 
+      - name: friendID
+        in: query
+        description: friend's identifier
+        required: true
+        schema:
+          type: string
+    patch:
+      description: ""
+      tags:
+       - Friends
+      security:
+        - BearerAuth: []
+      operationId: acceptOrRejectFriendship
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state:
+                  type: string
+                  enum:
+                    - accepted
+                    - rejected
+      responses:
+        200:
+          description: "Friendship request has been accepted or rejected"
+        400:
+          $ref: "#/components/responses/bad_request"  
+        401:
+          $ref: "#/components/responses/unauthorized_error" 
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: "User not exists"
+        500:
+          $ref: "#/components/responses/general_error"
+    delete:
+      description: ""
+      tags:
+        - Friends
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: "Friendship is over"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error" 
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: "User not exists"
+        500:
+          $ref: "#/components/responses/general_error"
+
+#CHATS
+  /users/{id}/chats:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+    post:
+      description: Creation of conversation between two friends
+      tags:
+        - Chats
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/chat"
+      responses:
+        201:
+          description: Chat has been created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chatID:
+                    type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
+        500:
+          $ref: "#/components/responses/general_error"  
+    get:
+      description: ""
+  
+      tags:
+        - Chats
+      security:
+        - BearerAuth: []
+   
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/chat"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error" 
+        404:
+          description: Chats are not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/chats/{chatID}:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      - $ref: "#/components/parameters/chatIdentifier"
+    get:
+      description: ""
+      operationId: showChat
+      tags:
+        - Chats
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/chat"  
+        400:
+          $ref: "#/components/responses/bad_request"               
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Chat not found
+        500:
+          $ref: "#/components/responses/general_error"
+    delete:
+      description: Deleting the chat only for the user who requests it
+      tags:
+        - Chats
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Chat has been deleted    
+        400:
+          $ref: "#/components/responses/bad_request"         
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: Chat not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/chats/unread_messages:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+    get:
+      description: Number of unread messages for each chats
+      tags:
+        - Chats
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    chatID:
+                      type: string
+                    "#_unread_message":
+                      type: integer
+                      minimum: 1
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: "Unread Messages are not found"
+        500:
+          $ref: "#/components/responses/general_error"
+
+#MESSAGES
+  /users/{id}/chats/{chatID}/messages:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      - $ref: "#/components/parameters/chatIdentifier"
+    post:
+      description: "Send message"
+      operationId: sendMessage
+      tags:
+        - Messages
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/message"
+      responses:
+        201:
+          description: Message has been sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messageID: 
+                    type: string  
+        400:
+          $ref: "#/components/responses/bad_request"               
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
+        404:
+          description: Chat not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/chats/{chatID}/messages/{messageID}:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      - $ref: "#/components/parameters/chatIdentifier"
+      - $ref: "#/components/parameters/messageIdentifier"
+    patch:
+      description: Read message
+      tags:
+        - Messages
+      security:
+        - BearerAuth: []   
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                read:
+                  type: boolean
+                  default: true
+      responses:
+        200:
+          description: Message has been readed
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: Message not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+
+#SEARCHES
+  /search/recipes:
+    get:
+      description: Users' shared recipes. Use to find specific recipes in base to filters.
+      tags:
+        - Searches
+      parameters:
+        - name : name
+          in: query
+          description: name of recipe
+          required: false
+          schema:
+            type: string
+        - name : country
+          in: query
+          description: country of recipe
+          required: false
+          schema:
+            type: string
+        - name : diet
+          in: query
+          description: diet of recipe 
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+              - gluten free
+              - lactose free
+              - light
+              - vegetarian
+              - vegan
+        - name : category
+          in: query
+          description: category of recipe
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+              - appetizers
+              - first courses
+              - second courses
+              - desserts
+              - drink
+              - side dish
+
+        - name : ingredients
+          in: query
+          description: ingredients of recipe
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/recipe"
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: Recipes are not found
+        500:
+          $ref: "#/components/responses/general_error" 
+    
+  /search/users/{id}/recipes/saved:
+    get:
+      description: Search between the user's saved recipes.
+      tags:
+        - Searches
+      security:
+        - BearerAuth: []      
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - name : name
+          in: query
+          description: partial/full name of recipe
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+      
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/recipe"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Recipes are not found
+        500:
+          $ref: "#/components/responses/general_error" 
+
+  /search/users/{id}/chats:
+    get:
+      description: Search between the user's opened chat
+      tags:
+        - Searches
+      security:
+        - BearerAuth: []
+     
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - name : name
+          in: query
+          description: partial/full name of friends
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/chat"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Chats are not found
+        500:
+          $ref: "#/components/responses/general_error" 
+
+  /search/users:
+    get:
+      description: Search between the users of the platform
+      tags:
+        - Searches
+      parameters:
+        - name: name
+          in: query
+          description: partial/full user's real name or nickname
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: ""
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/user"
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: Users are not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /search/users/{id}/friends:
+    get:
+      description: Search between the user's friends
+      tags:
+        - Searches
+      parameters:
+        - name: name
+          in: query
+          description: partial/full friend's real name or nickname
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/user"
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: Friends are not found
+        500:
+          $ref: "#/components/responses/general_error" 
+
+  /search/foods:
+    get:
+      description: Search between the foods of the platform
+      tags:
+        - Searches
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          description: partial/full name of food
+          required: false
+          schema:
+            type: string
+        - name: barcode
+          in: query
+          description: barcode of food
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: "#/components/schemas/food"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        404:
+          description: Foods are not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+#NOTIFICATIONS
+  /users/{id}/notifications:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      - name: readed
+        in: query
+        required: false
+        schema:
+          type: boolean
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/limit"
+    get:
+      description: ""
+      tags:
+        - Notifications
+
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/notifications"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Notifications are not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/notifications/{notificationID}:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      - name: notificationID
+        in: path
+        required: true
+        schema:
+          type: string
+
+    patch:
+      description: Read notification
+      tags:
+        - Notifications
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                read: 
+                  type: boolean
+                  default: true
+      responses:
+        200:
+          description: Notification has been readed
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: Notifications are not found
+        500:
+          $ref: "#/components/responses/general_error"
