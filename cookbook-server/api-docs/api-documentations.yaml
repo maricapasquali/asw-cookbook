@@ -45,6 +45,10 @@ components:
           $ref: "#/components/schemas/country"
         occupation:
           type: string
+        strike:
+          type: integer
+          minimum: 0
+          maximum: 3
       required:
         - name
         - lastname
@@ -279,6 +283,20 @@ components:
         read:
           type: boolean
           default: false
+
+    report:
+      type: object
+      properties:
+        from:
+          type: string
+          description: user's identifer 
+          example: "231313213, anonymous"
+        recipeID:
+          type: string
+          description: identifer of recipe
+        commentID:
+          type: string
+          description: identifer of comment
 
   responses:
     general_error:
@@ -1088,13 +1106,7 @@ paths:
             $ref: "#/components/responses/general_error"
 
   /users/{id}/recipes/{recipesID}/comments/{commentID}:
-      patch:
-        description: "User who owns the recipe replies to a comment"
-        tags:
-          - Comments
-        security:
-        - BearerAuth: []
-        parameters:
+      parameters:
           - $ref: "#/components/parameters/userIdentifier"
           - name: "recipesID"
             in: "path"
@@ -1108,6 +1120,12 @@ paths:
             required: true
             schema:
               type: string
+      patch:
+        description: "User who owns the recipe replies to a comment"
+        tags:
+          - Comments
+        security:
+        - BearerAuth: []
         requestBody:
           required: true
           content:
@@ -1139,7 +1157,27 @@ paths:
             description: Recipe not exist
           500:
             $ref: "#/components/responses/general_error"        
-    
+   
+      delete:
+        description: "Delete a comment (available only for administrator)"
+        tags:
+          - Comments
+        security:
+          - BearerAuth: []
+        responses:
+          200:
+            description: Comment has been deleted
+          400:
+            $ref: "#/components/responses/bad_request"
+          401:
+            $ref: "#/components/responses/unauthorized_error"
+          403:
+            $ref: "#/components/responses/forbidden_delete_error"
+          404:
+            description: Comment not found
+          500:
+            $ref: "#/components/responses/general_error"
+            
 #LIKES
   /users/{id}/recipes/{recipesID}/likes:
       parameters:
@@ -1903,3 +1941,89 @@ paths:
           description: Notifications are not found
         500:
           $ref: "#/components/responses/general_error"
+
+#REPORTS
+  /reports:
+    post:
+      description:  Report an user's comment
+      tags:
+        - Reports
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/report"
+      responses:
+        201:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportID:
+                    type: string
+        400:
+          $ref: "#/components/responses/bad_request"               
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
+        500:
+          $ref: "#/components/responses/general_error"
+
+    get:
+      description: Reports of users comment
+      tags:
+        - Reports
+      security:
+        - BearerAuth: []      
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/report"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Reports are not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /reports/{reportID}:
+    delete:
+      description: ""
+      tags:
+        - Reports
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: reportID
+          in: path
+          required: true
+          description: report's identifier
+          schema:
+            type: string
+      responses:
+        200:
+          description: Report has been readed
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: Report not found
+        500:
+          $ref: "#/components/responses/general_error"
+      
