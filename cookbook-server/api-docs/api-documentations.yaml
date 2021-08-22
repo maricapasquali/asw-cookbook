@@ -19,40 +19,101 @@ components:
       required:
         - name
         - code
-
+ 
     user:
       type: object
       properties:
-        img:
-          type: string
-        name:
-          type: string
-        lastname:
-          type: string
-        email:
-          type: string
-        tel_number:
-          type: string
-        birth_date:
-          type: string    
-        sex:
-          type: string
-          enum:
-            - female
-            - male
-            - other
-        country:
-          $ref: "#/components/schemas/country"
-        occupation:
-          type: string
+        information:
+          type: object
+          properties:
+            img:
+              type: string
+            name:
+              type: string
+            lastname:
+              type: string
+            email:
+              type: string
+            tel_number:
+              type: string
+            birth_date:
+              type: string    
+            sex:
+              type: string
+              enum:
+                - female
+                - male
+                - other
+            country:
+              $ref: "#/components/schemas/country"
+            occupation:
+              type: string
+          required:
+            - name
+            - lastname
+            - email
+        credential:
+          type: object
+          properties:
+            userID:
+              type: string
+              description: user's nickname
+            hash_password:
+              type: string
+              description: hash code of password (use algorithm bcrypt)
+            role:
+              type: string
+              default: signed
+              enum:
+                - admin
+                - signed
+            tokens:
+              type: array
+              default: []
+              items:
+                type: object
+                properties:
+                  access:
+                    type: string
+                  refresh:
+                    type: string
+            state:
+              type: object
+              properties:
+                active: 
+                  type: boolean
+                  default: false
+                timestamp:
+                  type: string
+          required:
+            - userID
+            - hash_password
+        friends: 
+          type: array
+          default: []
+          items:
+            type: object            
+            properties:
+              user: 
+                type: string
+                description: identifier of friend (= another user)
+              timestamp:
+                type: string
+              state: 
+                type: string
+                enum:
+                 - pending
+                 - accepted
+                 - rejected 
+            required:
+              - user
+              - state
+              - timestamp
         strike:
           type: integer
+          default: 0
           minimum: 0
           maximum: 3
-      required:
-        - name
-        - lastname
-        - email
 
     recipe:
       type: object
@@ -173,6 +234,10 @@ components:
               type: string
             timestamp: 
               type: string
+      required:
+        - name
+        - nutritial_values
+        - owner
         
     comment:
       type: object
@@ -246,6 +311,9 @@ components:
           default: []
           items:
             $ref: "#/components/schemas/message"
+      required:
+        - users
+        - messages
     
     message:
       type: object
@@ -262,8 +330,13 @@ components:
         read:
           type: boolean
           default: false
+      required:
+        - sender
+        - receiver
+        - content
+        - timestamp
 
-    notifications:
+    notification:
       type: object
       properties:
         user: 
@@ -283,6 +356,11 @@ components:
         read:
           type: boolean
           default: false
+      required:
+        - user
+        - from
+        - content
+        - timestamp
 
     shoppingListPoint:
       type: object
@@ -309,6 +387,10 @@ components:
         commentID:
           type: string
           description: identifer of comment
+      required:
+        - from
+        - recipeID
+        - commentID
 
   responses:
     general_error:
@@ -387,16 +469,12 @@ components:
         type: integer   
 
   securitySchemes:
-    BasicAuth:
-      type: http
-      scheme: basic
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT  
   
 paths:
-
 
 #USERS
   /users:          
@@ -411,20 +489,15 @@ paths:
             schema:
               type: object
               properties:
-                user:
-                  $ref: "#/components/schemas/user"
+                information:
+                  $ref: "#/components/schemas/user/properties/information"
                 credential:
                   type: object
                   properties:
                     userID:
-                      type: string
+                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
                     hash_password:
-                      type: string
-                      description: hash code of password (use algorithm bcrypt)
-                  required:
-                    - userID
-                    - hash_password
-                    - salt
+                      $ref: "#/components/schemas/user/properties/credential/properties/hash_password"
       responses:
         201:
           description: User has been signed up
@@ -433,6 +506,9 @@ paths:
               schema:
                 type: object
                 properties:
+                  userID: 
+                    description: user's identifier
+                    type: string
                   description:
                     type: string
                     default: Riceverai un'email di verifica
@@ -440,21 +516,39 @@ paths:
           $ref: "#/components/responses/bad_request"
         500:
           $ref: "#/components/responses/general_error" 
-    
-    head:
-      description: It checks if an user exists with the nickname entered (for reset password)
+        
+    get:
+      description: List of all users of the platform
       tags:
         - Users
       parameters:
-        - $ref: "#/components/parameters/nickname"
+        - name: nickname
+          in: query
+          description: user's nickname 
+          required: false
+          schema:
+            type: string  
       responses:
         200:
-          description: User exists
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    information:
+                      $ref: "#/components/schemas/user/properties/information"
+                    userID:
+                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
         400:
           $ref: "#/components/responses/bad_request"
         404:
-          description: User not exists
-    
+          description: User not found
+        500:
+          $ref: "#/components/responses/general_error"
+
     patch:
       description: Resets the password of the user with the 'nickname' entered
       operationId: changePassword
@@ -473,40 +567,29 @@ paths:
                   type: string
       responses:
         200:
-          description: User's password has been updated 
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  description: 
-                    type: string
-                    default: Cambio password avvenuto correttamente
+          description: User's password has been updated
         400:
           $ref: "#/components/responses/bad_request"
         404:
-          description: User not exists
+          description: User not found
         500:    
           $ref: "#/components/responses/general_error"
 
   /users/authentication:
     post:
       tags:
-        - Users
-      security:
-        - BasicAuth: [] #TODO: security in /users/authentication
-  
-      # requestBody:
-      #   required: true
-      #   content:
-      #     application/json:
-      #       schema:
-      #         type: object
-      #         properties:
-      #           userID:
-      #             type: string
-      #           hash_password:
-      #             type: string
+        - Users  
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userID:
+                  type: string
+                hash_password:
+                  type: string
       responses:
         200:
           description: User is logged in
@@ -527,26 +610,13 @@ paths:
         403: 
           description: User not authorized
         404: 
-          description: User not exists
+          description: User not found
         500:
           $ref: "#/components/responses/general_error" 
-    
+  
   /users/{id}:
     parameters:
       - $ref: "#/components/parameters/userIdentifier" 
-    
-    head:
-      description: Check if user is active
-      tags:
-        - Users
-      responses:
-        200:
-          description: User is active
-        400:
-          $ref: "#/components/responses/bad_request"
-        404:
-          description: User is not active
-
     get:
       description: ""
       tags:
@@ -557,11 +627,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/user"
+                type: object
+                properties:
+                  information:
+                    $ref: "#/components/schemas/user/properties/information"
+                  userID:
+                    $ref: "#/components/schemas/user/properties/credential/properties/userID"
         400:
           $ref: "#/components/responses/bad_request"
         404:
-          description: User not exists
+          description: User not found
         500:
           $ref: "#/components/responses/general_error"
    
@@ -577,11 +652,10 @@ paths:
         content:
           application/json:
             schema:   
-              $ref: "#/components/schemas/user"
-                  
+              $ref: "#/components/schemas/user/properties/information"          
       responses:
         200:
-          description: User's information or credentials has been updated
+          description: User's information has been updated
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -589,7 +663,7 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
-          description: "User not exists"
+          description: "User not found"
         500:
           $ref: "#/components/responses/general_error"
 
@@ -609,10 +683,31 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
-          description: "User not exists"
+          description: "User not found"
         500:
           $ref: "#/components/responses/general_error"
   
+  /users/{id}/state:     
+    get:
+      description: Check user's state in the platform
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier" 
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user/properties/credential/properties/state"
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: User not found
+        500:
+          $ref: "#/components/responses/general_error"
+
   /users/{id}/credentials:
     patch: 
       description: Change user's credentials
@@ -648,12 +743,12 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
-          description: "User not exists"
+          description: "User not found"
         500:
           $ref: "#/components/responses/general_error"
-                    
+    
   /users/{id}/logout:
-    get:
+     delete:
       tags:
         - Users
       security:
@@ -667,6 +762,45 @@ paths:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
+        404:
+          description: User not found
+        500:
+          $ref: "#/components/responses/general_error"
+  
+  /users/{id}/refreshToken:
+     post:
+      description: Retrieve a new token when the older is expired
+      tags:
+        - Users        
+      security:
+        - BearerAuth: []  
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"  
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        201:
+          description: New access token has been created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                        type: string                      
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        404:
+          description: User not found
         500:
           $ref: "#/components/responses/general_error"
 
@@ -702,6 +836,8 @@ paths:
           $ref: "#/components/responses/unauthorized_error"
         403:
           description: User is not allowed to create this resource
+        404:
+          description: User not found
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1433,7 +1569,7 @@ paths:
         401:
           $ref: "#/components/responses/unauthorized_error"
         404:
-          description: "User not exists"    
+          description: "User not found"    
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1457,7 +1593,7 @@ paths:
         400:
           $ref: "#/components/responses/bad_request"
         404:
-          description: "User not exists"
+          description: "User not found"
         500:
           $ref: "#/components/responses/general_error"  
     
@@ -1499,7 +1635,7 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
-          description: "User not exists"
+          description: "User not found"
         500:
           $ref: "#/components/responses/general_error"
     delete:
@@ -1518,7 +1654,7 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
-          description: "User not exists"
+          description: "User not found"
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1553,6 +1689,8 @@ paths:
           $ref: "#/components/responses/unauthorized_error"
         403:
           $ref: "#/components/responses/forbidden_post_error"
+        404:
+          description: User not found
         500:
           $ref: "#/components/responses/general_error"  
     get:
@@ -1914,7 +2052,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/user"
+                  type: object
+                  properties:
+                    information:
+                      $ref: "#/components/schemas/user/properties/information"
+                    userID:
+                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
         400:
           $ref: "#/components/responses/bad_request"
         404:
@@ -1943,7 +2086,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/user"
+                  type: object
+                  properties:
+                    information:
+                      $ref: "#/components/schemas/user/properties/information"
+                    userID:
+                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
         400:
           $ref: "#/components/responses/bad_request"
         404:
@@ -2015,7 +2163,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/notifications"
+                  $ref: "#/components/schemas/notification"
         400:
           $ref: "#/components/responses/bad_request"
         401:
