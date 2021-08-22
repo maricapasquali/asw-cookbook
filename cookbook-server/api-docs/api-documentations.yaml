@@ -284,6 +284,18 @@ components:
           type: boolean
           default: false
 
+    shoppingListPoint:
+      type: object
+      properties:
+        foodID:
+          type: string
+        checked:
+          type: boolean
+          default: false
+      required:
+        - foodID
+        - check
+
     report:
       type: object
       properties:
@@ -1040,6 +1052,117 @@ paths:
           description: "Food not found"           
         500:
           $ref: "#/components/responses/general_error"
+
+#SHOPPING LIST
+  /users/{id}/shopping_list:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+    post:
+      tags:
+        - Shopping List
+      requestBody:
+        required: true
+        content: 
+          application/json:
+            schema:
+              $ref: "#/components/schemas/shoppingListPoint"
+      responses:
+        201:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pointShoppingListID: 
+                    type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
+        404:
+          description: User not found
+        500:
+          $ref: "#/components/responses/general_error" 
+      
+    get:
+      tags:
+        - Shopping List
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema: 
+                type: array
+                items:
+                  $ref: "#/components/schemas/shoppingListPoint"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: User not found
+        500:
+          $ref: "#/components/responses/general_error" 
+  
+  /users/{id}/shopping_list/{pointShoppingListID}:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      - name: pointShoppingListID
+        in: path
+        required: true
+        description: identifier of shopping list point
+        schema:
+          type: string
+    patch:
+      description: Mark whether the food has been bought or not
+      tags:
+        - Shopping List
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                checked:
+                  type: boolean
+      responses:
+        200:
+          description: "Food has been bought or not"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: Shopping List point not found
+        500:
+          $ref: "#/components/responses/general_error" 
+
+    delete:
+      tags:
+        - Shopping List
+      responses:
+        200:
+          description: "Shopping List point has been deleted"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: Shopping List point not found
+        500:
+          $ref: "#/components/responses/general_error" 
+
 
 #COMMENTS
   /users/{id}/recipes/{recipesID}/comments:
