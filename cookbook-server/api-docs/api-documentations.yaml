@@ -469,6 +469,10 @@ components:
         type: integer   
 
   securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      
     BearerAuth:
       type: http
       scheme: bearer
@@ -579,17 +583,8 @@ paths:
     post:
       tags:
         - Users  
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userID:
-                  type: string
-                hash_password:
-                  type: string
+      security:
+       - BasicAuth: []
       responses:
         200:
           description: User is logged in
