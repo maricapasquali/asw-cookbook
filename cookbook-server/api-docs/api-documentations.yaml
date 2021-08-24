@@ -68,23 +68,15 @@ components:
                 - admin
                 - signed
             tokens:
-              type: array
-              default: []
-              items:
-                type: object
-                properties:
-                  access:
-                    type: string
-                  refresh:
-                    type: string
-            state:
-              type: object
-              properties:
-                active: 
-                  type: boolean
-                  default: false
-                timestamp:
-                  type: string
+              oneOf:
+                - type: object
+                  properties:
+                    access: 
+                      type: string
+                    refresh:
+                      type: string
+                - type: number
+
           required:
             - userID
             - hash_password
@@ -472,7 +464,7 @@ components:
     BasicAuth:
       type: http
       scheme: basic
-      
+
     BearerAuth:
       type: http
       scheme: bearer
@@ -518,6 +510,8 @@ paths:
                     default: Riceverai un'email di verifica
         400:
           $ref: "#/components/responses/bad_request"
+        409:
+          description: Username has been already used
         500:
           $ref: "#/components/responses/general_error" 
         
@@ -546,8 +540,6 @@ paths:
                       $ref: "#/components/schemas/user/properties/information"
                     userID:
                       $ref: "#/components/schemas/user/properties/credential/properties/userID"
-        400:
-          $ref: "#/components/responses/bad_request"
         404:
           description: User not found
         500:
@@ -579,7 +571,7 @@ paths:
         500:    
           $ref: "#/components/responses/general_error"
 
-  /users/authentication:
+  /users/login:
     post:
       tags:
         - Users  
@@ -628,14 +620,12 @@ paths:
                     $ref: "#/components/schemas/user/properties/information"
                   userID:
                     $ref: "#/components/schemas/user/properties/credential/properties/userID"
-        400:
-          $ref: "#/components/responses/bad_request"
         404:
           description: User not found
         500:
           $ref: "#/components/responses/general_error"
    
-    put:
+    patch:
       description: "Change user's informations"
       tags:
         - Users
@@ -695,9 +685,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/user/properties/credential/properties/state"
-        400:
-          $ref: "#/components/responses/bad_request"
+                oneOf:
+                  - type: object
+                    properties:
+                      online:
+                        type: boolean
+                        default: false
+                      lastTimeLogin:
+                        type: string
+                  - type: object
+                    properties:
+                      online:
+                        type: boolean
+                        default: true
+               
         404:
           description: User not found
         500:
@@ -711,23 +712,33 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-      - $ref: "#/components/parameters/userIdentifier"
+        - $ref: "#/components/parameters/userIdentifier"
+        - name: change
+          in: query
+          required: true
+          description: "what to change the credentials"
+          schema:
+            type: string
+            enum:
+              - userID
+              - password
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                userID:
-                  type: string
-                new_hash_password:
-                  type: string
-                  default: ""
-                  description: use bcrypt
-                old_hash_password:
-                  default: ""
-                  type: string
-                  description: use bcrypt
+              oneOf:
+                - type: object
+                  properties:
+                    old_userID:
+                      type: string
+                    new_userID:
+                      type: string
+                - type: object
+                  properties:
+                    old_password:
+                      type: string
+                    new_hash_password:
+                      type: string
       responses:
         200:
           description: User's credentials has been updated
@@ -757,8 +768,12 @@ paths:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
         404:
           description: User not found
+        409:
+          description: User is already logged out
         500:
           $ref: "#/components/responses/general_error"
   
@@ -781,7 +796,7 @@ paths:
                 refresh_token:
                   type: string
       responses:
-        201:
+        200:
           description: New access token has been created
           content:
             application/json:
@@ -793,9 +808,13 @@ paths:
         400:
           $ref: "#/components/responses/bad_request"
         401:
-          $ref: "#/components/responses/unauthorized_error"
+          description: Refresh token was expired. Please make a new signin request
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
         404:
           description: User not found
+        409:
+          description: Access token is still valid
         500:
           $ref: "#/components/responses/general_error"
 
