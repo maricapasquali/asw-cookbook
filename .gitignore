@@ -5,3 +5,8 @@ cookbook-app/dist
 
 modules/**/*.js
 modules/**/*.js.map
+
+cookbook-server/.env
+
+cookbook-server/**/*.js
+cookbook-server/**/*.js.map
