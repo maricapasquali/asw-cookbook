@@ -1,11 +1,25 @@
 import * as bcrypt from 'bcrypt'
-import {extractAuthorization, isAlreadyLoggedOut, unixTimestampToString} from '../../modules/utilities'
-import {User} from '../../models'
+import {
+    extractAuthorization,
+    futureDateFromNow,
+    isAlreadyLoggedOut,
+    randomString,
+    unixTimestampToString
+} from '../../modules/utilities'
+import {User, EmailLink} from '../../models'
+
 import {IJwtToken, JwtToken} from '../../modules/jwt.token'
 import {IRbac, RBAC} from '../../modules/rbac'
+import {Mailer, IMailer} from "../../modules/mailer";
+import {client_origin} from "../../../modules/hosting/variables";
+
+import {ResetPasswordEmail, TemplateEmail} from "../../modules/mailer/templates";
+
+const app_name = require('../../../app.config.json').app_name
 
 const tokensManager: IJwtToken = new JwtToken()
 const accessManager: IRbac = new RBAC()
+const mailer: IMailer = new Mailer(`no-reply@${app_name.toLowerCase()}.com`);
 
 export function create_user(req, res){
     const new_user = new User(req.body);
@@ -270,5 +284,56 @@ export function update_access_token(req, res){
                     err => res.status(500).json({description: err.message}))
         },
         err=>res.status(500).json({description: err.message}))
+
+}
+
+
+//SEND EMAIL
+export function send_email_password(req, res){
+    let {email} = req.query
+    if(!email) return res.status(400).json({description: 'Missing email.'})
+
+    User.findOne().where('information.email').equals(email).then(user => {
+        if(!user) return res.status(404).json({description: 'Email is not associated with any account'});
+
+        let randomKey: string = randomString()
+        let url: string = client_origin + '/reset-password'
+
+        const resetPswEmail: TemplateEmail = new ResetPasswordEmail({
+            app_name: app_name,
+            user_name: user.information.firstname + ' '+user.information.lastname,
+            url: url + '?key=' + randomKey
+        })
+
+        let html: string = resetPswEmail.toHtml()
+        let text: string = resetPswEmail.toText()
+
+        mailer.save(`${user._id}.html`, html) //FOR DEVELOP
+
+        mailer.send({
+            to: email,
+            subject: 'CookBook - Reset Password',
+            html: html,
+            text: text
+        }, {
+            error: (e) => {
+                res.status(500).json({send: false, description: e.message})
+            },
+            success: () => {
+                let emailLink = new EmailLink({
+                    email: email,
+                    expired: futureDateFromNow(30),
+                    link: url,
+                    randomKey: randomKey
+                })
+                emailLink.save().then((_emailLink) => {
+                    res.status(200).json({send: true});
+                },
+                err => res.status(500).json({send: true, link_valid: false, description: err.message}))
+
+            },
+        })
+    })
+
 
 }
