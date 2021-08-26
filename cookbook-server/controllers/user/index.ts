@@ -71,8 +71,9 @@ export function login(req, res){
         if(user==null) return res.status(404).json({description: 'User is not found'});
         const result = bcrypt.compareSync(password, user.credential.hash_password)
         if(result) {
+            let firstLogin = accessManager.isAdminUser(user.credential) && user.credential.tokens === undefined
             user.credential.tokens = tokensManager.createNewTokens({_id: user._id, userID: user.credential.userID, role: user.credential.role})
-            user.save().then(u => res.status(200).json({token: u.credential.tokens}),
+            user.save().then(u => res.status(200).json({token: u.credential.tokens, firstLogin: firstLogin ? true: undefined}),
                 err => res.status(500).json({description: err.message}))
         }
         else res.status(403).json({description: 'User is unauthorized'});
