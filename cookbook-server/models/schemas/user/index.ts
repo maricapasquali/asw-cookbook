@@ -1,7 +1,5 @@
 import {Schema, Document} from "mongoose";
 
-import {CountrySchema, ICountry} from '../country'
-
 export interface IUser extends Document{
     information: {
         img?:string
@@ -11,7 +9,7 @@ export interface IUser extends Document{
         tel_number?:string
         birth_date?:string
         sex?:string
-        country?:ICountry
+        country?:string
         occupation?:string
     },
     credential:{
@@ -61,7 +59,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
             enum: ['female', 'male', 'other'],
         },
         country: {
-            type: CountrySchema,
+            type: String,
             required: false,
         },
         occupation: {
