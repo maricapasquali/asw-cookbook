@@ -6,20 +6,7 @@ servers:
   - url: https://localhost:3000/api
 
 components:
-  schemas:
-    country:
-      type: object
-      properties:
-        flag:
-          type: string
-        name:
-          type: string
-        code:
-          type: string
-      required:
-        - name
-        - code
- 
+  schemas: 
     user:
       type: object
       properties:
@@ -45,7 +32,7 @@ components:
                 - male
                 - other
             country:
-              $ref: "#/components/schemas/country"
+              type: string
             occupation:
               type: string
           required:
@@ -90,7 +77,7 @@ components:
                 type: string
                 description: identifier of friend (= another user)
               timestamp:
-                type: string
+                type: number
               state: 
                 type: string
                 enum:
@@ -148,9 +135,9 @@ components:
             - ["my_id_user", "mario_id_user", "..."]
             - true
         timestamp: 
-          type: string
+          type: number
         country:
-          $ref: "#/components/schemas/country"
+          type: string
         category:
           type: string
           enum:
@@ -225,7 +212,7 @@ components:
             user:
               type: string
             timestamp: 
-              type: string
+              type: number
       required:
         - name
         - nutritial_values
@@ -240,7 +227,7 @@ components:
           example:
             "anonymous, 231313123"
         timestamp:
-          type: string
+          type: number
         content:
           type: string
         likes: 
@@ -260,7 +247,7 @@ components:
               example:
                 "231313123"
             timestamp:
-              type: string
+              type: number
             content:
               type: string
             likes: 
@@ -284,7 +271,7 @@ components:
           description: user's identifier
           default: anonymous
         timestamp:
-          type: string
+          type: number
       required:
         - user
         - timestamp
@@ -315,7 +302,7 @@ components:
         receiver:
           type: string
         timestamp: 
-          type: string
+          type: number
         content:
           type: string
           description: Encrypted message
@@ -344,7 +331,7 @@ components:
         content:
           type: string
         timestamp:
-          type: string
+          type: number
         read:
           type: boolean
           default: false
@@ -526,6 +513,8 @@ paths:
           required: false
           schema:
             type: string  
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
       responses:
         200:
           description: ""
@@ -592,6 +581,10 @@ paths:
                         type: string
                       refresh_token:
                         type: string
+                  firstLogin:
+                    type: boolean
+                    default: true
+                    description: only if it's admin's first login 
         400:
           $ref: "#/components/responses/bad_request"
         403: 
@@ -815,6 +808,36 @@ paths:
           description: User not found
         409:
           description: Access token is still valid
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/emails/reset-password:
+    get:
+      description: ''
+      tags:
+        - Users
+      parameters:
+        - name: email
+          in: query
+          description: address to send the link of reset password
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  send:
+                    type: boolean
+                    default: true  
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: Email is not associated with any account
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1059,7 +1082,7 @@ paths:
                 shared:
                   type: boolean
                 country:
-                  $ref: "#/components/schemas/country"
+                  type: string
                 category: 
                   type: string
                 diet:
@@ -1113,7 +1136,7 @@ paths:
                   type: object
                   properties:
                     country:
-                      $ref: "#/components/schemas/country"
+                      type: string
                     number:
                       type: number
         500:
@@ -1340,7 +1363,7 @@ paths:
                   user:
                     type: string
                   timestamp:
-                    type: string
+                    type: number
                   content:
                     type: string
                   
@@ -1414,7 +1437,7 @@ paths:
                         example:
                           "231313123"
                       timestamp:
-                        type: string
+                        type: number
                       content:
                         type: string
         responses:
@@ -1560,7 +1583,7 @@ paths:
                     description: recipient user 
                     type: string
                   timestamp:
-                    type: string
+                    type: number
                   state:
                     type: string
                     default: pending
