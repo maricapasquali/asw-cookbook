@@ -1,4 +1,5 @@
 import {Schema, Document} from "mongoose";
+import {EmailValidator} from "../../../../modules/validator";
 
 export interface IUser extends Document{
     information: {
@@ -43,7 +44,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         email: {
             type: String,
             required: true,
-            match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
+            match: [EmailValidator.regex, 'Please fill a valid email address']
         },
         tel_number: {
             type: String,
