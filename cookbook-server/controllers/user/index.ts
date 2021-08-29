@@ -13,7 +13,7 @@ import {IRbac, RBAC} from '../../modules/rbac'
 import {Mailer, IMailer} from "../../modules/mailer";
 import {client_origin} from "../../../modules/hosting/variables";
 
-import {ResetPasswordEmail, TemplateEmail} from "../../modules/mailer/templates";
+import {ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
 
 const app_name = require('../../../app.config.json').app_name
 
@@ -21,14 +21,51 @@ const tokensManager: IJwtToken = new JwtToken()
 const accessManager: IRbac = new RBAC()
 const mailer: IMailer = new Mailer(`no-reply@${app_name.toLowerCase()}.com`);
 
+const send_email_signup = function (user) {
+    let randomKey: string = randomString()
+    let url: string = client_origin + '/end-signup'
+    let emailLink = new EmailLink({
+        userID: user.credential.userID,
+        email: user.information.email,
+        expired: futureDateFromNow(1440), //24 ore
+        link: url,
+        randomKey: randomKey
+    })
+    emailLink.save().then((_email_link) =>{
+
+        const signUpEmail: TemplateEmail = new SignUpEmail({
+            app_name: app_name,
+            firstname: user.information.firstname,
+            lastname: user.information.lastname,
+            email: user.information.email,
+            userID: user.credential.userID,
+            url: url + '?key=' + randomKey + "&email=" + user.information.email+"&userID="+user.credential.userID
+        })
+
+        let html: string = signUpEmail.toHtml()
+        let text: string = signUpEmail.toText()
+
+        mailer.save(`signup-${user._id}.html`, html) //FOR DEVELOP
+        mailer.send({
+            to: user.information.email,
+            subject: 'CookBook - Registazione',
+            html: html,
+            text: text
+        })
+
+    })
+
+}
+
 export function create_user(req, res){
     const new_user = new User(req.body);
     new_user.save()
         .then(user => {
-            return res.status(201).json({
+            res.status(201).json({
                 userID: user._id,
                 description: "Riceverai un'email di verifica"
             })
+            send_email_signup(user)
         }, err => {
             if(err.name === 'ValidationError')
                 return res.status(400).json({description: err.message})
@@ -36,6 +73,29 @@ export function create_user(req, res){
                 return res.status(409).json({description: 'Username has been already used'})
             res.status(500).json({code: 0, description: err.message})
         })
+}
+
+export function check_account(req, res){
+    let {email, userID, key} = req.body
+    if(!email || !userID || !key) return res.status(400).json({description: "Require 'email', 'userID', 'key'"})
+    EmailLink.findOne().where('randomKey').equals(key)
+                       .where('email').equals(email)
+                       .where('userID').equals(userID)
+                       .then((email_link) =>{
+                           if(!email_link) return res.status(404).json({description: 'Link not valid'})
+
+                           User.findOne().where('credential.userID').equals(userID).then((user) =>{
+                               if(!user) return res.status(404).json({description: 'User not found'})
+                               if(user.signup === 'checked') return res.status(200).json({just_check_account: true})
+                               if(user.signup === 'pending') {
+                                   user.signup = 'checked'
+                                   user.save()
+                                       .then((u) => res.status(200).json({check_account: true}),
+                                             (e) => res.status(500).json({check_account: false, description: e.message}))
+                               }
+
+                           })
+                       })
 }
 
 export function all_users(req, res){
@@ -83,6 +143,7 @@ export function login(req, res){
 
     User.findOne().where("credential.userID").equals(userID).then(user => {
         if(user==null) return res.status(404).json({description: 'User is not found'});
+        if(user.signup === 'pending') return res.status(403).json({signup: user.signup, description: 'User yet to be verified'});
         const result = bcrypt.compareSync(password, user.credential.hash_password)
         if(result) {
             let firstLogin = accessManager.isAdminUser(user.credential) && user.credential.tokens === undefined
@@ -299,41 +360,33 @@ export function send_email_password(req, res){
         let randomKey: string = randomString()
         let url: string = client_origin + '/reset-password'
 
-        const resetPswEmail: TemplateEmail = new ResetPasswordEmail({
-            app_name: app_name,
-            user_name: user.information.firstname + ' '+user.information.lastname,
-            url: url + '?key=' + randomKey
+        let emailLink = new EmailLink({
+            email: email,
+            expired: futureDateFromNow(30),
+            link: url,
+            randomKey: randomKey
         })
-
-        let html: string = resetPswEmail.toHtml()
-        let text: string = resetPswEmail.toText()
-
-        mailer.save(`${user._id}.html`, html) //FOR DEVELOP
-
-        mailer.send({
-            to: email,
-            subject: 'CookBook - Reset Password',
-            html: html,
-            text: text
-        }, {
-            error: (e) => {
-                res.status(500).json({send: false, description: e.message})
-            },
-            success: () => {
-                let emailLink = new EmailLink({
-                    email: email,
-                    expired: futureDateFromNow(30),
-                    link: url,
-                    randomKey: randomKey
-                })
-                emailLink.save().then((_emailLink) => {
+        emailLink.save()
+                 .then((_emailLink) => {
                     res.status(200).json({send: true});
-                },
-                err => res.status(500).json({send: true, link_valid: false, description: err.message}))
 
-            },
-        })
+                    const resetPswEmail: TemplateEmail = new ResetPasswordEmail({
+                        app_name: app_name,
+                        user_name: user.information.firstname + ' '+user.information.lastname,
+                        url: url + '?key=' + randomKey
+                    })
+
+                    let html: string = resetPswEmail.toHtml()
+                    let text: string = resetPswEmail.toText()
+
+                    mailer.save(`reset-pass-${user._id}.html`, html) //FOR DEVELOP
+
+                    mailer.send({
+                        to: email,
+                        subject: 'CookBook - Reset Password',
+                        html: html,
+                        text: text
+                    })
+                }, err => res.status(500).json({description: err.message}))
     })
-
-
 }

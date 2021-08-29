@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv'
 dotenv.config({path: path.resolve('cookbook-server/.env')})
 
 export interface IMailer {
-   send(messageHeader: MessageHeader, callbacks: {error: (e: any) => void, success: (i: object) => void})
+   send(messageHeader: MessageHeader, callbacks?: {error: (e: any) => void, success: (i: object) => void})
    save(filename: string, content, callback?: (err) => void)
 }
 
@@ -38,18 +38,22 @@ export class Mailer implements IMailer{
       this.output = output || path.join(__dirname , 'outputs')
    }
 
-   send(messageHeader: MessageHeader, callbacks: {error: (e: any) => void, success: (i: object) => void}){
+   send(messageHeader: MessageHeader, callbacks?: {error: (e: any) => void, success: (i: object) => void}){
      try {
         const message = Object.assign({from: this.from}, messageHeader)
         this.transport.sendMail(message, function (err, info){
            if(err) {
               console.error(err)
-              callbacks.error(err)
+              if(callbacks && typeof callbacks.error === 'function') callbacks.error(err)
            }
-           else callbacks.success(info)
+           else {
+              console.log('Email was sent to '+ messageHeader.to)
+              if(callbacks && typeof callbacks.success === 'function') callbacks.success(info)
+           }
         })
      }catch (e){
-        callbacks.error(e)
+        console.error(e)
+        if(callbacks && typeof callbacks.error === 'function') callbacks.error(e)
      }
    }
 

@@ -2,6 +2,7 @@ import {Schema, Document} from "mongoose";
 import {EmailValidator} from "../../../../modules/validator";
 
 export interface IUser extends Document{
+    signup: string,
     information: {
         img?:string
         firstname:string
@@ -28,6 +29,12 @@ export interface IUser extends Document{
 }
 
 export const UserSchema: Schema<IUser> = new Schema<IUser>({
+    signup: {
+      type: String,
+      required: false,
+      default: 'pending',
+      enum: ['pending', 'checked']
+    },
     information: {
         img: {
             type: String,
@@ -57,7 +64,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         sex: {
             type: String,
             required: false,
-            enum: ['female', 'male', 'other'],
+            enum: ['', 'female', 'male', 'other'],
         },
         country: {
             type: String,

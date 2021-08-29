@@ -7,6 +7,8 @@ export default function (app) {
         .get(userController.all_users)
         .patch(userController.reset_password)
 
+    app.route('/api/users/check-account').put(userController.check_account)
+
     app.route('/api/users/login').post(userController.login)
 
     app.route('/api/users/emails/reset-password').get(userController.send_email_password)

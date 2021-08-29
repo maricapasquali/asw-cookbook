@@ -13,19 +13,36 @@ type ResetPasswordEmailData = {
     url: string
 }
 
-export class ResetPasswordEmail implements TemplateEmail{
+type SignUpEmailData = {
+    app_name: string,
+    firstname: string
+    lastname: string
+    email: string
+    userID: string
+    url: string
+}
 
+abstract class ATemplateEmail implements TemplateEmail{
     private readonly template: any
-    private readonly data: ResetPasswordEmailData
+    protected readonly data: any
 
-    constructor(data: ResetPasswordEmailData) {
-        let contents = fs.readFileSync(path.join(__dirname, 'reset-password.ejs'), 'utf8');
+    protected constructor(file: string, data: any) {
+        let contents = fs.readFileSync(path.join(__dirname, file), 'utf8');
         this.template = ejs.compile(contents);
         this.data = data
     }
 
-    toHtml(): string{
+    toHtml(): string {
         return this.template(this.data)
+    }
+
+    abstract toText(): string
+}
+
+export class ResetPasswordEmail extends ATemplateEmail{
+
+    constructor(data: ResetPasswordEmailData) {
+        super('reset-password.ejs', data)
     }
 
     toText(): string{
@@ -40,6 +57,33 @@ export class ResetPasswordEmail implements TemplateEmail{
             
             ATTENZIONE:
             Il link sarà valido solo per i 30 minuti successivi alla ricezione di questa email.
+            
+            Il Team ${this.data.app_name}
+        `
+    }
+}
+
+export class SignUpEmail extends ATemplateEmail{
+
+    constructor(data: SignUpEmailData) {
+       super('signup.ejs', data)
+    }
+
+    toText(): string{
+        return  `
+            Creazione account ${this.data.app_name}.
+            
+            Gentile ${this.data.firstname} ${this.data.lastname},
+            il suo account è stato creato.
+                
+                Nome: ${this.data.firstname}
+                Cognome: ${this.data.lastname}
+                Email: ${this.data.email}
+                UserID: ${this.data.userID}
+                Password: ********************
+            
+            Copia il link sottostante nel browser per completare la registrazione:
+                ${this.data.url}
             
             Il Team ${this.data.app_name}
         `

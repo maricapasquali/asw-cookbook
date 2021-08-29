@@ -33,11 +33,10 @@ export function unixTimestampToString(ts: number, get: string = 'date_time', loc
    }
 }
 
-export function randomString(size = 20) {
-    return crypto
-        .randomBytes(size)
-        .toString('base64')
-        .slice(0, size)
+export function randomString(size: number = 20) {
+    return crypto.randomBytes(size)
+                 .toString('hex')
+                 .slice(0, size)
 }
 
 export function futureDateFromNow(minutes: number): number{
