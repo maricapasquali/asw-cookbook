@@ -109,7 +109,9 @@ export function all_users(req, res){
     }
 
     const query = nickname ? User.find().where('credential.userID').equals(nickname) : User.find()
-    query.select({information: 1, 'credential.userID': 1})
+    query.where('signup').equals('checked')
+         .where('credential.role', 'signed')
+         .select({information: 1, 'credential.userID': 1})
          .collation({'locale':'en'}) // sort case insensitive
          .sort({'credential.userID': 1})
          .limit(limit).skip((page-1)* limit)
