@@ -126,7 +126,7 @@ export function reset_password(req, res){
     const {hash_password} = req.body
     if(!nickname) return res.status(400).json({description: 'nickname is required'});
     if(!hash_password) return res.status(400).json({description: 'hash_password is required'});
-    User.findOne().where("credential.userID").equals(nickname)
+    User.findOne().where('signup').equals('checked').where("credential.userID").equals(nickname)
         .then(user => {
                 if(user==null) return res.status(404).json({description: 'User is not found'});
                 user.credential.hash_password = hash_password
@@ -159,7 +159,7 @@ export function login(req, res){
 
 export function one_user(req, res){
     let {id} = req.params
-    User.findOne().where('_id').equals(id)
+    User.findOne().where('signup').equals('checked').where('_id').equals(id)
         .then(user => {
                 if (user == null) return res.status(404).json({description: 'User is not found'});
                 res.status(200).json({
@@ -184,7 +184,7 @@ export function update_user(req, res){
     let authorized = accessManager.isAuthorized(decoded_token, id, RBAC.Operation.UPDATE, 'user');
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
-    User.findOne().where('_id').equals(id)
+    User.findOne().where('signup').equals('checked').where('_id').equals(id)
         .then(user =>{
                 if (!user) return res.status(404).json({description: 'User is not found'});
                 if(isAlreadyLoggedOut(user)) return res.status(401).send({description: 'User is not authenticated'})
@@ -209,7 +209,7 @@ export function delete_user(req, res){
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
     const deleteUser = (id, decoded_token) => {
-        User.findOne().where('_id').equals(id).then(user => {
+        User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
             if(!user) return res.status(404).json({description: 'User not found'})
             if(accessManager.isSignedUser(decoded_token) && isAlreadyLoggedOut(user))
                 return res.status(401).send({description: 'User is not authenticated'})
@@ -229,7 +229,7 @@ export function delete_user(req, res){
 
 export function state_user(req, res){
     let {id} = req.params
-    User.findOne().where("_id").equals(id)
+    User.findOne().where('signup').equals('checked').where("_id").equals(id)
         .then(user => {
                 if (!user) return res.status(404).json({description: 'User is not found'});
                 res.status(200).json({
@@ -265,7 +265,7 @@ export function update_credential_user(req, res){
             if(!(old_userID && new_userID))
                 return res.status(400).send({description: 'Update userID: required [old_userID, new_userID] '})
 
-            User.findOne().where('_id').equals(id).then(user => {
+            User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
                     if (!user) return res.status(404).json({description: 'User is not found'});
                     if(user.credential.userID === old_userID) {
                         user.credential.userID = new_userID
@@ -280,7 +280,7 @@ export function update_credential_user(req, res){
             if(!(old_password && new_hash_password))
                 return res.status(400).send({description: 'Update password: required [old_password, new_hash_password] '})
 
-            User.findOne().where('_id').equals(id).then(user => {
+            User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
                     if (!user) return res.status(404).json({description: 'User is not found'});
                     let result = bcrypt.compareSync(old_password, user.credential.hash_password)
                     if(result) {
@@ -307,7 +307,7 @@ export function logout(req, res){
     let authorized = accessManager.isAuthorized(decoded_token, id, RBAC.Operation.DELETE, 'session');
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
-    User.findOne().where('_id').equals(id).then(user => {
+    User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
         if(!user) return res.status(404).json({description: 'User not found'})
         if(isAlreadyLoggedOut(user)) return res.status(409).json({ description: 'User is already logged out' })
 
@@ -334,7 +334,7 @@ export function update_access_token(req, res){
     if(!accessManager.isAuthorized(decoded_rToken, id, RBAC.Operation.UPDATE, 'session'))
         return res.status(403).send({description: 'User is unauthorized'})
 
-    User.findOne().where('_id').equals(id).then(user => {
+    User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
             if(!user) return res.status(404).json({description: 'User not found'})
             let {access, refresh} = user.credential.tokens
             if(!(access && refresh && tokensManager.areTheSame(access, access_token) && tokensManager.areTheSame(refresh, refresh_token)))
@@ -356,7 +356,7 @@ export function send_email_password(req, res){
     let {email} = req.query
     if(!email) return res.status(400).json({description: 'Missing email.'})
 
-    User.findOne().where('information.email').equals(email).then(user => {
+    User.findOne().where('signup').equals('checked').where('information.email').equals(email).then(user => {
         if(!user) return res.status(404).json({description: 'Email is not associated with any account'});
 
         let randomKey: string = randomString()
