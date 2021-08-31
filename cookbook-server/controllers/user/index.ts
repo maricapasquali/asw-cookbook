@@ -11,15 +11,24 @@ import {User, EmailLink} from '../../models'
 import {IJwtToken, JwtToken} from '../../modules/jwt.token'
 import {IRbac, RBAC} from '../../modules/rbac'
 import {Mailer, IMailer} from "../../modules/mailer";
-import {client_origin} from "../../../modules/hosting/variables";
+import {client_origin, images_origin, server_origin} from "../../../modules/hosting/variables";
 
 import {ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
+import * as path from "path";
+import {ImageUploader} from "../../modules/image.uploader";
 
 const app_name = require('../../../app.config.json').app_name
 
 const tokensManager: IJwtToken = new JwtToken()
 const accessManager: IRbac = new RBAC()
 const mailer: IMailer = new Mailer(`no-reply@${app_name.toLowerCase()}.com`);
+
+const imageUploader = new ImageUploader(path.resolve('cookbook-server/images'))
+imageUploader.configuration = {
+    newFileName: function (file: any){
+        return randomString(30) + path.extname(file.originalname)
+    }
+}
 
 const send_email_signup = function (user) {
     let randomKey: string = randomString()
@@ -57,15 +66,25 @@ const send_email_signup = function (user) {
 
 }
 
+export function uploadProfileImage(){
+    return imageUploader.upload('img')
+}
+
 export function create_user(req, res){
-    const new_user = new User(req.body);
+    let userBody = {
+        credential: { userID: req.body.userID, hash_password: req.body.hash_password },
+        information: {}
+    }
+    delete req.body.userID
+    delete req.body.hash_password
+    userBody.information = req.body
+    if(req.file) userBody.information['img'] = `${images_origin}/${req.file.filename}`
+
+    const new_user = new User(userBody)
     new_user.save()
         .then(user => {
-            res.status(201).json({
-                userID: user._id,
-                description: "Riceverai un'email di verifica"
-            })
-            send_email_signup(user)
+            res.status(201).json({ userID: user._id })
+            if(accessManager.isSignedUser(user.credential)) send_email_signup(user)
         }, err => {
             if(err.name === 'ValidationError')
                 return res.status(400).json({description: err.message})

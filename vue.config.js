@@ -12,7 +12,13 @@ module.exports = {
     configureWebpack: {
         resolve: {
             alias: {
-                '@': path.resolve(__dirname, 'cookbook-app/src')
+                '@app': path.resolve(__dirname),
+                '@': path.resolve(__dirname, 'cookbook-app/src'),
+                '@components': path.resolve(__dirname, 'cookbook-app/src/components'),
+                '@assets': path.resolve(__dirname, 'cookbook-app/src/assets'),
+                '@views': path.resolve(__dirname, 'cookbook-app/src/views'),
+                '@router': path.resolve(__dirname, 'cookbook-app/src/router'),
+                '@api': path.resolve(__dirname, 'cookbook-app/src/api')
             }
         }
     },

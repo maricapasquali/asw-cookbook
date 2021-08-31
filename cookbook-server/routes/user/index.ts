@@ -2,7 +2,7 @@ import * as userController from '../../controllers/user'
 
 export default function (app) {
 
-    app.route('/api/users')
+    app.route('/api/users').all(userController.uploadProfileImage())
         .post(userController.create_user)
         .get(userController.all_users)
         .patch(userController.reset_password)

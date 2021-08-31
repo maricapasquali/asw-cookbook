@@ -10,3 +10,9 @@ cookbook-server/.env
 
 cookbook-server/**/*.js
 cookbook-server/**/*.js.map
+cookbook-server/images
+
+cookbook-app/src/api/*.js
+cookbook-app/src/api/*.js.map
+
+.todo

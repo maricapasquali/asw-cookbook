@@ -32,8 +32,10 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
     signup: {
       type: String,
       required: false,
-      default: 'pending',
-      enum: ['pending', 'checked']
+      default: function (){
+          return this.credential.role === 'admin' ? 'checked' : 'pending'
+      },
+      enum: ['pending', 'checked'],
     },
     information: {
         img: {

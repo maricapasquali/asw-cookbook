@@ -1,5 +1,5 @@
 import axios, {AxiosRequestConfig, AxiosResponse} from 'axios'
-import * as variables from "../hosting/variables"
+import * as variables from "../../../modules/hosting/variables"
 
 
 export function head(pathname: string, config?: AxiosRequestConfig): Promise<AxiosResponse>{
