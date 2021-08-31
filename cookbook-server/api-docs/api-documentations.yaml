@@ -15,7 +15,7 @@ components:
           properties:
             img:
               type: string
-            name:
+            firstname:
               type: string
             lastname:
               type: string
@@ -468,19 +468,33 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
-                information:
-                  $ref: "#/components/schemas/user/properties/information"
-                credential:
-                  type: object
-                  properties:
-                    userID:
-                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
-                    hash_password:
-                      $ref: "#/components/schemas/user/properties/credential/properties/hash_password"
+                img:
+                  $ref: "#/components/schemas/user/properties/information/properties/img"
+                firstname:
+                  $ref: "#/components/schemas/user/properties/information/properties/firstname"
+                lastname:
+                  $ref: "#/components/schemas/user/properties/information/properties/lastname"
+                email:
+                  $ref: "#/components/schemas/user/properties/information/properties/email"
+                tel_number:
+                  $ref: "#/components/schemas/user/properties/information/properties/tel_number"
+                birth_date:
+                  $ref: "#/components/schemas/user/properties/information/properties/birth_date"
+                sex:
+                  $ref: "#/components/schemas/user/properties/information/properties/sex"
+                country:
+                  $ref: "#/components/schemas/user/properties/information/properties/country"
+                occupation:
+                  $ref: "#/components/schemas/user/properties/information/properties/occupation"
+                userID:
+                  $ref: "#/components/schemas/user/properties/credential/properties/userID"
+                hash_password:
+                  $ref: "#/components/schemas/user/properties/credential/properties/hash_password"
+
       responses:
         201:
           description: User has been signed up
