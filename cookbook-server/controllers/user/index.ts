@@ -176,14 +176,30 @@ export function login(req, res){
     }, err => res.status(500).json({description: err.message}))
 }
 
+//use token
+export function check_authorization(req, res) {
+    let {id} = req.params
+    const {access_token} = extractAuthorization(req.headers)
+    if(!access_token) return res.status(400).json({description: 'Missing authorization.'})
+    let decoded_token = tokensManager.checkValidityOfToken(access_token);
+    if(!decoded_token) return res.status(401).json({description: 'Token is expired. You request another.'})
+    if(decoded_token._id === id) return res.status(200).json({description: 'You can access to this resource'})
+    else return res.status(403).json({description: "You can't access to this resource"})
+}
+
 export function one_user(req, res){
     let {id} = req.params
     User.findOne().where('signup').equals('checked').where('_id').equals(id)
         .then(user => {
                 if (user == null) return res.status(404).json({description: 'User is not found'});
+                let isSigned = accessManager.isSignedUser(user.credential) ? true : undefined
+                let isAdmin = accessManager.isAdminUser(user.credential) ? true : undefined
+
                 res.status(200).json({
                     information: user.information,
                     userID: user.credential.userID,
+                    isSigned: isSigned,
+                    isAdmin: isAdmin,
                     _id: user._id
                 });
             },

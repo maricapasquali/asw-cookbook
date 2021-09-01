@@ -9,6 +9,8 @@ export default function (app) {
 
     app.route('/api/users/check-account').put(userController.check_account)
 
+    app.route('/api/users/authorized/:id').get(userController.check_authorization)
+
     app.route('/api/users/login').post(userController.login)
 
     app.route('/api/users/emails/reset-password').get(userController.send_email_password)

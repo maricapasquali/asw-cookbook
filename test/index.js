@@ -1,5 +1,5 @@
 const assert = require('assert');
-const {EmailValidator, PasswordValidator, TelephoneValidator} = require('../modules/validator')
+const {EmailValidator, PasswordValidator} = require('../modules/validator')
 
 describe('Validator', function (){
     describe('Email', function() {
