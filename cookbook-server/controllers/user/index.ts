@@ -370,6 +370,7 @@ export function update_access_token(req, res){
     let { refresh_token } = req.body
     let { access_token } = extractAuthorization(req.headers)
 
+    if(!access_token) return res.status(400).json({description: 'Missing access token'})
     if(!refresh_token) return res.status(400).json({description: 'Missing refresh token'})
 
     let decoded_aToken = tokensManager.checkValidityOfToken(access_token);
