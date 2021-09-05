@@ -15,7 +15,7 @@ export default function (app) {
 
     app.route('/api/users/emails/reset-password').get(userController.send_email_password)
 
-    app.route('/api/users/:id')
+    app.route('/api/users/:id').all(userController.uploadProfileImage())
         .get(userController.one_user)
         .patch(userController.update_user)
         .delete(userController.delete_user)

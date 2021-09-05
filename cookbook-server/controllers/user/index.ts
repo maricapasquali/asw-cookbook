@@ -188,15 +188,21 @@ export function check_authorization(req, res) {
 }
 
 export function one_user(req, res){
+    const {access_token} = extractAuthorization(req.headers)
     let {id} = req.params
     User.findOne().where('signup').equals('checked').where('_id').equals(id)
         .then(user => {
                 if (user == null) return res.status(404).json({description: 'User is not found'});
                 let isSigned = accessManager.isSignedUser(user.credential) ? true : undefined
                 let isAdmin = accessManager.isAdminUser(user.credential) ? true : undefined
-
+                var userO = user.toObject();
+                let decoded_token = tokensManager.checkValidityOfToken(access_token)
+                if(!access_token || !decoded_token || decoded_token._id !== id) {
+                    delete userO.information.email;
+                    delete userO.information.tel_number;
+                }
                 res.status(200).json({
-                    information: user.information,
+                    information: userO.information,
                     userID: user.credential.userID,
                     isSigned: isSigned,
                     isAdmin: isAdmin,
@@ -219,12 +225,19 @@ export function update_user(req, res){
     let authorized = accessManager.isAuthorized(decoded_token, id, RBAC.Operation.UPDATE, 'user');
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
+    let userBody = req.body
+    // console.log(userBody)
+    if(req.file) userBody.img = `${images_origin}/${req.file.filename}`
+
     User.findOne().where('signup').equals('checked').where('_id').equals(id)
         .then(user =>{
                 if (!user) return res.status(404).json({description: 'User is not found'});
                 if(isAlreadyLoggedOut(user)) return res.status(401).send({description: 'User is not authenticated'})
-                user.information = Object.assign( user.information , req.body)
-                user.save().then(() => res.status(200).json({update: true}), err => res.status(500).json({description: err.message}))
+                user.information = Object.assign(user.information , userBody)
+                user.save().then((u) => res.status(200).json({update: true, info: u.information}), err => {
+                    if(err.name === 'ValidationError') return res.status(400).json({description: err.message})
+                    res.status(500).json({description: err.message})
+                })
             },
             err => res.status(500).json({description: err.message}))
 }
