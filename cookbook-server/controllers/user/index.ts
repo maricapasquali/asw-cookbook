@@ -183,7 +183,14 @@ export function check_authorization(req, res) {
     if(!access_token) return res.status(400).json({description: 'Missing authorization.'})
     let decoded_token = tokensManager.checkValidityOfToken(access_token);
     if(!decoded_token) return res.status(401).json({description: 'Token is expired. You request another.'})
-    if(decoded_token._id === id) return res.status(200).json({description: 'You can access to this resource'})
+    if(decoded_token._id === id) {
+        User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
+            if (user == null) return res.status(404).json({description: 'User is not found'});
+            let isSigned = accessManager.isSignedUser(user.credential) ? true : undefined
+            let isAdmin = accessManager.isAdminUser(user.credential) ? true : undefined
+            return res.status(200).json({ isSigned: isSigned, isAdmin: isAdmin, description: 'You can access to this resource'})
+        })
+    }
     else return res.status(403).json({description: "You can't access to this resource"})
 }
 
@@ -226,7 +233,7 @@ export function update_user(req, res){
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
     let userBody = req.body
-    // console.log(userBody)
+    if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
     if(req.file) userBody.img = `${images_origin}/${req.file.filename}`
 
     User.findOne().where('signup').equals('checked').where('_id').equals(id)
@@ -381,7 +388,7 @@ export function update_access_token(req, res){
         return res.status(401).send({description: 'Refresh token was expired. Please make a new signin request'})
 
     if(!accessManager.isAuthorized(decoded_rToken, id, RBAC.Operation.UPDATE, 'session'))
-        return res.status(403).send({description: 'User is unauthorized'})
+        return res.status(403).send({description: 'User is unauthorized to update session.'})
 
     User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
             if(!user) return res.status(404).json({description: 'User not found'})
@@ -390,7 +397,7 @@ export function update_access_token(req, res){
                 return res.status(403).send({description: 'User is unauthorized'})
             let token = tokensManager.createNewTokens({_id: user._id, userID: user.credential.userID, role: user.credential.role})
 
-            user.credential.tokens.access = token
+            user.credential.tokens.access = token.access
             user.save()
                 .then(u => res.status(200).json({access_token: token.access}),
                     err => res.status(500).json({description: err.message}))
