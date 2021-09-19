@@ -655,7 +655,9 @@ paths:
     get:
       description: ""
       tags:
-        - Users   
+        - Users
+      security:
+        - BearerAuth: []
       responses:
         200:
           description: User's information
