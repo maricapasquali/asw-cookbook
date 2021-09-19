@@ -887,6 +887,41 @@ paths:
         500:
           $ref: "#/components/responses/general_error"
 
+  /users/{id}/authorized:
+    get:
+      description: ''
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+      responses:
+        200:
+          description: You can access to this resource
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      isSigned:
+                        type: boolean
+                        default: true
+                  - type: object
+                    properties:
+                      isAdmin:
+                        type: boolean
+                        default: true
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          description: Token is expired. You request another
+        403:
+          description: You CAN'T access to this resource
+        500:
+          $ref: "#/components/responses/general_error"
+
   /reset-password/email:
     get:
       description: ''
@@ -909,7 +944,7 @@ paths:
                 properties:
                   send:
                     type: boolean
-                    default: true  
+                    default: true
         400:
           $ref: "#/components/responses/bad_request"
         404:
