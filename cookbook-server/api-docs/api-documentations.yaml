@@ -936,6 +936,37 @@ paths:
           description: Link is expired
         500:
           $ref: "#/components/responses/general_error"
+
+  /reset-password/users:
+    get:
+      description: Retrieve a temporary token for a given user for a forgot password request or for change default password of an admin
+      tags:
+        - Users
+      parameters:
+        - name: nickname
+          in: query
+          required: true
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  temporary_token:
+                    type: string
+                  _id:
+                    type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: User not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+
+
   #RECIPES
   /users/{id}/recipes:
     parameters:
