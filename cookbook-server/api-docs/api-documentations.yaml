@@ -655,7 +655,9 @@ paths:
     get:
       description: ""
       tags:
-        - Users   
+        - Users
+      security:
+        - BearerAuth: []
       responses:
         200:
           description: User's information
@@ -683,9 +685,28 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
-            schema:   
-              $ref: "#/components/schemas/user/properties/information"          
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                img:
+                  $ref: "#/components/schemas/user/properties/information/properties/img"
+                firstname:
+                  $ref: "#/components/schemas/user/properties/information/properties/firstname"
+                lastname:
+                  $ref: "#/components/schemas/user/properties/information/properties/lastname"
+                email:
+                  $ref: "#/components/schemas/user/properties/information/properties/email"
+                tel_number:
+                  $ref: "#/components/schemas/user/properties/information/properties/tel_number"
+                birth_date:
+                  $ref: "#/components/schemas/user/properties/information/properties/birth_date"
+                sex:
+                  $ref: "#/components/schemas/user/properties/information/properties/sex"
+                country:
+                  $ref: "#/components/schemas/user/properties/information/properties/country"
+                occupation:
+                  $ref: "#/components/schemas/user/properties/information/properties/occupation"
       responses:
         200:
           description: User's information has been updated
@@ -866,7 +887,42 @@ paths:
         500:
           $ref: "#/components/responses/general_error"
 
-  /users/emails/reset-password:
+  /users/{id}/authorized:
+    get:
+      description: ''
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+      responses:
+        200:
+          description: You can access to this resource
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      isSigned:
+                        type: boolean
+                        default: true
+                  - type: object
+                    properties:
+                      isAdmin:
+                        type: boolean
+                        default: true
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          description: Token is expired. You request another
+        403:
+          description: You CAN'T access to this resource
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /reset-password/email:
     get:
       description: ''
       tags:
@@ -888,15 +944,65 @@ paths:
                 properties:
                   send:
                     type: boolean
-                    default: true  
+                    default: true
         400:
           $ref: "#/components/responses/bad_request"
         404:
           description: Email is not associated with any account
         500:
           $ref: "#/components/responses/general_error"
+  /reset-password/check-link:
+    get:
+      description: ''
+      tags:
+        - Users
+      parameters:
+        - name: key
+          in: query
+          required: true
+      responses:
+        200:
+          description: Link is valid
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: Key not valid
+        410:
+          description: Link is expired
+        500:
+          $ref: "#/components/responses/general_error"
 
-#RECIPES
+  /reset-password/users:
+    get:
+      description: Retrieve a temporary token for a given user for a forgot password request or for change default password of an admin
+      tags:
+        - Users
+      parameters:
+        - name: nickname
+          in: query
+          required: true
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  temporary_token:
+                    type: string
+                  _id:
+                    type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: User not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+
+
+  #RECIPES
   /users/{id}/recipes:
     parameters:
       - $ref: "#/components/parameters/userIdentifier"
