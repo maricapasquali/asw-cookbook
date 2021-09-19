@@ -683,9 +683,28 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
-            schema:   
-              $ref: "#/components/schemas/user/properties/information"          
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                img:
+                  $ref: "#/components/schemas/user/properties/information/properties/img"
+                firstname:
+                  $ref: "#/components/schemas/user/properties/information/properties/firstname"
+                lastname:
+                  $ref: "#/components/schemas/user/properties/information/properties/lastname"
+                email:
+                  $ref: "#/components/schemas/user/properties/information/properties/email"
+                tel_number:
+                  $ref: "#/components/schemas/user/properties/information/properties/tel_number"
+                birth_date:
+                  $ref: "#/components/schemas/user/properties/information/properties/birth_date"
+                sex:
+                  $ref: "#/components/schemas/user/properties/information/properties/sex"
+                country:
+                  $ref: "#/components/schemas/user/properties/information/properties/country"
+                occupation:
+                  $ref: "#/components/schemas/user/properties/information/properties/occupation"
       responses:
         200:
           description: User's information has been updated
