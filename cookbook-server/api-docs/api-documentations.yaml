@@ -887,7 +887,7 @@ paths:
         500:
           $ref: "#/components/responses/general_error"
 
-  /users/emails/reset-password:
+  /reset-password/email:
     get:
       description: ''
       tags:
