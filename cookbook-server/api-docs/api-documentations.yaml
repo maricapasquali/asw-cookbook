@@ -916,8 +916,27 @@ paths:
           description: Email is not associated with any account
         500:
           $ref: "#/components/responses/general_error"
-
-#RECIPES
+  /reset-password/check-link:
+    get:
+      description: ''
+      tags:
+        - Users
+      parameters:
+        - name: key
+          in: query
+          required: true
+      responses:
+        200:
+          description: Link is valid
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: Key not valid
+        410:
+          description: Link is expired
+        500:
+          $ref: "#/components/responses/general_error"
+  #RECIPES
   /users/{id}/recipes:
     parameters:
       - $ref: "#/components/parameters/userIdentifier"
