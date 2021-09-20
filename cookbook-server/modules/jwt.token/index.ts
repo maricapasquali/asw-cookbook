@@ -6,6 +6,7 @@ import {server_origin, client_origin} from "../../../modules/hosting/variables";
 
 export interface IJwtToken {
     createNewTokens(data: object): {access: string, refresh: string}
+    createToken(data: object, timeout?: string): string
     checkValidityOfToken(token: string): {_id: string, role: string} | false
     getDecodedToken(token: string): object
     areTheSame(actual_token: string, expected_token: string): boolean
@@ -29,9 +30,13 @@ export class JwtToken implements IJwtToken {
     createNewTokens(data: object): { access: string; refresh: string } {
         console.debug('Create new token.')
         return  {
-            access: sign(data, this.privateKey, Object.assign({expiresIn: "30 minutes"}, this.signOptions)),
-            refresh: sign(data, this.privateKey, Object.assign({expiresIn: "1 days"}, this.signOptions)),
+            access: this.createToken(data),
+            refresh: this.createToken(data, "1 days")
         }
+    }
+
+    createToken(data: object, timeout?: string): string {
+        return sign(data, this.privateKey, Object.assign({expiresIn: timeout || "30 minutes"}, this.signOptions))
     }
 
     checkValidityOfToken(token: string): {_id: string, role: string} | false {

@@ -169,7 +169,14 @@ export function login(req, res){
         if(result) {
             let firstLogin = accessManager.isAdminUser(user.credential) && user.credential.tokens === undefined
             user.credential.tokens = tokensManager.createNewTokens({_id: user._id, userID: user.credential.userID, role: user.credential.role})
-            user.save().then(u => res.status(200).json({token: u.credential.tokens, firstLogin: firstLogin ? true: undefined}),
+            user.save().then(u => {
+                let isSigned = accessManager.isSignedUser(u.credential)? true: undefined
+                let isAdmin = accessManager.isAdminUser(u.credential)? true: undefined
+                res.status(200).json({
+                    token: u.credential.tokens,
+                    userInfo: {_id: u._id, userID: u.credential.userID, isSigned: isSigned, isAdmin: isAdmin},
+                    firstLogin: firstLogin ? true: undefined})
+                },
                 err => res.status(500).json({description: err.message}))
         }
         else res.status(403).json({description: 'User is unauthorized'});
@@ -194,6 +201,7 @@ export function check_authorization(req, res) {
     else return res.status(403).json({description: "You can't access to this resource"})
 }
 
+// (optional) use token
 export function one_user(req, res){
     const {access_token} = extractAuthorization(req.headers)
     let {id} = req.params
@@ -300,7 +308,7 @@ export function state_user(req, res){
 //use token
 export function update_credential_user(req, res){
     let {id} = req.params
-    let {change} = req.query
+    let {change, reset} = req.query
 
     const {access_token} = extractAuthorization(req.headers)
     if(!access_token) return res.status(400).json({description: 'Missing authorization.'})
@@ -332,12 +340,12 @@ export function update_credential_user(req, res){
 
         }break;
         case 'password':{
-            if(!(old_password && new_hash_password))
+            if(!reset && !(old_password && new_hash_password))
                 return res.status(400).send({description: 'Update password: required [old_password, new_hash_password] '})
 
             User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
                     if (!user) return res.status(404).json({description: 'User is not found'});
-                    let result = bcrypt.compareSync(old_password, user.credential.hash_password)
+                    let result = reset || bcrypt.compareSync(old_password, user.credential.hash_password)
                     if(result) {
                         user.credential.hash_password = new_hash_password
                         user.save().then(() => res.status(200).json({update: change}),
@@ -395,17 +403,51 @@ export function update_access_token(req, res){
             let {access, refresh} = user.credential.tokens
             if(!(access && refresh && tokensManager.areTheSame(access, access_token) && tokensManager.areTheSame(refresh, refresh_token)))
                 return res.status(403).send({description: 'User is unauthorized'})
-            let token = tokensManager.createNewTokens({_id: user._id, userID: user.credential.userID, role: user.credential.role})
+            let token = tokensManager.createToken({_id: user._id, userID: user.credential.userID, role: user.credential.role})
 
-            user.credential.tokens.access = token.access
+            user.credential.tokens = {
+                access: token,
+                refresh: refresh_token
+            }
+            console.log("create new access = ", token)
             user.save()
-                .then(u => res.status(200).json({access_token: token.access}),
+                .then(() => res.status(200).json({access_token: token}),
                     err => res.status(500).json({description: err.message}))
         },
         err=>res.status(500).json({description: err.message}))
-
 }
 
+export function checkLinkResetPassword(req, res){
+    let {key} = req.query
+    if(!key) return res.status(400).json({description: 'Missing key'})
+
+    EmailLink.findOne()
+             .where('link').equals(client_origin + '/reset-password')
+             .where('randomKey').equals(key)
+             .then(emailLink => {
+                 if(!emailLink) return res.status(404).json({description: 'Key not valid'})
+                 if(emailLink.expired < Date.now()) {
+                     emailLink.delete()
+                              .then(() => res.status(410).json({description: 'Link expired'}),
+                                    err => res.status(500).json({description: err.message}))
+                 }
+                 else return res.status(200).json({description: 'Link valid'})
+             }, err => res.status(500).json({description: err.message}))
+}
+
+export function foundUserForNickname(req, res){
+    const {nickname} = req.query
+    if(!nickname) return res.status(400).json({description: 'Missing nickname'})
+
+    User.findOne()
+        .where('credential.userID').equals(nickname)
+        .where('signup').equals('checked')
+        .then(user => {
+            if(!user) return res.status(404).json({description: 'User is not found'});
+            let token = tokensManager.createToken({_id: user._id, userID: user.credential.userID, role: user.credential.role}, "5 minutes")
+            res.status(200).json({temporary_token: token, _id: user._id})
+        }, err => res.status(500).json({description: err.message}))
+}
 
 //SEND EMAIL
 export function send_email_password(req, res){

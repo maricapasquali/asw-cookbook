@@ -9,16 +9,18 @@ export default function (app) {
 
     app.route('/api/users/check-account').put(userController.check_account)
 
-    app.route('/api/users/authorized/:id').get(userController.check_authorization)
-
     app.route('/api/users/login').post(userController.login)
 
-    app.route('/api/users/emails/reset-password').get(userController.send_email_password)
+    app.route('/api/reset-password/email').get(userController.send_email_password)
+    app.route('/api/reset-password/check-link').get(userController.checkLinkResetPassword)
+    app.route('/api/reset-password/users').get(userController.foundUserForNickname)
 
     app.route('/api/users/:id').all(userController.uploadProfileImage())
         .get(userController.one_user)
         .patch(userController.update_user)
         .delete(userController.delete_user)
+
+    app.route('/api/users/:id/authorized').get(userController.check_authorization)
 
     app.route('/api/users/:id/state').get(userController.state_user)
 
