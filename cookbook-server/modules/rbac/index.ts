@@ -1,58 +1,44 @@
 export interface IRbac {
-    isAuthorized(user: { _id: string, role: string } | any, identifier: string, operation: RBAC.Operation, subject: string): boolean
+    isAuthorized(role: string, operation: RBAC.Operation, subject: RBAC.Subject, others?: boolean): boolean
     isSignedUser(user: { _id?: string, role: string } ): boolean
     isAdminUser(user: { _id?: string, role: string } ): boolean
 }
 
-export class RBAC implements IRbac{
-    private readonly admin = 'admin'
-    private readonly signed = 'signed'
-    private readonly roles;
-
+export class RBAC implements IRbac {
+    private readonly authorizations: Array<RBAC.Authorization>
     constructor() {
-        this.roles = [this.admin, this.signed];
+        this.authorizations = [
+            { roles: [RBAC.Role.ADMIN], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.USER, others: true },
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.USER },
+            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.USER },
+            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.SESSION },
+            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.SESSION },
+            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.USER_CREDENTIAL },
+        ]
     }
 
-    isAuthorized(user: {_id: string, role: string} | any, identifier: string, operation: RBAC.Operation, subject: string): boolean {
-        if(!user) return false
-        if(!user._id || !user.role) return false
-        switch (subject){
-            case 'user': {
-                switch (operation){
-                    case RBAC.Operation.DELETE:
-                        return user.role === this.admin || (user.role === this.signed && user._id === identifier)
-                    case RBAC.Operation.UPDATE:
-                        return this.roles.includes(user.role) && user._id === identifier
-                }
-            }
-            break
-            case 'user_credential':{
-                switch (operation){
-                    case RBAC.Operation.UPDATE:
-                        return this.roles.includes(user.role) && user._id === identifier
-                }
-            }break;
-            case 'session':{
-                switch (operation){
-                    case RBAC.Operation.DELETE:
-                        return this.roles.includes(user.role) && user._id === identifier
-                    case RBAC.Operation.UPDATE:
-                        return this.roles.includes(user.role) && user._id === identifier
-                }
-
-            }break;
-        }
-        throw new Error(subject + ' not implemented')
+    isAuthorized(role: string, operation: RBAC.Operation, subject: RBAC.Subject, others?: boolean): boolean {
+        others = others || undefined
+        return this.authorizations.find(auth => auth.roles.includes(role as RBAC.Role) && auth.operation === operation && auth.subject === subject && auth.others == others) !== undefined ;
     }
 
     isSignedUser(user: {_id?: string, role: string} ): boolean {
-        return user && user.role === this.signed;
+        return user && user.role as RBAC.Role === RBAC.Role.SIGNED;
     }
     isAdminUser(user: {_id?: string, role: string} ): boolean{
-        return user && user.role === this.admin;
+        return user && user.role as RBAC.Role === RBAC.Role.ADMIN;
     }
 }
 
 export namespace RBAC{
+    export enum Role{ADMIN = 'admin', SIGNED = 'signed'}
     export enum Operation{CREATE, RETRIEVE, UPDATE, DELETE}
+    export enum Subject{USER, USER_CREDENTIAL, SESSION}
+
+    export interface Authorization {
+        roles: Array<Role>,
+        operation: Operation
+        subject: Subject
+        others?: boolean
+    }
 }

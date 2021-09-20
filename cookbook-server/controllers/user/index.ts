@@ -237,7 +237,7 @@ export function update_user(req, res){
     let decoded_token = tokensManager.checkValidityOfToken(access_token);
     if(!decoded_token) return res.status(401).send({description: 'User is not authenticated'})
 
-    let authorized = accessManager.isAuthorized(decoded_token, id, RBAC.Operation.UPDATE, 'user');
+    let authorized = accessManager.isAuthorized(decoded_token.role, RBAC.Operation.UPDATE, RBAC.Subject.USER, decoded_token._id !== id);
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
     let userBody = req.body
@@ -268,7 +268,7 @@ export function delete_user(req, res){
     if(!decoded_token) return res.status(401).send({description: 'User is not authenticated'})
 
 
-    let authorized = accessManager.isAuthorized(decoded_token, id, RBAC.Operation.DELETE, 'user');
+    let authorized = accessManager.isAuthorized(decoded_token.role, RBAC.Operation.DELETE, RBAC.Subject.USER, decoded_token._id !== id);
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
     const deleteUser = (id, decoded_token) => {
@@ -318,7 +318,7 @@ export function update_credential_user(req, res){
     let decoded_token = tokensManager.checkValidityOfToken(access_token);
     if(!decoded_token) return res.status(401).send({description: 'User is not authenticated'})
 
-    let authorized = accessManager.isAuthorized(decoded_token, id, RBAC.Operation.UPDATE, 'user_credential');
+    let authorized = accessManager.isAuthorized(decoded_token.role, RBAC.Operation.UPDATE, RBAC.Subject.USER_CREDENTIAL, decoded_token._id !== id);
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
     let {old_userID, new_userID, old_password, new_hash_password} = req.body
@@ -367,7 +367,7 @@ export function logout(req, res){
     let decoded_token = tokensManager.checkValidityOfToken(access_token);
     if(!decoded_token) return res.status(401).send({description: 'User is not authenticated'})
 
-    let authorized = accessManager.isAuthorized(decoded_token, id, RBAC.Operation.DELETE, 'session');
+    let authorized = accessManager.isAuthorized(decoded_token.role, RBAC.Operation.DELETE, RBAC.Subject.SESSION, decoded_token._id !== id);
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
     User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
@@ -395,7 +395,7 @@ export function update_access_token(req, res){
     if(!decoded_rToken)
         return res.status(401).send({description: 'Refresh token was expired. Please make a new signin request'})
 
-    if(!accessManager.isAuthorized(decoded_rToken, id, RBAC.Operation.UPDATE, 'session'))
+    if(!accessManager.isAuthorized(decoded_rToken.role, RBAC.Operation.UPDATE, RBAC.Subject.SESSION, decoded_rToken._id !== id))
         return res.status(403).send({description: 'User is unauthorized to update session.'})
 
     User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
