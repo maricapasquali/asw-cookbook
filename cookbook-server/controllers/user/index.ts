@@ -241,8 +241,10 @@ export function update_user(req, res){
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
     let userBody = req.body
-    if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
     if(req.file) userBody.img = `${images_origin}/${req.file.filename}`
+    if(!userBody.img) userBody.img = undefined
+    if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
+    console.log("Update info user = ", userBody)
 
     User.findOne().where('signup').equals('checked').where('_id').equals(id)
         .then(user =>{
