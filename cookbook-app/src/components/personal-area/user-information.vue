@@ -10,7 +10,7 @@
             <b-form-group>
               <label for="input-country"><b>Paese</b></label>
               <select-with-image id="input-country" placeholder="Seleziona paese ..." :value="changeableUser.information.country"
-                                 @select="changeableUser.information.country=$event.value" :options="countries"></select-with-image>
+                                 @select="selectCountry($event)" :options="countries"></select-with-image>
             </b-form-group>
 
             <b-form-group>
@@ -29,9 +29,9 @@
             </b-form-group>
 
             <b-form-group>
-              <label for="input-gender"><b>Paese</b></label>
-              <select-with-image v-if="changeableUser.information.sex" id="input-gender" placeholder="Seleziona genere ..." :value="changeableUser.information.sex"
-                                 @select="changeableUser.information.sex=$event.value" :options="genders"></select-with-image>
+              <label for="input-gender"><b>Genere</b></label>
+              <select-with-image id="input-gender" placeholder="Seleziona genere ..." :value="changeableUser.information.sex"
+                                 @select="selectGender($event)" :options="genders"></select-with-image>
             </b-form-group>
 
             <b-form-group>
@@ -48,7 +48,7 @@
                     <b-form-input id="input-email" type="email" :state="validation.email" v-model="changeableUser.information.email" @input="checkRequiredField($event, 'email')"></b-form-input>
                   </b-form-group>
                 </li>
-                <li v-if="changeableUser.information.tel_number">
+                <li>
                   <b-form-group>
                     <label for="input-tel-num"><b>Numero di telefono</b></label>
                     <b-form-input id="input-tel-num" type="tel" v-model="changeableUser.information.tel_number"></b-form-input>
@@ -89,11 +89,11 @@
                 <b-col><b>Data di nascita</b></b-col>
                 <b-col><p>{{ user.information.birth_date | localDate(user.information.country) }}</p></b-col>
               </b-row>
-              <b-row v-if="changeableUser.information.sex" cols="1" cols-md="2">
+              <b-row v-if="user.information.sex" cols="1" cols-md="2">
                 <b-col><b>Genere</b></b-col>
-                <b-col><p>{{ require('@assets/genders.js').find(g => user.information.sex = g.value).text }}</p></b-col>
+                <b-col><p>{{gender}}</p></b-col>
               </b-row>
-              <b-row v-if="changeableUser.information.occupation" cols="1" cols-md="2">
+              <b-row v-if="user.information.occupation" cols="1" cols-md="2">
                 <b-col><b>Occupazione</b></b-col>
                 <b-col><p>{{ user.information.occupation }}</p></b-col>
               </b-row>
@@ -221,6 +221,9 @@ export default {
     country: function (){
       return this.countries.find(o => this.user.information.country === o.value).src
     },
+    gender: function (){
+      return this.genders.find(g => this.user.information.sex === g.value).text
+    },
     isOtherUser: function (){
       return Session.accessToken() && Session.userInfo()._id !== this.id
     }
@@ -242,6 +245,15 @@ export default {
     changeImage: function (val){
       console.log(val)
       this.changeableUser.information.img = val && val.size === 0 ? this.user.information.img : val
+    },
+
+    selectCountry: function (e){
+      console.log("select contry = ", e)
+      this.changeableUser.information.country = e.value
+    },
+    selectGender: function (e){
+      console.log("select gender = ", e)
+      this.changeableUser.information.sex = e.value
     },
 
     checkRequiredField: function (val, field){
