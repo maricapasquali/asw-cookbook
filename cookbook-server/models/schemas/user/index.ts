@@ -40,7 +40,8 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
     information: {
         img: {
             type: String,
-            required: false
+            required: false,
+            default: null
         },
         firstname: {
             type: String,
