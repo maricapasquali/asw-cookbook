@@ -65,17 +65,59 @@
         </wrap-loading>
       </div>
       <b-container v-else fluid class="user-infos mt-2">
-        <b-row align-h="between" class="text-center">
-          <b-col class="d-flex justify-content-start">
-            <b-img v-if="user.information.img" width="100" height="100" rounded="circle" :src="user.information.img" alt="immagine profilo" @error="imgErr"></b-img>
-            <b-img v-else width="100" height="100" :src="img_profile" alt="immagine profilo"></b-img>
-          </b-col>
-          <b-col align-self="center" class="d-flex justify-content-end">
-            <b-img v-if="user.information.country" width="100" height="70" :src="country"></b-img>
-          </b-col>
-        </b-row>
+        <b-skeleton-wrapper :loading="isNotLoaded">
+          <template #loading>
+            <b-row align-h="between" class="text-center">
+              <b-col class="d-flex justify-content-start">
+                <b-skeleton type="avatar"></b-skeleton>
+              </b-col>
+            </b-row>
+            <b-row cols="1" cols-sm="2">
+              <b-col>
+                <b-row cols="1" cols-md="2">
+                  <b-col><b>UserID</b></b-col>
+                  <b-col><b-skeleton width="30%"></b-skeleton></b-col>
+                </b-row>
+                <b-row cols="1" cols-md="2">
+                  <b-col><b>Nome completo</b></b-col>
+                  <b-col><b-skeleton width="50%"></b-skeleton></b-col>
+                </b-row>
+                <b-row cols="1" cols-md="2">
+                  <b-col><b>Data di nascita</b></b-col>
+                  <b-col><b-skeleton width="40%"></b-skeleton></b-col>
+                </b-row>
+                <b-row cols="1" cols-md="2">
+                  <b-col><b>Genere</b></b-col>
+                  <b-col><b-skeleton width="70%"></b-skeleton></b-col>
+                </b-row>
+                <b-row cols="1" cols-md="2">
+                  <b-col><b>Occupazione</b></b-col>
+                  <b-col><b-skeleton width="40%"></b-skeleton></b-col>
+                </b-row>
+                <b-row cols="1">
+                  <b-col><b>Contatti</b></b-col>
+                  <b-col>
+                    <ul>
+                      <li><b-col><b-skeleton width="50%"></b-skeleton></b-col></li>
+                      <li><b-col><b-skeleton width="60%"></b-skeleton></b-col></li>
+                    </ul>
+                  </b-col>
+                </b-row>
+              </b-col>
+            </b-row>
+          </template>
 
-        <b-row cols="1" cols-sm="2">
+          <b-row align-h="between" class="text-center">
+            <b-col class="d-flex justify-content-start">
+              <b-img v-if="user.information.img" width="100" height="100" rounded="circle" :src="user.information.img" alt="immagine profilo" @error="imgErr"></b-img>
+              <b-img v-else width="100" height="100" :src="img_profile" alt="immagine profilo"></b-img>
+            </b-col>
+            <b-col align-self="center" class="d-flex justify-content-end">
+              <b-img v-if="user.information.country" width="100" height="70" :src="country"></b-img>
+            </b-col>
+          </b-row>
+
+          <b-row cols="1" cols-sm="2">
             <b-col>
               <b-row cols="1" cols-md="2">
                 <b-col><b>UserID</b></b-col>
@@ -101,13 +143,13 @@
                 <b-col><b>Contatti</b></b-col>
                 <b-col>
                   <ul>
-                  <li v-if="user.information.email">
-                    <p>{{ user.information.email }}</p>
-                  </li>
-                  <li v-if="user.information.tel_number">
-                    <p>{{ user.information.tel_number }}</p>
-                  </li>
-                </ul>
+                    <li v-if="user.information.email">
+                      <p>{{ user.information.email }}</p>
+                    </li>
+                    <li v-if="user.information.tel_number">
+                      <p>{{ user.information.tel_number }}</p>
+                    </li>
+                  </ul>
                 </b-col>
               </b-row>
             </b-col>
@@ -127,7 +169,9 @@
                 <b-button variant="secondary" @click="goChat"> Chat </b-button>
               </b-button-group>
             </b-col>
-        </b-row>
+          </b-row>
+        </b-skeleton-wrapper>
+
       </b-container>
 
     </b-container>
@@ -214,6 +258,9 @@ export default {
     }
   },
   computed:{
+    isNotLoaded() {
+      return this.user._id.length === 0;
+    },
     isChangedSomething: function (){
       return !Utils.equals(this.changeableUser.information, this.user.information) &&
               Object.values(this.validation).every(v => v === true)
