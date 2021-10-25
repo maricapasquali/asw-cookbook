@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div id="navigator-app">
     <!-- NAV BAR -->
-    <b-navbar toggleable="lg" type="dark" class="navigator-bar">
+    <b-navbar ref="navigator" toggleable="lg" type="dark" class="navigator-bar">
       <b-navbar-brand href="#">{{ app_name }}</b-navbar-brand>
 
       <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
@@ -41,7 +41,7 @@
       </b-collapse>
     </b-navbar>
     <!-- LOADING OVERLAY -->
-    <loading v-model="processing" />
+    <loading v-model="processing" /> <!-- FIXME: loading nav bar -->
     <!-- ERRORS MODAL -->
     <modal-alert v-model="error.show" variant="danger">
       <template v-slot:msg>
@@ -123,14 +123,14 @@ export default {
   },
   methods:{
     userId: function (userID){
-      this.userInfo.userID = userID
-      Session.changeUserID(userID)
       console.debug('change UserID (nav bar): ', userID)
+      // this.userInfo.userID = userID
+      Session.changeUserID(userID)
     },
     startSession: function (session){
-      this.access_token = session.token
-      this.userInfo.userID = session.userID
       console.debug('session start (nav bar) : ', session)
+      this.access_token = session.token
+      // this.userInfo.userID = session.userID
     },
     endSession: function (){
       Session.end()
@@ -141,7 +141,7 @@ export default {
         isSigned: null,
         isAdmin: null
       }
-      console.error("LOGOUT OK.")
+      console.debug("LOGOUT OK.")
     },
 
     logout: function (){

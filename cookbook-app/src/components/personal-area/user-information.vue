@@ -374,7 +374,7 @@ export default {
 .user-infos {
   border: 1px dashed black;
   border-radius: 10px;
-  background: $nav-color;
+  background: $component-color;
   padding-top: 10px;
   color: white;
   & > div {

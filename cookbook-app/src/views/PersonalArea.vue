@@ -1,5 +1,4 @@
 <template>
-  <div v-if="!loading">
     <div v-if="authorized">
       <b-card no-body>
         <b-tabs content-class="mt-1" ref="tabs">
@@ -34,8 +33,6 @@
       </modal-alert>
     </div>
     <div v-else><not-authorized-area/></div>
-  </div>
-  <loading v-else v-model="loading"/>
 </template>
 
 <script>

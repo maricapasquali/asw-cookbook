@@ -10,5 +10,8 @@ export default {
     },
     isCallable: function (v: any){
         return typeof v === 'function'
-    }
+    },
+    isEmpty: function (v: object){
+        return typeof v === 'object' && JSON.stringify(v) === "{}"
+    },
 }
