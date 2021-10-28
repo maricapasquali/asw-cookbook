@@ -18,9 +18,17 @@ module.exports = {
                 '@assets': path.resolve(__dirname, 'cookbook-app/src/assets'),
                 '@views': path.resolve(__dirname, 'cookbook-app/src/views'),
                 '@router': path.resolve(__dirname, 'cookbook-app/src/router'),
-                '@api': path.resolve(__dirname, 'cookbook-app/src/api')
+                '@services': path.resolve(__dirname, 'cookbook-app/src/services'),
+                '@api': path.resolve(__dirname, 'cookbook-app/src/services/api')
             }
         }
+    },
+    css: {
+        loaderOptions: {
+            sass: {
+                additionalData: `@import "@assets/scss/globals.scss";`,
+            },
+        },
     },
     outputDir: path.join(__dirname, 'cookbook-app/dist'),
     devServer: {

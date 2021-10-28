@@ -4,6 +4,6 @@
     "target": "es5",
     "sourceMap": true,
   },
-  "include": ["modules/**/*", "cookbook-server/**/*", "cookbook-app/**/*"],
+  "include": ["modules/**/*", "cookbook-server/**/*", "cookbook-app/src/services/**/*"],
   "exclude": ["node_modules"]
 }

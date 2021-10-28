@@ -12,7 +12,7 @@ cookbook-server/**/*.js
 cookbook-server/**/*.js.map
 cookbook-server/images
 
-cookbook-app/src/api/*.js
-cookbook-app/src/api/*.js.map
+cookbook-app/src/services/**/*.js
+cookbook-app/src/services/**/*.js.map
 
 .todo
