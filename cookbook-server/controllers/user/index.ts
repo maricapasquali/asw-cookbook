@@ -11,7 +11,7 @@ import {User, EmailLink} from '../../models'
 import {IJwtToken, JwtToken} from '../../modules/jwt.token'
 import {IRbac, RBAC} from '../../modules/rbac'
 import {Mailer, IMailer} from "../../modules/mailer";
-import {client_origin, images_origin, server_origin} from "../../../modules/hosting/variables";
+import {client_origin, server_origin} from "../../../modules/hosting/variables";
 
 import {ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
 import * as path from "path";
@@ -78,7 +78,7 @@ export function create_user(req, res){
     delete req.body.userID
     delete req.body.hash_password
     userBody.information = req.body
-    if(req.file) userBody.information['img'] = `${images_origin}/${req.file.filename}`
+    if(req.file) userBody.information['img'] = req.file.filename
 
     const new_user = new User(userBody)
     new_user.save()
@@ -241,7 +241,7 @@ export function update_user(req, res){
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
     let userBody = req.body
-    if(req.file) userBody.img = `${images_origin}/${req.file.filename}`
+    if(req.file) userBody.img = req.file.filename
     if(!userBody.img) userBody.img = undefined
     if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
     console.log("Update info user = ", userBody)
