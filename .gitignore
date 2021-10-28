@@ -16,3 +16,4 @@ cookbook-app/src/services/**/*.js
 cookbook-app/src/services/**/*.js.map
 
 .todo
+.env

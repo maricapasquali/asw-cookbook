@@ -9,7 +9,7 @@ declare module 'axios' {
 }
 
 const instance = axios.create({
-    baseURL: variables.server_origin,
+    baseURL: process.env.VUE_APP_SERVER_ORIGIN || variables.server_origin,
     headers: {
         "Content-Type": "application/json",
     },
