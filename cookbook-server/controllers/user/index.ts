@@ -402,9 +402,10 @@ export function update_access_token(req, res){
 
     User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
             if(!user) return res.status(404).json({description: 'User not found'})
-            let {access, refresh} = user.credential.tokens
-            if(!(access && refresh && tokensManager.areTheSame(access, access_token) && tokensManager.areTheSame(refresh, refresh_token)))
-                return res.status(403).send({description: 'User is unauthorized'})
+            // TODO: found a way to use access token in db
+            // let {access, refresh} = user.credential.tokens
+            // if(!(access && refresh && tokensManager.areTheSame(access, access_token) && tokensManager.areTheSame(refresh, refresh_token)))
+            //     return res.status(403).send({description: 'User is unauthorized'})
             let token = tokensManager.createToken({_id: user._id, userID: user.credential.userID, role: user.credential.role})
 
             user.credential.tokens = {
