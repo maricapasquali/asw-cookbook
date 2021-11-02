@@ -11,6 +11,7 @@ cookbook-server/.env
 cookbook-server/**/*.js
 cookbook-server/**/*.js.map
 cookbook-server/images
+cookbook-server/videos
 
 cookbook-app/src/services/**/*.js
 cookbook-app/src/services/**/*.js.map
