@@ -23,7 +23,7 @@
             </template>
             <b-dropdown-item :active="isAccountActive" :to="{name: 'p-user-account', params: {id: userInfo._id}}">Account</b-dropdown-item>
 
-            <b-dropdown-item v-if="userInfo.isSigned" :active="isRecipesActive" :to="{name: 'p-user-recipes', params: {id: userInfo._id}}">Ricette</b-dropdown-item>
+            <b-dropdown-item v-if="userInfo.isSigned" :active="isRecipesActive" :to="{name: 'p-user-recipes', params: {id: userInfo._id}, query: {tab: 'shared'}}">Ricette</b-dropdown-item>
             <b-dropdown-item v-if="userInfo.isSigned" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userInfo._id}}">Lista della spesa</b-dropdown-item>
 
             <b-dropdown-item v-if="userInfo.isAdmin" :active="isReportsActive" :to="{name: 'p-user-reports', params: {id: userInfo._id}}">Segnalazioni</b-dropdown-item>

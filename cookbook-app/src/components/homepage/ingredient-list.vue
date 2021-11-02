@@ -38,7 +38,7 @@ export default {
   data(){
     return {
       skeletons: 7,
-      nutritional_values: []
+      nutritional_values: {}
     }
   },
   methods:{
@@ -51,16 +51,8 @@ export default {
 
     getIngredientNutritionalValues(index) {
       //TODO: REQUEST INGREDIENT NUTRITIONAL VALUES
-      this.nutritional_values = [
-        {nutrient: 'energy', value100: 128},
-        {nutrient: 'protein', value100: 13},
-        {nutrient: 'fat', value100: 9},
-        {nutrient: 'saturated_fat', value100: 9},
-        {nutrient: 'carbohydrates', value100: 1},
-        {nutrient: 'sugar', value100: index},
-        {nutrient: 'sale', value100: (index+1)+'000'}
-      ]
-      console.log(this.nutritional_values)
+      let food = require('@assets/examples/foods.js').find(f => f._id === this.value[index].foodID)
+      if(food) this.nutritional_values = food.nutritional_values
     }
   }
 }

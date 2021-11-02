@@ -29,3 +29,17 @@
   z-index: 1030;
   margin-bottom: 10px;
 }
+
+button.rounded-left {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+button.rounded-right {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+button.no-rounded {
+  border-radius: 0;
+}

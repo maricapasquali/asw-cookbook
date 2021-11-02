@@ -19,7 +19,7 @@
 <script>
 import api from '@api'
 import {Session} from "@services/session";
-import Utils from "@services/utils";
+import {isString} from "@services/utils";
 
 export default {
   name: "change-userid",
@@ -64,7 +64,7 @@ export default {
         console.error(err)
 
         this.error.message = api.users.HandlerErrors.changeUserID(err)
-        if(Utils.isString(this.error.message)){
+        if(isString(this.error.message)){
           this.error.show = true
         }else if(err.response.status === 401){
           this.$emit('onSessionExpired')

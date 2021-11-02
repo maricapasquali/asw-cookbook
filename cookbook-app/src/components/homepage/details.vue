@@ -46,7 +46,7 @@
               <div class="details-component">
                 <p>Valori nutrizionali</p>
                 <b-card>
-                  <nutrients-table v-model="doc.nutritional_values"/>
+                  <nutrients-table :ingredients="doc.ingredients"/>
                 </b-card>
               </div>
 
@@ -73,7 +73,7 @@
 </template>
 
 <script>
-import Utils from "@services/utils"
+import {isEmpty} from "@services/utils"
 export default {
   name: "recipe-details",
   props:{
@@ -90,7 +90,7 @@ export default {
       return this.doc.notes && this.doc.notes.length>0
     },
     isNotLoaded(){
-      return Utils.isEmpty(this.doc)
+      return isEmpty(this.doc)
     }
   },
   methods:{
@@ -109,20 +109,15 @@ export default {
       console.log("Dettagli!!")
       // TODO: REQUEST DETAILS RECIPES
       this.doc = {
-        nutritional_values: [
-          {nutrient: 'energy', value100: 128},
-          {nutrient: 'protein', value100: 13},
-          {nutrient: 'fat', value100: 9},
-          {nutrient: 'saturated_fat', value100: 9},
-          {nutrient: 'carbohydrates', value100: 1},
-          {nutrient: 'sugar', value100: 0},
-        ],
         process: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
         notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-
-        ingredients: [{foodId: '1', name: 'uova', quantity: 101}, {foodId: '22', name: 'farina 00', quantity: 300}, {foodId: '2', name: "olio d'oliva", quantity: 5}, {foodId: '3', name: 'latte intero', quantity: 200}]
+        ingredients: [
+            {foodID: 'food-2', name: 'uovo', quantity: 101},
+            {foodID: 'food-10', name: 'farina 00', quantity: 300},
+            {foodID: 'food-9', name: "olio extra vergine d\'oliva", quantity: 5},
+            {foodID: 'food-3', name: 'latte intero', quantity: 200}
+        ]
       }
-
     }
   }
 }

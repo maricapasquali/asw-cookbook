@@ -13,7 +13,7 @@
 
 <script>
 import api from "@api"
-import Utils from '@services/utils'
+import {isString} from '@services/utils'
 import {Session} from "@services/session";
 
 export default {
@@ -44,7 +44,7 @@ export default {
       //     }).catch(error =>{
       //       console.error(error)
       //       this.error.message = api.users.HandlerErrors.getNewAccessToken(error)
-      //       if(Utils.isString( this.error.message)) {
+      //       if(isString( this.error.message)) {
       //         this.error.show = true
       //       }
       //       else if(error.response.status === 401 || error.response.status === 403){

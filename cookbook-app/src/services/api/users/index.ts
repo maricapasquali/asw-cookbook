@@ -2,6 +2,9 @@ import * as methods from "../methods";
 import  {AxiosResponse} from "axios";
 
 import * as handlerErrors from "./handlerErrors"
+import * as variables from "../../../../../modules/hosting/variables"
+
+const serverImage = process.env.VUE_APP_IMAGES_ORIGIN || variables.images_origin
 
 export const HandlerErrors = handlerErrors
 
@@ -44,6 +47,12 @@ export function getUser(id: string, token?: string){
         urlParams:{
             id: id
         }
+    }).then(response =>{
+        if(response.data.information.img){
+            response.data.information.img = `${serverImage}/${response.data.information.img}`
+            console.log('image = ' + response.data.information.img)
+        }
+        return response
     })
 }
 
@@ -69,6 +78,12 @@ export function updateUserInfo(id: string, info: object,  token: string){
         urlParams:{
             id: id
         }
+    }).then(response =>{
+        if(response.data.info.img){
+            response.data.info.img = `${serverImage}/${response.data.info.img}`
+            console.log('image = ' + response.data.info.img)
+        }
+        return response
     })
 }
 

@@ -193,7 +193,7 @@
 <script>
 import api from '@api'
 import {EmailValidator} from '@app/modules/validator'
-import Utils from "@services/utils"
+import {clone, equals, isString} from "@services/utils"
 import {Session} from "@services/session"
 import {bus} from "@/main";
 
@@ -237,7 +237,7 @@ export default {
     console.log(`CREATE GUI INFO USER (${this.id})...`)
     api.users.getUser(this.id, this.accessToken).then((response)=>{
       this.user = response.data
-      this.changeableUser = Utils.clone(this.user)
+      this.changeableUser = clone(this.user)
       console.log(this.user)
       console.log(this.changeableUser)
     }).catch(err => {
@@ -262,7 +262,7 @@ export default {
       return this.user._id.length === 0;
     },
     isChangedSomething: function (){
-      return !Utils.equals(this.changeableUser.information, this.user.information) &&
+      return !equals(this.changeableUser.information, this.user.information) &&
               Object.values(this.validation).every(v => v === true)
     },
     country: function (){
@@ -324,13 +324,13 @@ export default {
 
     cancel: function (){
       this.changeMode = false;
-      this.changeableUser = Utils.clone(this.user)
+      this.changeableUser = clone(this.user)
     },
 
     save: function (){
       this.processing = true
 
-      if(!Utils.equals(this.changeableUser.information, this.user.information)) {
+      if(!equals(this.changeableUser.information, this.user.information)) {
         let formData = new FormData();
         Object.entries(this.changeableUser.information).filter(([k, v]) => this.user.information[k] !== v).forEach(([k, v]) => formData.append(k, v))
         for(let [k, v] of formData.entries()) console.warn(k, " = ", v)
@@ -341,7 +341,7 @@ export default {
           this.user.information = response.data.info
         }).catch(err => {
           this.error.message = api.users.HandlerErrors.updateUser(err)
-          if(Utils.isString(this.error.message)){
+          if(isString(this.error.message)){
             this.error.show = true
           }else if(err.response.status === 401){
             //this.$router.replace({ name: 'login' })
@@ -349,7 +349,7 @@ export default {
           }
         }).then(() => {
           this.processing = false
-          this.changeableUser.information = Utils.clone(this.user.information)
+          this.changeableUser.information = clone(this.user.information)
         })
       }
     },

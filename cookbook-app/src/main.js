@@ -11,6 +11,20 @@ Vue.use(BootstrapVue)
 // Optionally install the BootstrapVue icon components plugin
 Vue.use(IconsPlugin)
 
+// Import Fort Awesome
+import { library } from '@fortawesome/fontawesome-svg-core'
+import {
+    faBarcode,
+    faMinus,
+    faPlusCircle,
+    faTimesCircle
+
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+library.add(faBarcode, faMinus, faPlusCircle, faTimesCircle)
+Vue.component('font-awesome-icon', FontAwesomeIcon)
+Vue.config.productionTip = false
+
 import components from "@components"
 Object.values(components).forEach(comp => Vue.component(comp.name, comp))
 

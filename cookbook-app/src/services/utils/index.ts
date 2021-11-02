@@ -1,17 +1,19 @@
-export default {
-    clone: function (from: object){
-        return JSON.parse(JSON.stringify(from))
-    },
-    equals: function (o: object, o1: object){
-        return JSON.stringify(o) === JSON.stringify(o1)
-    },
-    isString: function (v: any){
-        return typeof v === 'string'
-    },
-    isCallable: function (v: any){
-        return typeof v === 'function'
-    },
-    isEmpty: function (v: object){
-        return typeof v === 'object' && JSON.stringify(v) === "{}"
-    },
+export function clone(from: object){
+    return JSON.parse(JSON.stringify(from))
+}
+
+export function equals(o: object, o1: object){
+    return JSON.stringify(o) === JSON.stringify(o1)
+}
+
+export function isString(v: any){
+    return typeof v === 'string'
+}
+
+export function isCallable(v: any){
+    return typeof v === 'function'
+}
+
+export function isEmpty(v: object){
+    return typeof v === 'object' && JSON.stringify(v) === "{}"
 }

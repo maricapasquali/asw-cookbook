@@ -1,5 +1,5 @@
 <template>
-    <div v-if="authorized">
+    <div v-if="authorized === true">
       <b-card no-body>
         <b-tabs content-class="mt-1" ref="tabs">
           <!-- BOTH -->
@@ -7,7 +7,9 @@
             <user-information :id="$route.params.id" :access-token="accessToken" @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- SIGNED -->
-          <b-tab v-if="isSignedUser" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy><p>Ricette</p></b-tab>
+          <b-tab v-if="isSignedUser" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy>
+            <recipe-sections :id="$route.params.id" :access-token="accessToken" @onSessionExpired="sessionTimeout=true"/>
+          </b-tab>
           <!-- BOTH -->
           <b-tab title="Alimenti" @click="getFoods" :active="isActive('foods')" lazy><p>Alimenti</p></b-tab>
           <!-- ADMIN -->
@@ -32,17 +34,16 @@
         </template>
       </modal-alert>
     </div>
-    <div v-else><not-authorized-area/></div>
+    <div v-else-if="authorized === false"><not-authorized-area/></div>
 </template>
 
 <script>
-import Utils from '@services/utils'
+import {isString} from '@services/utils'
 import api from "@api"
 import {Session} from "@services/session";
 import {bus} from "@/main"
 export default {
   name: "PersonalArea",
-  components: {Navigator},
   props:{
     active: {
       type: String,
@@ -52,7 +53,7 @@ export default {
   },
   data: function (){
     return {
-      authorized: false,
+      authorized: null,
       sessionTimeout: false,
       error:{
         show: false,
@@ -63,7 +64,7 @@ export default {
     }
   },
 
-  created() {
+  created(){
     console.log(`CHECK IF YOU IS AUTHORIZED ...`)
     this.accessToken = Session.accessToken()
     if(this.accessToken){
@@ -77,7 +78,7 @@ export default {
             this.authorized = false
             this.error.message = api.users.HandlerErrors.isAuthorized(error);
             console.log(this.error.message)
-            if(Utils.isString(this.error.message)){
+            if(isString(this.error.message)){
               this.error.show = true
             }
             else if(error.response.status === 401){

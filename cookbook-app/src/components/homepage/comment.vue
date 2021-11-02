@@ -25,6 +25,7 @@
           <b-container fluid class="px-0 py-3">
             <span class="timestamp">{{ timeStampComment, language | dateFormat }}</span>
             <like v-model="likesComment" @like="like" @unlike="unlike"/>
+<!--        TODO: convert or chnage like to Number -> Array -->
           </b-container>
           <b-button-group class="actions">
             <b-button variant="link" @click="openModalReporting">Segnala</b-button>

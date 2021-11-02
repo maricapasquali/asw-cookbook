@@ -35,6 +35,8 @@
 
 <script>
 
+import {ReaderImage} from "@services/filesystem";
+
 export default {
   name: "image-preview-uploader",
   props: {
@@ -70,9 +72,6 @@ export default {
     this.readFile(this.value)
   },
   methods:{
-    isImageFile: function (file){
-      return /image\/.*/.test(file.type)
-    },
     isDefaultImage: function (){
       return this.default === this.profile_img
     },
@@ -102,17 +101,13 @@ export default {
      this.readFile(e.target.files[0], true)
     },
     readFile: function(files, emit = false){
-      if (files && this.isImageFile(files)) {
+      if(ReaderImage.isValid(files)){
         if(emit) this.$emit('selectImage', files)
-        const fileReader = new FileReader();
-        fileReader.readAsDataURL(files);
-        fileReader.addEventListener("load", this.fileReaderLoad);
+        ReaderImage.read(files,  function (e){
+          console.log('Load image preview...')
+          this.profile_img = e.target.result
+        }.bind(this), function (err){ console.error(err) })
       }
-    },
-
-    fileReaderLoad: function (e){
-      console.log('Load image preview...')
-      this.profile_img = e.target.result
     },
     removeImg: function (){
       //TODO: REMOVABLE IMAGE

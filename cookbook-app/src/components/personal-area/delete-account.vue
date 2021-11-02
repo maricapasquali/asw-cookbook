@@ -18,7 +18,7 @@
 <script>
 import api from '@api'
 import {Session} from "@services/session";
-import Utils from "@services/utils";
+import {isString} from "@services/utils";
 
 export default {
   name: "delete-account",
@@ -60,7 +60,7 @@ export default {
           })
           .catch(err => {
             this.error.message = api.users.HandlerErrors.deleteAccount(err)
-            if(Utils.isString(this.error.message)){
+            if(isString(this.error.message)){
               this.error.show = true
             }else if(err.response.status === 401){
               this.$emit('onSessionExpired')

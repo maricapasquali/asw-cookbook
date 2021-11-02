@@ -110,10 +110,9 @@
 
                   <select-with-image
                       id="input-6"
-                      :value="user.sex"
+                      v-model="user.sex"
                       placeholder="Select gender"
                       type="text"
-                      @select="user.sex=$event.value"
                       :options="optionsGender">
                   </select-with-image>
                 </b-form-group>
@@ -125,12 +124,10 @@
                     class="pr-md-2"
                 >
                   <select-with-image
-
                       id="input-7"
-                      :value="user.country"
+                      v-model="user.country"
                       placeholder="Select country"
                       type="text"
-                      @select="user.country=$event.value"
                       :options="optionsCountry">
                   </select-with-image>
                 </b-form-group>

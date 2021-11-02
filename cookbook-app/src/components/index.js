@@ -19,6 +19,10 @@ import UserInformation from "./personal-area/user-information"
 import DeleteAccount from "./personal-area/delete-account"
 import ChangeUserID from "./personal-area/change-userid"
 import ChangePassword from "./personal-area/change-password"
+import RecipesSections from "./personal-area/recipes/recipe-sections"
+import RecipeForm from "./personal-area/recipes/recipe-form"
+import FoodForm from "./personal-area/foods/food-form"
+import FoodFinder from "./personal-area/foods/food-finder"
 
 
 import Comments from "./homepage/comments"
@@ -49,6 +53,10 @@ export default {
     DeleteAccount,
     ChangeUserID,
     ChangePassword,
+    RecipesSections,
+    RecipeForm,
+    FoodForm,
+    FoodFinder,
 
     Comments,
     Comment,
