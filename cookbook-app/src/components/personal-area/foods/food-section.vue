@@ -1,0 +1,576 @@
+<template>
+  <b-container :fluid="isSignedUser">
+    <b-row cols="1" cols-sm="1" cols-md="1" :cols-lg="isSignedUser? 2: 1" class="mx-auto">
+
+      <!-- Foods -->
+      <b-col class="my-5">
+        <b-row class="align" align-h="between" align-v="center">
+          <b-col class="px-0"><h2 id="foods">Alimenti</h2></b-col>
+          <b-col align="end" class="mb-2">
+            <b-button-group>
+              <b-button id="search-btn" class="px-3" @click="toggleSearchForm" variant="info">
+                <font-awesome-icon size="2x" :icon="search.show? 'search-minus':'search-plus'" class="icon"/>
+              </b-button>
+              <b-tooltip target="search-btn">{{search.show ? 'Chiudi ricerca' : 'Ricerca' }}</b-tooltip>
+
+              <b-button id="food-form-btn" @click="toggleFoodForm" :variant="showFormFood? 'danger': 'primary'">
+                <font-awesome-icon size="2x" :icon="showFormFood ? 'times-circle': 'plus-circle'" class="icon"/>
+              </b-button>
+              <b-tooltip target="food-form-btn"> {{showFormFood ? 'Chiudi' : 'Aggiungi alimento'}}</b-tooltip>
+            </b-button-group>
+          </b-col>
+        </b-row>
+
+        <b-toast id="add-food-success" variant="success" toaster="b-toaster-top-center">
+          Inserimento dell' alimento avvenuto correttamente.
+        </b-toast>
+        <b-toast id="change-food-success" variant="success" toaster="b-toaster-top-center">
+          Modifica dell' alimento avvenuto correttamente.
+        </b-toast>
+
+        <b-card class="align mb-3" v-if="showFormFood">
+          <b-toast id="duplicate-food" variant="warning" class="mx-auto" static no-auto-hide>
+            Alimento già presente.
+          </b-toast>
+          <food-form @onSave="onSaveFood" @onDuplicateGenerate="onDuplicateGenerateFood"/>
+        </b-card>
+
+        <!-- View foods table & research -->
+        <div class="align">
+          <b-skeleton-table v-if="loadingFood"
+                            :rows="pagination.for_page"
+                            :columns="fieldsFoodsTable.length"
+                            :table-props="{ bordered: true, striped: true }" />
+
+          <div v-show="!loadingFood" >
+            <!-- Search food for aliment name or/and barcode -->
+            <b-form v-if="search.show">
+              <fieldset class="bordered">
+                <legend>Ricerca</legend>
+                <b-row cols="1" cols-sm="1" cols-md="2">
+                  <b-col class="pl-0">
+                    <b-form-group class="align mr-2" label-for="find-food-with-start">
+                      <b-input-group >
+                        <b-form-input id="find-food-with-start" v-model.trim="search.value" placeholder="Alimento" type="search"/>
+                      </b-input-group>
+                    </b-form-group>
+                  </b-col>
+                  <b-col class="pl-0">
+                    <b-form-group class="align mr-2" label-for="find-food-with-barcode">
+                      <b-input-group>
+                        <b-form-input id="find-food-with-barcode" v-model.trim.number="search.barcode.value" placeholder="Codice a barre" type="search"/>
+                        <template #append>
+                          <barcode-scanner no-manual icon-class="mt-1 ml-2" icon-size="2x" @onFound="search.barcode.value = $event" @onError="search.barcode.value = ''" show/>
+                        </template>
+                      </b-input-group>
+                    </b-form-group>
+                  </b-col>
+                </b-row>
+                <b-row >
+                  <b-col align="start">
+                    <b-button variant="secondary" @click="onResetSearch"> Reset </b-button>
+                  </b-col>
+                  <b-col align="end" v-if="search.value || search.barcode.value">
+                    <b-button variant="primary" @click="onSearchFood"> Ricerca </b-button>
+                  </b-col>
+                </b-row>
+              </fieldset>
+            </b-form>
+
+            <!-- Table aliment  -->
+            <b-table id="food-table" fixed responsive
+                     v-show="showFoodTable"
+                     :tbody-tr-class="rowClass"
+                     ref="foodTable"
+                     :current-page="currentPage"
+                     :per-page="perPageItemsTable"
+                     :busy.sync="busyTable"
+                     :fields="fieldsFoodsTable"
+                     :items="getItemsTable"
+                     @row-clicked="item => $set(item, '_showDetails', !item._showDetails)" show-empty>
+
+              <template #table-busy>
+                <div  class="text-center text-primary my-2">
+                  <b-spinner class="align-middle"></b-spinner>
+                  <strong class="ml-2">Caricamento...</strong>
+                </div>
+              </template>
+
+              <template #empty>
+                <div class="text-center text-primary my-2">
+                  <strong class="ml-2">Non ci sono alimenti...</strong>
+                </div>
+              </template>
+
+              <template #cell(owner)="row">
+                <span v-if="isItMine(row.item.details.owner.user)">{{ row.value }}</span>
+                <router-link v-else :to="{name: 'single-user', params:{id: row.item.details.owner.user._id}}">{{ row.value  }}</router-link>
+              </template>
+
+              <template #row-details="row">
+
+                <b-modal v-model="modifyFood[row.index].edit" title="Modifica ingrediente"  hide-footer>
+                  <food-form v-model="modifyFood[row.index].food" @onSave="onChangeFood($event, row)" mode="update"/>
+                </b-modal>
+
+                <b-row class="mb-3 mx-1" align-v="center">
+                  <b-col class="px-0" v-if="row.item.details.barcode">
+                    <b-row cols="1" align-h="start">
+                      <b-col align="start"> <strong>Codice a barre</strong> </b-col>
+                      <b-col align="start"> {{row.item.details.barcode}}  </b-col>
+                    </b-row>
+                  </b-col>
+                  <b-col v-if="isItMine(row.item.details.owner.user) || isAdmin" align="end" class="px-0">
+                    <b-button-group >
+                      <b-button :id="'change-food-'+row.index" v-if="row.item.actions.includes('change')" variant="primary" @click="openChangeModeFood(row)"> <b-icon-pencil-square /></b-button>
+                      <b-tooltip :target="'change-food-'+row.index" v-if="row.item.actions.includes('change')"> Modifica <i>{{row.item.aliment}}</i></b-tooltip>
+                      <!-- use modal to remove food -->
+                      <b-button :id="'remove-food-'+row.index" v-if="row.item.actions.includes('remove')" variant="danger" @click="removeFood(row)"> <b-icon-trash-fill /></b-button>
+                      <b-tooltip :target="'remove-food-'+row.index" v-if="row.item.actions.includes('remove')"> Cancella <i>{{row.item.aliment}}</i></b-tooltip>
+                    </b-button-group>
+                  </b-col>
+                </b-row>
+                <nutrients-table v-model="row.item.details.nutritional_values"/>
+              </template>
+
+            </b-table>
+            <b-pagination v-model="pagination.currentPage"
+                          :total-rows="pagination.totals"
+                          :per-page="pagination.for_page"
+                          align="fill"
+                          aria-controls="food-table" v-show="showFoodTablePagination" />
+          </div>
+        </div>
+      </b-col>
+
+      <!-- Shopping List -->
+      <b-col id="shopping-list" class="my-5" v-if="isSignedUser">
+        <h2 class="align">Lista della spesa</h2>
+        <food-finder @found="addInShoppingList" id="finder-food" ref="foodFinder" />
+        <b-skeleton-wrapper :loading="loadingSL">
+          <template #loading>
+            <b-list-group class="shopping-list align">
+              <b-list-group-item v-for="ind in skeleton" :key="ind" >
+                <b-row align-v="center">
+                  <b-col cols="9" sm="9" md="8" lg="9">
+                    <b-skeleton width="40%"></b-skeleton>
+                  </b-col>
+                  <b-col cols="3" sm="3" md="4" lg="3">
+                    <b-skeleton type="button"/>
+                  </b-col>
+                </b-row>
+              </b-list-group-item>
+            </b-list-group>
+          </template>
+
+          <!-- SHOPPING LIST -->
+          <b-list-group :class="classesShoppingList" >
+            <b-list-group-item v-for="(food, index) in shopping_list" :key="index" :id="food.foodID" class="py-0" variant="warning">
+              <b-row align-v="center" align-h="between">
+                <b-col @click="patchShoppingList(index, !food.checked)" class="py-3">
+                  <div :class="{'food-checked': food.checked}"></div>
+                  <span>{{food.name}}</span>
+                </b-col>
+                <b-col cols="3" cols-sm="1" align="end">
+                  <b-button :id="'remove-food-' + index" variant="danger" @click="removeFromShoppingList(index)"><b-icon-trash-fill/></b-button>
+                  <b-tooltip :target="'remove-food-' + index">Rimuovi alimento <br/> dalla lista della spesa</b-tooltip>
+                </b-col>
+              </b-row>
+            </b-list-group-item>
+          </b-list-group>
+
+        </b-skeleton-wrapper>
+      </b-col>
+
+    </b-row>
+  </b-container>
+</template>
+
+<script>
+import {Session} from "@services/session";
+import {clone, dateFormat} from '@services/utils'
+export default {
+  name: "food-section",
+  props: {
+    id: String,
+    accessToken: String
+  },
+  data(){
+    return {
+      skeleton: 6,
+      widthWindow: window.innerWidth,
+
+      /* Shopping list */
+      loadingSL: true,
+      shopping_list: [],
+      foodSelected: '',
+
+      /*Foods */
+      loadingFood: true,
+      showFormFood: false,
+
+      modifyFood: [],
+      //foods: [],
+
+      pagination: {
+        currentPage: 1,
+        for_page: 4, //TODO: CHANGE IN 10
+        totals: 0,
+        isBusy: false
+      },
+
+      fieldsFoodsTable: [
+        {
+          key: 'aliment',
+          label: 'Alimento'
+        },
+        {
+          key: 'owner',
+          label: 'Creatore',
+          formatter: (value, key, item) => value === Session.userInfo().userID ? 'io': value
+        },
+        {
+          key: 'creationDate',
+          label: 'Data di creazione',
+          formatter: (value, key, item) => dateFormat(value)
+        }
+      ],
+
+      /*food search*/
+      search: {
+        show: false,
+        value: '',
+        items: [],
+        barcode: {
+          show: false,
+          value: ''
+        },
+        isBusy: false,
+        clickedSearch: false
+      }
+
+    }
+  },
+
+  computed: {
+    classesShoppingList(){
+      return {'shopping-list':true, 'align':true, 'scroll':  this.widthWindow < 768}
+    },
+
+    isSignedUser(){
+      let userSession = Session.userInfo()
+      return userSession.isSigned && !userSession.isAdmin
+    },
+
+    isAdmin(){
+      let userSession = Session.userInfo()
+      return userSession.isAdmin
+    },
+
+    /* Table Food */
+    showFoodTable(){
+      return !this.search.show || (this.search.show && this.search.clickedSearch)
+    },
+    showFoodTablePagination(){
+      return !this.search.show //&& this.foods.length > 0
+    },
+    getItemsTable() {
+      return this.search.show ? this.search.items : this.getFoods;
+    },
+    currentPage(){
+      return this.search.show ? 1 : this.pagination.currentPage;
+    },
+    perPageItemsTable() {
+      return this.search.show ? 0 : this.pagination.for_page;
+    },
+    busyTable: {
+      get(){
+        return this.search.show ? this.search.isBusy : this.pagination.isBusy;
+      },
+      set(val){
+        if(this.search.show) this.search.isBusy = val
+        else this.pagination.isBusy = val
+      }
+    },
+  },
+  filters: {
+    ownerName(value){
+      return value === Session.userInfo().userID ? 'io': value
+    },
+  },
+  methods: {
+    rowClass(item, type) {
+      if (!item || type !== 'row') return ''
+      if (item._showDetails) return 'table-primary'
+    },
+    onResize(){
+      this.widthWindow = window.innerWidth
+    },
+
+    isItMine(owner){
+      let userSession = Session.userInfo()
+      return userSession._id === owner._id && userSession.userID === owner.userID
+    },
+
+    // Shopping List
+    addInShoppingList(food){
+
+      this.foodSelected = food._id
+      let index = this.shopping_list.findIndex(f => f.foodID === this.foodSelected)
+      if(index === -1) {
+
+        //TODO: REQUEST add element of SHOPPING LIST
+        // this.shopping_list.push({foodID: food._id, name: food.name, checked: false})
+        this.shopping_list.unshift({foodID: food._id, name: food.name, checked: false})
+
+        console.log('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
+      }
+      else if(this.shopping_list[index].checked) {
+        this.patchShoppingList(index, false)
+      }
+    },
+    patchShoppingList(index, checked){
+      //TODO: REQUEST patch element of SHOPPING LIST
+      this.shopping_list[index].checked = checked
+      console.log(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(this.shopping_list[index]))
+    },
+    removeFromShoppingList(index){
+      //TODO: REQUEST remove element of SHOPPING LIST
+      console.log('Remove from shopping list: ', JSON.stringify(this.shopping_list[index]))
+      this.shopping_list.splice(index, 1)
+    },
+    getShoppingList(){
+      //TODO: REQUEST SHOPPING LIST OF USER 'id'
+      this.shopping_list = require('@assets/examples/shopping-list.js')
+      this.loadingSL = false
+    },
+
+    // Foods
+    toggleFoodForm(){
+      this.showFormFood = !this.showFormFood
+    },
+
+    remapping(food) {
+      let operation = [];
+      if( this.isItMine(food.owner.user) || this.isAdmin ) operation.push('change')
+      // if( this.isAdmin ) operation.push('remove')
+      return {
+        aliment: food.name,
+        creationDate: food.owner.timestamp,
+        owner: food.owner.user.userID,
+        actions: operation,
+        details: food,
+      }
+    },
+
+    getFoodOnPage(page, forPage) {
+      return new Promise((resolve, reject) =>{
+        setTimeout(function (_page, _forPage){
+
+          let _foods = require('@assets/examples/foods.js')
+          let start = (_page - 1) * _forPage, end = start + _forPage
+          // console.debug('all Foods = ', _foods, ', start = ', start, ', end = ', end)
+          resolve({items: _foods.slice( start, end ), total: _foods.length})
+
+        }.bind(this), 500, page, forPage)
+      })
+    },
+    getFoods(pageInfo){
+      console.debug('PaginationInfo = ', pageInfo);
+      let {perPage, currentPage} = pageInfo || {}
+      let forPage = perPage || this.pagination.for_page
+      let page = currentPage || this.pagination.currentPage
+      this.pagination.isBusy = true
+      return this.getFoodOnPage(page, forPage)
+                 .then((data) =>{
+                    console.debug('Foods = ',data.items, ', total = ', data.total)
+
+                    let items = data.items.map(f => this.remapping(f))
+                    this.pagination.totals = data.total
+
+                    // this.foods = items
+
+                    this.modifyFood = items.map(f =>
+                        this.isItMine(f.details.owner.user) || this.isAdmin ?
+                            ({edit: false, food: f.details}) :
+                            ({edit: null, food: null})
+                    )
+
+                    return items
+                 })
+                 .catch(err => {
+                    console.error(err)
+                    return []
+                 })
+                 .finally(() =>{
+                    this.loadingFood = false
+                    this.pagination.isBusy = false
+                 })
+    },
+
+    onDuplicateGenerateFood(){
+      //toast warming
+      this.$bvToast.show('duplicate-food')
+    },
+    onSaveFood(food){
+      // let index = ((this.pagination.currentPage - 1) * this.pagination.for_page) -1
+      // -> get food on index [= index ] of all foods if currentPage > 1
+      //TODO: REQUEST ADD FOOD 'food'
+      setTimeout(function (){
+        console.log('Add food = ', food, ', current page = ', this.pagination.currentPage)
+        // if(this.foods.length >= this.pagination.currentPage){
+        //   console.log('delete last food')
+        //   this.foods.splice(this.foods.length - 1, 1)
+        // }
+        // if(this.pagination.currentPage == 1){
+        //   this.foods.unshift(this.remapping(food))
+        // }else{
+        //   let index = ((this.pagination.currentPage - 1) * this.pagination.for_page) -1
+        //   //TODO: REQUEST food on index [= index ] of all foods
+        //   let _foods = require('@assets/examples/foods.js')
+        //   this.foods.unshift(this.remapping(_foods[index]))
+        // }
+        // console.log('foods now = ', JSON.stringify(this.foods))
+        this.showFormFood = false
+        this.$bvToast.show('add-food-success')
+
+        this.$refs.foodTable.refresh()// after request
+
+      }.bind(this), 300)
+    },
+    removeFood(){
+      throw new Error('Remove food not implemented!')
+    },
+    openChangeModeFood(row){
+      let old = this.modifyFood[row.index]
+      old.edit = true
+      old.food = clone(row.item.details)
+      console.log(this.$bvModal)
+    },
+    onChangeFood(food, row){
+      this.modifyFood[row.index].edit = false
+      //TODO: REQUEST patch FOOD
+
+      let oldF = row.item
+      oldF.aliment = food.name
+      oldF.details.name = food.name
+      oldF.details.barcode = food.barcode
+      oldF.details.nutritional_values = food.nutritional_values
+      this.$bvToast.show('change-food-success')
+    },
+
+    /*Search food */
+    toggleSearchForm() {
+      this.search = {
+        show: !this.search.show,
+        value: '',
+        items: [],
+        barcode: {
+          show: false,
+          value: ''
+        },
+        isBusy: false,
+        clickedSearch: false
+      }
+    },
+    onResetSearch(){
+      this.search.value = ''
+      this.search.barcode.value = ''
+      this.search.clickedSearch = false
+    },
+    onSearchFood(){
+      //TODO: REQUEST SEARCH FOOD with 'alimentStartWith' and/or 'barcodeStartWith'
+      this.search.isBusy = true
+      this.search.clickedSearch = true
+      setTimeout(function (){
+        let foods = require('@assets/examples/foods.js')
+        let alimentStartWith = this.search.value
+        let barcodeStartWith = this.search.barcode.value
+
+        let filterForName = (food, _alimentStartWith) => _alimentStartWith && food.name.startsWith(_alimentStartWith)
+        let filterForBarcode = (food, _barcodeStartWith) => food.barcode && _barcodeStartWith && food.barcode.startsWith(_barcodeStartWith)
+
+        let _items = []
+
+        if(!alimentStartWith && barcodeStartWith){
+          console.debug(`Search: Only Barcode (${barcodeStartWith}) ...`)
+          _items = foods.filter(f => filterForBarcode(f, barcodeStartWith))
+        }
+        else if(alimentStartWith && !barcodeStartWith){
+          console.debug(`Search: Only Aliment Name (${alimentStartWith})...`)
+          _items = foods.filter(f => filterForName(f, alimentStartWith))
+        }
+        else if(alimentStartWith && barcodeStartWith){
+          console.debug(`Search: Aliment (${alimentStartWith}) & Barcode (${barcodeStartWith})...`)
+          _items = foods.filter(f => filterForName(f, alimentStartWith) && filterForBarcode(f, barcodeStartWith))
+        }
+
+        this.search.items = _items.map(food => this.remapping(food))
+        console.debug('Search -> items = ', this.search.items)
+        this.search.isBusy = false
+
+      }.bind(this), 500)
+    },
+  },
+
+  created() {
+    window.addEventListener('resize', this.onResize.bind(this))
+
+    setTimeout(this.getShoppingList.bind(this), 1000)
+  },
+
+  beforeDestroy() {
+    window.removeEventListener('resize', this.onResize.bind(this))
+  },
+
+}
+</script>
+
+<style lang="scss" scoped>
+
+.scroll{
+  overflow-y: auto;
+  max-height: 350px;
+}
+.align{
+  margin-left: 17px;
+}
+
+.shopping-list{
+  & > div{
+    cursor: pointer;
+  }
+  .food-checked {
+    width: 100%;
+    top: 29px;
+    border-bottom: 2px solid black;
+    position: absolute;
+
+  }
+}
+
+@media (max-width: 992px){
+  .shopping-list{
+    .food-checked {
+      width: 110%;
+    }
+  }
+}
+
+@media (max-width: 576px){
+  .shopping-list{
+    .food-checked {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 400px){
+  .shopping-list{
+    .food-checked {
+      width: 90%;
+    }
+  }
+}
+
+</style>

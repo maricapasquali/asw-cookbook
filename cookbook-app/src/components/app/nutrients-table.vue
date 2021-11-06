@@ -3,8 +3,8 @@
 </template>
 
 <script>
-import Vue from 'vue'
 import FoodFinder from '@components/personal-area/foods/food-finder'
+import ComponentFactory from '@services/component.factory'
 
 export default {
   name: "nutrients-table",
@@ -131,8 +131,7 @@ export default {
     }
   },
   created() {
-    const FoodFinderComponentClass = Vue.extend(FoodFinder)
-    this.foodFinder = new FoodFinderComponentClass()
+    this.foodFinder = ComponentFactory(FoodFinder)
     this.table = this.convertObjToArray(this.value)
     if(this.ingredients.length > 0) this.makeTable(this.ingredients)
   }

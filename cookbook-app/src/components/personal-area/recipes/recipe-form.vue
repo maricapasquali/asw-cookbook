@@ -56,7 +56,7 @@
         <!-- INGREDIENTS -->
         <fieldset class="fieldset-ingredients">
           <legend>Ingredienti</legend>
-          <food-finder @found="addIngredient" ref="foodFinder" />
+          <food-finder @found="addIngredient" ref="foodFinder" barcode-search food-adder/>
           <b-list-group >
             <b-list-group-item v-for="(ingredient, ind) in recipe.ingredients" :key="ingredient._id">
               <b-row >
@@ -299,11 +299,12 @@ export default {
     },
     addIngredient(food){
       console.debug('add ingredient = ', food)
-      let foundFood = this.recipe.ingredients.find(f => f.foodID === food._id)
+      let _food = food[0]
+      let foundFood =  this.recipe.ingredients.find(f => f.foodID === _food._id)
       if(!foundFood)
         this.recipe.ingredients.push({
-          foodID: food._id,
-          name: food.name,
+          foodID: _food._id,
+          name: _food.name,
           quantity: 0,
         })
     },

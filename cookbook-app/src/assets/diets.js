@@ -1,5 +1,5 @@
 module.exports = [
-    {value: '', text: ''},
+    {value: '', text: '-- None --'},
     {value: 'light', text: 'Light'},
     {value: 'gluten free', text: 'Senza glutine'},
     {value: 'lactose free', text: 'Senza lattosio'},

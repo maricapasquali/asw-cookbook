@@ -18,6 +18,6 @@ export default {
 
 footer{
   background-color:  $footer-color!important;
-  z-index: 1;
+  z-index: 3;
 }
 </style>

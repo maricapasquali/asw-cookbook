@@ -17,11 +17,17 @@ import {
     faBarcode,
     faMinus,
     faPlusCircle,
-    faTimesCircle
+    faTimesCircle,
+    faSearch,
+    faSearchMinus,
+    faSearchPlus,
+    faTimes,
+    faBars
 
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-library.add(faBarcode, faMinus, faPlusCircle, faTimesCircle)
+library.add(faBarcode, faMinus, faPlusCircle, faTimesCircle, faSearch,
+            faSearchMinus, faSearchPlus,faTimes, faBars)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.config.productionTip = false
 

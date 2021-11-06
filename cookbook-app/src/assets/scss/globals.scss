@@ -43,3 +43,14 @@ button.rounded-right {
 button.no-rounded {
   border-radius: 0;
 }
+
+fieldset.bordered {
+  border: 1px solid lightgray;
+  border-radius: 10px;
+  padding: 10px;
+  & > legend {
+    width: fit-content;
+    padding-right: 5px;
+    padding-left: 5px;
+  }
+}

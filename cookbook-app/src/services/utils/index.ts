@@ -17,3 +17,7 @@ export function isCallable(v: any){
 export function isEmpty(v: object){
     return typeof v === 'object' && JSON.stringify(v) === "{}"
 }
+
+export function dateFormat(timestamp: number, lang: string = 'it'){
+    return new Date(timestamp).toLocaleString([lang], {year: 'numeric', day: '2-digit',month:'2-digit', hour: '2-digit', minute: '2-digit'})
+}

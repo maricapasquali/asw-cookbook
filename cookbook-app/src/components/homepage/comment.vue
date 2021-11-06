@@ -43,6 +43,8 @@
 </template>
 <script>
 import {Session} from "@services/session";
+import {dateFormat} from "@services/utils";
+
 export default {
   name: "comment",
   props: {
@@ -70,9 +72,7 @@ export default {
     name(user){
       return user ? user.userID : "Anonimo"
     },
-    dateFormat: function (timestamp, lang){
-      return new Date(timestamp).toLocaleString([lang], {year: '2-digit', day:'2-digit',month:'2-digit', hour: '2-digit', minute: '2-digit'})
-    },
+    dateFormat: dateFormat
   },
   computed:{
     userComment(){

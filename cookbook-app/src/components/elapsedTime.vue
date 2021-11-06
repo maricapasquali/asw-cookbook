@@ -3,7 +3,7 @@
 </template>
 
 <script>
-
+import {dateFormat} from "@services/utils";
 export default {
   name: "elapsed-time",
   props:{
@@ -55,7 +55,7 @@ export default {
       let day = Math.floor(hour / 24)
       if (day >= 1 && day < 7) return this.elapsedTimeStamp = day + SEPARATOR + DAYS
 
-      this.elapsedTimeStamp = new Date(this.value).toLocaleDateString()
+      this.elapsedTimeStamp = dateFormat(this.value)
     }
   },
   mounted() {

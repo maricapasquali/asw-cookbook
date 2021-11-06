@@ -4,7 +4,12 @@
     <b-navbar ref="navigator" toggleable="lg" type="dark" class="navigator-bar">
       <b-navbar-brand href="#">{{ app_name }}</b-navbar-brand>
 
-      <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+      <b-navbar-toggle target="nav-collapse">
+        <template #default="{ expanded }">
+          <font-awesome-icon v-if="expanded" icon="times" />
+          <font-awesome-icon v-else icon="bars" />
+        </template>
+      </b-navbar-toggle>
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
@@ -24,8 +29,7 @@
             <b-dropdown-item :active="isAccountActive" :to="{name: 'p-user-account', params: {id: userInfo._id}}">Account</b-dropdown-item>
 
             <b-dropdown-item v-if="userInfo.isSigned" :active="isRecipesActive" :to="{name: 'p-user-recipes', params: {id: userInfo._id}, query: {tab: 'shared'}}">Ricette</b-dropdown-item>
-            <b-dropdown-item v-if="userInfo.isSigned" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userInfo._id}}">Lista della spesa</b-dropdown-item>
-
+            <b-dropdown-item v-if="userInfo.isSigned" :active="isFoodsActive" :to="{name: 'p-user-foods', hash: '#shopping-list', params: {id: userInfo._id}}">Lista della spesa</b-dropdown-item>
             <b-dropdown-item v-if="userInfo.isAdmin" :active="isReportsActive" :to="{name: 'p-user-reports', params: {id: userInfo._id}}">Segnalazioni</b-dropdown-item>
             <b-dropdown-item v-if="userInfo.isAdmin" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userInfo._id}}">Alimenti</b-dropdown-item>
             <b-dropdown-item v-if="userInfo.isAdmin" :active="isUsersActive" :to="{name: 'p-user-users', params: {id: userInfo._id}}">Utenti</b-dropdown-item>

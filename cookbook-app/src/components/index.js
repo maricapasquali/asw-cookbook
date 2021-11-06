@@ -23,6 +23,8 @@ import RecipesSections from "./personal-area/recipes/recipe-sections"
 import RecipeForm from "./personal-area/recipes/recipe-form"
 import FoodForm from "./personal-area/foods/food-form"
 import FoodFinder from "./personal-area/foods/food-finder"
+import FoodSection from "./personal-area/foods/food-section"
+import BarcodeScanner from "./personal-area/foods/barcode-scanner"
 
 
 import Comments from "./homepage/comments"
@@ -57,6 +59,8 @@ export default {
     RecipeForm,
     FoodForm,
     FoodFinder,
+    FoodSection,
+    BarcodeScanner,
 
     Comments,
     Comment,

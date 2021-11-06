@@ -175,6 +175,7 @@
 </template>
 
 <script>
+import {dateFormat} from "@services/utils";
 
 export default {
   name: "recipe-sections",
@@ -247,9 +248,7 @@ export default {
     }
   },
   filters: {
-    dateFormat(timestamp){
-      return new Date(timestamp).toLocaleString([], {year: '2-digit', day:'2-digit',month:'2-digit', hour: '2-digit', minute: '2-digit'})
-    }
+    dateFormat: dateFormat
   },
   methods:{
     tutorialNotFound(e){
