@@ -9,8 +9,7 @@
 
             <b-form-group>
               <label for="input-country"><b>Paese</b></label>
-              <select-with-image id="input-country" placeholder="Seleziona paese ..." :value="changeableUser.information.country"
-                                 @select="selectCountry($event)" :options="countries"></select-with-image>
+              <select-with-image id="input-country" placeholder="Seleziona paese ..." v-model="changeableUser.information.country" :options="countries"></select-with-image>
             </b-form-group>
 
             <b-form-group>
@@ -30,8 +29,7 @@
 
             <b-form-group>
               <label for="input-gender"><b>Genere</b></label>
-              <select-with-image id="input-gender" placeholder="Seleziona genere ..." :value="changeableUser.information.sex"
-                                 @select="selectGender($event)" :options="genders"></select-with-image>
+              <select-with-image id="input-gender" placeholder="Seleziona genere ..." v-model="changeableUser.information.sex" :options="genders"></select-with-image>
             </b-form-group>
 
             <b-form-group>
@@ -293,14 +291,14 @@ export default {
       this.changeableUser.information.img = val && val.size === 0 ? this.user.information.img : val
     },
 
-    selectCountry: function (e){
-      console.log("select contry = ", e)
-      this.changeableUser.information.country = e.value
-    },
-    selectGender: function (e){
-      console.log("select gender = ", e)
-      this.changeableUser.information.sex = e.value
-    },
+    // selectCountry: function (e){
+    //   console.log("select contry = ", e)
+    //   this.changeableUser.information.country = e.value
+    // },
+    // selectGender: function (e){
+    //   console.log("select gender = ", e)
+    //   this.changeableUser.information.sex = e.value
+    // },
 
     checkRequiredField: function (val, field){
       // if(val.length === 0) this.changeableUser.information[field] = this.user.information[field]
