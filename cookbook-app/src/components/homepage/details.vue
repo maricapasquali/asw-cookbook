@@ -57,12 +57,12 @@
 
               <div class="details-component">
                 <p>Procedimento</p>
-                <b-card>{{doc.process}}</b-card>
+                <b-card>{{doc.preparation}}</b-card>
               </div>
 
               <div class="details-component" v-if="areThereNotes">
                 <p>Note</p>
-                <b-card>{{doc.notes}}</b-card>
+                <b-card>{{doc.note}}</b-card>
               </div>
             </b-row>
           </b-container>
@@ -77,7 +77,7 @@ import {isEmpty} from "@services/utils"
 export default {
   name: "recipe-details",
   props:{
-    recipeID: String
+    recipeId: String
   },
   data(){
     return {
@@ -87,7 +87,7 @@ export default {
   },
   computed:{
     areThereNotes(){
-      return this.doc.notes && this.doc.notes.length>0
+      return this.doc.note
     },
     isNotLoaded(){
       return isEmpty(this.doc)
@@ -109,8 +109,8 @@ export default {
       console.log("Dettagli!!")
       // TODO: REQUEST DETAILS RECIPES
       this.doc = {
-        process: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-        notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        preparation: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+        note: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         ingredients: [
             {foodID: 'food-2', name: 'uovo', quantity: 101},
             {foodID: 'food-10', name: 'farina 00', quantity: 300},

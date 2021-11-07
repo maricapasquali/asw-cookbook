@@ -10,7 +10,7 @@
 export default {
   name: "like",
   props: {
-    value: Number
+    value: Number | Array
   },
   watch:{
     value(val, old){
@@ -30,7 +30,7 @@ export default {
     }
   },
   mounted() {
-    this.like = this.value
+    this.like = Array.isArray(this.value) ? this.value.length : this.value
   },
   methods: {
     onLike(){
