@@ -44,14 +44,11 @@
           <router-link to=""> <!-- TODO: add link to page of one specific recipe -->
             <b-img fluid class="recipes-image" :src="doc.recipe.img" @error="imgNotFound"/>
           </router-link>
-          <b-row class="description-post" align-h="between">
+          <b-row :class="{'description-post': true, 'py-2': !doc.recipe.nationality}" align-h="between">
             <b-col class="d-flex align-items-center pl-2">  {{doc.recipe.name}} </b-col>
             <b-col class="d-flex justify-content-end pr-1" >
-              <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.recipe.category}} </span>
-              <b-img v-if="doc.recipe.nationality" :id="imageId(doc.recipe._id)" class="country-image" :src="doc.recipe.nationality.src"></b-img>
-              <b-tooltip :target="imageId(doc.recipe._id)" triggers="hover">
-                <p>{{doc.recipe.nationality.text}}</p>
-              </b-tooltip>
+              <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.recipe.category.text}} </span>
+              <country-image v-model="doc.recipe.nationality" :id="imageId(doc.recipe._id)"/>
             </b-col>
           </b-row>
 
@@ -86,6 +83,7 @@
 
 <script>
 import {Session} from "@services/session";
+import {RecipeCategories} from "@services/app";
 
 export default {
   name: "HomePage",
@@ -94,7 +92,6 @@ export default {
       skeletons: 5,
 
       language: 'it',
-      optionsCountry: require('@assets/countries.js'),
       defaultImageRecipes: require('@assets/images/recipe-image.jpg'),
 
       showDetails: false,
@@ -149,116 +146,17 @@ export default {
     updateDocs(){
       this.docs.forEach(p => {
         p.recipe.img = p.recipe.img || this.defaultImageRecipes
-        let nationality = this.optionsCountry.find(c => c.value === p.recipe.nationality)
-        if(nationality) p.recipe.nationality = nationality
+        // let nationality = this.optionsCountry.find(c => c.value === p.recipe.nationality)
+        // if(nationality) p.recipe.nationality = nationality
+
+        let category = RecipeCategories.find(p.recipe.category)
+        if(category) p.recipe.category = category
       })
     },
 
     getPost(){
       // TODO: REQUEST POST RECIPES
-      this.docs = [
-        {
-          owner: {
-            _id: '31312313b',
-            userID: 'Mario Rossi'
-          },
-          recipe : {
-            _id: '1231413421321asx',
-            timestamp: Date.parse("2021-10-23T10:41:00"),
-            name: 'Fiorentina al sangue',
-            category: 'Secondi',
-            nationality: 'IT',
-            likes: 0,
-            comments: [       {
-              number: 1,
-              content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-              timestamp: Date.parse("2021-10-23T13:41:00"),
-              likes: 0,
-              reported: false
-            }],
-          }
-        },
-        {
-          owner: {
-            _id: '612df857e9e11fd2d82cb95f',
-            userID: 'maricapasquali01'
-          },
-          recipe : {
-            _id: '1231413421321asa',
-            timestamp:  Date.parse("2021-10-21T10:30:00"),
-            name: 'Pancake',
-            category: 'Dolci',
-            nationality: 'US',
-            likes: 0,
-            comments: [
-              {
-                number: 12,
-                content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                timestamp: Date.parse("2021-10-21T14:00:00"),
-                likes: 0,
-                reported: true
-              },
-              {
-                number: 11,
-                user: {userID: "hanna smith", _id: "sfsfw3223"},
-                content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                timestamp: Date.parse("2021-10-20T12:00:00"),
-                likes: 0,
-                reported: false
-              },
-              {
-
-                number: 10,
-                content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                timestamp: Date.parse("2021-10-19T12:00:00"),
-                likes: 0,
-                reported: false,
-                response: {
-                  owner_recipe: {
-                    _id: '612df857e9e11fd2d82cb95f',
-                    userID: "maricapasquali01",
-                    img: ""
-                  },
-                  timestamp: Date.parse("2021-10-19T13:00:00"),
-                  content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                  likes: 0,
-                  reported: false
-                }
-              },
-            ],
-          },
-        },
-        {
-          owner: {
-            _id: '31312313b',
-            userID: 'Mario Rossi'
-          },
-          recipe : {
-            _id: '1231413421321asB',
-            timestamp: Date.parse("2021-10-18T10:30:00"),
-            name: 'Lasagne',
-            category: 'Primi',
-            nationality: 'IT',
-            likes: 5,
-            comments: [],
-          }
-        },
-        {
-          owner: {
-            _id: '31312313b',
-            userID: 'Mario Rossi'
-          },
-          recipe : {
-            _id: '1231413421321asc',
-            timestamp: Date.parse("2021-10-17T12:30:00"),
-            name: 'Spaghetti alla carbonara',
-            category: 'Primi',
-            nationality: 'IT',
-            likes: 0,
-            comments: [],
-          }
-        }
-      ]
+      this.docs = require('@assets/examples/home-page.js')
 
       this.updateDocs()
     },
@@ -267,10 +165,10 @@ export default {
 
     newPost(){
       setInterval(function (){
-        this.docs.unshift( {
+        this.docs.unshift({
           owner: {
-            _id: '31312313www',
-            userID: 'MarinaCavalli01'
+            _id: '612bce9f8710a153e80ca4cf',
+            userID: 'hannah_smith'
           },
           recipe : {
             _id: '12345'+this.$data._newPostInd,
@@ -291,36 +189,7 @@ export default {
       //TODO: REQUEST OTHER 10 POST RECIPE
       console.debug("Altri 10 post ..")
       if(!this.$data._others){
-        this.docs.push( {
-          owner: {
-            _id: '31312313www',
-            userID: 'MarinaCavalli01'
-          },
-          recipe : {
-            _id: '1231413421321assss',
-            timestamp: Date.parse("2021-10-14T10:30:00"),
-            name: 'Patate al forno',
-            category: 'Contorni',
-            nationality: 'IT',
-            likes: 5,
-            comments: [],
-          }
-        },)
-        this.docs.push({
-          owner: {
-            _id: '31312313www',
-            userID: 'MarinaCavalli01'
-          },
-          recipe : {
-            _id: '1231413421321asss1',
-            timestamp: Date.parse("2021-10-13T10:30:00"),
-            name: 'Fagioli alla messicana',
-            category: 'Secondi',
-            nationality: 'MX',
-            likes: 0,
-            comments: [],
-          }
-        })
+        require('@assets/examples/others-home-page.js').forEach(r => this.docs.push(r))
 
         this.updateDocs()
         this.$data._others = true

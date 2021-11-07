@@ -35,7 +35,7 @@
 
 <script>
 
-import {ReaderImage} from "@services/filesystem";
+import {ReaderStreamImage} from "@services/filesystem";
 
 export default {
   name: "image-preview-uploader",
@@ -101,9 +101,9 @@ export default {
      this.readFile(e.target.files[0], true)
     },
     readFile: function(files, emit = false){
-      if(ReaderImage.isValid(files)){
+      if(ReaderStreamImage.isValid(files)){
         if(emit) this.$emit('selectImage', files)
-        ReaderImage.read(files,  function (e){
+        ReaderStreamImage.read(files,  function (e){
           console.log('Load image preview...')
           this.profile_img = e.target.result
         }.bind(this), function (err){ console.error(err) })

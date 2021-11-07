@@ -2,7 +2,7 @@
   <div>
     <app-navigator class="sticky-top" v-if="navigatorVisibility"/>
     <router-view :class="classObject"></router-view>
-    <app-footer class="sticky-bottom" v-if="footerVisibility" />
+    <app-footer v-if="footerVisibility" />
   </div>
 </template>
 

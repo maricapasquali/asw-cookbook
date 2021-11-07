@@ -12,6 +12,7 @@ import MiniTextEditor from "./mini-text-editor"
 import Navigator from "./app/navigator"
 import Footer from "./app/footer"
 import NutrientsTable from "./app/nutrients-table"
+import CountryImage from "./app/country-image"
 
 import SignUp from "./login/SignUp";
 
@@ -33,6 +34,9 @@ import Like from "./homepage/like"
 import Details from "./homepage/details"
 import IngredientList from "./homepage/ingredient-list"
 
+import ContainerCollapsable from './one-user/container-collapsable'
+
+
 export default {
     CenterContainer,
     ImagePreviewUploader,
@@ -48,6 +52,7 @@ export default {
     Navigator,
     Footer,
     NutrientsTable,
+    CountryImage,
 
     SignUp,
 
@@ -66,5 +71,8 @@ export default {
     Comment,
     Like,
     Details,
-    IngredientList
+    IngredientList,
+
+
+    ContainerCollapsable
 }

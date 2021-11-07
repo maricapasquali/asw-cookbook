@@ -113,7 +113,7 @@
               <b-img v-else width="100" height="100" :src="img_profile" alt="immagine profilo"></b-img>
             </b-col>
             <b-col align-self="center" class="d-flex justify-content-end">
-              <b-img v-if="user.information.country" width="100" height="70" :src="country"></b-img>
+              <country-image v-model="user.information.country" width="100" height="70" />
             </b-col>
           </b-row>
 
@@ -197,6 +197,8 @@ import {clone, equals, isString} from "@services/utils"
 import {Session} from "@services/session"
 import {bus} from "@/main";
 
+import {Countries, Genders} from '@services/app'
+
 export default {
   name: "user-information",
   props:{
@@ -209,8 +211,8 @@ export default {
   data: function (){
     return {
       img_profile: require('@assets/icons/person-circle.svg'),
-      countries: require('@assets/countries.js'),
-      genders: require('@assets/genders.js'),
+      countries: Countries.get(),
+      genders: Genders.get(),
       changeableUser: { information: {}, userID: '', _id: ''},
       user: { information: {}, userID: '', _id: ''},
       changeMode: false,
@@ -265,11 +267,11 @@ export default {
       return !equals(this.changeableUser.information, this.user.information) &&
               Object.values(this.validation).every(v => v === true)
     },
-    country: function (){
-      return this.countries.find(o => this.user.information.country === o.value).src
-    },
+    // country: function (){
+    //   return this.countries.find(o => this.user.information.country === o.value).src
+    // },
     gender: function (){
-      return this.genders.find(g => this.user.information.sex === g.value).text
+      return Genders.find(this.user.information.sex).text
     },
     isOtherUser: function (){
       return Session.accessToken() && Session.userInfo()._id !== this.id

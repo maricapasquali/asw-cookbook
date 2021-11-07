@@ -119,7 +119,7 @@
                     </b-form-group>
                   </b-col>
                   <b-col v-if="item.recipe.country" align-self="center" align="end">
-                    <b-img width="50" height="50" :src="item.recipe.country.src"/>
+                    <country-image v-model="item.recipe.country" width="50" height="50" :id="'recipe-'+item.recipe._id + '-country'" />
                   </b-col>
                 </b-row>
 
@@ -176,7 +176,7 @@
 
 <script>
 import {dateFormat} from "@services/utils";
-
+import {Diets, RecipeCategories} from '@services/app'
 export default {
   name: "recipe-sections",
   props:{
@@ -185,9 +185,6 @@ export default {
   },
   data(){
     return {
-      optionsCountry: require('@assets/countries.js'),
-      optionsCategory: require("@assets/recipe-categories.js"),
-      optionsDiet: require("@assets/diets.js"),
       defaultImgRecipe: require("@assets/images/recipe-image.jpg"),
       skeletons: 7,
 
@@ -309,13 +306,13 @@ export default {
       docs.forEach(recipe => {
           recipe.img = recipe.img || this.defaultImgRecipe
 
-          let country = this.optionsCountry.find(c => c.value === recipe.country)
-          if(country) recipe.country = country
+          // let country = this.optionsCountry.find(c => c.value === recipe.country)
+          // if(country) recipe.country = country
 
-          let category = this.optionsCategory.find(c => c.value === recipe.category)
+          let category = RecipeCategories.find(recipe.category)
           if(category) recipe.category = category
 
-          let diet = this.optionsDiet.find(c => c.value === recipe.diet)
+          let diet = Diets.find(recipe.diet)
           if(diet) recipe.diet = diet
 
           recipe.shared = this.active === 'shared' /*TODO: REMOVE */

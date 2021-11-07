@@ -15,6 +15,7 @@ cookbook-server/videos
 
 cookbook-app/src/services/**/*.js
 cookbook-app/src/services/**/*.js.map
+!cookbook-app/src/services/app/assets/*.js
 
 .todo
 .env
