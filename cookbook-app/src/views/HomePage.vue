@@ -108,14 +108,6 @@ export default {
       return this.docs.length === 0
     }
   },
-  watch: {
-    docs: {
-      handler(val){
-        console.log('Update docs ..')
-      },
-      deep: false
-    }
-  },
   methods: {
     imageId(id){
       return 'country-image-'+ id
@@ -146,8 +138,6 @@ export default {
     updateDocs(){
       this.docs.forEach(p => {
         p.recipe.img = p.recipe.img || this.defaultImageRecipes
-        // let nationality = this.optionsCountry.find(c => c.value === p.recipe.nationality)
-        // if(nationality) p.recipe.nationality = nationality
 
         let category = RecipeCategories.find(p.recipe.category)
         if(category) p.recipe.category = category

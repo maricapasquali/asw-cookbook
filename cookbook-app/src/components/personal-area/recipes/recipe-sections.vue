@@ -306,9 +306,6 @@ export default {
       docs.forEach(recipe => {
           recipe.img = recipe.img || this.defaultImgRecipe
 
-          // let country = this.optionsCountry.find(c => c.value === recipe.country)
-          // if(country) recipe.country = country
-
           let category = RecipeCategories.find(recipe.category)
           if(category) recipe.category = category
 

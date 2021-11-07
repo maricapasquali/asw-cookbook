@@ -65,7 +65,7 @@ export default {
       if(this.startWith.length === 0) return [];
       else {
         let founds = this.findFoods(this.startWith)
-        this.hideDropdown = false //founds.length === 0
+        this.hideDropdown = false
         return founds
       }
     }

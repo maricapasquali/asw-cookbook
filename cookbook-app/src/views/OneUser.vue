@@ -50,8 +50,6 @@ export default {
   methods: {
     /* User Recipes Section */
     remappingRecipe(recipe){
-      // let _country = this.rCountries.find(c => c.value === recipe.nationality)
-      // if(_country) recipe.nationality = _country
 
       let _category = RecipeCategories.find(recipe.category)
       if(_category) recipe.category = _category

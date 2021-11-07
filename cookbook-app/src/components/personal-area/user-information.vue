@@ -267,9 +267,6 @@ export default {
       return !equals(this.changeableUser.information, this.user.information) &&
               Object.values(this.validation).every(v => v === true)
     },
-    // country: function (){
-    //   return this.countries.find(o => this.user.information.country === o.value).src
-    // },
     gender: function (){
       return Genders.find(this.user.information.sex).text
     },

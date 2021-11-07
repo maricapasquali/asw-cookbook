@@ -231,7 +231,7 @@ export default {
     },
 
     equalsRecipes(){
-     return this.value.country === this.recipe.country && ////this.value.country.value === this.recipe.country &&
+     return this.value.country === this.recipe.country &&
              this.value.diet.value === this.recipe.diet &&
              this.value.category.value === this.recipe.category &&
              (this.value.img === this.recipe.img || '' === this.recipe.img)
@@ -407,12 +407,10 @@ export default {
     _setOptionSelection(before){
       if(before){
         if(this.defaultImgRecipe === this.recipe.img) this.recipe.img = ''
-        // this.recipe.country =  this.recipe.country ? this.recipe.country.value : undefined
         this.recipe.category = this.recipe.category ? this.recipe.category.value: undefined
         this.recipe.diet =  this.recipe.diet ? this.recipe.diet.value : undefined
       }else{
         if('' === this.recipe.img) this.recipe.img = this.defaultImgRecipe
-        // this.recipe.country = this.optionsCountry.find(country => country.value === this.recipe.country) || ''
         this.recipe.category = RecipeCategories.find(this.recipe.category) || ''
         this.recipe.diet = Diets.find(this.recipe.diet) || ''
       }
