@@ -1,42 +1,45 @@
-import * as countries from './assets/countries.js'
-import * as genders from './assets/genders.js'
-import * as diets from './assets/diets.js'
-import * as rCategories from './assets/recipe-categories.js'
+import {ICountry} from './assets/countries'
+import countries from './assets/countries'
 
-type Country = {value: string, text: string, src: string}
-type Gender = {value: string, text: string, src: string}
-type Diet = {value: string, text: string}
-type RCategory = {value: string, text: string}
+import {IGender} from './assets/genders'
+import genders from './assets/genders'
 
-function getCountries(): Array<Country> {
+import {IDiet} from './assets/diets'
+import diets from './assets/diets'
+
+import {IRecipeCategory} from './assets/recipe-categories'
+import rCategories from './assets/recipe-categories'
+
+
+function getCountries(): Array<ICountry> {
     return countries
 }
 
-function findCountry(value): Country {
+function findCountry(value): ICountry {
     return countries.find(country => country.value === value)
 }
 
-function getGenders(): Array<Gender> {
+function getGenders(): Array<IGender> {
     return genders
 }
 
-function findGender(value): Gender {
+function findGender(value): IGender {
     return genders.find(gender => gender.value === value)
 }
 
-function getDiets(): Array<Diet> {
+function getDiets(): Array<IDiet> {
     return diets
 }
 
-function findDiet(value): Diet {
+function findDiet(value): IDiet {
     return diets.find(diet => diet.value === value)
 }
 
-function getRecipeCategories(): Array<RCategory> {
+function getRecipeCategories(): Array<IRecipeCategory> {
     return rCategories
 }
 
-function findRecipeCategory(value): RCategory {
+function findRecipeCategory(value): IRecipeCategory {
     return rCategories.find(rCategory => rCategory.value === value)
 }
 
