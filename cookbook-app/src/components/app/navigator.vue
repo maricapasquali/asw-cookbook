@@ -44,8 +44,6 @@
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
-    <!-- LOADING OVERLAY -->
-    <loading v-model="processing" /> <!-- FIXME: loading nav bar -->
     <!-- ERRORS MODAL -->
     <modal-alert v-model="error.show" variant="danger">
       <template v-slot:msg>
@@ -61,6 +59,8 @@ import api from '@api'
 import {Session} from "@services/session";
 import {bus} from "@/main";
 
+import {isString} from '@services/utils'
+
 export default {
   name: "app-navigator",
   data: function (){
@@ -73,7 +73,6 @@ export default {
         isAdmin: null
       },
       access_token: null,
-      processing: false,
       error: {
         show: false,
         message: ''
@@ -149,7 +148,7 @@ export default {
     },
 
     logout: function (){
-      this.processing = true
+      bus.$emit('onLogout', true)
       console.log(this.userInfo._id)
       api.users.logout(this.userInfo._id, Session.accessToken())
                .then(response => {
@@ -159,13 +158,15 @@ export default {
                })
                .catch(err => {
                  this.error.message = api.users.HandlerErrors.logout(err)
-                 if(err.response.status === 409){
+                 if(isString(this.error.message)){
+                   this.error.show = true
+                 } else if(err.response.status === 409){
                    this.endSession()
-                 }else{
+                 } else{
                    this.error.show = true
                  }
                })
-               .then(() => this.processing = false)
+               .then(() => bus.$emit('onLogout', false))
     }
   }
 }

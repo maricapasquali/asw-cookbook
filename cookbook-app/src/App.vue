@@ -3,16 +3,20 @@
     <app-navigator class="sticky-top" v-if="navigatorVisibility"/>
     <router-view :class="classObject"></router-view>
     <app-footer v-if="footerVisibility" />
+    <loading v-model="processing" />
   </div>
 </template>
 
 <script>
+import  {bus} from "@/main";
+
 export default {
   name: 'App',
   data: function (){
     return {
       notNav: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password'],
-      notFooter: this.notNav
+      notFooter: this.notNav,
+      processing: false
     }
   },
   computed:{
@@ -29,6 +33,15 @@ export default {
       }
 
     }
+  },
+  methods: {
+    onLogout(isLogout){
+      console.debug('Logout = ', isLogout)
+      this.processing = isLogout
+    }
+  },
+  created() {
+    bus.$on('onLogout', this.onLogout.bind(this))
   }
 }
 </script>
