@@ -29,25 +29,19 @@ export const FoodSchema: Schema<IFood> = new Schema<IFood>({
     img: { type: String, required: false },
     barcode: { type: String, required: false },
 
-    name: { type: String, required: true },
+    name: { type: String, required: true, unique: true },
     nutritional_values: {
         energy: {type: Number, required: true },
-        protein: {type: Number, required: false },
+        protein: {type: Number, required: false , default: 0},
         carbohydrates: {
-            type: {
-                complex: {type: Number, required: false },
-                sugar: {type: Number, required: false },
-            },
-            required: false
+            complex: {type: Number, required: false, default: 0  },
+            sugar: {type: Number, required: false, default: 0 },
         },
         fat: {
-            type: {
-                unsaturated: {type: Number, required: false },
-                saturated: {type: Number, required: false },
-            },
-            required: false
+            unsaturated: {type: Number, required: false, default: 0 },
+            saturated: {type: Number, required: false, default: 0  },
         },
-        salt: {type: Number, required: false },
+        salt: {type: Number, required: false, default: 0 },
     },
 
     owner: {
