@@ -128,12 +128,11 @@ components:
           oneOf:
             - type: boolean
             - type: array
+              items:
+                type: string
+                description: user's identifier
+          description: true if it's shared, false if it's saved, list of string if it's shared in chat
           default: false
-          example:
-           oneOf:
-            - false
-            - ["my_id_user", "mario_id_user", "..."]
-            - true
         timestamp: 
           type: number
         country:
@@ -188,6 +187,8 @@ components:
         nutritial_values:
           type: object
           properties:
+            energy:
+              type: number
             protein: 
               type: number
             fat:
@@ -230,6 +231,9 @@ components:
           type: number
         content:
           type: string
+        reported:
+          type: boolean
+          default: false
         likes: 
           type: array
           items:
@@ -250,6 +254,9 @@ components:
               type: number
             content:
               type: string
+            reported:
+              type: boolean
+              default: false
             likes: 
               type: array
               items:
@@ -445,7 +452,19 @@ components:
       description: ""
       required: false
       schema:
-        type: integer   
+        type: integer
+    privateTypeRecipe:
+      name: type
+      in: path
+      description: type of recipe
+      required: true
+      schema:
+        type: string
+        enum:
+          - shared
+          - saved
+          - shared-in-chat
+          - loved
 
   securitySchemes:
     BasicAuth:
@@ -636,6 +655,17 @@ paths:
                         type: string
                       refresh_token:
                         type: string
+                  userInfo:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      userID:
+                        type: string
+                      isSigned:
+                        type: boolean
+                      isAdmin:
+                        type: boolean
                   firstLogin:
                     type: boolean
                     default: true
@@ -1075,71 +1105,38 @@ paths:
         500:
           $ref: "#/components/responses/general_error" 
 
-  /users/{id}/recipes/saved:
+  /users/{id}/recipes/{recipesID}:
     get:
-      description: A specific user's saved recipes
+      description: A specific user's shared recipe
       tags:
         - Recipes
-      security:
-        - BearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/limit"
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/recipe"
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_get_error"
-        404:
-          description: Favorites recipes are not found
-        500:
-          $ref: "#/components/responses/general_error" 
 
-  /users/{id}/recipes/shared_in_chat:
-    get:
-      description: A specific user's shared in chat recipes
-      tags:
-        - Recipes
-      security:
-        - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/userIdentifier"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/limit"
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/recipe"
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_get_error"
-        404:
-          description: Favorites recipes are not found
-        500:
-          $ref: "#/components/responses/general_error" 
+        - name: "recipesID"
+          in: "path"
+          description: "recipe's identifier"
+          required: true
+          schema:
+            type: string
 
-  /users/{id}/recipes/favorites:
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/recipe"
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: "Recipe not found"
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/recipes/{type}:
     get:
-      description: A specific user's favorites recipes
+      description: A specific user's 'type' recipes
       tags:
         - Recipes
       security:
@@ -1148,6 +1145,7 @@ paths:
         - $ref: "#/components/parameters/userIdentifier"
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/limit"
+        - $ref: '#/components/parameters/privateTypeRecipe'
       responses:
         200:
           description: ""
@@ -1164,9 +1162,9 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_get_error"
         404:
-          description: Favorites recipes are not found
+          description: Recipes are not found
         500:
-          $ref: "#/components/responses/general_error" 
+          $ref: "#/components/responses/general_error"
 
   /users/{id}/recipes/{type}/{recipesID}:
     parameters:
@@ -1177,23 +1175,15 @@ paths:
         required: true
         schema:
           type: string
-      - name: type
-        in: path
-        description: type of recipe
-        required: true
-        schema:
-          type: string
-          enum:
-            - ''
-            - saved
-            - shared_in_chat         
+
     get:
       description: ""
       tags:
         - Recipes  
       security:
         - BearerAuth: []
-      
+      parameters:
+        - $ref: '#/components/parameters/privateTypeRecipe'
       responses:
         200:
           description: ""
@@ -1208,15 +1198,25 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_get_error"
         404:
-          description: "Recipe not found"
+          description: Recipe not found
         500:
           $ref: "#/components/responses/general_error" 
-    put:
+    patch:
       description: ""
       tags:
         - Recipes
       security:
         - BearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: type of recipe
+          required: true
+          schema:
+            type: string
+            enum:
+              - shared
+              - saved
       requestBody:
         required: true
         content:
@@ -1267,6 +1267,8 @@ paths:
         - Recipes
       security:
         - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/privateTypeRecipe'
       responses:
         200:
           description: Recipe has been deleted    
@@ -1388,7 +1390,7 @@ paths:
           $ref: "#/components/responses/general_error"
 
 #SHOPPING LIST
-  /users/{id}/shopping_list:
+  /users/{id}/shopping-list:
     parameters:
       - $ref: "#/components/parameters/userIdentifier"
     post:
@@ -1420,7 +1422,7 @@ paths:
           description: User not found
         500:
           $ref: "#/components/responses/general_error" 
-      
+
     get:
       tags:
         - Shopping List
@@ -1444,7 +1446,7 @@ paths:
         500:
           $ref: "#/components/responses/general_error" 
   
-  /users/{id}/shopping_list/{pointShoppingListID}:
+  /users/{id}/shopping-list/{pointShoppingListID}:
     parameters:
       - $ref: "#/components/parameters/userIdentifier"
       - name: pointShoppingListID
