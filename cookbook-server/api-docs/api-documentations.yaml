@@ -128,12 +128,11 @@ components:
           oneOf:
             - type: boolean
             - type: array
+              items:
+                type: string
+                description: user's identifier
+          description: true if it's shared, false if it's saved, list of string if it's shared in chat
           default: false
-          example:
-           oneOf:
-            - false
-            - ["my_id_user", "mario_id_user", "..."]
-            - true
         timestamp: 
           type: number
         country:
