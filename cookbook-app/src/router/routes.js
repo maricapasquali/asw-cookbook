@@ -6,6 +6,7 @@ import PersonalArea from "@views/PersonalArea";
 import OneUser from "@views/OneUser";
 import Searches from "@views/Searches";
 import ChangePassword from "@views/ChangePassword";
+import OneRecipe from "@views/OneRecipe";
 
 export default [
     {
@@ -42,6 +43,11 @@ export default [
         path: '/users/:id',
         name: 'single-user',
         component: OneUser
+    },
+    {
+        path: '/users/:id/recipe/:recipe_id',
+        name: 'single-recipe',
+        component: OneRecipe
     },
     {
         path: '/users/:id/personal-area', // PRIVATE (se il token non c'è o se il token non è dell' id )

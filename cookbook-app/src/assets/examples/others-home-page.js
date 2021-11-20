@@ -8,7 +8,7 @@ module.exports = [{
             timestamp: Date.parse("2021-10-14T10:30:00"),
             name: 'Patate al forno',
             category: 'side dish',
-            nationality: 'IT',
+            country: 'IT',
             likes: 5,
             comments: [],
         }
@@ -23,7 +23,7 @@ module.exports = [{
             timestamp: Date.parse("2021-10-13T10:30:00"),
             name: 'Fagioli alla messicana',
             category: 'second courses',
-            nationality: 'MX',
+            country: 'MX',
             likes: 0,
             comments: [],
         }

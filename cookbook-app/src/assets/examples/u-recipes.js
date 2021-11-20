@@ -5,7 +5,7 @@ module.exports = [
     name: 'Fiorentina al sangue',
     category: 'second courses',
     country: 'IT',
-    likes: [{user: '612df857e9e11fd2d82cb95g', timestamp: Date.parse("2021-10-23T15:00:00")}],
+    likes: [{user: {_id:'6140db2a3071f72df88a1f6b', userID: 'marina'}, timestamp: Date.parse("2021-10-23T15:00:00")}, {user: 'anonymous', timestamp: Date.parse("2021-10-25T17:00:20")}],
     comments: [{
       number: 1,
       content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",

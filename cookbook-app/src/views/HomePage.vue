@@ -41,14 +41,14 @@
               </b-col>
             </b-row>
           </template>
-          <router-link to=""> <!-- TODO: add link to page of one specific recipe -->
+          <router-link :to="{name: 'single-recipe', params: {id: doc.owner._id, recipe_id: doc.recipe._id}}">
             <b-img fluid class="recipes-image" :src="doc.recipe.img" @error="imgNotFound"/>
           </router-link>
-          <b-row :class="{'description-post': true, 'py-2': !doc.recipe.nationality}" align-h="between">
+          <b-row :class="{'description-post': true, 'py-2': !doc.recipe.country}" align-h="between">
             <b-col class="d-flex align-items-center pl-2">  {{doc.recipe.name}} </b-col>
             <b-col class="d-flex justify-content-end pr-1" >
               <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.recipe.category.text}} </span>
-              <country-image v-model="doc.recipe.nationality" :id="imageId(doc.recipe._id)"/>
+              <country-image v-model="doc.recipe.country" :id="imageId(doc.recipe._id)"/>
             </b-col>
           </b-row>
 
@@ -165,7 +165,7 @@ export default {
             timestamp: Date.now(),
             name: 'Funghi in padella - '+this.$data._newPostInd,
             category: 'Contorni',
-            nationality: 'IT',
+            country: 'IT',
             likes: 0,
             comments: [],
           }

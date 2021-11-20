@@ -9,11 +9,13 @@
           <b-list-group-item v-for="(recipe, ind) in recipes" :key="ind">
             <b-row>
               <b-col align="start">
-                <router-link to="#"> {{ recipe.name }} </router-link> <!-- TODO: add link to page of one specific recipe  -->
+                <router-link :to="{name: 'single-recipe', params: {id: identifierUser, recipe_id: recipe._id}}">
+                  {{ recipe.name }}
+                </router-link>
               </b-col>
               <b-col align="end">
                 <span> {{ recipe.category.text }} </span>
-                <country-image v-model="recipe.nationality" :id="'country-recipe-'+recipe._id"></country-image>
+                <country-image v-model="recipe.country" :id="'country-recipe-'+recipe._id"></country-image>
               </b-col>
             </b-row>
           </b-list-group-item>

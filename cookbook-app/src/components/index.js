@@ -28,11 +28,11 @@ import FoodSection from "./personal-area/foods/food-section"
 import BarcodeScanner from "./personal-area/foods/barcode-scanner"
 
 
-import Comments from "./homepage/comments"
-import Comment from "./homepage/comment"
-import Like from "./homepage/like"
+import Comments from "./comments/comments"
+import Comment from "./comments/comment"
+import Like from "./app/like"
 import Details from "./homepage/details"
-import IngredientList from "./homepage/ingredient-list"
+import IngredientList from "./app/ingredient-list"
 
 import ContainerCollapsable from './one-user/container-collapsable'
 

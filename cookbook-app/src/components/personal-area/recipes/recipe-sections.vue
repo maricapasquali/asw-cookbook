@@ -70,7 +70,7 @@
                     <b-col class="ml-3">
                       <b-row>
                         <strong>
-                          <router-link v-if="isLoved"  :to="{name: 'single-recipe', params: {id: item.recipe._id, _user: item.recipe.owner._id } }">{{item.recipe.name}}</router-link>
+                          <router-link v-if="isLoved"  :to="{name: 'single-recipe', params: {id: item.recipe.owner._id, recipe_id: item.recipe._id } }">{{item.recipe.name}}</router-link>
                           <span v-else> {{item.recipe.name}} </span>
                         </strong>
                       </b-row>
@@ -149,11 +149,20 @@
                 </b-row>
 
                 <b-row v-if="item.recipe.shared && item.recipe.likes.length>0">
-                  <!-- TODO: aggiungere lista delle persone che hanno messo mi piace. -->
+                  <b-col> <!-- TODO: migliorare css on list of liker -->
+                    <strong>Chi ha messo 'Mi piace'</strong>
+                    <ul>
+                      <li v-for="(liker, ind) in item.recipe.likes" :key="ind">
+                        <router-link v-if="liker.user._id" :to="{name: 'single-user', params: {id: liker.user._id}}">{{liker.user.userID}}</router-link>
+                        <p v-else>{{liker.user}} </p>
+                      </li>
+                    </ul>
+                  </b-col>
                 </b-row>
                 <!-- Comments -->
-                <b-row class="comments mx-1" v-if="item.recipe.shared && item.recipe.comments.length>0">
-                  <comments v-model="item.recipe.comments" :recipeId="item.recipe._id" isOwner/>
+                <b-row cols="1" class="comments mx-1" v-if="item.recipe.shared && item.recipe.comments.length>0">
+                 <b-col class="px-0"><strong>Commenti</strong></b-col>
+                 <b-col> <comments v-model="item.recipe.comments" :recipeId="item.recipe._id" isOwner/></b-col>
                 </b-row>
 
               </b-card>

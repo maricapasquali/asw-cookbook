@@ -1,0 +1,238 @@
+<template>
+  <b-skeleton-wrapper :loading="isNotLoaded">
+    <template #loading>
+      <b-row cols="1" class="mx-0">
+        <b-col class="mb-3">
+
+          <b-breadcrumb >
+            <b-skeleton width="20%" class="mt-2 mr-2" /> / <b-skeleton class=" mt-2 ml-2" width="30%" />
+          </b-breadcrumb>
+
+        </b-col>
+        <b-col class="header-recipe py-3">
+          <b-container fluid>
+            <b-row align-h="between" align-v="center">
+              <b-col>
+                <b-row align-h="center" align-v="center">
+                  <b-col cols="2" class="pl-0">
+                   <b-skeleton-img card-img="top" aspect="2:1" />
+                  </b-col>
+                  <b-col class="px-0">  <b-skeleton width="55%" /> </b-col>
+                </b-row>
+              </b-col>
+              <b-col cols="2" align="end">
+                <b-skeleton-icon icon="heart"></b-skeleton-icon>
+              </b-col>
+            </b-row>
+            <b-row class="mt-2" align-h="between">
+              <b-col cols="8">
+                <b-row>
+                  <b-col class="px-0" cols="4">
+                    <b-skeleton width="80%" />
+                  </b-col>
+                  <b-col class="px-0" cols="4">
+                    <b-skeleton width="80%" />
+                  </b-col>
+                </b-row>
+              </b-col>
+              <b-col align="end" cols="2" >  <b-skeleton width="100%" /></b-col>
+            </b-row>
+          </b-container>
+        </b-col>
+        <b-col class="mt-5">
+          <strong>Ingredienti</strong>
+          <ingredient-list/>
+        </b-col>
+        <b-col class="mt-5">
+          <strong>Preparazione</strong>
+          <div>
+            <b-skeleton width="85%"></b-skeleton>
+            <b-skeleton width="55%"></b-skeleton>
+            <b-skeleton width="70%"></b-skeleton>
+          </div>
+        </b-col>
+        <b-col class="mt-5">
+          <strong>Note</strong>
+          <div>
+            <b-skeleton width="85%"></b-skeleton>
+            <b-skeleton width="55%"></b-skeleton>
+            <b-skeleton width="70%"></b-skeleton>
+          </div>
+        </b-col>
+        <b-col class="mt-5">
+          <strong>Valori Nutrizionali</strong>
+          <nutrients-table />
+        </b-col>
+        <b-col class="mt-5">
+          <strong>Commenti</strong>
+          <div class="skeleton-card-comments">
+            <b-skeleton width="85%"></b-skeleton>
+            <b-skeleton width="55%"></b-skeleton>
+            <b-skeleton width="70%"></b-skeleton>
+          </div>
+
+        </b-col>
+      </b-row>
+    </template>
+
+    <b-row cols="1" class="mx-0" v-if="!isNotLoaded">
+
+      <b-col class="mb-3">
+        <b-breadcrumb :items="itemsBreadcrumb" />
+      </b-col>
+
+      <b-col class="header-recipe py-3">
+        <b-container fluid>
+          <b-row align-h="between" align-v="center">
+            <b-col>
+              <b-row align-h="center" align-v="center">
+                <b-col align="start" cols="2" class="px-0" v-if="doc.recipe.country">
+                  <country-image v-model="doc.recipe.country"/>
+                </b-col>
+                <b-col class="px-0">
+                  <h2>{{ doc.recipe.name }}</h2>
+                </b-col>
+              </b-row>
+            </b-col>
+            <b-col cols="2" align="end">
+              <like v-model="doc.recipe.likes" />
+            </b-col>
+          </b-row>
+          <b-row class="mt-2" align-h="between">
+            <b-col class="px-0" v-if="doc.recipe.category"> {{ doc.recipe.category | nameCategory }} </b-col>
+            <b-col v-if="doc.recipe.diet"> {{ doc.recipe.diet | nameDiet }} </b-col>
+            <b-col align="end"> {{ doc.recipe.timestamp | dateFormat }}</b-col>
+          </b-row>
+        </b-container>
+      </b-col>
+
+      <!-- TODO: improve view for image and tutorial video -->
+      <b-col  v-if="doc.recipe.img || doc.recipe.tutorial">
+        <b-row class="mt-5">
+          <b-col v-if="thereIsImage">
+            <b-img fluid :src="doc.recipe.img" @error="imageNotFound"/>
+          </b-col>
+          <b-col v-if="doc.recipe.tutorial">
+            <b-embed style="object-fit: cover; height: auto" type="video" :poster="posterTutorial" controls >
+              <source :src="doc.recipe.tutorial" type="video/mp4"  @error="tutorialNotFound">
+              Your browser does not support the video tag.
+            </b-embed>
+          </b-col>
+        </b-row>
+      </b-col>
+
+      <b-col class="mt-5">
+        <strong>Ingredienti</strong>
+        <ingredient-list v-model="doc.recipe.ingredients"/>
+      </b-col>
+
+      <b-col class="mt-5">
+        <strong>Preparazione</strong>
+        <p> {{ doc.recipe.preparation }} </p>
+      </b-col>
+
+      <b-col v-if="doc.recipe.note" class="mt-5">
+        <strong>Note</strong>
+        <p> {{ doc.recipe.note }} </p>
+      </b-col>
+
+      <b-col class="mt-5">
+        <strong>Valori Nutrizionali</strong>
+        <nutrients-table :ingredients="doc.recipe.ingredients"/>
+      </b-col>
+
+      <b-col class="mt-5">
+        <strong>Commenti</strong>
+        <comments v-model="doc.recipe.comments" :recipeId="doc.recipe._id" :isOwner="isOwner(doc.owner)" />
+      </b-col>
+    </b-row>
+
+  </b-skeleton-wrapper>
+</template>
+
+<script>
+import {Session} from "@services/session"
+import {isEmpty, dateFormat} from "@services/utils"
+import {Diets, RecipeCategories} from "@services/app"
+
+export default {
+  name: "OneRecipe",
+  data(){
+    return {
+      loading: true,
+      itemsBreadcrumb: [],
+      defaultImageRecipe: require('@assets/images/recipe-image.jpg'),
+      doc: {
+        owner: {},
+        recipe: {}
+      }
+    }
+  },
+  computed: {
+    isNotLoaded(){
+      return !this.doc || (isEmpty(this.doc.owner) && isEmpty(this.doc.recipe))
+    },
+    posterTutorial(){
+      return this.doc.recipe.img || this.defaultImageRecipe
+    },
+    thereIsImage(){
+      return this.doc.recipe.img && this.doc.recipe.img !== this.defaultImageRecipe
+    }
+  },
+  filters: {
+    dateFormat: dateFormat,
+    nameCategory(text){
+      let category = RecipeCategories.find(text)
+      return category ? category.text : ''
+    },
+    nameDiet(text){
+      let diet = Diets.find(text)
+      return diet ? diet.text : ''
+    },
+
+  },
+  methods: {
+    tutorialNotFound(e){
+      e.target.parent.parent.remove()
+    },
+    imageNotFound(e){
+      e.target.parent.remove()
+    },
+
+    isOwner(owner_recipe) {
+      let session = Session.userInfo()
+      return session && owner_recipe._id === session._id && owner_recipe.userID === session.userID
+    },
+    getRecipe() {
+      let {id, recipe_id} = this.$route.params;
+      //TODO: REQUEST shared RECIPE with 'recipe_id' of user 'id'
+      this.doc = require('@assets/examples/home-page.js').find(r => r.owner._id === id && r.recipe._id === recipe_id)
+      console.debug(this.doc)
+      if(this.doc) {
+        this.itemsBreadcrumb = [
+          {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.$route.params.id} } },
+          {text: this.doc.recipe.name, active: true}
+        ]
+      }
+
+    }
+  },
+  mounted() {
+    setTimeout(this.getRecipe.bind(this), 1000)
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.skeleton-card-comments {
+  background-color: $component-color;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+
+.header-recipe{
+  background-color: $overlay;
+  color: white;
+}
+</style>

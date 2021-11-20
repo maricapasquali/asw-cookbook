@@ -1,5 +1,10 @@
 <template>
-  <b-table striped :items="getItems" :fields="fields"></b-table>
+  <b-skeleton-wrapper :loading="isTableEmpty">
+    <template #loading>
+      <b-skeleton-table :rows="7" :columns="2" :table-props="{ bordered: true, striped: true }"/>
+    </template>
+    <b-table striped :items="getItems" :fields="fields"></b-table>
+  </b-skeleton-wrapper>
 </template>
 
 <script>
@@ -58,6 +63,9 @@ export default {
         item.nutrient_label = this.nutrients.find(n => n.value === item.nutrient).text;
         return item
       })
+    },
+    isTableEmpty(){
+      return this.table.length === 0 || this.table.every(item => item.value100 === 0)
     }
   },
 
