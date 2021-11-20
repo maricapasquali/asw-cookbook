@@ -1406,7 +1406,7 @@ paths:
           $ref: "#/components/responses/general_error"
 
 #SHOPPING LIST
-  /users/{id}/shopping_list:
+  /users/{id}/shopping-list:
     parameters:
       - $ref: "#/components/parameters/userIdentifier"
     post:
@@ -1462,7 +1462,7 @@ paths:
         500:
           $ref: "#/components/responses/general_error" 
   
-  /users/{id}/shopping_list/{pointShoppingListID}:
+  /users/{id}/shopping-list/{pointShoppingListID}:
     parameters:
       - $ref: "#/components/parameters/userIdentifier"
       - name: pointShoppingListID
