@@ -636,6 +636,17 @@ paths:
                         type: string
                       refresh_token:
                         type: string
+                  userInfo:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      userID:
+                        type: string
+                      isSigned:
+                        type: boolean
+                      isAdmin:
+                        type: boolean
                   firstLogin:
                     type: boolean
                     default: true
