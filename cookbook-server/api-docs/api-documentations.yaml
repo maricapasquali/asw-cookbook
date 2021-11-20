@@ -188,6 +188,8 @@ components:
         nutritial_values:
           type: object
           properties:
+            energy:
+              type: number
             protein: 
               type: number
             fat:
