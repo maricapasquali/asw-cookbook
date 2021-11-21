@@ -208,12 +208,10 @@ components:
             salt:
               type: number
         owner:
-          type: object
-          properties:
-            user:
-              type: string
-            timestamp: 
-              type: number
+          type: string
+        createdAt:
+          type: number
+
       required:
         - name
         - nutritial_values
