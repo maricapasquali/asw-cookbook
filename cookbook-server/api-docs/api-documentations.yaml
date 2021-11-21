@@ -208,12 +208,10 @@ components:
             salt:
               type: number
         owner:
-          type: object
-          properties:
-            user:
-              type: string
-            timestamp: 
-              type: number
+          type: string
+        createdAt:
+          type: number
+
       required:
         - name
         - nutritial_values
@@ -1332,6 +1330,8 @@ paths:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1356,6 +1356,8 @@ paths:
         $ref: "#/components/responses/bad_request"
       401:
         $ref: "#/components/responses/unauthorized_error"
+      403:
+        $ref: "#/components/responses/forbidden_get_error"
       500:
           $ref: "#/components/responses/general_error"
 
@@ -1384,6 +1386,8 @@ paths:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
         404:
           description: "Food not found"           
         500:
