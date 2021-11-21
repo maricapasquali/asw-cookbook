@@ -349,14 +349,14 @@ components:
     shoppingListPoint:
       type: object
       properties:
-        foodID:
+        food:
+          description: identifier of food
           type: string
         checked:
           type: boolean
           default: false
       required:
-        - foodID
-        - check
+        - food
 
     report:
       type: object
@@ -1400,6 +1400,8 @@ paths:
     post:
       tags:
         - Shopping List
+      security:
+      - BearerAuth: [ ]
       requestBody:
         required: true
         content: 
@@ -1430,6 +1432,8 @@ paths:
     get:
       tags:
         - Shopping List
+      security:
+      - BearerAuth: [ ]
       responses:
         200:
           description: ""
@@ -1463,6 +1467,8 @@ paths:
       description: Mark whether the food has been bought or not
       tags:
         - Shopping List
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -1489,6 +1495,8 @@ paths:
     delete:
       tags:
         - Shopping List
+      security:
+        - BearerAuth: [ ]
       responses:
         200:
           description: "Shopping List point has been deleted"
