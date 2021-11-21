@@ -14,7 +14,7 @@
     "watch": [
       "cookbook-server"
     ],
-    "ext": "js, ts, json"
+    "ext": "js, json"
   },
   "author": "Marica Pasquali",
   "license": "ISC",
