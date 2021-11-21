@@ -14,6 +14,8 @@ export class RBAC implements IRbac {
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.SESSION },
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.SESSION },
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.USER_CREDENTIAL },
+            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.FOOD },
+            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.FOOD },
         ]
     }
 
@@ -33,7 +35,7 @@ export class RBAC implements IRbac {
 export namespace RBAC{
     export enum Role{ADMIN = 'admin', SIGNED = 'signed'}
     export enum Operation{CREATE, RETRIEVE, UPDATE, DELETE}
-    export enum Subject{USER, USER_CREDENTIAL, SESSION}
+    export enum Subject{USER, USER_CREDENTIAL, SESSION, FOOD}
 
     export interface Authorization {
         roles: Array<Role>,

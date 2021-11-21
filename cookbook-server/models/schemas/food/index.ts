@@ -18,10 +18,8 @@ export interface IFood extends Document {
         },
         salt?: number
     },
-    owner: {
-        user: IUser['_id'],
-        timestamp: number
-    }
+    owner: IUser['_id'],
+    createdAt?: number
 }
 
 
@@ -43,10 +41,23 @@ export const FoodSchema: Schema<IFood> = new Schema<IFood>({
         },
         salt: {type: Number, required: false, default: 0 },
     },
+    owner: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    createdAt: { type: Number, required: false, default: Date.now() },
+})
 
-    owner: {
-        user: { type: Schema.Types.ObjectId, required: true },
-        timestamp: { type: Number, required: false, default: Date.now() },
+FoodSchema.pre(['find', 'findOne'], function() {
+    this.populate({
+        path: 'owner',
+        select: '_id credential.userID'
+    })
+});
+
+FoodSchema.set('toJSON', {
+    transform: function (doc, ret, options) {
+        if(ret.owner.credential) {
+            ret.owner.userID = ret.owner.credential.userID
+            delete ret.owner.credential
+        }
+        return ret
     }
-
 })
