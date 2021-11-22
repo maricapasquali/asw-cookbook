@@ -1332,6 +1332,8 @@ paths:
           $ref: "#/components/responses/unauthorized_error"
         403:
           $ref: "#/components/responses/forbidden_post_error"
+        409:
+          description: Food has been already inserted
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1425,7 +1427,9 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_post_error"
         404:
-          description: User not found
+          description: User/Food not found
+        409:
+          description: Food has been already inserted in the shopping list
         500:
           $ref: "#/components/responses/general_error" 
 
@@ -1488,7 +1492,7 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
-          description: Shopping List point not found
+          description: User/Shopping List/Food not found
         500:
           $ref: "#/components/responses/general_error" 
 
@@ -1507,7 +1511,7 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
-          description: Shopping List point not found
+          description: User/Shopping List/Food not found
         500:
           $ref: "#/components/responses/general_error" 
 
