@@ -15,20 +15,13 @@ import {client_origin, server_origin} from "../../../modules/hosting/variables";
 
 import {ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
 import * as path from "path";
-import {ImageUploader} from "../../modules/image.uploader";
+import {FileConfigurationImage, fileUploader} from "../index";
 
 const app_name = require('../../../app.config.json').app_name
 
 const tokensManager: IJwtToken = new JwtToken()
 const accessManager: IRbac = new RBAC()
 const mailer: IMailer = new Mailer(`no-reply@${app_name.toLowerCase()}.com`);
-
-const imageUploader = new ImageUploader(path.resolve('cookbook-server/images'))
-imageUploader.configuration = {
-    newFileName: function (file: any){
-        return randomString(30) + path.extname(file.originalname)
-    }
-}
 
 const send_email_signup = function (user) {
     let randomKey: string = randomString()
@@ -67,7 +60,12 @@ const send_email_signup = function (user) {
 }
 
 export function uploadProfileImage(){
-    return imageUploader.upload('img')
+    let config = {...FileConfigurationImage, ...{
+            newFileName: function (file: any){
+                return randomString(30) + path.extname(file.originalname)
+            }
+        }}
+    return fileUploader.single('img', config)
 }
 
 export function create_user(req, res){

@@ -1,6 +1,9 @@
 import {IRbac, RBAC} from "../modules/rbac";
 import {extractAuthorization} from "../modules/utilities";
 import {IJwtToken, JwtToken} from "../modules/jwt.token";
+import {FileUploader, IFileUploader, UploaderConfiguration} from "../modules/uploader";
+import FileType = FileUploader.FileType;
+import * as path from "path";
 
 const tokensManager: IJwtToken = new JwtToken()
 const accessManager: IRbac = new RBAC()
@@ -22,4 +25,16 @@ export function userIsAuthorized(req, res, options: {operation: RBAC.Operation, 
         return false
     }
     return decoded_token
+}
+
+export const fileUploader: IFileUploader = new FileUploader()
+
+export const FileConfigurationImage: UploaderConfiguration = {
+    type: FileType.IMAGE,
+    dest: path.resolve('cookbook-server/images'),
+}
+
+export const FileConfigurationVideo: UploaderConfiguration = {
+    type: FileType.VIDEO,
+    dest: path.resolve('cookbook-server/videos'),
 }
