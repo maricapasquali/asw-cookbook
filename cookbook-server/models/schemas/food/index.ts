@@ -54,7 +54,7 @@ FoodSchema.pre(['find', 'findOne'], function() {
 
 FoodSchema.set('toJSON', {
     transform: function (doc, ret, options) {
-        if(ret.owner.credential) {
+        if(ret.owner && ret.owner.credential) {
             ret.owner.userID = ret.owner.credential.userID
             delete ret.owner.credential
         }

@@ -1,30 +1,13 @@
 import {Food} from '../../models'
 import {Types} from "mongoose";
-import {extractAuthorization} from "../../modules/utilities";
-import {IJwtToken, JwtToken} from "../../modules/jwt.token";
-import {IRbac, RBAC} from "../../modules/rbac";
 
-const tokensManager: IJwtToken = new JwtToken()
-const accessManager: IRbac = new RBAC()
+import {RBAC} from "../../modules/rbac";
+import {userIsAuthorized} from "../index";
 
 export function uploadImage() {}
 
-function authorized(req, res, options: {operation: RBAC.Operation} ){
-    const {access_token} = extractAuthorization(req.headers)
-    if(!access_token) {
-        res.status(400).json({description: 'Missing authorization.'})
-        return false
-    }
-    let decoded_token = tokensManager.checkValidityOfToken(access_token);
-    if(!decoded_token) {
-        res.status(401).json({description: 'User is not authenticated'})
-        return false
-    }
-    if(!accessManager.isAuthorized(decoded_token.role, options.operation, RBAC.Subject.FOOD)) {
-        res.status(403).json({description: 'User is unauthorized'})
-        return false
-    }
-    return decoded_token
+function authorized(req, res, options: {operation: RBAC.Operation}): {_id: string, role: string} | false {
+    return userIsAuthorized(req, res, {operation: options.operation, subject: RBAC.Subject.FOOD})
 }
 
 export function create_food(req, res) {

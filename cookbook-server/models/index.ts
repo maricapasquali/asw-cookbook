@@ -5,7 +5,6 @@ import {EmailLinkSchema, IEmailLink} from './schemas/email_link'
 
 import {FoodSchema, IFood} from "./schemas/food";
 import {ShoppingListSchema, IShoppingList} from "./schemas/shopping-list";
-import {ShoppingListPointSchema, IShoppingListPoint} from "./schemas/shopping-list/point";
 import {RecipeSchema, IRecipe} from "./schemas/recipe";
 import {LikeSchema, ILike} from "./schemas/recipe/like";
 import {CommentSchema, IComment} from "./schemas/recipe/comment";
@@ -16,7 +15,6 @@ export const EmailLink: Model<IEmailLink> = model<IEmailLink>('EmailLink', Email
 
 export const Food: Model<IFood> = model<IFood>('Food', FoodSchema)
 export const ShoppingList: Model<IShoppingList> = model<IShoppingList>('ShoppingList', ShoppingListSchema)
-export const ShoppingListPoint: Model<IShoppingListPoint> = model<IShoppingListPoint>('ShoppingListPoint', ShoppingListPointSchema)
 export const Recipe: Model<IRecipe> = model<IRecipe>('Recipe', RecipeSchema)
 export const Like: Model<ILike> = model<ILike>('Like', LikeSchema)
 export const Comment: Model<IComment> = model<IComment>('Comment', CommentSchema)
