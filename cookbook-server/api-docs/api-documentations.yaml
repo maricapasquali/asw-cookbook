@@ -1043,9 +1043,33 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/recipe"
+              type: object
+              properties:
+                img:
+                  $ref: "#/components/schemas/recipe/properties/img"
+                tutorial:
+                  $ref: "#/components/schemas/recipe/properties/tutorial"
+                name:
+                  $ref: "#/components/schemas/recipe/properties/name"
+                ingredients:
+                  $ref: "#/components/schemas/recipe/properties/ingredients"
+                preparation:
+                  $ref: "#/components/schemas/recipe/properties/preparation"
+                note:
+                  $ref: "#/components/schemas/recipe/properties/note"
+                shared:
+                  $ref: "#/components/schemas/recipe/properties/shared"
+                country:
+                  $ref: "#/components/schemas/recipe/properties/country"
+                category:
+                  $ref: "#/components/schemas/recipe/properties/category"
+                diet:
+                  $ref: "#/components/schemas/recipe/properties/diet"
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/recipe"
       responses:
         201:
           description: "New recipe has been created"
