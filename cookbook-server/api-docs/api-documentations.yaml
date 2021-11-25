@@ -125,15 +125,26 @@ components:
         note:
           type: string
         shared:
-          oneOf:
-            - type: boolean
-            - type: array
-              items:
-                type: string
-                description: user's identifier
-          description: true if it's shared, false if it's saved, list of string if it's shared in chat
+          type: boolean
+          description: identifies if the recipe has been shared with everyone or not
           default: false
-        timestamp: 
+        permission:
+          type: array
+          items:
+            type: object
+            properties:
+              user:
+                type: string
+              granted:
+                type: string
+                description: user's permission on a recipe
+                enum:
+                  - read
+                  - read-write
+                  - root
+        createdAt:
+          type: number
+        updatedAt:
           type: number
         country:
           type: string
@@ -171,8 +182,11 @@ components:
         - ingredients
         - preparation
         - type
-        - timestamp
+        - createdAt
+        - updatedAt
         - category
+        - permission
+        - shared
         # - country
 
     food:
@@ -451,11 +465,10 @@ components:
       required: false
       schema:
         type: integer
-    privateTypeRecipe:
+    typeRecipe:
       name: type
-      in: path
+      in: query
       description: type of recipe
-      required: true
       schema:
         type: string
         enum:
@@ -463,6 +476,13 @@ components:
           - saved
           - shared-in-chat
           - loved
+    recipeIdentifier:
+      name: recipesID
+      in: path
+      description: "recipe's identifier"
+      required: true
+      schema:
+        type: string
 
   securitySchemes:
     BasicAuth:
@@ -1031,6 +1051,45 @@ paths:
 
 
   #RECIPES
+  /recipes:
+    get:
+      description: Retrieve all shared recipe from all users
+      tags:
+        - Recipes
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/recipe"
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /recipes-for-country:
+    get:
+      tags:
+        - Recipes
+      description: Number of shared recipes for country
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    country:
+                      type: string
+                    number:
+                      type: number
+        500:
+          $ref: "#/components/responses/general_error"
+
   /users/{id}/recipes:
     parameters:
       - $ref: "#/components/parameters/userIdentifier"
@@ -1067,9 +1126,6 @@ paths:
                   $ref: "#/components/schemas/recipe/properties/category"
                 diet:
                   $ref: "#/components/schemas/recipe/properties/diet"
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/recipe"
       responses:
         201:
           description: "New recipe has been created"
@@ -1092,120 +1148,70 @@ paths:
           $ref: "#/components/responses/general_error"
 
     get:
-      # description: A specific user's recipes
-      description: A specific user's shared recipes
+      description: List of a specific user's recipes
       tags:
-        - Recipes      
+        - Recipes
+      security:
+        - BearerAuth: []
       parameters:
-        # - name : shared
-        #   in: query
-        #   description: only recipes shared
-        #   required: false          
-        #   schema:
-        #     type: boolean
-        #     default: true
-
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/typeRecipe"
       responses:
         200:
           description: ""
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/recipe"
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/recipe"
+                  total:
+                    type: number
+                  paginationInformation:
+                    type: object
+                    properties:
+                      page:
+                        type: number
+                      limit:
+                        type: number
+
         400:
           $ref: "#/components/responses/bad_request"
-        # 401:
-        #   description: User is not authorized to access this resource (when the parameter 'shared' is not set or is false and user is not authenticated)
-        # 403:
-        #   description: User is not authorized to access this resource (when the parameter 'shared' is not set or is false and user is authenticated but it is not the recipes' owner)
+        401:
+           description: User is not authenticated
+        403:
+           description: User is not authorized to access this resource
         404:
-          description: "Recipes are not found"
+          description: User not found
         500:
           $ref: "#/components/responses/general_error" 
 
   /users/{id}/recipes/{recipesID}:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      - $ref: "#/components/parameters/recipeIdentifier"
     get:
-      description: A specific user's shared recipe
+      description: A specific user's recipe
       tags:
         - Recipes
-
+      security:
+        - BearerAuth: []
       parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-        - name: "recipesID"
-          in: "path"
-          description: "recipe's identifier"
+        - name: type
+          in: query
+          description: type of recipe
           required: true
           schema:
             type: string
-
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/recipe"
-        400:
-          $ref: "#/components/responses/bad_request"
-        404:
-          description: "Recipe not found"
-        500:
-          $ref: "#/components/responses/general_error"
-
-  /users/{id}/recipes/{type}:
-    get:
-      description: A specific user's 'type' recipes
-      tags:
-        - Recipes
-      security:
-        - BearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/limit"
-        - $ref: '#/components/parameters/privateTypeRecipe'
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/recipe"
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_get_error"
-        404:
-          description: Recipes are not found
-        500:
-          $ref: "#/components/responses/general_error"
-
-  /users/{id}/recipes/{type}/{recipesID}:
-    parameters:
-      - $ref: "#/components/parameters/userIdentifier"
-      - name: "recipesID"
-        in: "path"
-        description: "recipe's identifier"
-        required: true
-        schema:
-          type: string
-
-    get:
-      description: ""
-      tags:
-        - Recipes  
-      security:
-        - BearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/privateTypeRecipe'
+            enum:
+                - shared
+                - saved
+                - shared-in-chat
+                - loved
       responses:
         200:
           description: ""
@@ -1222,54 +1228,41 @@ paths:
         404:
           description: Recipe not found
         500:
-          $ref: "#/components/responses/general_error" 
+          $ref: "#/components/responses/general_error"
+
     patch:
       description: ""
       tags:
         - Recipes
       security:
         - BearerAuth: []
-      parameters:
-        - name: type
-          in: query
-          description: type of recipe
-          required: true
-          schema:
-            type: string
-            enum:
-              - shared
-              - saved
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              #$ref: "#/components/schemas/recipe"
               type: object
               properties:
-                name: 
-                  type: string
+                img:
+                  $ref: "#/components/schemas/recipe/properties/img"
+                tutorial:
+                  $ref: "#/components/schemas/recipe/properties/tutorial"
+                name:
+                  $ref: "#/components/schemas/recipe/properties/name"
                 ingredients:
-                  type: object
-                  properties:
-                    foodID:
-                      type: string
-                    name:
-                      type: string
-                    quantity:
-                      type: number
+                  $ref: "#/components/schemas/recipe/properties/ingredients"
                 preparation:
-                  type: string
+                  $ref: "#/components/schemas/recipe/properties/preparation"
                 note:
-                  type: string
+                  $ref: "#/components/schemas/recipe/properties/note"
                 shared:
-                  type: boolean
+                  $ref: "#/components/schemas/recipe/properties/shared"
                 country:
-                  type: string
-                category: 
-                  type: string
+                  $ref: "#/components/schemas/recipe/properties/country"
+                category:
+                  $ref: "#/components/schemas/recipe/properties/category"
                 diet:
-                  type: string
+                  $ref: "#/components/schemas/recipe/properties/diet"
       responses:
         200:
           description: Recipe has been updated
@@ -1280,20 +1273,19 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
-          description: Recipe not exist
+          description: Recipe not found
         500:
-          $ref: "#/components/responses/general_error"        
+          $ref: "#/components/responses/general_error"
+
     delete:
       description: ""
       tags:
         - Recipes
       security:
         - BearerAuth: []
-      parameters:
-        - $ref: '#/components/parameters/privateTypeRecipe'
       responses:
         200:
-          description: Recipe has been deleted    
+          description: Recipe has been deleted
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1301,31 +1293,59 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
-          description: Recipe not exist
+          description: Recipe not found
         500:
-          $ref: "#/components/responses/general_error"       
+          $ref: "#/components/responses/general_error"
 
-  /recipes-for-country:
-    get:
+
+  /users/{id}/reicpes/{recipesID}/permission:
+    put:
+      description: ''
       tags:
         - Recipes
-      description: Number of shared recipes for country
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - $ref: "#/components/parameters/recipeIdentifier"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permission:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      user:
+                        type: string
+                        description: User's identifier
+                      granted:
+                        type: string
+                        description: user's permission on a recipe
+                        default: read
+                        enum:
+                          - read
+                          - write-read
+                          - root
+                    required:
+                      - user
       responses:
         200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    country:
-                      type: string
-                    number:
-                      type: number
+          description: Permission of recipe has been updated
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: Recipe not found or Users are not found
         500:
-          $ref: "#/components/responses/general_error" 
+          $ref: "#/components/responses/general_error"
 
 #FOODS 
   /foods:
