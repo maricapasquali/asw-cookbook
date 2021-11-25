@@ -42,3 +42,9 @@ export function randomString(size: number = 20) {
 export function futureDateFromNow(minutes: number): number{
     return new Date(Date.now() + minutes*60000).getTime()
 }
+
+export function decodeToArray(encodedString: string): Array<any> {
+    let array = JSON.parse(encodedString)
+    if(!Array.isArray(array)) throw new Error("it's not array.")
+    return array
+}

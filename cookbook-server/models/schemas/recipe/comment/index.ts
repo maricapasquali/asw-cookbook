@@ -16,7 +16,7 @@ export interface IComment extends Document {
 }
 
 export const CommentSchema: Schema<IComment> = new Schema<IComment>({
-    user: { type: Schema.Types.Mixed, required: true }, //Schema.Types.ObjectId | String
+    user: { type: Schema.Types.Mixed, required: true, ref: 'User' }, //Schema.Types.ObjectId | String
     timestamp: { type: Number, required: false, default: Date.now()},
     content: { type: String, required: true },
     reported: { type: Boolean, required: false, default: false},

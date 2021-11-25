@@ -10,7 +10,8 @@ export const LikeSchema: Schema<ILike> = new Schema<ILike>({
     user: {
         type: Schema.Types.Mixed , //Schema.Types.ObjectId | String
         default: 'anonymous',
-        required: true
+        required: true,
+        ref: 'User'
     },
     timestamp:{ type: Number, required: false, default: Date.now() },
 })

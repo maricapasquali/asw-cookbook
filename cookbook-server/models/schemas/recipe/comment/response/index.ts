@@ -13,7 +13,7 @@ export interface IResponse extends Document {
 }
 
 export const ResponseSchema: Schema<IResponse> = new Schema<IResponse>({
-    user_owner_recipe: { type: Schema.Types.ObjectId, required: true },
+    user_owner_recipe: { type: Schema.Types.ObjectId, required: true, ref: 'User'},
     timestamp: { type: Number, required: false, default: Date.now()},
     content: { type: String, required: true },
     reported: { type: Boolean, required: false, default: false},

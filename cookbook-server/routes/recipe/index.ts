@@ -1,23 +1,25 @@
 import * as recipeController from '../../controllers/recipe'
 
 export default function (app) {
+    // for ALL users
+    app.route('/api/recipes')
+       .get(recipeController.list_all_recipes)
 
+    app.route('/api/recipes-for-country')
+       .get(recipeController.numberRecipesForCountry)
+
+    // for specific user
     app.route('/api/users/:id/recipes')
-        //.all(recipeController.uploadImageOrTutorial()) // for upload image and/or tutorial
-        .post(recipeController.create_recipe)
-        .get(recipeController.list_recipes)
+       .all(recipeController.uploadImageAndTutorial()) // for upload image and/or tutorial
+       .post(recipeController.create_recipe)
+       .get(recipeController.list_recipes)
 
     app.route('/api/users/:id/recipes/:recipeID')
-        .get(recipeController.one_recipe)
+       .all(recipeController.uploadImageAndTutorial()) // for update image and/or tutorial
+       .patch(recipeController.update_recipe)
+       .delete(recipeController.delete_recipe)
+       .get(recipeController.one_recipe)
 
-    app.route('/api/recipes-for-country').get(recipeController.numberRecipesForCountry)
-
-    app.route('/api/users/:id/recipes/:type')
-        .get(recipeController.private_version_recipes)
-
-    app.route('/api/users/:id/recipes/:type/:recipeID')
-        // .all(recipeController.uploadImageOrTutorial()) // for update image and/or tutorial
-        .patch(recipeController.update_recipe) // only shared and saved
-        .get(recipeController.private_version_one_recipe)
-        .delete(recipeController.delete_recipe)
+    app.route('/api/users/:id/recipes/:recipeID/permission')
+       .put(recipeController.update_permission_recipe)
 }
