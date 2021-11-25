@@ -2,7 +2,7 @@ import {Food} from '../../models'
 import {Types} from "mongoose";
 
 import {RBAC} from "../../modules/rbac";
-import {userIsAuthorized} from "../index";
+import {pagination, userIsAuthorized} from "../index";
 
 export function uploadImage() {}
 
@@ -31,26 +31,10 @@ export function list_foods(req, res) {
     if(authorized(req, res, {operation: RBAC.Operation.RETRIEVE})){
         let { page, limit } = req.query
         if(page && limit && (isNaN(page) || isNaN(limit))) return res.status(400).json({ description: 'Required that page and limit are number'})
-        Food.countDocuments().then(nDocs  => {
-            let response = {items: [], total: 0, paginationInfo: undefined}
 
-            let query = Food.find()
-                            .collation({ 'locale': 'en' }) // sort case insensitive
-                            .sort({ 'name': 1 });
-
-            if(page && limit) {
-                page = +page
-                limit = +limit
-                response.paginationInfo = {page: page, perPage: limit}
-                query = query.limit(limit).skip((page - 1) * limit)
-            }
-
-            query.then(foods => {
-                response.items = foods
-                response.total = nDocs
-                return res.status(200).json(response)
-            }, err => res.status(500).json({description: err.message}))
-        })
+        pagination(() =>
+            Food.find().collation({ 'locale': 'en' } /* sort case insensitive */ ).sort({ 'name': 1 }), page && limit ? {page: +page, limit: +limit}: undefined
+        ).then(paginationResult => res.status(200).json(paginationResult), err => res.status(500).json({description: err.message}))
     }
 
 }

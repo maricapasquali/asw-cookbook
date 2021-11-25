@@ -4,6 +4,7 @@ import {IJwtToken, JwtToken} from "../modules/jwt.token";
 import {FileUploader, IFileUploader, UploaderConfiguration} from "../modules/uploader";
 import FileType = FileUploader.FileType;
 import * as path from "path";
+import {Document, Query} from "mongoose";
 
 const tokensManager: IJwtToken = new JwtToken()
 const accessManager: IRbac = new RBAC()
@@ -37,4 +38,17 @@ export const FileConfigurationImage: UploaderConfiguration = {
 export const FileConfigurationVideo: UploaderConfiguration = {
     type: FileType.VIDEO,
     dest: path.resolve('cookbook-server/videos'),
+}
+
+export type PaginationOptions = { page: number, limit: number }
+export type PaginationResult = { items: Document[], total: number, paginationInfo?: PaginationOptions }
+export function pagination(lazyQuery: () => Query<Document[], Document, {}, Document>, options?: PaginationOptions): Promise<PaginationResult> {
+    return lazyQuery().countDocuments()
+                .then(nDocs => {
+                    let _query = lazyQuery()
+                    let _paginationInfo = options
+                    if(options && (options.page && options.limit)) _query = _query.limit(options.limit).skip((options.page - 1) * options.limit)
+                    else _paginationInfo = undefined
+                    return _query.then(docs => Promise.resolve({ items: docs, total: nDocs, paginationInfo: _paginationInfo }), err => Promise.reject(err))
+                }, err => Promise.reject(err))
 }
