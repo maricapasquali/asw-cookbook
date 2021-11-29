@@ -223,6 +223,7 @@ components:
               type: number
         owner:
           type: string
+          description: user's identifier
         createdAt:
           type: number
 
@@ -230,69 +231,72 @@ components:
         - name
         - nutritial_values
         - owner
-        
+
+    shoppingListPoint:
+      type: object
+      properties:
+        food:
+          description: identifier of food
+          type: string
+        checked:
+          type: boolean
+          default: false
+      required:
+        - food
+
     comment:
       type: object
       properties:
         user: 
           type: string
-          default: anonymous
-          example:
-            "anonymous, 231313123"
+          default: undefined
+          description: user's identifier
         timestamp:
           type: number
         content:
           type: string
         reported:
-          type: boolean
-          default: false
+          type: array
+          items:
+            type: object
+            properties:
+              user:
+                type: string
+                description: user's identifier
+                default: undefined
+              timestamp:
+                type: number
+            required:
+              - timestamp
+          default: []
         likes: 
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/like"
           default: []
-          example:
-            - "anonymous"
-            - "231313123"
-        response:
-          type: object
-          default: {}
-          properties:
-            user_owner_recipe: 
-              type: string
-              example:
-                "231313123"
-            timestamp:
-              type: number
-            content:
-              type: string
-            reported:
-              type: boolean
-              default: false
-            likes: 
-              type: array
-              items:
-                type: string
-          required:
-          - user_owner_recipe
-          - timestamp
-          - content
+        responses:
+          type: array
+          items:
+            type: string
+            description: identifier of a comment
+        recipe:
+          type: string
+          description: identifier of recipe
       required:
-        - user
         - timestamp
         - content
-     
+        - recipe
+
     like:
       type: object
       properties:
         user:
           type: string
           description: user's identifier
-          default: anonymous
+          default: undefined
         timestamp:
           type: number
       required:
-        - user
         - timestamp
 
     chat:
@@ -359,36 +363,6 @@ components:
         - from
         - content
         - timestamp
-
-    shoppingListPoint:
-      type: object
-      properties:
-        food:
-          description: identifier of food
-          type: string
-        checked:
-          type: boolean
-          default: false
-      required:
-        - food
-
-    report:
-      type: object
-      properties:
-        from:
-          type: string
-          description: user's identifer 
-          example: "231313213, anonymous"
-        recipeID:
-          type: string
-          description: identifer of recipe
-        commentID:
-          type: string
-          description: identifer of comment
-      required:
-        - from
-        - recipeID
-        - commentID
 
   responses:
     general_error:
@@ -480,6 +454,22 @@ components:
       name: recipesID
       in: path
       description: "recipe's identifier"
+      required: true
+      schema:
+        type: string
+
+    commentIdentifier:
+      name: commentID
+      in: "path"
+      description: "comment's identifier"
+      required: true
+      schema:
+        type: string
+
+    likeIdentifier:
+      name: likeID
+      in: "path"
+      description: "like's identifier"
       required: true
       schema:
         type: string
@@ -1050,7 +1040,7 @@ paths:
 
 
 
-  #RECIPES
+#RECIPES
   /recipes:
     get:
       description: Retrieve all shared recipe from all users
@@ -1070,9 +1060,9 @@ paths:
 
   /recipes-for-country:
     get:
+      description: Number of shared recipes for country
       tags:
         - Recipes
-      description: Number of shared recipes for country
       responses:
         200:
           description: ""
@@ -1141,7 +1131,7 @@ paths:
         401:
           $ref: "#/components/responses/unauthorized_error"
         403:
-          description: User is not allowed to create this resource
+          $ref: "#/components/responses/forbidden_post_error"
         404:
           description: User not found
         500:
@@ -1182,9 +1172,9 @@ paths:
         400:
           $ref: "#/components/responses/bad_request"
         401:
-           description: User is not authenticated
+           $ref: "#/components/responses/unauthorized_error"
         403:
-           description: User is not authorized to access this resource
+          $ref: "#/components/responses/forbidden_get_error"
         404:
           description: User not found
         500:
@@ -1236,6 +1226,18 @@ paths:
         - Recipes
       security:
         - BearerAuth: []
+      parameters:
+        - name: field
+          in: query
+          description: |
+              _permission_ : It allows you to add permissions on recipe, if you are authorized.
+
+              Required header content-type : application/json.
+
+          schema:
+            type: string
+            enum:
+              - permission
       requestBody:
         required: true
         content:
@@ -1263,54 +1265,7 @@ paths:
                   $ref: "#/components/schemas/recipe/properties/category"
                 diet:
                   $ref: "#/components/schemas/recipe/properties/diet"
-      responses:
-        200:
-          description: Recipe has been updated
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_patch_put_error"
-        404:
-          description: Recipe not found
-        500:
-          $ref: "#/components/responses/general_error"
 
-    delete:
-      description: ""
-      tags:
-        - Recipes
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: Recipe has been deleted
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_delete_error"
-        404:
-          description: Recipe not found
-        500:
-          $ref: "#/components/responses/general_error"
-
-
-  /users/{id}/reicpes/{recipesID}/permission:
-    put:
-      description: ''
-      tags:
-        - Recipes
-      security:
-        - BearerAuth: [ ]
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-        - $ref: "#/components/parameters/recipeIdentifier"
-      requestBody:
-        required: true
-        content:
           application/json:
             schema:
               type: object
@@ -1335,7 +1290,27 @@ paths:
                       - user
       responses:
         200:
-          description: Permission of recipe has been updated
+          description: Recipe has been updated / Permission of recipe has been updated
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: Recipe not found or Users are not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+    delete:
+      description: ""
+      tags:
+        - Recipes
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Recipe has been deleted
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1343,11 +1318,261 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
-          description: Recipe not found or Users are not found
+          description: Recipe not found
         500:
           $ref: "#/components/responses/general_error"
 
-#FOODS 
+#COMMENTS
+  /comments-reported:
+    get:
+      description: Retrieve all reported comments. Available only for administrator.
+      tags:
+        - Comments
+        - Reports
+      security:
+        - BearerAuth: [ ]
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/comment"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/recipes/{recipesID}/comments:
+    post:
+      description: User leaves a comment to a recipe
+      tags:
+        - Comments
+        - Recipes
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - $ref: "#/components/parameters/recipeIdentifier"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+
+      responses:
+        201:
+          description: New comment of the recipe has been created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/comment"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
+        404:
+          description: Recipe not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/recipes/{recipesID}/comments/{commentID}:
+    parameters:
+      - $ref: "#/components/parameters/userIdentifier"
+      - $ref: "#/components/parameters/recipeIdentifier"
+      - $ref: "#/components/parameters/commentIdentifier"
+
+    patch:
+      description: Update the content of a comment.
+      tags:
+        - Comments
+        - Recipes
+        - Reports
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: action
+          in: query
+          description: |
+            _report_ : It allows you to report a comment
+
+            _un-report_: It allows you to remove reports from a comment.  Available only for administrator.
+          schema:
+            type: string
+            enum:
+              - report
+              - un-report
+      requestBody:
+        required: false
+        description: Body is required if no parameter 'action' is set.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+      responses:
+        200:
+          description: Comment has been reported / Comment has been un-reported / Content of comment has been updated
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: Comment not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+    delete:
+      description: Delete a comment. Available only for administrator (if comment is reported) and comment's owner.
+      tags:
+        - Comments
+        - Recipes
+        - Reports
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Comment has been deleted
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: Comment not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/recipes/{recipesID}/comments/{commentID}/responses:
+    post:
+      description: User responds a comment
+      tags:
+        - Comments
+        - Recipes
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - $ref: "#/components/parameters/recipeIdentifier"
+        - $ref: "#/components/parameters/commentIdentifier"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+
+      responses:
+        201:
+          description: New comment of the selected comment has been created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/comment"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
+        404:
+          description: Comment not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+#LIKES
+  /users/{id}/recipes/{recipesID}/likes:
+    post:
+      description: User likes a recipe/comment
+      tags:
+        - Likes
+        - Recipes
+        - Comments
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - $ref: "#/components/parameters/recipeIdentifier"
+        - name: commentID
+          in: query
+          description: "comment's identifier"
+          required: false
+          schema:
+            type: string
+      responses:
+        201:
+          description: New like of the recipe/comment has been created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/like"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
+        404:
+          description: Recipe/Comment not found
+        409:
+          description: You have already liked it.
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/recipes/{recipesID}/likes/{likeID}:
+    delete:
+      description: User no longer likes the recipe/comment
+      tags:
+        - Likes
+        - Recipes
+        - Comments
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - $ref: "#/components/parameters/recipeIdentifier"
+        - $ref: "#/components/parameters/likeIdentifier"
+        - name: commentID
+          in: query
+          description: "comment's identifier"
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Like has been deleted
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: Like not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+#FOODS
   /foods:
    post:
       tags:
@@ -1559,217 +1784,6 @@ paths:
         500:
           $ref: "#/components/responses/general_error" 
 
-
-#COMMENTS
-  /users/{id}/recipes/{recipesID}/comments:
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-        - name: "recipesID"
-          in: "path"
-          description: "recipe's identifier"
-          required: true
-          schema:
-            type: string
-      
-      post:
-        description: ""
-        tags:
-          - Comments
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                #$ref: "#/components/schemas/comment"
-                type: object
-                properties:
-                  user:
-                    type: string
-                  timestamp:
-                    type: number
-                  content:
-                    type: string
-                  
-        responses:
-          200:
-            description: New comment of the recipe has been created
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/comment"
-          400:
-            $ref: "#/components/responses/bad_request"
-          404:
-            description: Recipe not exist
-          500:
-            $ref: "#/components/responses/general_error"        
-    
-      get:
-        description: ""
-        tags:
-          - Comments
-        responses:
-          200:
-            description: ""
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/comment"
-          400:
-            $ref: "#/components/responses/bad_request"
-          404:
-            description: Comments are not found
-          500:
-            $ref: "#/components/responses/general_error"
-
-  /users/{id}/recipes/{recipesID}/comments/{commentID}:
-      parameters:
-          - $ref: "#/components/parameters/userIdentifier"
-          - name: "recipesID"
-            in: "path"
-            description: "recipe's identifier"
-            required: true
-            schema:
-              type: string
-          - name: "commentID"
-            in: "path"
-            description: "comment's identifier"
-            required: true
-            schema:
-              type: string
-      patch:
-        description: "User who owns the recipe replies to a comment"
-        tags:
-          - Comments
-        security:
-        - BearerAuth: []
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  response:
-                    type: object
-                    properties:
-                      user_owner_recipe: 
-                        type: string
-                        example:
-                          "231313123"
-                      timestamp:
-                        type: number
-                      content:
-                        type: string
-        responses:
-          200:
-            description: Comment of the recipe has been updated
-          400:
-            $ref: "#/components/responses/bad_request"
-          403:
-            description: > 
-              User is not allowed to update this resource, 
-              becase she/he is not the owner
-          404:
-            description: Recipe not exist
-          500:
-            $ref: "#/components/responses/general_error"        
-   
-      delete:
-        description: "Delete a comment (available only for administrator)"
-        tags:
-          - Comments
-        security:
-          - BearerAuth: []
-        responses:
-          200:
-            description: Comment has been deleted
-          400:
-            $ref: "#/components/responses/bad_request"
-          401:
-            $ref: "#/components/responses/unauthorized_error"
-          403:
-            $ref: "#/components/responses/forbidden_delete_error"
-          404:
-            description: Comment not found
-          500:
-            $ref: "#/components/responses/general_error"
-            
-#LIKES
-  /users/{id}/recipes/{recipesID}/likes:
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-        - name: "recipesID"
-          in: "path"
-          description: "recipe's identifier"
-          required: true
-          schema:
-            type: string
-      
-      post:
-        description: "User likes a recipe"
-        tags:
-          - Likes
-    
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/like"
-                   
-        responses:
-          200:
-            description: New like of the recipe has been created
-          400:
-            $ref: "#/components/responses/bad_request"
-          404:
-            description: Recipe not exist
-          500:
-            $ref: "#/components/responses/general_error"          
-      
-      get:
-        description: ""
-        tags:
-          - Likes
-        responses:
-          200:
-            description: ""
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/like"
-          400:
-            $ref: "#/components/responses/bad_request"
-          404:
-            description: Likes are not found
-          500:
-            $ref: "#/components/responses/general_error"
-  
-  /users/{id}/recipes/{recipesID}/likes/{likeID}:
-    delete:
-      description: ""
-      tags:
-      - Likes
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: Like has been deleted
-        400:
-          $ref: "#/components/responses/bad_request"   
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_delete_error"
-        404:
-          description: Like not exist
-        500:
-          $ref: "#/components/responses/general_error"  
 
 #FRINEDS
   /users/{id}/friends:
@@ -2472,89 +2486,3 @@ paths:
           description: Notifications are not found
         500:
           $ref: "#/components/responses/general_error"
-
-#REPORTS
-  /reports:
-    post:
-      description:  Report an user's comment
-      tags:
-        - Reports
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/report"
-      responses:
-        201:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  reportID:
-                    type: string
-        400:
-          $ref: "#/components/responses/bad_request"               
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_post_error"
-        500:
-          $ref: "#/components/responses/general_error"
-
-    get:
-      description: Reports of users comment
-      tags:
-        - Reports
-      security:
-        - BearerAuth: []      
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/report"
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_get_error"
-        404:
-          description: Reports are not found
-        500:
-          $ref: "#/components/responses/general_error"
-
-  /reports/{reportID}:
-    delete:
-      description: ""
-      tags:
-        - Reports
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: reportID
-          in: path
-          required: true
-          description: report's identifier
-          schema:
-            type: string
-      responses:
-        200:
-          description: Report has been readed
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_delete_error"
-        404:
-          description: Report not found
-        500:
-          $ref: "#/components/responses/general_error"
-      
