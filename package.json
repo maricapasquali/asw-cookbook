@@ -5,7 +5,7 @@
     "build": "tsc --build & vue-cli-service build",
     "start-server": "node cookbook-server/index.js",
     "start-app": "node cookbook-app/index.js",
-    "dev-build-modules": "tsc --build",
+    "dev-build-modules": "tsc --build -w",
     "dev-server": "nodemon cookbook-server/index.js",
     "dev-app": "vue-cli-service serve",
     "test": "mocha"
@@ -14,7 +14,7 @@
     "watch": [
       "cookbook-server"
     ],
-    "ext": "js, ts, json"
+    "ext": "js, json"
   },
   "author": "Marica Pasquali",
   "license": "ISC",
