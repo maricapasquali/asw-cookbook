@@ -1,15 +1,17 @@
 import {IRbac, RBAC} from "../modules/rbac";
+import Operation = RBAC.Operation;
+import Subject = RBAC.Subject;
 import {extractAuthorization} from "../modules/utilities";
-import {IJwtToken, JwtToken} from "../modules/jwt.token";
+import {DecodedTokenType, IJwtToken, JwtToken} from "../modules/jwt.token";
 import {FileUploader, IFileUploader, UploaderConfiguration} from "../modules/uploader";
 import FileType = FileUploader.FileType;
 import * as path from "path";
 import {Document, Model, Query} from "mongoose";
 
-const tokensManager: IJwtToken = new JwtToken()
-const accessManager: IRbac = new RBAC()
+export const tokensManager: IJwtToken = new JwtToken()
+export const accessManager: IRbac = new RBAC()
 
-export function userIsAuthorized(req, res, options: {operation: RBAC.Operation, subject: RBAC.Subject, others?: (decodedToken: {_id: String, role: String}) => boolean}): {_id: string, role: string} | false {
+export function getRestrictedUser(req: any, res: any, options: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
     const {access_token} = extractAuthorization(req.headers)
     if(!access_token) {
         res.status(400).json({description: 'Missing authorization.'})
@@ -26,6 +28,48 @@ export function userIsAuthorized(req, res, options: {operation: RBAC.Operation, 
         return false
     }
     return decoded_token
+}
+
+export function getUser(req: any, res: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): Promise<DecodedTokenType | undefined>{
+    const {access_token} = extractAuthorization(req.headers)
+    let user: DecodedTokenType = undefined;
+    if(access_token){
+        let decoded_token = tokensManager.checkValidityOfToken(access_token);
+        if(!decoded_token) {
+            res.status(401).json({description: 'User is not authenticated'})
+            return Promise.reject(401)
+        }
+
+        if(options) {
+            options.others = options.others || (() => false)
+            if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.subject, options.others(decoded_token))){
+                res.status(403).json({description: 'User is unauthorized to execute this function.'})
+                return Promise.reject(403)
+            }
+        }
+
+        user = decoded_token
+    }
+    return Promise.resolve(user)
+}
+
+export function checkRequestHeaders(req: any, res: any, headersToCheck: object): boolean {
+    let headersNotValid: object = Object.entries(headersToCheck)
+                                        .filter(([key, value]) => {
+                                            let header = req.get(key)
+                                            if(header && header.search(value) == -1) return true
+                                            return header != value
+                                        })
+                                        .reduce((prev, current) => {
+                                            prev[current[0]] = current[1];
+                                            return prev;
+                                        }, {});
+    if(Object.keys(headersNotValid).length > 0)  {
+        console.debug(headersNotValid)
+        res.status(400).json({description: 'Headers are not correct. Correct headers : ' + JSON.stringify(headersNotValid) })
+        return false
+    }
+    return true
 }
 
 export const fileUploader: IFileUploader = new FileUploader()

@@ -2,8 +2,6 @@ import userRoute from './user'
 import foodRoute from './food'
 import shoppingListRoute from './shopping-list'
 import recipeRoute from './recipe'
-import likeRoute from './recipe/like'
-import commentRoute from './recipe/comment'
 import * as path from "path";
 
 export = function (app: any) {
@@ -17,7 +15,5 @@ export = function (app: any) {
     foodRoute(app)
     shoppingListRoute(app)
     recipeRoute(app)
-    likeRoute(app)
-    commentRoute(app)
     //TODO: ADD OTHER ROUTES
 }

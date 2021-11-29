@@ -164,6 +164,7 @@ export function login(req, res){
         if(user==null) return res.status(404).json({description: 'User is not found'});
         if(user.signup === 'pending') return res.status(403).json({signup: user.signup, description: 'User yet to be verified'});
         const result = bcrypt.compareSync(password, user.credential.hash_password)
+        console.debug('Password is correct = ', result)
         if(result) {
             let firstLogin = accessManager.isAdminUser(user.credential) && user.credential.tokens === undefined
             user.credential.tokens = tokensManager.createNewTokens({_id: user._id, userID: user.credential.userID, role: user.credential.role})
@@ -177,7 +178,7 @@ export function login(req, res){
                 },
                 err => res.status(500).json({description: err.message}))
         }
-        else res.status(403).json({description: 'User is unauthorized'});
+        else res.status(403).json({description: 'Password is uncorrected'});
     }, err => res.status(500).json({description: err.message}))
 }
 

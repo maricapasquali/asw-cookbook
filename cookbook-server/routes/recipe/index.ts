@@ -1,4 +1,6 @@
 import * as recipeController from '../../controllers/recipe'
+import likeRoute from "./like";
+import commentRoute from "./comment";
 
 export default function (app) {
     // for ALL users
@@ -20,6 +22,6 @@ export default function (app) {
        .delete(recipeController.delete_recipe)
        .get(recipeController.one_recipe)
 
-    app.route('/api/users/:id/recipes/:recipeID/permission')
-       .put(recipeController.update_permission_recipe)
+    commentRoute(app)
+    likeRoute(app)
 }

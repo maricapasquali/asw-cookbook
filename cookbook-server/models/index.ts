@@ -8,7 +8,7 @@ import {ShoppingListSchema, IShoppingList} from "./schemas/shopping-list";
 import {RecipeSchema, IRecipe} from "./schemas/recipe";
 import {LikeSchema, ILike} from "./schemas/recipe/like";
 import {CommentSchema, IComment} from "./schemas/recipe/comment";
-import {ResponseSchema, IResponse} from "./schemas/recipe/comment/response";
+import {ReportSchema, IReport} from "./schemas/recipe/comment/report";
 
 export const User: Model<IUser> = model<IUser>('User', UserSchema)
 export const EmailLink: Model<IEmailLink> = model<IEmailLink>('EmailLink', EmailLinkSchema)
@@ -18,6 +18,5 @@ export const ShoppingList: Model<IShoppingList> = model<IShoppingList>('Shopping
 export const Recipe: Model<IRecipe> = model<IRecipe>('Recipe', RecipeSchema)
 export const Like: Model<ILike> = model<ILike>('Like', LikeSchema)
 export const Comment: Model<IComment> = model<IComment>('Comment', CommentSchema)
-export const CommentResponse: Model<IResponse> = model<IResponse>('CommentResponse', ResponseSchema)
-
+export const Report: Model<IReport> = model<IReport>('Report', ReportSchema)
 //TODO: ADD OTHER SCHEMAS

@@ -48,16 +48,6 @@ export const FoodSchema: Schema<IFood> = new Schema<IFood>({
 FoodSchema.pre(['find', 'findOne'], function() {
     this.populate({
         path: 'owner',
-        select: '_id credential.userID'
+        select: { 'userID' : '$credential.userID' }
     })
 });
-
-FoodSchema.set('toJSON', {
-    transform: function (doc, ret, options) {
-        if(ret.owner && ret.owner.credential) {
-            ret.owner.userID = ret.owner.credential.userID
-            delete ret.owner.credential
-        }
-        return ret
-    }
-})

@@ -11,19 +11,37 @@ export class RBAC implements IRbac {
             { roles: [RBAC.Role.ADMIN], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.USER, others: true },
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.USER },
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.USER },
+
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.SESSION },
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.SESSION },
+
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.USER_CREDENTIAL },
+
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.FOOD },
-            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.FOOD },
+            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.FOOD, others: true },
+
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.SHOPPING_LIST },
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.SHOPPING_LIST },
-            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.SHOPPING_LIST },
-            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.SHOPPING_LIST }, //TODO: in realta è delete non è SHOPPING_LIST ma SHOPPING_LIST_POINT
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.SHOPPING_LIST_POINT },
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.SHOPPING_LIST_POINT },
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.SHOPPING_LIST_POINT },
+
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.RECIPE },
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.RECIPE },
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.RECIPE },
-            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.RECIPE },
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.RECIPE },
+
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.LIKE },
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.LIKE },
+
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.COMMENT},
+            { roles: [RBAC.Role.ADMIN], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.COMMENT, others: true },
+            { roles: [RBAC.Role.ADMIN], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.COMMENT, others: true},
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.COMMENT },
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.COMMENT },
+
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.COMMENT_REPORT},
+            { roles: [RBAC.Role.ADMIN], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.COMMENT_REPORT, others: true },
         ]
     }
 
@@ -43,7 +61,12 @@ export class RBAC implements IRbac {
 export namespace RBAC{
     export enum Role{ADMIN = 'admin', SIGNED = 'signed'}
     export enum Operation{CREATE, RETRIEVE, UPDATE, DELETE}
-    export enum Subject{USER, USER_CREDENTIAL, SESSION, FOOD, SHOPPING_LIST, RECIPE}
+    export enum Subject{
+        USER, USER_CREDENTIAL, SESSION,
+        FOOD, SHOPPING_LIST, SHOPPING_LIST_POINT,
+        RECIPE, LIKE,
+        COMMENT, COMMENT_REPORT,
+    }
 
     export interface Authorization {
         roles: Array<Role>,

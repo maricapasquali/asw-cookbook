@@ -4,17 +4,19 @@ import {Types} from "mongoose";
 import {IUser} from "../../models/schemas/user";
 import {RBAC} from "../../modules/rbac";
 
-import {userIsAuthorized} from "../index";
+import {getRestrictedUser} from "../index";
+import Subject = RBAC.Subject;
+import Operation = RBAC.Operation;
 
-function authorized(req, res, options: {operation: RBAC.Operation}): {_id: string, role: string} | false {
-    return userIsAuthorized(req, res, {
+function authorized(req, res, options: {operation: Operation, subject?: Subject}): {_id: string, role: string} | false {
+    return getRestrictedUser(req, res, {
         operation: options.operation,
-        subject: RBAC.Subject.SHOPPING_LIST,
+        subject: options.subject || Subject.SHOPPING_LIST_POINT,
         others: (decodedToken) => decodedToken._id !== req.params.id
     })
 }
 
-function getUser(req, res): Promise<IUser | any> {
+function getUser(req, res): Promise<IUser> {
     let {id} = req.params
     if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     return User.findOne()
@@ -31,52 +33,55 @@ function getUser(req, res): Promise<IUser | any> {
 }
 
 export function add_food(req, res){
-    if(authorized(req, res, {operation: RBAC.Operation.CREATE})){
-        let body = req.body
-        if(!Types.ObjectId.isValid(body.food)) return res.status(400).json({ description: 'Required a valid \'foodID\' '})
+    let body = req.body
+    if(!Types.ObjectId.isValid(body.food)) return res.status(400).json({ description: 'Required a valid \'foodID\' '})
 
-        getUser(req, res)
-            .then(user => {
-                Food.findOne()
-                    .where('_id').equals(body.food)
-                    .then(food => {
-                        if(!food) return res.status(404).json({description: 'Food is not found.'})
+    getUser(req, res)
+        .then(user => {
+            Food.findOne()
+                .where('_id').equals(body.food)
+                .then(food => {
+                    if(!food) return res.status(404).json({description: 'Food is not found.'})
 
-                        ShoppingList.findOne()
-                            .where('user').equals(user._id)
-                            .then(doc => {
-                                if(!doc) {
-                                    new ShoppingList({ user: user._id, shoppingList: [body] })
-                                        .save()
-                                        .then(_doc => res.status(201).json({ pointShoppingListID: _doc.shoppingList.pop()._id }),
-                                            err => {
-                                                console.error(err);
-                                                if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
-                                                return res.status(500).json({ code: err.code, description: err.message })
-                                            }
-                                        )
-                                }
-                                else{
-                                    doc.shoppingList.push(body)
-                                    doc.save()
-                                        .then(_doc => res.status(201).json({ pointShoppingListID: _doc.shoppingList.pop()._id }),
-                                            err => {
-                                                console.error(err)
-                                                if (MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
-                                                if (MongooseDuplicateError.is(err)) return res.status(409).json({description: 'Food has been already inserted in the shopping list.'})
-                                                return res.status(500).json({code: err.code, description: err.message})
-                                            }
-                                        )
-                                }
-                            }, err => res.status(500).json({ code: err.code || 0, description: err.message }))
+                    ShoppingList.findOne()
+                                .where('user').equals(user._id)
+                                .then(doc => {
+                                    if(!doc) {
+                                        if(authorized(req, res, { operation: Operation.CREATE, subject: Subject.SHOPPING_LIST })){
+                                            new ShoppingList({ user: user._id, shoppingList: [body] })
+                                                .save()
+                                                .then(_doc => res.status(201).json({ pointShoppingListID: _doc.shoppingList.pop()._id }),
+                                                    err => {
+                                                        console.error(err);
+                                                        if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
+                                                        return res.status(500).json({ code: err.code, description: err.message })
+                                                    }
+                                                )
+                                        }
+                                    }
+                                    else{
+                                        if(authorized(req, res, { operation: Operation.CREATE })){
+                                            doc.shoppingList.push(body)
+                                            doc.save()
+                                                .then(_doc => res.status(201).json({ pointShoppingListID: _doc.shoppingList.pop()._id }),
+                                                    err => {
+                                                        console.error(err)
+                                                        if (MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
+                                                        if (MongooseDuplicateError.is(err)) return res.status(409).json({description: 'Food has been already inserted in the shopping list.'})
+                                                        return res.status(500).json({code: err.code, description: err.message})
+                                                    }
+                                                )
+                                        }
 
-                    }, err => res.status(500).json({ code: err.code || 0, description: err.message }))
-            }, err => console.error(err))
-    }
+                                    }
+                                }, err => res.status(500).json({ code: err.code || 0, description: err.message }))
+
+                }, err => res.status(500).json({ code: err.code || 0, description: err.message }))
+        }, err => console.error(err))
 }
 
 export function list(req, res){
-    if(authorized(req, res, {operation: RBAC.Operation.RETRIEVE}))
+    if(authorized(req, res, {operation: Operation.RETRIEVE, subject: Subject.SHOPPING_LIST }))
         getUser(req, res)
             .then(user => {
                 ShoppingList.findOne()
@@ -111,11 +116,11 @@ function _updateFoodOnShoppingList(req, res, options: {body?: { checked: Boolean
 }
 
 export function update_food_on_list(req, res){
-  if(authorized(req, res, {operation: RBAC.Operation.UPDATE}))
+  if(authorized(req, res, {operation: Operation.UPDATE}))
        _updateFoodOnShoppingList(req, res, {responseDescription: "Shopping List point has been updated", body: req.body})
 }
 
 export function delete_food_on_list(req, res){
-    if(authorized(req, res, {operation: RBAC.Operation.DELETE}))
+    if(authorized(req, res, {operation: Operation.DELETE}))
         _updateFoodOnShoppingList(req, res, {responseDescription: "Shopping List point has been deleted"})
 }

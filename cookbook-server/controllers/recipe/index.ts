@@ -5,26 +5,28 @@ import {Document, Query, Types} from "mongoose";
 import {Food, Recipe, User} from "../../models";
 
 import {
+    checkRequestHeaders,
     existById,
     FileConfigurationImage,
     FileConfigurationVideo,
     fileUploader,
-    userIsAuthorized,
+    getRestrictedUser,
 } from '../index'
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 import {RBAC} from "../../modules/rbac";
 
-import {IRecipe} from "../../models/schemas/recipe";
 import FileType = FileUploader.FileType;
 import Operation = RBAC.Operation;
-import GrantedType = IRecipe.GrantedType;
+import {IPermission} from "../../models/schemas/recipe/permission";
+import GrantedType = IPermission.GrantedType;
 
 import {pagination} from "../index"
+import {DecodedTokenType} from "../../modules/jwt.token";
 
 const RecipeType: Array<string> = ['shared', 'saved',  'loved', 'shared-in-chat']
 
-function authorized(req, res, options: { operation: RBAC.Operation, others?: (decodedToken: {_id: string, role: string}) => boolean}): {_id: string, role: string} | false {
-    return userIsAuthorized(req, res, {operation: options.operation, subject: RBAC.Subject.RECIPE, others: options.others})
+function authorized(req, res, options: { operation: RBAC.Operation, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
+    return getRestrictedUser(req, res, {operation: options.operation, subject: RBAC.Subject.RECIPE, others: options.others})
 }
 
 function noAuthorizationForOther(id: string | Types.ObjectId){
@@ -99,27 +101,29 @@ export function uploadImageAndTutorial(){
 }
 
 export function create_recipe(req, res){
-    let {id} = req.params
-    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+    if(checkRequestHeaders(req, res, {'content-type': 'multipart/form-data'})){
+        let {id} = req.params
+        if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
 
-    if(authorized(req, res, {operation: Operation.CREATE, others: noAuthorizationForOther(id) })){
-        existById(User, [id])
-            .then(() => {
-                getBody(req, res)
-                    .then(recipeBody => {
-                        recipeBody.owner = req.params.id
-                        new Recipe(recipeBody)
-                            .save()
-                            .then(recipe => res.status(201).json({recipeID: recipe._id}),
-                                err => {
-                                    if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
-                                    if(MongooseDuplicateError.is(err)) return res.status(409).json({ description: 'Recipe has been already inserted' })
-                                    return res.status(500).json({ code: 0, description: err.message })
-                                }
-                            )
+        if(authorized(req, res, {operation: Operation.CREATE, others: noAuthorizationForOther(id) })){
+            existById(User, [id])
+                .then(() => {
+                    getBody(req, res)
+                        .then(recipeBody => {
+                            recipeBody.owner = req.params.id
+                            new Recipe(recipeBody)
+                                .save()
+                                .then(recipe => res.status(201).json({recipeID: recipe._id}),
+                                    err => {
+                                        if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
+                                        if(MongooseDuplicateError.is(err)) return res.status(409).json({ description: 'Recipe has been already inserted' })
+                                        return res.status(500).json({ code: 0, description: err.message })
+                                    }
+                                )
 
-                    }, err => console.error(err))
-            }, ids => res.status(404).json({description: 'User ('+ids[0]+') is not found.'}))
+                        }, err => console.error(err))
+                }, ids => res.status(404).json({description: 'User ('+ids[0]+') is not found.'}))
+        }
     }
 }
 
@@ -230,75 +234,98 @@ export function one_recipe(req, res){
     }
 }
 
-export function update_recipe(req, res){
-    let {id, recipeID} = req.params
-    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
-    if(Object.keys(req.body).length === 0) return res.status(400).json({ description: 'Required body'})
+function update_actual_recipe(req, res){
+    if(checkRequestHeaders(req, res, {'content-type': 'multipart/form-data'})){
+        let {id, recipeID} = req.params
+        if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+        if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
+        if(Object.keys(req.body).length === 0) return res.status(400).json({ description: 'Required body'})
 
-    const decodedToken = authorized(req, res, {operation: Operation.UPDATE})
-    if(decodedToken) {
-        getBody(req, res)
-            .then(updated => {
-                Recipe.findOne()
-                    .where('_id').equals(recipeID)
-                    .where('owner').equals(id)
-                    .then(doc => {
-                        if(!doc) return res.status(404).json({description: 'Recipe is not found'})
+        const decodedToken = authorized(req, res, {operation: Operation.UPDATE})
+        if(decodedToken) {
+            getBody(req, res)
+                .then(updated => {
+                    if(Object.keys(updated).length === 0) return res.status(400).json({
+                        description: 'Required body have to contain: '+
+                            'img?: string, tutorial?: string, '+
+                            'name?: string, ingredients?: array, preparation?: string note?: string, '+
+                            'shared?: boolean, country?: string, category?: string, diet?: string'
+                    })
+                    Recipe.findOne()
+                        .where('_id').equals(recipeID)
+                        .where('owner').equals(id)
+                        .then(doc => {
+                            if(!doc) return res.status(404).json({description: 'Recipe is not found'})
 
-                        if(!(decodedToken._id == doc.owner._id || doc.permission.find(p => p.user._id == decodedToken._id && GrantedType.isWritePermission(p.granted))))
-                            return res.status(403).json({description: 'User is not allowed to update this resource'})
+                            if(!(decodedToken._id == doc.owner._id || doc.permission.find(p => p.user._id == decodedToken._id && GrantedType.isWritePermission(p.granted))))
+                                return res.status(403).json({description: 'User is not allowed to update this resource'})
 
-                        updated.updatedAt = Date.now()
-                        let newDoc = new Recipe(Object.assign(doc, updated))
-                        newDoc.save()
-                              .then(_doc => res.status(200).json({description: 'Recipe has been updated', updatedDoc: _doc}),
+                            updated.updatedAt = Date.now()
+                            let newDoc = new Recipe(Object.assign(doc, updated))
+                            newDoc.save()
+                                .then(_doc => res.status(200).json({description: 'Recipe has been updated', updatedDoc: _doc}),
                                     err => {
                                         if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
                                         return res.status(500).json({code: err.code || 0, description: err.message})
                                     })
-                    }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-            }, err => console.error(err))
+                        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+                }, err => console.error(err))
+        }
     }
 }
 
-export function update_permission_recipe(req, res){
-    const {id, recipeID} = req.params
-    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
+function update_permission_recipe(req, res){
+    if(checkRequestHeaders(req, res, {'content-type': 'application/json'})){
+        const {id, recipeID} = req.params
+        if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+        if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
 
-    const err_ms_empty = "Permission must be array and have at least one element"
-    const permission = req.body.permission
+        const err_ms_empty = "Permission must be array and have at least one element"
+        const permission = req.body.permission
 
-    if(!permission) return res.status(400).json({ description:  err_ms_empty })
-    if(!permission.every(p => p.user)) return res.status(400).json({ description: 'Elements of \'Permission\' must be of the form : { user: string, granted?: string }'})
+        if(!permission) return res.status(400).json({ description:  err_ms_empty })
+        if(!permission.every(p => p.user)) return res.status(400).json({ description: 'Elements of \'Permission\' must be of the form : { user: string, granted?: string }'})
 
-    console.debug(permission)
+        console.debug(permission)
 
-    existById(User, permission.map(p => p.user))
-        .then(() =>{
-            const decodedToken = authorized(req, res, { operation: Operation.UPDATE })
-            if(decodedToken) {
-                Recipe.findOne()
-                      .where('_id').equals(recipeID)
-                      .then(recipe => {
+        existById(User, permission.map(p => p.user))
+            .then(() =>{
+                const decodedToken = authorized(req, res, { operation: Operation.UPDATE })
+                if(decodedToken) {
+                    Recipe.findOne()
+                        .where('_id').equals(recipeID)
+                        .then(recipe => {
 
-                          if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-                          if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
-                              return res.status(403).json({ description: 'User is not allowed to update permissions.' })
+                            if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
+                            if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
+                                return res.status(403).json({ description: 'User is not allowed to update permissions.' })
 
-                          //UPDATE PERMISSION
-                          permission.forEach(per => recipe.permission.push(per))
-                          recipe.save()
+                            //UPDATE PERMISSION
+                            permission.forEach(per => recipe.permission.push(per))
+                            recipe.save()
                                 .then(_doc => res.status(200).json({ description: 'Permission has been updated', updatedPermission: _doc.permission}),
-                                      err => res.status(500).json({ code: err.code || 0, description: err.message }))
+                                    err => res.status(500).json({ code: err.code || 0, description: err.message }))
 
-                     }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-            }
-        }, err => {
-            if(Array.isArray(err)) res.status(404).json({description: 'Users [' + err +'] are not founds.'})
-            else res.status(400).json({ description: err_ms_empty })
-        })
+                        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+                }
+            }, err => {
+                if(Array.isArray(err)) res.status(404).json({description: 'Users [' + err +'] are not founds.'})
+                else res.status(400).json({ description: err_ms_empty })
+            })
+    }
+}
+
+enum UpdateType {
+    PERMISSION = 'permission'
+}
+export function update_recipe(req, res){
+    const { field } = req.query
+    switch (field as UpdateType){
+        case UpdateType.PERMISSION:
+            return update_permission_recipe(req, res)
+        default:
+            return update_actual_recipe(req, res)
+    }
 }
 
 export function delete_recipe(req, res){
@@ -309,18 +336,18 @@ export function delete_recipe(req, res){
     const decodedToken = authorized(req, res, { operation: Operation.DELETE })
     if(decodedToken){
         Recipe.findOne()
-              .where('_id').equals(recipeID)
-              .then(recipe =>{
-                  if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
+            .where('_id').equals(recipeID)
+            .then(recipe =>{
+                if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
 
-                  if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
-                      return res.status(403).json({description: 'User is not allowed to delete this resource'})
+                if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
+                    return res.status(403).json({description: 'User is not allowed to delete this resource'})
 
-                  recipe.remove()
-                        .then(doc => res.status(200).json({description: 'Recipe has been deleted', deletedDoc: doc}),
-                              err => res.status(500).json({code: err.code || 0, description: err.message}) )
+                recipe.remove()
+                    .then(doc => res.status(200).json({description: 'Recipe has been deleted', deletedDoc: doc}),
+                        err => res.status(500).json({code: err.code || 0, description: err.message}) )
 
-             }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+            }, err => res.status(500).json({code: err.code || 0, description: err.message}))
     }
 }
 

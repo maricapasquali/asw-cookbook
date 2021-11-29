@@ -2,16 +2,19 @@ import {Food} from '../../models'
 import {Types} from "mongoose";
 
 import {RBAC} from "../../modules/rbac";
-import {pagination, userIsAuthorized} from "../index";
+import Operation = RBAC.Operation
+import Subject = RBAC.Subject
+import {pagination, getRestrictedUser} from "../index";
+import {DecodedTokenType} from "../../modules/jwt.token";
 
 export function uploadImage() {}
 
-function authorized(req, res, options: {operation: RBAC.Operation}): {_id: string, role: string} | false {
-    return userIsAuthorized(req, res, {operation: options.operation, subject: RBAC.Subject.FOOD})
+function authorized(req, res, options: {operation: Operation, others?: (decodedToken: DecodedTokenType) => boolean}): {_id: string, role: string} | false {
+    return getRestrictedUser(req, res, {operation: options.operation, subject: Subject.FOOD, others: options.others || (() => true)})
 }
 
 export function create_food(req, res) {
-    let user = authorized(req, res, {operation: RBAC.Operation.CREATE})
+    let user = authorized(req, res, {operation: Operation.CREATE, others: () => false})
     if(user){
         const new_food = new Food({...(req.body), owner: user._id})
         new_food.save()
@@ -28,7 +31,7 @@ export function create_food(req, res) {
 }
 
 export function list_foods(req, res) {
-    if(authorized(req, res, {operation: RBAC.Operation.RETRIEVE})){
+    if(authorized(req, res, {operation: Operation.RETRIEVE})){
         let { page, limit } = req.query
         if(page && limit && (isNaN(page) || isNaN(limit))) return res.status(400).json({ description: 'Required that page and limit are number'})
 
@@ -40,7 +43,7 @@ export function list_foods(req, res) {
 }
 
 export function one_food(req, res) {
-    if(authorized(req, res, {operation: RBAC.Operation.RETRIEVE})){
+    if(authorized(req, res, {operation: Operation.RETRIEVE})){
         let {id} = req.params
         if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
 
