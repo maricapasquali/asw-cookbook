@@ -111,10 +111,8 @@ components:
           items:
             type: object
             properties:
-              foodID:
+              food:
                 description: identifier of food
-                type: string 
-              name:
                 type: string
               quantity:
                 type: number
@@ -198,7 +196,7 @@ components:
           type: string
         name:
           type: string
-        nutritial_values:
+        nutritional_values:
           type: object
           properties:
             energy:
@@ -1046,15 +1044,36 @@ paths:
       description: Retrieve all shared recipe from all users
       tags:
         - Recipes
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
       responses:
         200:
           description: ''
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/recipe"
+                type: object
+                properties:
+                  items:
+                    type: array
+                    required: true
+                    items:
+                      $ref: "#/components/schemas/recipe"
+                  total:
+                    type: number
+                    description: Number of all recipe
+                    required: true
+                  paginationInfo:
+                    type: object
+                    required: false
+                    properties:
+                      page:
+                        type: number
+                        description: Selected page
+                      limit:
+                        type: number
+                        description: the maximum number od recipe to take
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1122,10 +1141,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  recipeID: 
-                    type: string
+                $ref: "#/components/schemas/recipe"
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1157,17 +1173,23 @@ paths:
                 properties:
                   items:
                     type: array
+                    required: true
                     items:
                       $ref: "#/components/schemas/recipe"
                   total:
                     type: number
-                  paginationInformation:
+                    description: Number of all 'type' recipe
+                    required: true
+                  paginationInfo:
                     type: object
+                    required: false
                     properties:
                       page:
                         type: number
+                        description: Selected page
                       limit:
                         type: number
+                        description: the maximum number of recipe to take
 
         400:
           $ref: "#/components/responses/bad_request"
@@ -1291,6 +1313,15 @@ paths:
       responses:
         200:
           description: Recipe has been updated / Permission of recipe has been updated
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/recipe"
+                  - type: object
+                    properties:
+                      updatedPermission:
+                        $ref: "#/components/schemas/recipe/properties/permission"
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1591,10 +1622,7 @@ paths:
             content:
               application/json:
                 schema:
-                  type: object
-                  properties:
-                    foodID: 
-                      type: string
+                  $ref: "#/components/schemas/food"
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1620,9 +1648,27 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/food"
+              type: object
+              properties:
+                items:
+                  type: array
+                  required: true
+                  items:
+                    $ref: "#/components/schemas/food"
+                total:
+                  type: number
+                  description: Number of all foods
+                  required: true
+                paginationInfo:
+                  type: object
+                  required: false
+                  properties:
+                    page:
+                      type: number
+                      description: Selected page
+                    limit:
+                      type: number
+                      description: the maximum number of food to take
       400:
         $ref: "#/components/responses/bad_request"
       401:
@@ -1634,18 +1680,18 @@ paths:
 
 
   /foods/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: food's identifier
+        required: true
+        schema:
+          type: string
     get:
       tags:
         - Foods
       security:
         - BearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: food's identifier
-          required: true
-          schema:
-            type: string
       responses:
         200:
           description: ""
@@ -1663,7 +1709,40 @@ paths:
           description: "Food not found"           
         500:
           $ref: "#/components/responses/general_error"
-
+    patch:
+      tags:
+        - Foods
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: "#/components/schemas/food/properties/name"
+                barcode:
+                    $ref: "#/components/schemas/food/properties/barcode"
+                nutritional_values:
+                  $ref: "#/components/schemas/food/properties/nutritional_values"
+      responses:
+        200:
+          description: Food has been updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/food"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: "Food not found"
+        500:
+          $ref: "#/components/responses/general_error"
 #SHOPPING LIST
   /users/{id}/shopping-list:
     parameters:
@@ -1685,10 +1764,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  pointShoppingListID: 
-                    type: string
+                $ref: "#/components/schemas/shoppingListPoint"
         400:
           $ref: "#/components/responses/bad_request"
         401:
