@@ -22,7 +22,7 @@ import GrantedType = IPermission.GrantedType;
 
 import {pagination} from "../index"
 import {DecodedTokenType} from "../../modules/jwt.token";
-import {IRecipe} from "../../models/schemas/recipe";
+import {IRecipe, RecipePopulationPipeline} from "../../models/schemas/recipe";
 
 const RecipeType: Array<string> = ['shared', 'saved',  'loved', 'shared-in-chat']
 
@@ -102,7 +102,7 @@ export function uploadImageAndTutorial(){
 }
 
 function sendPopulatedRecipe(recipe: IRecipe, res: any, status: number){
-    recipe.populate([{path: 'ingredients.food'}, {path:'owner', select: {userID: '$credential.userID'}}], function (err, recipe){
+    recipe.populate(RecipePopulationPipeline, function (err, recipe){
         if(err) return res.status(500).json({description: err.message})
         return res.status(status).json(recipe)
     })

@@ -67,16 +67,18 @@ RecipeSchema.index({owner: 1, name: 1, shared: 1}, { unique: true, name: 'unique
 RecipeSchema.index({'permission.user': 1, 'permission.granted': 1}, { unique: true, name: 'unique-permission-for-user' })
 
 RecipeSchema.pre(['find', 'findOne'], function() {
-   this.populate([
-       {
-           path: 'owner permission.user likes.user comments.likes.user ',
-           select: { 'userID' : '$credential.userID'}
-       },
-       {
-           path: 'ingredients.food'
-       },
-       {
-           path: 'comments'
-       }
-   ])
+   this.populate(RecipePopulationPipeline)
 });
+
+export const RecipePopulationPipeline = [
+    {
+        path: 'owner permission.user likes.user comments.likes.user ',
+        select: { 'userID' : '$credential.userID'}
+    },
+    {
+        path: 'ingredients.food'
+    },
+    {
+        path: 'comments'
+    }
+]
