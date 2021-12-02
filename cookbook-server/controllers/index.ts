@@ -57,8 +57,7 @@ export function checkRequestHeaders(req: any, res: any, headersToCheck: object):
     let headersNotValid: object = Object.entries(headersToCheck)
                                         .filter(([key, value]) => {
                                             let header = req.get(key)
-                                            if(header && header.search(value) == -1) return true
-                                            return header != value
+                                            return !header || header.search(value) == -1
                                         })
                                         .reduce((prev, current) => {
                                             prev[current[0]] = current[1];

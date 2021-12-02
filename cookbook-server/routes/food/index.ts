@@ -9,6 +9,8 @@ export default function (app){
 
 
     app.route('/api/foods/:id')
+        //.all(foodController.uploadImage()) //NOTA: nel client ora non è implementato
         .get(foodController.one_food)
+        .patch(foodController.update_food)
 
 }

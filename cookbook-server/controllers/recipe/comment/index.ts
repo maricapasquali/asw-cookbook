@@ -50,7 +50,12 @@ function addCommentOn(doc: IComment | IRecipe, options: {body: any, user_id: str
                 else res.status(500).json({description: 'doc is not formatted well.'})
 
                 doc.save()
-                    .then(doc => res.status(201).json(_doc),
+                    .then(doc => {
+                            _doc.populate({path: 'user', select: { userID: '$credential.userID' }},function (err, populateComment){
+                                if(populateComment) return res.status(500).json({description: err.message})
+                                return res.status(201).json(populateComment)
+                            })
+                        },
                         err => res.status(500).json({code: err.code || 0, description: err.message}))
             },
             err => {

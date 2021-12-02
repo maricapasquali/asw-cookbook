@@ -7,6 +7,7 @@ import {RBAC} from "../../modules/rbac";
 import {getRestrictedUser} from "../index";
 import Subject = RBAC.Subject;
 import Operation = RBAC.Operation;
+import {IShoppingList} from "../../models/schemas/shopping-list";
 
 function authorized(req, res, options: {operation: Operation, subject?: Subject}): {_id: string, role: string} | false {
     return getRestrictedUser(req, res, {
@@ -32,9 +33,16 @@ function getUser(req, res): Promise<IUser> {
                }, err => res.status(500).json({code: err.code || 0, description: err.message}))
 }
 
+function sendNewListPoint(_doc: IShoppingList, res: any){
+    _doc.populate('shoppingList.food', function (err, docPopulate){
+        if(err) return res.status(500).json({ description: err.message })
+        return res.status(201).json(docPopulate.shoppingList.pop())
+    })
+}
+
 export function add_food(req, res){
     let body = req.body
-    if(!Types.ObjectId.isValid(body.food)) return res.status(400).json({ description: 'Required a valid \'foodID\' '})
+    if(!Types.ObjectId.isValid(body.food)) return res.status(400).json({ description: 'Required a valid \'food\' '})
 
     getUser(req, res)
         .then(user => {
@@ -50,7 +58,7 @@ export function add_food(req, res){
                                         if(authorized(req, res, { operation: Operation.CREATE, subject: Subject.SHOPPING_LIST })){
                                             new ShoppingList({ user: user._id, shoppingList: [body] })
                                                 .save()
-                                                .then(_doc => res.status(201).json({ pointShoppingListID: _doc.shoppingList.pop()._id }),
+                                                .then(_doc => sendNewListPoint(_doc, res),
                                                     err => {
                                                         console.error(err);
                                                         if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
@@ -63,7 +71,7 @@ export function add_food(req, res){
                                         if(authorized(req, res, { operation: Operation.CREATE })){
                                             doc.shoppingList.push(body)
                                             doc.save()
-                                                .then(_doc => res.status(201).json({ pointShoppingListID: _doc.shoppingList.pop()._id }),
+                                                .then(_doc => sendNewListPoint(_doc, res),
                                                     err => {
                                                         console.error(err)
                                                         if (MongooseValidationError.is(err)) return res.status(400).json({description: err.message})

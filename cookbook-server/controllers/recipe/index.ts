@@ -22,6 +22,7 @@ import GrantedType = IPermission.GrantedType;
 
 import {pagination} from "../index"
 import {DecodedTokenType} from "../../modules/jwt.token";
+import {IRecipe} from "../../models/schemas/recipe";
 
 const RecipeType: Array<string> = ['shared', 'saved',  'loved', 'shared-in-chat']
 
@@ -100,6 +101,12 @@ export function uploadImageAndTutorial(){
         [_configurationImage, _configurationVideo])
 }
 
+function sendPopulatedRecipe(recipe: IRecipe, res: any, status: number){
+    recipe.populate([{path: 'ingredients.food'}, {path:'owner', select: {userID: '$credential.userID'}}], function (err, recipe){
+        if(err) return res.status(500).json({description: err.message})
+        return res.status(status).json(recipe)
+    })
+}
 export function create_recipe(req, res){
     if(checkRequestHeaders(req, res, {'content-type': 'multipart/form-data'})){
         let {id} = req.params
@@ -113,7 +120,7 @@ export function create_recipe(req, res){
                             recipeBody.owner = req.params.id
                             new Recipe(recipeBody)
                                 .save()
-                                .then(recipe => res.status(201).json({recipeID: recipe._id}),
+                                .then(recipe => sendPopulatedRecipe(recipe, res, 201),
                                     err => {
                                         if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
                                         if(MongooseDuplicateError.is(err)) return res.status(409).json({ description: 'Recipe has been already inserted' })
@@ -161,7 +168,7 @@ export function list_recipes(req, res){
         .then(() => {
 
             if(
-                (type === 'shared' && authorized(req, res, {operation: Operation.RETRIEVE })) ||
+                type === 'shared' ||
                 authorized(req, res, {operation: Operation.RETRIEVE, others: noAuthorizationForOther(id) })
             ){
                 pagination(() => queryListRecipes(id, type), page && limit ? {page: +page, limit: +limit}: undefined)
@@ -183,7 +190,7 @@ export function one_recipe(req, res){
     console.debug({...req.params, ...req.query})
     switch (type){
         case 'shared':
-            if(authorized(req, res, {operation: Operation.RETRIEVE})){
+
                 Recipe.findOne()
                     .where('_id').equals(recipeID)
                     .where('owner').equals(id)
@@ -192,7 +199,6 @@ export function one_recipe(req, res){
                         if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
                         return  res.status(200).json(recipe)
                     }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-            }
 
             break
         case 'saved':
@@ -263,11 +269,11 @@ function update_actual_recipe(req, res){
                             updated.updatedAt = Date.now()
                             let newDoc = new Recipe(Object.assign(doc, updated))
                             newDoc.save()
-                                .then(_doc => res.status(200).json({description: 'Recipe has been updated', updatedDoc: _doc}),
-                                    err => {
-                                        if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
-                                        return res.status(500).json({code: err.code || 0, description: err.message})
-                                    })
+                                  .then(_doc => sendPopulatedRecipe(_doc, res, 200),
+                                        err => {
+                                            if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
+                                            return res.status(500).json({code: err.code || 0, description: err.message})
+                                        })
                         }, err => res.status(500).json({code: err.code || 0, description: err.message}))
                 }, err => console.error(err))
         }
@@ -352,10 +358,11 @@ export function delete_recipe(req, res){
 }
 
 export function list_all_recipes(req, res){
-    Recipe.find()
-          .where('shared').equals(true)
-          .sort({timestamp: -1, _id: -1})
-          .then(recipes => res.status(200).json(recipes),
+    let {page, limit} = req.query
+    pagination(
+        () => Recipe.find().where('shared').equals(true).sort({timestamp: -1, _id: -1}),
+        page && limit ? {page: +page, limit: +limit}: undefined
+    ).then(recipes => res.status(200).json(recipes),
             err => res.status(500).json({code: err.code || 0, description: err.message}))
 }
 
