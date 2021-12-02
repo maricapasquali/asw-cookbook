@@ -23,7 +23,15 @@ function addLike(doc: IRecipe | IComment, user: string, res: any){
     let like = new Like({ user: user })
     doc.likes.push(like)
     doc.save()
-          .then(doc => res.status(201).json(like),
+          .then(doc => {
+                like.populate({
+                    path: 'user',
+                    select: { userID: '$credential.userID' }
+                }, function (err, _like){
+                    if(err) return res.status(500).json({description: err.message})
+                    return res.status(201).json(_like)
+                })
+              },
                 err => res.status(500).json({code: err.code || 0 , description: err.message}))
 }
 
@@ -85,7 +93,7 @@ function add_like_on_comment(req, res){
     getComment(req, res)
         .then(comment => {
             console.log(comment.user)
-            _getUserFromAuthorization(req, res, { operation: Operation.CREATE, others: decodedToken => (comment.user && decodedToken._id == comment.user.id) })
+            _getUserFromAuthorization(req, res, { operation: Operation.CREATE, others: decodedToken => (comment.user && decodedToken._id == comment.user._id) })
                 .then(user => addLike(comment, user, res),
                       err => console.error(err))
         }, err => console.error(err))
@@ -103,7 +111,7 @@ function remove_like_on_comment(req, res){
             const like = comment.likes.find(l => l._id == likeID)
             if(!like) return res.status(404).json({description: 'Like is not found'})
             console.log(like)
-            _getUserFromAuthorization(req, res, { operation: Operation.DELETE, others: decodedToken => (decodedToken && like.user != decodedToken._id) })
+            _getUserFromAuthorization(req, res, { operation: Operation.DELETE, others: decodedToken => (decodedToken && like.user._id != decodedToken._id) })
                 .then(user => removeLike(comment, comment.likes.indexOf(like), res),
                       err => console.error(err))
         }, err => console.error(err))

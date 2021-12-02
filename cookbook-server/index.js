@@ -27,7 +27,7 @@ require('./routes')(app)
 const YAML = require("yamljs")
 const swaggerUi = require('swagger-ui-express');
 const swaggerCookbookAPI = YAML.load(path.join(__dirname, 'api-docs/api-documentations.yaml'));
-app.use('/api', swaggerUi.serveFiles(swaggerCookbookAPI, {}), swaggerUi.setup(swaggerCookbookAPI));
+app.use('/api-docs', swaggerUi.serveFiles(swaggerCookbookAPI, {}), swaggerUi.setup(swaggerCookbookAPI));
 app.use(function (req, res) {
     res.status(404).json({ error: { description: req.originalUrl + " not found" } });
 });
@@ -42,5 +42,5 @@ new Hosting(app)
     .setPort(port_server)
     .build()
     .listen((server) => {
-        console.log(`Server running at ${server.protocol}://${server.hostname}:${server.port}/api`);
+        console.log(`Server running at ${server.protocol}://${server.hostname}:${server.port}/api-docs`);
     });

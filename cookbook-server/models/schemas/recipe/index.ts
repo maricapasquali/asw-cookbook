@@ -2,7 +2,7 @@ import {Schema, Document} from "mongoose";
 import {IUser} from "../user";
 
 import {ILike, LikeSchema} from "./like";
-import {IComment, CommentSchema} from "./comment";
+import {IComment} from "./comment";
 import {Comment} from "../../index";
 
 import {IPermission, PermissionSchema} from "./permission";
@@ -58,7 +58,7 @@ export const RecipeSchema: Schema<IRecipe> = new Schema<IRecipe>({
     tutorial: { type: String, required: false },
     note: { type: String, required: false },
     country: { type: String, required: false },
-    diet: { type: String, required: false, enum: ['gluten free', 'lactose free', 'light', 'vegetarian', 'vegan'] },
+    diet: { type: String, required: false, enum: ['', 'gluten free', 'lactose free', 'light', 'vegetarian', 'vegan'] },
     likes: { type: [LikeSchema], required: false, default: [] },
     comments: { type: [Schema.Types.ObjectId] , required: false, default: [], ref: 'Comment' },
 })
@@ -67,10 +67,16 @@ RecipeSchema.index({owner: 1, name: 1, shared: 1}, { unique: true, name: 'unique
 RecipeSchema.index({'permission.user': 1, 'permission.granted': 1}, { unique: true, name: 'unique-permission-for-user' })
 
 RecipeSchema.pre(['find', 'findOne'], function() {
-   this.populate({
-       path: 'owner permission.user likes.user comments.likes.user ',
-       select: { 'userID' : '$credential.userID'}
-   })
-   this.populate({ path: 'ingredients.food', select: 'name -owner' })
-   this.populate({ path: 'comments'})
+   this.populate([
+       {
+           path: 'owner permission.user likes.user comments.likes.user ',
+           select: { 'userID' : '$credential.userID'}
+       },
+       {
+           path: 'ingredients.food'
+       },
+       {
+           path: 'comments'
+       }
+   ])
 });
