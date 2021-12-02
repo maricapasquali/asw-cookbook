@@ -13,7 +13,7 @@
     <b-list-group class="accordion" role="tablist">
       <b-list-group-item v-for="(ingredient, ind) in value" :key="ingredient._id" v-b-toggle="ingredientId(ind)" role="tab">
         <b-row align-h="between">
-          <b-col><p>{{ingredient.name}}</p></b-col>
+          <b-col><p>{{ingredient.food.name}}</p></b-col>
           <b-col align="end"><p>{{ingredient.quantity}} g</p></b-col>
         </b-row>
         <b-collapse :id="ingredientId(ind)" :ref="collapsedIngredientId(ind)" role="tabpanel" accordion="my-accordion" @show="getIngredientNutritionalValues(ind)">
@@ -50,9 +50,10 @@ export default {
     },
 
     getIngredientNutritionalValues(index) {
-      //TODO: REQUEST INGREDIENT NUTRITIONAL VALUES
-      let food = require('@assets/examples/foods.js').find(f => f._id === this.value[index].foodID)
-      if(food) this.nutritional_values = food.nutritional_values
+      //REQUEST INGREDIENT NUTRITIONAL VALUES
+      // let food = require('@assets/examples/foods.js').find(f => f._id === this.value[index].foodID)
+      //if(food) this.nutritional_values = food.nutritional_values
+      this.nutritional_values = this.value[index].food.nutritional_values
     }
   }
 }

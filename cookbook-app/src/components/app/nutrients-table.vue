@@ -131,9 +131,10 @@ export default {
     },
 
     makeTable(ingredients){
-      let nutrientsForIngredient = ingredients.map(food =>
-          ({quantity: food.quantity || 0, nutrients: this.calc(food.quantity || 0, this.foodFinder.getNutritionalValues(food.foodID),  100)})
-     )
+      let nutrientsForIngredient = ingredients.map(ingredient =>{
+         // return ({quantity: ingredient.quantity || 0, nutrients: this.calc(ingredient.quantity || 0, this.foodFinder.getNutritionalValues(ingredient.foodID) ,  100)})
+         return ({quantity: ingredient.quantity || 0, nutrients: this.calc(ingredient.quantity || 0, ingredient.food.nutritional_values ,  100)})
+    })
       this.fillNutritionalTable(this.table, nutrientsForIngredient)
       this.$emit('input', this.table)
     }

@@ -32,8 +32,18 @@ export default {
       selected: null
     }
   },
+  watch: {
+    value(val, old){
+      this.select(val)
+    }
+  },
+  methods: {
+    select(val){
+      this.selected = Countries.find(val)
+    }
+  },
   mounted() {
-    this.selected = Countries.find(this.value)
+    this.select(this.value)
   }
 }
 </script>

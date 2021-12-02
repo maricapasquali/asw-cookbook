@@ -28,7 +28,7 @@
 
      <div>
       <b-row >
-        <b-card v-for="doc in docs" :key="doc.recipe._id" class="recipe-post p-0 mt-3 mx-auto col-lg-7">
+        <b-card v-for="(doc, ind) in docs" :key="doc._id" class="recipe-post p-0 mt-3 mx-auto col-lg-7">
           <template #header>
             <b-row align-h="between">
               <b-col>
@@ -37,42 +37,42 @@
                 </router-link>
               </b-col>
               <b-col align="end">
-                <elapsed-time v-model="doc.recipe.timestamp" :language="language" />
+                <elapsed-time v-model="doc.createdAt" :language="language" />
               </b-col>
             </b-row>
           </template>
-          <router-link :to="{name: 'single-recipe', params: {id: doc.owner._id, recipe_id: doc.recipe._id}}">
-            <b-img fluid class="recipes-image" :src="doc.recipe.img" @error="imgNotFound"/>
+          <router-link :to="{name: 'single-recipe', params: {id: doc.owner._id, recipe_id: doc._id}}">
+            <b-img fluid class="recipes-image" :src="doc.img" @error="imgNotFound"/>
           </router-link>
-          <b-row :class="{'description-post': true, 'py-2': !doc.recipe.country}" align-h="between">
-            <b-col class="d-flex align-items-center pl-2">  {{doc.recipe.name}} </b-col>
+          <b-row :class="{'description-post': true, 'py-2': !doc.country}" align-h="between">
+            <b-col class="d-flex align-items-center pl-2">  {{doc.name}} </b-col>
             <b-col class="d-flex justify-content-end pr-1" >
-              <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.recipe.category.text}} </span>
-              <country-image v-model="doc.recipe.country" :id="imageId(doc.recipe._id)"/>
+              <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.category.text}} </span>
+              <country-image v-model="doc.country" :id="imageId(doc._id)"/>
             </b-col>
           </b-row>
 
-          <recipe-details :recipeId="doc.recipe._id" class="details-recipes"/>
+          <recipe-details :recipe="doc" class="details-recipes"/>
 
           <template #footer>
             <b-row align-h="between">
               <b-col>
                 <!-- Like of a RECIPE -->
-                <like v-model="doc.recipe.likes" @like="like(doc.recipe)" @unlike="unlike(doc.recipe)"/>
+                <like v-model="doc.likes" :recipe="{id: doc._id, ownerID: doc.owner._id}" :no-like="isOwnerRecipe(ind)"/>
               </b-col>
               <b-col align="end">
-                <b-icon-chat class="icon" v-b-toggle="commentsId(doc.recipe._id)"/>
+                <b-icon-chat class="icon" v-b-toggle="commentsId(doc._id)"/>
               </b-col>
             </b-row>
-            <b-collapse :id="commentsId(doc.recipe._id)" class="mt-2">
+            <b-collapse :id="commentsId(doc._id)" class="mt-2">
               <!-- LIST COMMENT for a RECIPE -->
-              <comments v-model="doc.recipe.comments" :recipeId="doc.recipe._id" :language="language"  :isOwner="isOwner(doc.owner)" />
+              <comments v-model="doc.comments" :recipe="{id: doc._id, ownerID: doc.owner._id}" :language="language" />
             </b-collapse>
           </template>
 
         </b-card>
       </b-row>
-      <b-row class="mt-3" align-h="center" v-if="!$data._others">
+      <b-row class="mt-3" align-h="center" v-if="areOthers">
         <b-button variant="link" @click="others">Altri ...</b-button>
       </b-row>
      </div>
@@ -82,8 +82,9 @@
 </template>
 
 <script>
-import {Session} from "@services/session";
 import {RecipeCategories} from "@services/app";
+import {Session} from "@services/session";
+import api from '@api'
 
 export default {
   name: "HomePage",
@@ -97,8 +98,11 @@ export default {
       showDetails: false,
 
       docs: [],
-
-      _others: false,
+      total: 0,
+      optionsPagination: {
+        page: 1,
+        limit: 2
+      },
 
       _newPostInd: 0,
     }
@@ -106,7 +110,10 @@ export default {
   computed: {
     isNotLoaded(){
       return this.docs.length === 0
-    }
+    },
+    areOthers(){
+      return this.docs.length >0 && this.docs.length < this.total
+    },
   },
   methods: {
     imageId(id){
@@ -120,76 +127,68 @@ export default {
       e.target.src = this.defaultImageRecipes
     },
 
-    isOwner(owner_recipe){
-      let session = Session.userInfo()
-      return session && owner_recipe._id === session._id && owner_recipe.userID === session.userID
+    isOwnerRecipe(index){
+      let userInfo = Session.userInfo()
+      return userInfo && this.docs[index].owner._id === userInfo._id
     },
     /* -- REQUEST --*/
 
-    like(recipe){
-      //TODO: REQUEST ADD LIKE FROM RECIPE
-      console.debug("Like ", recipe)
-    },
-    unlike(recipe){
-      //TODO: REQUEST REMOVE LIKE FROM RECIPE
-      console.debug("UNLike ",recipe)
-    },
-
     updateDocs(){
       this.docs.forEach(p => {
-        p.recipe.img = p.recipe.img || this.defaultImageRecipes
+        p.img = p.img || this.defaultImageRecipes
 
-        let category = RecipeCategories.find(p.recipe.category)
-        if(category) p.recipe.category = category
+        let category = RecipeCategories.find(p.category)
+        if(category) p.category = category
       })
     },
 
-    getPost(){
-      // TODO: REQUEST POST RECIPES
-      this.docs = require('@assets/examples/home-page.js')
+    getPost(currentPage){
+      this.optionsPagination.page = currentPage || 1
+      api.recipes.allSharedRecipes(this.optionsPagination)
+      .then(({data}) => {
 
-      this.updateDocs()
+        console.log(data)
+
+        if(currentPage) this.docs.push(...data.items)
+        else this.docs = data.items
+
+        this.total = data.total
+        this.updateDocs()
+      })
+      .catch(err => {
+      //TODO: HANDLER ERROR HOME-PAGE
+        console.error(err)
+      })
     },
-
+    others(){
+      console.debug("Altri "+this.optionsPagination.limit+" post ..")
+      this.getPost(this.optionsPagination.page + 1)
+    },
 
 
     newPost(){
       setInterval(function (){
         this.docs.unshift({
+          _id: '12345'+this.$data._newPostInd,
           owner: {
             _id: '612bce9f8710a153e80ca4cf',
             userID: 'hannah_smith'
           },
-          recipe : {
-            _id: '12345'+this.$data._newPostInd,
-            timestamp: Date.now(),
-            name: 'Funghi in padella - '+this.$data._newPostInd,
-            category: 'Contorni',
-            country: 'IT',
-            likes: 0,
-            comments: [],
-          }
+          createdAt: Date.now(),
+          name: 'Funghi in padella - '+this.$data._newPostInd,
+          category: 'Contorni',
+          country: 'IT',
+          likes: [],
+          comments: [],
         })
         this.$data._newPostInd++
         this.updateDocs()
       }.bind(this), 10000)
     },
-
-    others(){
-      //TODO: REQUEST OTHER 10 POST RECIPE
-      console.debug("Altri 10 post ..")
-      if(!this.$data._others){
-        require('@assets/examples/others-home-page.js').forEach(r => this.docs.push(r))
-
-        this.updateDocs()
-        this.$data._others = true
-      }
-    }
   },
   mounted() {
     this.getPost()
-    // setTimeout(this.getPost.bind(this), 1000)
-    // this.newPost()
+    //this.newPost()
   },
 }
 </script>

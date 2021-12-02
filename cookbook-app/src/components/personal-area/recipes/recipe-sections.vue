@@ -24,11 +24,11 @@
         <p v-else> Vuoi davvero cancellare la ricetta <b><em>{{deleteRecipe.name}}</em></b>?</p>
       </b-modal>
       <!-- SEARCHES -->
-      <b-container fluid class="search-section">
+      <b-container fluid class="search-section" v-if="total">
         <!-- TODO: SFUTTARE GLIE ELEMENTI DELLA SEZIONE SEARCH -->
       </b-container>
 
-      <b-skeleton-wrapper :loading="loading">
+      <b-skeleton-wrapper :loading="processing">
         <template #loading>
           <b-list-group>
             <b-list-group-item v-for="ind in skeletons" :key="ind" >
@@ -67,6 +67,9 @@
                     <b-col class="px-0" align-self="center" align="center" v-if="item.recipe.img" cols="3" >
                       <b-img fluid :src="item.recipe.img" :alt="'image-'+item.recipe.name" />
                     </b-col>
+                    <b-col class="px-0" align-self="center" align="center" cols="3" v-else >
+                      <b-img fluid :src="defaultImgRecipe" />
+                    </b-col>
                     <b-col class="ml-3">
                       <b-row>
                         <strong>
@@ -75,7 +78,7 @@
                         </strong>
                       </b-row>
                       <b-row v-if="item.recipe.owner"><router-link :to="{name: 'single-user', params:{id: item.recipe.owner._id}}">{{item.recipe.owner.userID}}</router-link></b-row>
-                      <b-row><small>{{ item.recipe.timestamp | dateFormat }}</small></b-row>
+                      <b-row><small>{{ item.recipe.createdAt | dateFormat }}</small></b-row>
                       <b-row class="mt-1"  v-if="item.recipe.shared && item.recipe.likes.length > 0">
                         <b-col class="pl-0"><b-icon-heart-fill /> <span>{{item.recipe.likes.length}}</span></b-col>
                       </b-row>
@@ -108,7 +111,7 @@
                 </b-row>
                 <!-- Country, Diet & Category -->
                 <b-row class="country-diet-category" cols="1" cols-sm="3">
-                  <b-col v-if="item.recipe.diet && item.recipe.diet.length>0">
+                  <b-col v-if="item.recipe.diet && item.recipe.diet.value">
                     <b-form-group label-for="r-d-diet" label="Regime alimentare">
                       <b-form-input id="r-d-diet" :value="item.recipe.diet.text" readonly/>
                     </b-form-group>
@@ -153,8 +156,8 @@
                     <strong>Chi ha messo 'Mi piace'</strong>
                     <ul>
                       <li v-for="(liker, ind) in item.recipe.likes" :key="ind">
-                        <router-link v-if="liker.user._id" :to="{name: 'single-user', params: {id: liker.user._id}}">{{liker.user.userID}}</router-link>
-                        <p v-else>{{liker.user}} </p>
+                        <router-link v-if="liker.user" :to="{name: 'single-user', params: {id: liker.user._id}}">{{liker.user.userID}}</router-link>
+                        <p v-else>Anonimo</p>
                       </li>
                     </ul>
                   </b-col>
@@ -162,11 +165,12 @@
                 <!-- Comments -->
                 <b-row cols="1" class="comments mx-1" v-if="item.recipe.shared && item.recipe.comments.length>0">
                  <b-col class="px-0"><strong>Commenti</strong></b-col>
-                 <b-col> <comments v-model="item.recipe.comments" :recipeId="item.recipe._id" isOwner/></b-col>
+                 <b-col> <comments v-model="item.recipe.comments" :recipe="{id: item.recipe._id, ownerID: item.recipe.owner._id}" /></b-col>
                 </b-row>
 
               </b-card>
             </b-list-group-item>
+            <div v-if="!itemsRecipes.length"> Nessuna ricetta trovata. </div>
           </b-list-group>
           <b-row v-if="areOthers">
             <b-col align="center">
@@ -186,12 +190,12 @@
 <script>
 import {dateFormat} from "@services/utils";
 import {Diets, RecipeCategories} from '@services/app'
+
+import api from '@api'
+import {Session} from "@services/session";
+
 export default {
   name: "recipe-sections",
-  props:{
-    id: String,
-    accessToken: String,
-  },
   data(){
     return {
       defaultImgRecipe: require("@assets/images/recipe-image.jpg"),
@@ -210,38 +214,57 @@ export default {
       tabs: [
         {
           title: 'Condivise',
-          type: 'shared'
+          type: 'shared',
+          itemsRecipes: []
         },
         {
           title: 'Salvate',
-          type: 'saved'
+          type: 'saved',
+          itemsRecipes: []
         },
         {
           title: 'Preferite',
-          type: 'loved'
+          type: 'loved',
+          itemsRecipes: []
         },
         {
           title: 'Condivise in chat', //TODO: da rigurdare quando creato 'chats'
-          type: 'shared-in-chat'
+          type: 'shared-in-chat',
+          itemsRecipes: []
         }
       ],
       windowWidth: window.innerWidth,
 
+      processing: true,
       total: 0,
-      itemsRecipes:[]
+      paginationOptions: {
+        page: 1,
+        limit: 2 //todo: change pagination limit  from 2 to 10
+      }
     }
   },
 
   computed:{
+    itemsRecipes: {
+      get(){
+        let items = this.tabs.find(e => e.type === this.active)
+        return items ? items.itemsRecipes : []
+      },
+      set(val){
+        if(Array.isArray(val)) this.itemsRecipes.push(...val)
+        else this.itemsRecipes.push(val)
+      }
+    },
+
+    userIdentifier: function (){
+      return this.$route.params.id
+    },
 
     isMobileDevice(){
       return this.windowWidth < 768
     },
     active(){
       return this.$route.query.tab
-    },
-    loading(){
-      return this.itemsRecipes.length === 0 && this.active !== 'add'
     },
     areOthers(){
       return this.itemsRecipes.length >0 && this.itemsRecipes.length < this.total
@@ -288,43 +311,54 @@ export default {
         case 'loved':
           operation.push('remove')
           break
-        case 'shared-in-chat': break
+        case 'shared-in-chat':
+          operation.push('details')
+          //in the FUTURE: operation.push('change'); operation.push('delete')
+          break
       }
       return {recipe: recipe, actions: operation, showDetails: false}
     },
-    getDocs(){
-      //TODO: REQUEST N RECIPES OF USER id
-      let docs = this.isLoved ?
-          require('@assets/examples/u-recipes-loved.js') :
-          require('@assets/examples/u-recipes.js')
-      this.setDefaultValueOn(docs)
-      this.itemsRecipes = docs.map(r => this.remapping(r))
-      this.total =  this.isLoved  ? 3: 6
+    getDocs(currentPage){
+      this.paginationOptions.page = currentPage || 1
+      console.debug('Pagination = ', JSON.stringify(this.paginationOptions, null, 1))
 
-      console.debug(JSON.stringify(this.itemsRecipes, null, 2))
+      api.recipes
+         .getRecipes(this.userIdentifier, Session.accessToken(), this.active, this.paginationOptions)
+         .then(({data}) => {
+            console.log(data)
+            this.setDefaultValueOn(data.items)
+
+           let _remapData = data.items.map(r => this.remapping(r))
+            if(currentPage) this.itemsRecipes.push(..._remapData)
+            else this.itemsRecipes = _remapData
+
+            this.total = data.total
+         })
+         .catch(err => {
+           //TODO: HANDLER ERROR N RECIPES OF USER id
+           console.error(err)
+         })
+         .finally(() => this.processing = false)
+
     },
     others(){
-      //TODO: REQUEST others N RECIPES OF USER id
       console.debug('Others ..')
-      let docs = require('@assets/examples/u-others-recipes.js')
-      this.setDefaultValueOn(docs)
-      docs.map(r => this.itemsRecipes.push(this.remapping(r)))
-
+      this.getDocs(this.paginationOptions.page + 1)
     },
+
     setDefaultValueOn(docs){
-      docs.forEach(recipe => {
-          recipe.img = recipe.img || this.defaultImgRecipe
+      const setting = (recipe) => {
+        recipe.img = recipe.img || this.defaultImgRecipe
 
-          let category = RecipeCategories.find(recipe.category)
-          if(category) recipe.category = category
+        let category = RecipeCategories.find(recipe.category)
+        if(category) recipe.category = category
 
-          let diet = Diets.find(recipe.diet)
-          if(diet) recipe.diet = diet
+        let diet = Diets.find(recipe.diet)
+        recipe.diet = diet || Diets.find('')
 
-          recipe.shared = this.active === 'shared' /*TODO: REMOVE */
-          recipe.comments = this.active === 'saved' ?  []: recipe.comments /*TODO: REMOVE */
-          recipe.likes = this.active === 'saved' ?  []: recipe.likes /*TODO: REMOVE */
-      })
+      }
+      if(Array.isArray(docs)) docs.forEach(recipe => setting(recipe))
+      else setting(docs)
     },
 
     /* search */
@@ -356,7 +390,33 @@ export default {
     onChangedRecipe(cRecipe){
       console.debug('onChangedRecipe ... ')
       let old = this.itemsRecipes[this.formUpdate.index]
-      this.itemsRecipes.splice(this.formUpdate.index, 1, Object.assign(old, {recipe: cRecipe}))
+
+      switch (this.active){
+        case 'shared': {
+          // tab shared
+            // new saved
+            // update
+            // new shared
+
+            //if(cRecipe._id !== old.recipe._id && cRecipe.shared === false) // nothing
+
+            if(cRecipe._id === old.recipe._id && cRecipe.shared === old.recipe.shared)
+              this.itemsRecipes[this.formUpdate.index] = Object.assign(old, {recipe: cRecipe})
+
+            if(cRecipe._id !== old.recipe._id && cRecipe.shared === true)
+              this.itemsRecipes.unshift(this.remapping(cRecipe))
+        }
+        break
+        case 'saved': {
+          //tab saved
+            // update
+            // remove from this.itemsRecipes
+          if(old.recipe.shared === cRecipe.shared) this.itemsRecipes[this.formUpdate.index] = Object.assign(old, {recipe: cRecipe})
+          else this.itemsRecipes.splice(this.formUpdate.index, 1)
+        }
+        break
+      }
+
       this.closeChangeMode()
     },
 
@@ -369,20 +429,43 @@ export default {
         removeFromLoved: removeFromLoved
       }
     },
-    eraseRecipe(){
-      if(this.deleteRecipe.removeFromLoved){
-        // TODO: REQUEST REMOVE LIKE ON RECIPE
-        console.debug('REMOVE LIKE ON RECIPE')
-      }else{
-        // TODO: REQUEST DELETE RECIPE
-        console.debug('DELETE RECIPE')
-      }
+    _afterDelete(data){
+      console.log(data)
       this.itemsRecipes.splice(this.deleteRecipe.index, 1)
       this.deleteRecipe = {
         index: -1,
         name: '',
         show: false,
         removeFromLoved: false
+      }
+    },
+    eraseRecipe(){
+
+      let recipe = this.itemsRecipes[this.deleteRecipe.index].recipe
+      console.debug(recipe)
+      if(this.deleteRecipe.removeFromLoved){
+        console.log('REMOVE LIKE ON RECIPE')
+        let like = recipe.likes.find(l => l.user && l.user._id === this.userIdentifier)
+        console.debug(like)
+        api.recipes
+           .likes
+           .unLike(recipe.owner._id, recipe._id, like._id , Session.accessToken())
+           .then(({data}) => this._afterDelete(data))
+           .catch(err => {
+              // TODO: HANDLER ERROR REMOVE LIKE ON RECIPE
+              console.log(err)
+           })
+      }
+      else
+      {
+        console.log('DELETE RECIPE')
+        api.recipes
+           .deleteRecipe(this.userIdentifier, recipe._id, Session.accessToken())
+           .then(({data}) => this._afterDelete(data))
+           .catch(err => {
+             // TODO: HANDLER ERROR DELETE RECIPE
+             console.log(err)
+           })
       }
     },
     /* END ACTIONS: MODIFY, DELETE, REMOVE ...*/
@@ -398,18 +481,19 @@ export default {
         console.debug('set route with type = ', type)
       }
 
-      if(!this.isAddRecipeTab) {
-        this.itemsRecipes = []
-        //TODO: REQUEST DOCUMENTS OF TYPE 'type'
-        setTimeout(this.getDocs.bind(this), 1000)
+      if(this.itemsRecipes.length === 0 && !this.isAddRecipeTab) {
+     // if(!this.isAddRecipeTab) { this.itemsRecipes = []
+        this.processing = true;
+        this.getDocs()
       }
     },
 
+    // ON TAB 'ADD'
     onShareRecipe(recipe){
-      //TODO: REQUEST ADD RECIPE ON SERVER
+      //AFTER ADD NEW SHARED RECIPE ON SERVER
     },
     onSaveRecipe(recipe){
-      //TODO: REQUEST ADD RECIPE ON SERVER
+      //AFTER ADD NEW SAVED RECIPE ON SERVER
     }
   },
 
@@ -445,8 +529,8 @@ export default {
 }
 
 .recipes-section{
-  overflow-y: auto;
-  max-height: calc(100vh - 300px);
+  //overflow-y: auto;
+  //max-height: calc(100vh - 300px);
 
   & > div.collapse{
     margin: 1% 0;

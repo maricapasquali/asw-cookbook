@@ -8,11 +8,11 @@
           </b-tab>
           <!-- SIGNED -->
           <b-tab v-if="isSignedUser" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy>
-            <recipe-sections :id="$route.params.id" :access-token="accessToken" @onSessionExpired="sessionTimeout=true"/>
+            <recipe-sections @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- BOTH -->
           <b-tab title="Alimenti" @click="getFoods" :active="isActive('foods')" lazy>
-            <food-section :id="$route.params.id" :access-token="accessToken" @onSessionExpired="sessionTimeout=true"/>
+            <food-section @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- ADMIN -->
           <b-tab v-if="isAdminUser" title="Segnalazioni" @click="getReports" :active="isActive('reports')" lazy><p>Segnalazioni</p></b-tab>

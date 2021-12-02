@@ -30,6 +30,10 @@
 <script>
 import outside from '@components/directives/outside' // CLICK FUORI
 import {ImageBarcodeReader, StreamBarcodeReader} from "vue-barcode-reader";
+
+import api from '@api'
+import {Session} from "@services/session";
+
 export default {
   name: "food-finder",
   directives: {outside},
@@ -105,7 +109,7 @@ export default {
 
     findFoods(_startWith){
       //TODO: REQUEST LIST INGREDIENT that start with 'ingredientStart'
-      return this.allFoods.filter(ingredient => ingredient.name.startsWith(_startWith))
+      return this.allFoods.filter(ingredient => ingredient.name.toLowerCase().startsWith(_startWith.toLowerCase()))
     },
 
     onSaveFood(food){
@@ -124,7 +128,14 @@ export default {
 
     requestAllFoods(){
       //TODO: REQUEST ALL FOODS
-      this.allFoods = require('@assets/examples/foods.js')
+      //this.allFoods = require('@assets/examples/foods.js')
+      api.foods
+         .getFoods(Session.accessToken())
+         .then(({data}) => {
+           console.debug('All foods = ', data)
+           this.allFoods = data.items
+         })
+         .catch(err => console.error(err))
     },
 
     getNutritionalValues(id){
@@ -132,7 +143,7 @@ export default {
       return food ? food.nutritional_values : {}
     },
   },
-  created() {
+  mounted() {
    this.requestAllFoods()
   }
 }

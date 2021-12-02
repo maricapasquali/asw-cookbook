@@ -2,7 +2,7 @@
   <div>
 
     <wrap-loading  v-model="processing" >
-      <b-form>
+      <b-form @submit="">
         <legend v-if="title"> {{ title }} </legend>
 
         <b-row cols="1" cols-md="2"   cols-lg="4">
@@ -58,11 +58,11 @@
           <legend>Ingredienti</legend>
           <food-finder @found="addIngredient" ref="foodFinder" barcode-search food-adder/>
           <b-list-group >
-            <b-list-group-item v-for="(ingredient, ind) in recipe.ingredients" :key="ingredient._id">
+            <b-list-group-item v-for="(ingredient, ind) in recipe.ingredients" :key="ingredient.food._id">
               <b-row >
                 <b-col cols="5" align-self="center">
                   <font-awesome-icon icon="minus" @click="removeIngredient(ind)" class="icon"/>
-                  <span class="ml-3">{{ ingredient.name }}</span>
+                  <span class="ml-3">{{ ingredient.food.name }}</span>
                 </b-col>
                 <b-col cols="7">
                   <b-row align-v="center">
@@ -115,8 +115,8 @@
                   </b-col>
                 </b-row>
               </b-col>
-              <b-col v-show="recipe.img.length > 0">
-                <b-img fluid id="img-preview" :src="recipe.img"/>
+              <b-col v-show="preview.img">
+                <b-img fluid id="img-preview" :src="preview.img"/>
               </b-col>
             </b-row>
           </b-col>
@@ -136,8 +136,8 @@
                 </b-row>
 
               </b-col>
-              <b-col v-show="recipe.tutorial.length > 0">
-                <video id="tutorial-preview" :src="recipe.tutorial" controls />
+              <b-col v-show="preview.tutorial">
+                <video id="tutorial-preview" :src="preview.tutorial" controls />
               </b-col>
             </b-row>
           </b-col>
@@ -183,8 +183,11 @@
 
 <script>
 import { ReaderStreamImage, ReaderStreamVideo } from '@services/filesystem'
-import {clone, equals} from '@services/utils'
+import {clone, equals, isBoolean} from '@services/utils'
 import {Countries, Diets, RecipeCategories} from '@services/app'
+
+import {Session} from "@services/session";
+import api from '@api'
 
 export default {
   name: "recipe-form",
@@ -198,6 +201,11 @@ export default {
       optionsCountry: Countries.get(),
       optionsDiet: Diets.get(),
       optionsCategory: RecipeCategories.get(),
+
+      preview: {
+        img: '',
+        tutorial: ''
+      },
 
       processing: false,
       show: false,
@@ -300,12 +308,10 @@ export default {
     },
     addIngredient(food){
       console.debug('add ingredient = ', food)
-      let _food = food[0]
-      let foundFood =  this.recipe.ingredients.find(f => f.foodID === _food._id)
+      let foundFood = this.recipe.ingredients.find(i => i.food._id === food._id)
       if(!foundFood)
         this.recipe.ingredients.push({
-          foodID: _food._id,
-          name: _food.name,
+          food: food,
           quantity: 0,
         })
     },
@@ -315,14 +321,12 @@ export default {
     _onLoadFile(fileType, event){
       switch (fileType){
         case 'image':
-          this.recipe.img = event.target.result
+          this.preview.img = event.target.result
           console.debug('load image')
-          //console.debug(this.recipe.img)
           break;
         case 'video':
-          this.recipe.tutorial = event.target.result
+          this.preview.tutorial = event.target.result
           console.debug('load video')
-          // console.debug(this.recipe.tutorial)
           break;
       }
     },
@@ -332,25 +336,31 @@ export default {
     _onResetFile(fileType){
       switch (fileType){
         case 'image':
-          this.recipe.img = this.isChangeMode ? this.value.img : ''
+          this.recipe.img = this.isChangeMode && this.value.img !== this.defaultImgRecipe ? this.value.img : ''
+          this.preview.img = this.isChangeMode && this.value.img !== this.defaultImgRecipe ? this.value.img : ''
+
           let inputImage = this.$refs['r-image']
           if(inputImage) inputImage.reset()
           break;
         case 'video':
           this.recipe.tutorial = this.isChangeMode ? this.value.tutorial: ''
-          let inputTutorial = this.$refs['r-image']
+          this.preview.tutorial = this.isChangeMode ? this.value.tutorial: ''
+
+          let inputTutorial = this.$refs['r-tutorial']
           if(inputTutorial) inputTutorial.reset()
           break;
       }
     },
     selectImage(event){
       let fileType = 'image'
+      this.recipe.img = event.target.files[0]
       ReaderStreamImage.read(event.target.files[0],
           this._onLoadFile.bind(this, fileType),
           this._onErrorFile.bind(this, fileType))
     },
     selectTutorial(event){
       let fileType = 'video'
+      this.recipe.tutorial = event.target.files[0]
       ReaderStreamVideo.read(event.target.files[0],
           this._onLoadFile.bind(this, fileType),
           this._onErrorFile.bind(this, fileType))
@@ -393,63 +403,123 @@ export default {
           ingredientQuantity: Array.from(this.value.ingredients).fill(true)
         }
 
-        Object.entries(this.recipe).forEach(([k, v]) => { if(!this.value.hasOwnProperty(k)) this.value[k] = v })
         this.recipe = clone(this.value)
-        this._setOptionSelection(true)
+        delete this.recipe._id
+        delete this.recipe.owner
+        delete this.recipe.permission
+        delete this.recipe.likes
+        delete this.recipe.__v
+        delete this.recipe.comments
+        delete this.recipe.createdAt
+        delete this.recipe.updatedAt
+        this._setOptionSelection(this.recipe, true)
 
         console.debug(`Reset form update recipe (value) = ${JSON.stringify(this.value)}...`)
         console.debug(`Reset form update recipe (recip) = ${JSON.stringify(this.recipe)}...`)
 
-
       }
     },
 
-    _setOptionSelection(before){
+    _setOptionSelection(_recipe, before){
       if(before){
-        if(this.defaultImgRecipe === this.recipe.img) this.recipe.img = ''
-        this.recipe.category = this.recipe.category ? this.recipe.category.value: undefined
-        this.recipe.diet =  this.recipe.diet ? this.recipe.diet.value : undefined
+        if(this.defaultImgRecipe === _recipe.img) _recipe.img = ''
+        _recipe.category = _recipe.category ? _recipe.category.value: undefined
+        _recipe.diet =  _recipe.diet ? _recipe.diet.value : undefined
       }else{
-        if('' === this.recipe.img) this.recipe.img = this.defaultImgRecipe
-        this.recipe.category = RecipeCategories.find(this.recipe.category) || ''
-        this.recipe.diet = Diets.find(this.recipe.diet) || ''
+        if('' === _recipe.img) _recipe.img = this.defaultImgRecipe
+        _recipe.category = RecipeCategories.find(_recipe.category) || ''
+        _recipe.diet = Diets.find(_recipe.diet) || ''
       }
     },
 
-    _newRecipe(eventType, opt = {shared: false, changed: false}){
+    _newRecipe(eventType, options = {shared: undefined, new: false}){
+      console.debug('OPT = ', options, ', changeMode = ', this.isChangeMode !== undefined)
+
+      let userInfo = Session.userInfo()
+      if(!userInfo) { return; /* TODO: ERROR NOT AUTHORIZED */ }
+
+      let request = null
+
+      const formData = this._formData(options)
+
       this.processing = true
-      console.log('OPT = ', opt, ', changeMode = ', this.isChangeMode)
-      if(opt.changed){
-        // TODO: REQUEST modify RECIPE
-        console.log('Changed recipe ', this.recipe)
 
-      }else{
-        this.recipe.shared = opt.shared
-        // TODO: REQUEST add new RECIPE
-        console.log('New recipe ', this.recipe)
+      if(options.new === false){
+        console.log('Changed recipe ')
+        // console.debug(this.recipe)
+        request = api.recipes.updateRecipe(userInfo._id, this.value._id, formData, Session.accessToken())
       }
-      this.$emit('input', this.recipe)
-      if(this.isChangeMode) {
-        this._setOptionSelection(false)
+      else{
+        console.log('New recipe ')
+        // console.debug(this.recipe)
+        request = api.recipes.createRecipe(userInfo._id, formData, Session.accessToken())
+      }
 
-        this.$emit('onChanged', this.recipe)
+      request
+          .then(({data}) => {
+
+            if(this.isChangeMode) {
+              this._setOptionSelection(data, false)
+              this.$emit('onChanged', data)
+            } else {
+              this.$emit(eventType, data)
+              this.resetFormRecipe()
+            }
+          })
+          .catch(err => {
+            // TODO: HANDLER ERROR add new RECIPE / modify RECIPE
+            console.error(err)
+          })
+          .finally(() => this.processing = false)
+    },
+
+    _formData(options = {shared: undefined, new: false}){
+      const formData = new FormData()
+
+      const addOnFormData = (k, v) => {
+        if(Array.isArray(v)) formData.append(k, JSON.stringify(v))
+        else formData.append(k, v)
       }
-      else {
-        this.$emit(eventType, this.recipe)
-        this.resetFormRecipe()
-      }
-      this.processing = false
+
+      const copyRecipe = clone(this.recipe)
+      copyRecipe.ingredients.forEach(i => i.food = i.food._id)
+      if(isBoolean(options.shared)) copyRecipe.shared = options.shared
+      if(!(copyRecipe.img instanceof File)) delete copyRecipe.img
+      if(!(copyRecipe.tutorial instanceof File)) delete copyRecipe.tutorial
+
+      Object.entries(copyRecipe).forEach(([k, v]) => addOnFormData(k, v))
+      //for(const i of formData.entries()) console.log(i)
+
+      console.log(options.new ? 'Create ...': 'Update ...')
+      return formData;
     },
 
     savedChanging(){
-      this._newRecipe('onSavedChanging', {changed: true})
+      //only in change mode
+      this._newRecipe('onSavedChanging', {new: false})
     },
     saved(){
-      this._newRecipe('onSaved', {shared: true})
+      let options = {shared: false, new: true}
+      if(this.isChangeMode && this.value.shared === false) options.new = false
+
+      // create mode : {shared: false, new: true}
+      // change mode
+        // value.shared == true ->   // {shared: false, new: true}
+        // value.shared == false (saved) ->   // {shared: false, new: false}
+
+      this._newRecipe('onSaved', options)
     },
     shared(){
-      this._newRecipe('onShared',{shared: true})
-    }
+      let options = {shared: true, new: true}
+      if(this.isChangeMode && this.value.shared === false) options.new = false
+
+      // create mode : {shared: true, new: true}
+      // change mode
+        // value.shared == true ->   // {shared: true, new: true}
+        // value.shared == false (saved) ->   // {shared: true, new: false}
+
+      this._newRecipe('onShared',options)
+    },
   },
   created() {
     this.resetFormRecipe();

@@ -86,35 +86,35 @@
           <b-row align-h="between" align-v="center">
             <b-col>
               <b-row align-h="center" align-v="center">
-                <b-col align="start" cols="2" class="px-0" v-if="doc.recipe.country">
-                  <country-image v-model="doc.recipe.country"/>
+                <b-col align="start" cols="2" class="px-0" v-if="doc.country">
+                  <country-image v-model="doc.country"/>
                 </b-col>
                 <b-col class="px-0">
-                  <h2>{{ doc.recipe.name }}</h2>
+                  <h2>{{ doc.name }}</h2>
                 </b-col>
               </b-row>
             </b-col>
             <b-col cols="2" align="end">
-              <like v-model="doc.recipe.likes" />
+              <like v-model="doc.likes" :recipe="{id: doc._id, ownerID: doc.owner._id}" :no-like="isOwnerRecipe"/>
             </b-col>
           </b-row>
           <b-row class="mt-2" align-h="between">
-            <b-col class="px-0" v-if="doc.recipe.category"> {{ doc.recipe.category | nameCategory }} </b-col>
-            <b-col v-if="doc.recipe.diet"> {{ doc.recipe.diet | nameDiet }} </b-col>
-            <b-col align="end"> {{ doc.recipe.timestamp | dateFormat }}</b-col>
+            <b-col class="px-0" v-if="doc.category"> {{ doc.category | nameCategory }} </b-col>
+            <b-col v-if="doc.diet"> {{ doc.diet | nameDiet }} </b-col>
+            <b-col align="end"> {{ doc.createdAt | dateFormat }}</b-col>
           </b-row>
         </b-container>
       </b-col>
 
       <!-- TODO: improve view for image and tutorial video -->
-      <b-col  v-if="doc.recipe.img || doc.recipe.tutorial">
+      <b-col  v-if="doc.img || doc.tutorial">
         <b-row class="mt-5">
           <b-col v-if="thereIsImage">
-            <b-img fluid :src="doc.recipe.img" @error="imageNotFound"/>
+            <b-img fluid :src="doc.img" @error="imageNotFound"/>
           </b-col>
-          <b-col v-if="doc.recipe.tutorial">
+          <b-col v-if="doc.tutorial">
             <b-embed style="object-fit: cover; height: auto" type="video" :poster="posterTutorial" controls >
-              <source :src="doc.recipe.tutorial" type="video/mp4"  @error="tutorialNotFound">
+              <source :src="doc.tutorial" type="video/mp4"  @error="tutorialNotFound">
               Your browser does not support the video tag.
             </b-embed>
           </b-col>
@@ -123,27 +123,27 @@
 
       <b-col class="mt-5">
         <strong>Ingredienti</strong>
-        <ingredient-list v-model="doc.recipe.ingredients"/>
+        <ingredient-list v-model="doc.ingredients"/>
       </b-col>
 
       <b-col class="mt-5">
         <strong>Preparazione</strong>
-        <p> {{ doc.recipe.preparation }} </p>
+        <p> {{ doc.preparation }} </p>
       </b-col>
 
-      <b-col v-if="doc.recipe.note" class="mt-5">
+      <b-col v-if="doc.note" class="mt-5">
         <strong>Note</strong>
-        <p> {{ doc.recipe.note }} </p>
+        <p> {{ doc.note }} </p>
       </b-col>
 
       <b-col class="mt-5">
         <strong>Valori Nutrizionali</strong>
-        <nutrients-table :ingredients="doc.recipe.ingredients"/>
+        <nutrients-table :ingredients="doc.ingredients"/>
       </b-col>
 
       <b-col class="mt-5">
         <strong>Commenti</strong>
-        <comments v-model="doc.recipe.comments" :recipeId="doc.recipe._id" :isOwner="isOwner(doc.owner)" />
+        <comments v-model="doc.comments" :recipe="{id: doc._id, ownerID: doc.owner._id}" />
       </b-col>
     </b-row>
 
@@ -155,6 +155,8 @@ import {Session} from "@services/session"
 import {isEmpty, dateFormat} from "@services/utils"
 import {Diets, RecipeCategories} from "@services/app"
 
+import api from '@api'
+
 export default {
   name: "OneRecipe",
   data(){
@@ -162,10 +164,7 @@ export default {
       loading: true,
       itemsBreadcrumb: [],
       defaultImageRecipe: require('@assets/images/recipe-image.jpg'),
-      doc: {
-        owner: {},
-        recipe: {}
-      }
+      doc: {}
     }
   },
   computed: {
@@ -173,10 +172,14 @@ export default {
       return !this.doc || (isEmpty(this.doc.owner) && isEmpty(this.doc.recipe))
     },
     posterTutorial(){
-      return this.doc.recipe.img || this.defaultImageRecipe
+      return this.doc.img || this.defaultImageRecipe
     },
     thereIsImage(){
-      return this.doc.recipe.img && this.doc.recipe.img !== this.defaultImageRecipe
+      return this.doc.img && this.doc.img !== this.defaultImageRecipe
+    },
+    isOwnerRecipe(){
+      let userInfo = Session.userInfo()
+      return userInfo && this.doc.owner._id === userInfo._id
     }
   },
   filters: {
@@ -205,20 +208,26 @@ export default {
     },
     getRecipe() {
       let {id, recipe_id} = this.$route.params;
-      //TODO: REQUEST shared RECIPE with 'recipe_id' of user 'id'
-      this.doc = require('@assets/examples/home-page.js').find(r => r.owner._id === id && r.recipe._id === recipe_id)
-      console.debug(this.doc)
-      if(this.doc) {
-        this.itemsBreadcrumb = [
-          {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.$route.params.id} } },
-          {text: this.doc.recipe.name, active: true}
-        ]
-      }
 
+      api.recipes.getRecipe(id, recipe_id, 'shared', Session.accessToken())
+      .then(({data})=>{
+        this.doc = data
+        console.debug(this.doc)
+        if(this.doc) {
+          this.itemsBreadcrumb = [
+            {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.$route.params.id} } },
+            {text: this.doc.name, active: true}
+          ]
+        }
+      }).catch(err => {
+        //TODO: HANDLER ERROR ONE RECIPE
+        console.error(err.response)
+      })
     }
   },
   mounted() {
-    setTimeout(this.getRecipe.bind(this), 1000)
+    // setTimeout(this.getRecipe.bind(this), 1000)
+    this.getRecipe()
   }
 }
 </script>

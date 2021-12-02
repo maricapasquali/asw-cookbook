@@ -3,15 +3,20 @@
     <!-- Public User Information  -->
     <user-information :id="identifierUser"></user-information>
     <!-- Shared Recipe of one specific user -->
-    <container-collapsable title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="others" @load-others="othersRecipes">
+    <container-collapsable title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="areOthers" @load-others="othersRecipes">
       <template #collapse-content>
         <b-list-group class="my-3">
           <b-list-group-item v-for="(recipe, ind) in recipes" :key="ind">
             <b-row>
               <b-col align="start">
-                <router-link :to="{name: 'single-recipe', params: {id: identifierUser, recipe_id: recipe._id}}">
-                  {{ recipe.name }}
-                </router-link>
+                <b-row cols="1">
+                  <b-col>
+                    <router-link :to="{name: 'single-recipe', params: {id: identifierUser, recipe_id: recipe._id}}">
+                      {{ recipe.name }}
+                    </router-link>
+                  </b-col>
+                  <b-col>  <small>{{recipe.createdAt | dataFormatter}}</small> </b-col>
+                </b-row>
               </b-col>
               <b-col align="end">
                 <span> {{ recipe.category.text }} </span>
@@ -29,24 +34,36 @@
 </template>
 
 <script>
-
+import {dateFormat} from "@services/utils";
 import {RecipeCategories} from "@services/app";
+
+import {Session} from "@services/session";
+import api from '@api'
 
 export default {
   name: "OneUser",
   computed: {
     identifierUser(){
       return this.$route.params.id
-    }
+    },
+    areOthers(){
+      return this.recipes.length >0 && this.recipes.length < this.total
+    },
+  },
+  filters: {
+    dataFormatter: dateFormat
   },
   data(){
     return {
       /* User Recipes Section */
       showRecipeSection: false,
       defaultRecipeImage: require('@assets/images/recipe-image.jpg'),
-      totalsRecipes: 9,
-      others: true,
-      recipes: []
+      total: 0,
+      recipes: [],
+      paginationOptions: {
+        page: 1,
+        limit: 1 //todo: change pagination limit from 1 to 10
+      }
     }
   },
   methods: {
@@ -59,29 +76,32 @@ export default {
       return recipe
     },
 
-    getRecipes(){
-      //TODO: REQUEST N RECIPE (shared) OF USER WITH 'id'
-      this.recipes = require('@assets/examples/home-page.js')
-          .filter(r => r.owner._id === this.identifierUser)
-          .map(r => this.remappingRecipe(r.recipe))
+    getRecipes(currentPage){
+      this.paginationOptions.page = currentPage || 1
+      console.debug('Pagination = ', JSON.stringify(this.paginationOptions, null, 1))
 
-      console.debug('Recipes : ', JSON.stringify( this.recipes))
+      api.recipes
+         .getRecipes(this.identifierUser, Session.accessToken(), 'shared', this.paginationOptions)
+         .then(({data}) =>{
+           let _remapData = data.items.map(recipe => this.remappingRecipe(recipe))
+
+           if(currentPage) this.recipes.push(..._remapData)
+           else this.recipes = _remapData
+
+           this.total = data.total
+           console.debug('Recipes : ',  this.recipes)
+         })
+          //TODO: HANDLER ERROR N RECIPE (shared) OF USER WITH 'id'
+         .catch(err => console.error(err))
     },
 
     othersRecipes(){
-      //TODO: REQUEST others N RECIPE (shared) OF USER WITH 'id'
-      require('@assets/examples/home-page.js')
-          .filter(r => r.owner._id === this.identifierUser)
-          .map(r => this.remappingRecipe(r.recipe))
-          .forEach(r => this.recipes.push(r))
-
-      console.debug('Recipes : ', JSON.stringify( this.recipes))
-
-      if(this.totalsRecipes === this.recipes.length) this.others = false
+      console.debug('Press \'other\' button ...')
+      this.getRecipes(this.paginationOptions.page + 1)
     },
 
     onCollapsedRecipes({show}){
-      console.log('Recipe: collapsed show = ', show)
+      console.debug('Recipe: collapsed show = ', show)
       if(show && this.recipes.length === 0) this.getRecipes()
     }
   },

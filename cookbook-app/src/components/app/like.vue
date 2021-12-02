@@ -1,27 +1,29 @@
 <template>
   <div>
-    <b-icon-heart-fill v-if="makeLike" @click="onLike" class="icon mr-1"/>
-    <b-icon-heart v-else  @click="onLike" class="icon mr-1"/>
-    <span v-if="like>0">{{like}}</span>
+    <b-icon-heart-fill v-if="makeLike" @click="onLike" :class="classesLike"/>
+    <b-icon-heart v-else  @click="onLike" :class="classesLike"/>
+    <span v-if="value.length>0">{{value.length}}</span>
   </div>
 </template>
 
 <script>
+
+import {Session} from "@services/session";
+import api from "@api";
+
 export default {
   name: "like",
   props: {
-    value: Number | Array
+    value: Array,
+    noLike: Boolean,
+    recipe: Object,
+    commentID: String
   },
   watch:{
     value(val, old){
-      // console.log(`Update model = ${old} -> ${val}`)
-      this.makeLike = val - old === 1
-      this.like = val
+      console.debug(`Like update = ${JSON.stringify(old)} -> ${JSON.stringify(val)}`)
+      this.makeLike = val.length > old.length
     },
-    like(val, old){
-      // console.log(`Update (local) model = ${old} -> ${val}`)
-      this.makeLike = val - old === 1
-    }
   },
   data(){
     return {
@@ -29,19 +31,52 @@ export default {
       like: 0
     }
   },
+  computed: {
+    classesLike(){
+      return {
+        'mr-1': true,
+        'icon': !this.noLike
+      }
+    }
+  },
   mounted() {
-    this.like = Array.isArray(this.value) ? this.value.length : this.value
+    let userInfo = Session.userInfo()
+    if(userInfo) this.makeLike = this.value.find(l => l.user && l.user._id === userInfo._id) !== undefined
   },
   methods: {
     onLike(){
-      if(this.makeLike) {
-        this.like -= 1
-        this.$emit('unlike')
-      } else {
-        this.like += 1
-        this.$emit('like')
+      if(!this.noLike){
+        if(this.makeLike) {
+          let userInfo = Session.userInfo()
+          //let like = null; if(userInfo) like = this.value.find(l => l.user && l.user._id === userInfo._id); else like = this.value.find(l => !l.user)
+          let like = this.value.find(l => (userInfo && l.user && l.user._id === userInfo._id) || (!userInfo && !l.user))
+          console.debug('Like to remove = ', JSON.stringify(like, null, 1))
+          api.recipes
+             .likes
+             .unLike(this.recipe.ownerID, this.recipe.id, like._id , Session.accessToken(), this.commentID)
+             .then(({data})=> {
+                console.debug('Unlike ', data)
+                this.$emit('input', this.value.filter(l => l._id !== like._id))
+                this.$emit('unlike')
+             })
+              //TODO: HANDLER ERROR UN-LIKE
+             .catch(err => console.error(err) )
+
+        }
+        else {
+          api.recipes
+             .likes
+             .like(this.recipe.ownerID, this.recipe.id, Session.accessToken(), this.commentID)
+             .then(({data})=> {
+                  console.debug('Like ', data)
+
+                  this.$emit('input', [...this.value, ...[data]])
+                  this.$emit('like')
+             })
+              //TODO: HANDLER ERROR LIKE
+             .catch(err => console.error(err) )
+        }
       }
-      this.$emit('input', this.like)
     }
   }
 }

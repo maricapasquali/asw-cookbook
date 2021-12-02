@@ -1,23 +1,31 @@
+import * as _ from 'lodash'
+import * as cloneDeep from 'lodash.clonedeep'
+import * as isEqual from 'lodash.isequal'
+
 export function clone(from: object){
-    return JSON.parse(JSON.stringify(from))
+    return cloneDeep(from)
 }
 
-export function equals(o: object, o1: object){
-    return JSON.stringify(o) === JSON.stringify(o1)
+export function equals(o: object, o1: object): boolean {
+    return isEqual(o, o1)
 }
 
-export function isString(v: any){
+export function isEmpty(v: any): boolean {
+    return _.isEmpty(v)
+}
+
+export function isBoolean(v: any): boolean {
+    return typeof v === 'boolean'
+}
+
+export function isString(v: any): boolean {
     return typeof v === 'string'
 }
 
-export function isCallable(v: any){
+export function isCallable(v: any): boolean {
     return typeof v === 'function'
 }
 
-export function isEmpty(v: object){
-    return typeof v === 'object' && JSON.stringify(v) === "{}"
-}
-
-export function dateFormat(timestamp: number, lang: string = 'it'){
+export function dateFormat(timestamp: number, lang: string = 'it'): string {
     return new Date(timestamp).toLocaleString([lang], {year: 'numeric', day: '2-digit',month:'2-digit', hour: '2-digit', minute: '2-digit'})
 }

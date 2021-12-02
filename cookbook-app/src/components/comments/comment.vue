@@ -1,70 +1,124 @@
 <template>
-  <div>
-    <!-- Modal for reporting-->
-    <b-modal v-model="reportComment.show" title="Segnala commento"  @ok="report" centered ok-only>
-      <p>Vuoi segnalare il commento di <strong>{{ userToReportedComment | name }}</strong>?</p>
-    </b-modal>
+  <li>
+    <div>
+      <!-- Modal for reporting-->
+      <b-modal v-model="showReportComment" title="Segnala commento"  @ok="report" centered ok-only>
+        <p>Vuoi segnalare il commento di <strong>{{ comment.user | name }}</strong>?</p>
+      </b-modal>
 
-    <b-row v-if="isReportedComment" class="reported-comment" cols="1" cols-sm="1">
-      <b-col align="center"><b-icon-exclamation-triangle-fill/> <span>Commento segnalato.</span> </b-col>
-      <b-col align="center"><b-button variant="link" @click="showReportedComment">Visualizza comunque</b-button></b-col>
-    </b-row>
-    <b-row v-else class="comment" cols="1" cols-sm="1">
-      <b-row class="comment-user">
-        <div>
-          <b-img v-if="isThereProfileImg(userComment)" fluid id="img-user" width="100" height="100" rounded="circle" :src="userComment.img" @error="imgNotFound" alt="immagine profilo"></b-img>
-          <b-img v-else fluid id="img-user" width="100" height="100" :src="defaultImageProfile"></b-img>
-          <router-link v-if="userComment" :to="{name: 'single-user', params: {id: userComment._id }}">{{ userComment | name }}</router-link>
-          <span v-else>{{ userComment | name }}</span>
-        </div>
+      <!-- Modal for reporting-->
+      <b-modal v-model="showDeleteComment" title="Cancella commento"  @ok="removeComment" centered ok-only>
+        <p>Vuoi cancellare il tuo commento ?</p>
+      </b-modal>
+
+      <b-row v-if="isDeletedComment" class="deleted-comment">
+        <b-col align="center"><b-icon-exclamation-triangle-fill/> <span>Commento cancellato.</span> </b-col>
       </b-row>
-      <b-row class="comment-popover">
+      <b-row v-else-if="isReportedComment" class="reported-comment" cols="1" cols-sm="1">
+        <b-col align="center"><b-icon-exclamation-triangle-fill/> <span>Commento segnalato.</span> </b-col>
+        <b-col align="center"><b-button variant="link" @click="showReportedComment">Visualizza comunque</b-button></b-col>
+      </b-row>
+      <b-row v-else class="comment-container" cols="1">
+        <b-col class="comment-header">
+          <b-row align-h="center">
+            <b-col>
+              <div class="avatar">
+              <b-img v-if="isThereProfileImg(comment.user)" fluid id="img-user" width="100" height="100" rounded="circle" :src="comment.user.img" @error="imgNotFound" alt="immagine profilo" />
+              <b-img v-else fluid id="img-user" width="100" height="100" :src="defaultImageProfile"></b-img>
+            </div>
 
-        {{ contentComment }}
-        <b-container fluid class="footer d-flex justify-content-between mt-2">
-          <b-container fluid class="px-0 py-3">
-            <span class="timestamp">{{ timeStampComment, language | dateFormat }}</span>
-            <like v-model="likesComment" @like="like" @unlike="unlike"/>
+               <div class="userID">
+                 <router-link v-if="comment.user" :to="{name: 'single-user', params: {id: comment.user._id }}">{{ comment.user | name }}</router-link>
+                 <span v-else>{{ comment.user | name }}</span>
+               </div>
+             </b-col>
+            <b-col cols="3" align="end" class="mt-3 mr-2">
+              <div class="right">
+                <b-button-group>
+                  <b-button :id="changeCommentId" v-if="isOwnerComment" @click="toggleChangeMode(comment.content)" variant="primary">
+                    <b-icon-x-square-fill v-if="changeMode.show"/>
+                    <b-icon-pencil-square v-else/>
+                  </b-button>
+                  <b-tooltip :target="changeCommentId">Modifica commento</b-tooltip>
+                  <b-button :id="deleteCommentId" v-if="isOwnerComment" @click="showDeleteComment = true" variant="danger"><b-icon-trash-fill /></b-button>
+                  <b-tooltip :target="deleteCommentId">Cancella commento</b-tooltip>
+                </b-button-group>
+              </div>
+            </b-col>
+          </b-row>
+        </b-col>
+        <b-col class="comment-content">
+          <div v-if="changeMode.show">
+            <b-form>
+              <b-form-row cols="1">
+                <b-col cols="12">
+                  <b-form-group :label-for="changeFormCommentId">
+                    <b-form-textarea :id="changeFormCommentId" v-model="changeMode.content" rows="5" />
+                  </b-form-group>
+                </b-col>
+                <b-col cols="12" align="end" class="mt-1">
+                  <b-button-group v-if="changeMode.content.length">
+                    <b-button variant="primary" @click="changeComment">Salva</b-button>
+                  </b-button-group>
+                </b-col>
+              </b-form-row>
+            </b-form>
+          </div>
+          <span v-else>{{ comment.content }}</span>
+
+        </b-col>
+        <b-col class="comment-footer">
+          <b-container fluid class="footer d-flex justify-content-between mt-2">
+            <b-container fluid class="px-0 py-3">
+              <b-row cols="2" align-h="between">
+                <b-col cols="8"><span class="timestamp">{{ comment.timestamp, language | dateFormat }}</span> </b-col>
+                <b-col cols="3" align="end"><like v-model="comment.likes" :recipe="recipe" :commentID="comment._id" :no-like="isOwnerComment"/> </b-col>
+              </b-row>
+            </b-container>
+            <b-button-group class="actions">
+              <b-button variant="link" @click="showReportComment = true" v-if="!isOwnerComment">Segnala</b-button>
+              <b-button variant="link" :ref="editorCommentId" v-if="!isOwnerComment"  v-b-toggle="editorCommentId">Rispondi</b-button>
+            </b-button-group>
           </b-container>
-          <b-button-group class="actions">
-            <b-button variant="link" @click="openModalReporting">Segnala</b-button>
-            <b-button variant="link" :ref="editorCommentId"  v-if="isAvailableResponse"  v-b-toggle="editorCommentId">Rispondi</b-button>
-          </b-button-group>
-        </b-container>
-        <b-collapse class="col" :id="editorCommentId" v-if="isAvailableResponse" >
-          <mini-text-editor @end-edit="addResponse" @close="closeEditorResponse">
-            <template #edit>Rispondi</template>
-          </mini-text-editor>
-        </b-collapse>
+
+          <b-collapse class="col" :id="editorCommentId"  v-if="!isOwnerComment">
+            <mini-text-editor @end-edit="addResponse" @close="closeEditorResponse">
+              <template #edit>Rispondi</template>
+            </mini-text-editor>
+          </b-collapse>
+        </b-col>
       </b-row>
-    </b-row>
-  </div>
+    </div>
+
+    <ul v-if="comment.responses && comment.responses.length">
+      <comment v-for="response in comment.responses" :key="response._id"
+                    :comment="response" :recipe="recipe" :language="language" />
+    </ul>
+  </li>
 </template>
 <script>
 import {Session} from "@services/session";
 import {dateFormat} from "@services/utils";
 
+import api from '@api'
+
 export default {
   name: "comment",
   props: {
-    index: Number,
     comment: Object,
-    isOwner: Boolean,
-    response: {
-      type: Boolean,
-      default: false
-    },
+    recipe: Object,
     language: String
   },
   data(){
     return {
       defaultImageProfile: require('@assets/icons/person-circle.svg'),
-      reportComment: {
+      showReportComment: false,
+      showDeleteComment: false,
+
+      changeMode: {
         show: false,
-        isResponse: false,
-        comment: ''
-      },
-      responseComment: null
+        content: ''
+      }
     }
   },
   filters: {
@@ -74,39 +128,30 @@ export default {
     dateFormat: dateFormat
   },
   computed:{
-    userComment(){
-      return this.response ? this.comment.response.owner_recipe : this.comment.user
-    },
-    contentComment(){
-      return this.response ? this.comment.response.content : this.comment.content
-    },
-    timeStampComment(){
-      return this.response ? this.comment.response.timestamp : this.comment.timestamp
-    },
-    likesComment: {
-      get(){
-        return this.response ? this.comment.response.likes : this.comment.likes
-      },
-      set(like){
-        if(this.response) this.comment.response.likes = like
-        else this.comment.likes = like
-      }
-    },
-
-    userToReportedComment(){
-      return this.reportComment.isResponse!== false ? this.reportComment.isResponse.user : this.reportComment.comment.user
-    },
-    isAvailableResponse(){
-      return this.isOwner && !this.response && !this.responseComment
-    },
     editorCommentId(){
-      return 'editor-' + this.index + '-' + this.comment.number + (this.response ? '-response' : '')
+      return 'editor-' + this.comment._id
+    },
+    changeCommentId(){
+      return 'change-' + this.comment._id
+    },
+    changeFormCommentId(){
+      return 'change-content-input-' + this.comment._id
+    },
+    deleteCommentId(){
+      return 'delete-' + this.comment._id
     },
 
-    isReportedComment(){
-      if(this.response) return this.comment.response && this.comment.response.reported !== false
-      return this.comment.reported !== false
+    isOwnerComment: function (){
+      let userInfo = Session.userInfo()
+      return userInfo && this.comment.user && this.comment.user._id === userInfo._id
     },
+
+    isDeletedComment(){
+      return !this.comment.content || this.comment.content.length === 0
+    },
+    isReportedComment(){
+      return this.comment.reported !== false
+    }
   },
   methods:{
     isThereProfileImg(user){
@@ -117,37 +162,30 @@ export default {
       console.error('image profile not found...')
       e.target.src = this.defaultImageProfile
     },
-    /*LIKE/UNLIKE COMMENT */
-    like(){
-      if(this.response) console.debug("Like comment response."); else console.debug("Like comment.")
-
-      this.$emit('like', {comment: this.comment, isResponse: this.response})
-    },
-    unlike(){
-      if(this.response)  console.debug("UNLike comment response.");else console.debug("UNLike comment.")
-
-      this.$emit('unlike', {comment: this.comment, isResponse: this.response})
-    },
 
     /* REPORT */
     showReportedComment(){
-      if(this.response) this.comment.response.reported = false
-      else this.comment.reported = false
+      this.comment.reported = false
       this.$emit('show-reported-comment')
       console.debug("Show Reported comment.")
     },
-    openModalReporting(){
-      this.reportComment = {
-        show: true,
-        isResponse: this.response ? { user:   this.comment.response.owner_recipe }: false,
-        comment: this.comment
-      }
-    },
+
     report(){
-      let comment = this.reportComment.comment;
-      let isResponse =  this.reportComment.isResponse
-      console.debug("Reporting comment.")
-      this.$emit('reporting', {comment: comment, isResponse: isResponse})
+      api.recipes
+         .comments
+         .updateComment(this.recipe.ownerID, this.recipe.id, this.comment._id, Session.accessToken(), {action: 'report'})
+         .then(({data})=> {
+           this.comment.reported = true
+           this.$emit('reporting', this.comment)
+         })
+          //TODO: HANDLER ERROR REPORT COMMENT
+         .catch(err => {
+           console.error(err)
+           if(err.response && err.response.status === 409) {
+             this.comment.reported = true
+             this.$emit('reporting', this.comment)
+           }
+         })
     },
 
     /*RESPONSE*/
@@ -156,27 +194,69 @@ export default {
       if(editorBtn) editorBtn.click()
     },
     addResponse(text){
-      console.debug('You answered.')
-      let infoUser =  Session.userInfo()
-      this.responseComment = {
-        content :  text,
-        timestamp: Date.now(),
-        owner_recipe: {_id: infoUser._id, userID: infoUser.userID },
-        likes: 0,
-        reported: false
-      }
-      this.comment.response = this.responseComment
-      this.$emit('add-response', this.responseComment)
+      api.recipes
+         .comments
+         .createResponse(this.recipe.ownerID, this.recipe.id, this.comment._id, {content: text}, Session.accessToken())
+         .then(({data}) => {
+           this.comment.responses.push(data)
+           console.debug('You answered.')
+           this.$emit('add-response', data)
+         })
+          //TODO: HANDLER ERROR ADD RESPONSE TO COMMENT
+         .catch(err => console.error(err))
     },
-  },
 
-  mounted() {
-    if(!this.response) this.responseComment = this.comment.response
-  }
+    /*CHANGE CONTENT COMMENT*/
+    toggleChangeMode(content){
+      this.changeMode = {
+        show: !this.changeMode.show,
+        content: content
+      }
+    },
+    changeComment(e){
+      e.preventDefault()
+
+      if(this.comment.content !== this.changeMode.content) {
+        api.recipes
+           .comments
+           .updateComment(this.recipe.ownerID,
+               this.recipe.id,
+               this.comment._id,
+               Session.accessToken(),
+            { data: { content: this.changeMode.content } })
+           .then(({data}) => {
+             console.debug('Update comment = ', data)
+             this.comment.content = this.changeMode.content
+
+             this.toggleChangeMode('')
+           })
+            //TODO: HANDLER ERROR CHANGE CONTENT OF COMMENT
+           .catch(err => console.error(err))
+      }
+
+    },
+
+    /* REMOVE COMMENT*/
+    removeComment(){
+      api.recipes
+         .comments
+         .deleteComment(this.recipe.ownerID, this.recipe.id, this.comment._id, Session.accessToken())
+         .then(({data}) => {
+           this.comment.content = ""
+           this.$emit('remove', this.comment)
+         })
+          //TODO: HANDLER ERROR REMOVE COMMENT
+         .catch(err => console.error(err))
+    }
+  },
 }
 </script>
 
 <style lang="scss" scoped>
+li {
+  list-style-type: none;
+}
+
 .reported-comment{
     padding: 10px 0;
     border-radius: 10px;
@@ -184,53 +264,37 @@ export default {
     margin: 10px -1%;
     color: black;
 }
-.comment{
-  margin: 10px;
-  & .comment-user {
+.deleted-comment{
+  padding: 10px 0;
+  border-radius: 10px;
+  background-color: $comment-bg-color;
+  margin: 5% 1% 5% -1%;
+  color: black;
+}
+
+
+.comment-container{
+  background-color: white;
+  border-radius: 10px;
+  margin: 2% 0;
+
+  & .comment-header {
     position: relative;
 
-    & > div {
-      display: grid;
-      margin-left: 40px;
-      text-align: center;
-      & > a {
-        color: white;
+    & .avatar {
+      & img {
+        margin-top: 10px;
+        margin-left: 10px;
       }
     }
-    &:after{
-      border: 1em solid transparent;
-      border-top-color: white;
-      content: '';
-      margin-left: 5em;
-      position: absolute;
-      top: 87%;
-      left: -8px;
-      width: 0;
-      height: 0;
-      transform: rotate(180deg);
+
+    & .userID {
+      margin-left: 25px;
     }
   }
 
-  & .comment-popover{
-    border: 1px solid lightgrey;
-    border-radius: 10px;
-    padding: 10px;
-    margin-top: 15px;
-    background-color: white;
-    color: black;
-    & .footer{
-      margin-top: 10px;
-      border-radius: 10px;
-      & .timestamp{
-        float: left;
-        padding-right: 10px;
-      }
-      & .actions {
-        & button {
-          padding-left: 0;
-        }
-      }
-    }
+  & .comment-content {
+    margin-top: 10px;
   }
 }
 

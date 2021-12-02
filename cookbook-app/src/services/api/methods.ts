@@ -29,9 +29,9 @@ function newAccessToken(id: string, data:object, token: string){
 
 instance.interceptors.request.use(function (config){
     if (!config.url) return config;
-    var pathname = config.url
+    let pathname = config.url;
     Object.entries(config.urlParams || {}).forEach(([k, v]) => pathname = pathname.replace(`:${k}`, encodeURIComponent(v)));
-    console.log("interceptors.request : pathname = ", pathname)
+    console.debug("interceptors.request : pathname = ", pathname)
     return {
         ...config,
         baseURL: config.baseURL,
@@ -39,32 +39,31 @@ instance.interceptors.request.use(function (config){
     };
 })
 instance.interceptors.response.use(function(res) {
-        console.log("interceptors.response : res = ", res.status)
+        console.debug("interceptors.response : res = ", res.status)
         return res;
     },
     async function (err){
         const originalConfig = err.config;
         console.error("interceptors.response : err = ", err)
-        if (err.response && originalConfig.urlParams && originalConfig.urlParams.id ) {
-            // Access Token was expired
-            if (err.response.status === 401 && !originalConfig._retry && !originalConfig.url.includes('refreshToken')) {
-                originalConfig._retry = true;
-                try {
-                    let id = originalConfig.urlParams.id
-                    const rs = await newAccessToken(id,{ refresh_token: Session.refreshToken() }, Session.accessToken())
-                    const { access_token } = rs.data;
-                    console.log("Interceptors : after refresh => access token = ", access_token)
-                    Session.setAccessToken(access_token)
-                    return instance({
-                        ...originalConfig,
-                        headers: {
-                            authorization: 'Bearer ' + access_token,
-                        }
-                    });
-                } catch (_error) {
-                    console.error("Refresh token err: ", _error)
-                    return Promise.reject(_error);
-                }
+
+        let userInfo = Session.userInfo()
+        console.debug('User is logged = ', userInfo)
+        if (err.response && err.response.status === 401 && userInfo && !originalConfig._retry && !originalConfig.url.includes('refreshToken')) {
+            originalConfig._retry = true;
+            try {
+                const rs = await newAccessToken(userInfo._id,{ refresh_token: Session.refreshToken() }, Session.accessToken())
+                const { access_token } = rs.data;
+                console.debug("Interceptors : after refresh => access token = ", access_token)
+                Session.setAccessToken(access_token)
+                return instance({
+                    ...originalConfig,
+                    headers: {
+                        authorization: 'Bearer ' + access_token,
+                    }
+                });
+            } catch (_error) {
+                console.error("Refresh token err: ", _error)
+                return Promise.reject(_error);
             }
         }
 

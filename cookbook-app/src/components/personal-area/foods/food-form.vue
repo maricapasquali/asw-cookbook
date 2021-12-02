@@ -88,7 +88,7 @@
 
           <b-form-group label="Sale" label-for="f-sale">
             <b-input-group prepend="mg">
-              <b-form-input id="f-sale" type="number" min="0.1" v-model.number="food.nutritional_values.sale" @input="onInputFoodNutrient('sale')"/>
+              <b-form-input id="f-sale" type="number" min="0.1" v-model.number="food.nutritional_values.salt" />
             </b-input-group>
           </b-form-group>
         </fieldset>
@@ -107,6 +107,9 @@
 <script>
 import {Session} from '@services/session'
 import {isEmpty, clone, equals} from '@services/utils'
+
+import api from '@api'
+
 export default {
   name: "food-form",
   props: {
@@ -159,8 +162,8 @@ export default {
              food.barcode === value.barcode &&
              food.nutritional_values.energy === value.nutritional_values.energy &&
 
-             (food.nutritional_values.sale === value.nutritional_values.sale ||
-                 (food.nutritional_values.sale === 0 && !value.nutritional_values.sale)) &&
+             (food.nutritional_values.salt === value.nutritional_values.salt ||
+                 (food.nutritional_values.salt === 0 && !value.nutritional_values.salt)) &&
              (food.nutritional_values.protein === value.nutritional_values.protein ||
                  (food.nutritional_values.protein === 0 && !value.nutritional_values.protein)) &&
              (equals(food.nutritional_values.fat, value.nutritional_values.fat) ||
@@ -193,7 +196,7 @@ export default {
             complex: 0,
             sugar: 0
           },
-          sale: 0
+          salt: 0
         }
       }
       console.debug('Reset form food ...')
@@ -225,24 +228,28 @@ export default {
       if(energy) this.validation.energy = energy > 0
     },
 
-    saveFood(){
-      //TODO: REQUEST SAVE FOOD
-      this.food._id = 'food-10'  //TODO: remove
-      let sessionInfo = Session.userInfo()
-      this.food.owner = {
-        user: {_id: sessionInfo._id, userID: sessionInfo.userID},
-        timestamp: Date.now()
+    saveFood() {
+      let request = null
+      switch (this.mode) {
+        case 'create':
+          request = api.foods.createFood(this.food, Session.accessToken())
+          break;
+        case 'update':
+          request = api.foods.updateFood(this.value._id, this.food, Session.accessToken())
+          break;
+          default: throw new Error('mode is not valid.')
       }
-
-      let justInsert = require('@assets/examples/foods.js').find(f => f.name === this.food.name)
-
-      if(this.createMode && justInsert ) {
-        this.$emit('onDuplicateGenerate')
-      }else{
-        this.$emit('onSave', this.food)
-      }
-
-    },
+      request
+          .then(({data}) => {
+            console.debug(data)
+            if(this.createMode) this.food = data
+            this.$emit('onSave', data)
+          })
+          .catch(err => {
+            //TODO: HANDLER ANOTHER ERROR ADD FOOD
+            if (this.createMode && err.response && err.response.status === 409) this.$emit('onDuplicateGenerate')
+          })
+    }
   },
   created() {
     console.debug(`${this.updateMode ? 'update': 'create'}  form FOOD ...`)
@@ -250,8 +257,8 @@ export default {
     this.setFormFood()
   },
   beforeDestroy() {
-    console.debug('beforeDestroy: ', this.food)
-    this.$emit('input', this.food)
+    //console.debug('beforeDestroy: ', this.food)
+    if(this.createMode) this.$emit('input', this.food)
   }
 }
 </script>

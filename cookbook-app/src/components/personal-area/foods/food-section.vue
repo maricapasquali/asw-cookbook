@@ -103,8 +103,8 @@
               </template>
 
               <template #cell(owner)="row">
-                <span v-if="isItMine(row.item.details.owner.user)">{{ row.value }}</span>
-                <router-link v-else :to="{name: 'single-user', params:{id: row.item.details.owner.user._id}}">{{ row.value  }}</router-link>
+                <span v-if="isItMine(row.item.details.owner)">{{ row.value }}</span>
+                <router-link v-else :to="{name: 'single-user', params:{id: row.item.details.owner._id}}">{{ row.value  }}</router-link>
               </template>
 
               <template #row-details="row">
@@ -120,7 +120,7 @@
                       <b-col align="start"> {{row.item.details.barcode}}  </b-col>
                     </b-row>
                   </b-col>
-                  <b-col v-if="isItMine(row.item.details.owner.user) || isAdmin" align="end" class="px-0">
+                  <b-col v-if="isItMine(row.item.details.owner) || isAdmin" align="end" class="px-0">
                     <b-button-group >
                       <b-button :id="'change-food-'+row.index" v-if="row.item.actions.includes('change')" variant="primary" @click="openChangeModeFood(row)"> <b-icon-pencil-square /></b-button>
                       <b-tooltip :target="'change-food-'+row.index" v-if="row.item.actions.includes('change')"> Modifica <i>{{row.item.aliment}}</i></b-tooltip>
@@ -165,11 +165,11 @@
 
           <!-- SHOPPING LIST -->
           <b-list-group :class="classesShoppingList" >
-            <b-list-group-item v-for="(food, index) in shopping_list" :key="index" :id="food.foodID" class="py-0" variant="warning">
+            <b-list-group-item v-for="(point, index) in shopping_list" :key="index" :id="point.food._id" class="py-0" variant="warning">
               <b-row align-v="center" align-h="between">
-                <b-col @click="patchShoppingList(index, !food.checked)" class="py-3">
-                  <div :class="{'food-checked': food.checked}"></div>
-                  <span>{{food.name}}</span>
+                <b-col @click="patchShoppingList(index, !point.checked)" class="py-3">
+                  <div :class="{'food-checked': point.checked}"></div>
+                  <span>{{point.food.name}}</span>
                 </b-col>
                 <b-col cols="3" cols-sm="1" align="end">
                   <b-button :id="'remove-food-' + index" variant="danger" @click="removeFromShoppingList(index)"><b-icon-trash-fill/></b-button>
@@ -189,12 +189,11 @@
 <script>
 import {Session} from "@services/session";
 import {clone, dateFormat} from '@services/utils'
+
+import api from '@api'
+
 export default {
   name: "food-section",
-  props: {
-    id: String,
-    accessToken: String
-  },
   data(){
     return {
       skeleton: 6,
@@ -214,7 +213,7 @@ export default {
 
       pagination: {
         currentPage: 1,
-        for_page: 4, //TODO: CHANGE IN 10
+        for_page: 3, //TODO: CHANGE IN 10
         totals: 0,
         isBusy: false
       },
@@ -255,6 +254,10 @@ export default {
   computed: {
     classesShoppingList(){
       return {'shopping-list':true, 'align':true, 'scroll':  this.widthWindow < 768}
+    },
+
+    userIdentifier: function() {
+      return this.$route.params.id
     },
 
     isSignedUser(){
@@ -314,35 +317,69 @@ export default {
 
     // Shopping List
     addInShoppingList(food){
-
+      console.log(food)
       this.foodSelected = food._id
-      let index = this.shopping_list.findIndex(f => f.foodID === this.foodSelected)
+      let index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
       if(index === -1) {
 
-        //TODO: REQUEST add element of SHOPPING LIST
-        // this.shopping_list.push({foodID: food._id, name: food.name, checked: false})
-        this.shopping_list.unshift({foodID: food._id, name: food.name, checked: false})
+        let _food = {food: this.foodSelected, checked: false}
+        api.shoppingList
+           .createShoppingListPoint(this.userIdentifier, _food, Session.accessToken())
+           .then(({data})=>{
+              console.log('New point = ', data)
+              // this.shopping_list.push(data)
+              this.shopping_list.unshift(data)
 
-        console.log('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
+              console.log('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
+           }).catch(err => {
+            //TODO: HANDLER ERROR add element of SHOPPING LIST
+              //no dovrebbe avvenire mai
+              if(err.response && err.response.status === 409){
+                let index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
+                this.patchShoppingList(index, false)
+              }
+              console.error(err.response)
+           })
       }
       else if(this.shopping_list[index].checked) {
         this.patchShoppingList(index, false)
       }
     },
     patchShoppingList(index, checked){
-      //TODO: REQUEST patch element of SHOPPING LIST
-      this.shopping_list[index].checked = checked
-      console.log(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(this.shopping_list[index]))
+      let point = this.shopping_list[index]
+      api.shoppingList
+         .updateShoppingListPoint(this.userIdentifier, point._id, { checked: checked } , Session.accessToken())
+         .then(({data}) => {
+           point.checked = checked
+           console.log(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(point))
+         }).catch(err => {
+          //TODO: HANDLER ERROR patch element of SHOPPING LIST
+            console.error(err)
+         })
     },
     removeFromShoppingList(index){
-      //TODO: REQUEST remove element of SHOPPING LIST
-      console.log('Remove from shopping list: ', JSON.stringify(this.shopping_list[index]))
-      this.shopping_list.splice(index, 1)
+
+      let point = this.shopping_list[index]
+      api.shoppingList
+         .deleteShoppingListPoint(this.userIdentifier, point._id, Session.accessToken())
+         .then(({data}) => {
+            console.log('Remove from shopping list: ', JSON.stringify(point))
+            this.shopping_list.splice(index, 1)
+         }).catch(err => {
+            //todo: HANDLER ERROR remove element of SHOPPING LIST
+            console.error(err)
+         })
     },
     getShoppingList(){
-      //TODO: REQUEST SHOPPING LIST OF USER 'id'
-      this.shopping_list = require('@assets/examples/shopping-list.js')
-      this.loadingSL = false
+      api.shoppingList
+         .getShoppingList(this.userIdentifier, Session.accessToken())
+         .then(({data}) => {
+            this.shopping_list = data
+            this.loadingSL = false
+         }).catch(err => {
+            //todo: HANDLER ERROR GET SHOPPING LIST
+            console.error(err)
+         })
     },
 
     // Foods
@@ -352,28 +389,22 @@ export default {
 
     remapping(food) {
       let operation = [];
-      if( this.isItMine(food.owner.user) || this.isAdmin ) operation.push('change')
+      if( this.isItMine(food.owner) || this.isAdmin ) operation.push('change')
       // if( this.isAdmin ) operation.push('remove')
       return {
         aliment: food.name,
-        creationDate: food.owner.timestamp,
-        owner: food.owner.user.userID,
+        creationDate: food.createdAt,
+        owner: food.owner.userID,
         actions: operation,
         details: food,
       }
     },
 
     getFoodOnPage(page, forPage) {
-      return new Promise((resolve, reject) =>{
-        setTimeout(function (_page, _forPage){
-
-          let _foods = require('@assets/examples/foods.js')
-          let start = (_page - 1) * _forPage, end = start + _forPage
-          // console.debug('all Foods = ', _foods, ', start = ', start, ', end = ', end)
-          resolve({items: _foods.slice( start, end ), total: _foods.length})
-
-        }.bind(this), 500, page, forPage)
-      })
+      return api.foods
+                .getFoods(Session.accessToken(), {page: page, limit: forPage})
+                .then(({data}) => Promise.resolve(data))
+                .catch(err => Promise.reject(err))
     },
     getFoods(pageInfo){
       console.debug('PaginationInfo = ', pageInfo);
@@ -391,7 +422,7 @@ export default {
                     // this.foods = items
 
                     this.modifyFood = items.map(f =>
-                        this.isItMine(f.details.owner.user) || this.isAdmin ?
+                        this.isItMine(f.details.owner) || this.isAdmin ?
                             ({edit: false, food: f.details}) :
                             ({edit: null, food: null})
                     )
@@ -413,30 +444,11 @@ export default {
       this.$bvToast.show('duplicate-food')
     },
     onSaveFood(food){
-      // let index = ((this.pagination.currentPage - 1) * this.pagination.for_page) -1
-      // -> get food on index [= index ] of all foods if currentPage > 1
-      //TODO: REQUEST ADD FOOD 'food'
-      setTimeout(function (){
-        console.log('Add food = ', food, ', current page = ', this.pagination.currentPage)
-        // if(this.foods.length >= this.pagination.currentPage){
-        //   console.log('delete last food')
-        //   this.foods.splice(this.foods.length - 1, 1)
-        // }
-        // if(this.pagination.currentPage == 1){
-        //   this.foods.unshift(this.remapping(food))
-        // }else{
-        //   let index = ((this.pagination.currentPage - 1) * this.pagination.for_page) -1
-        //   //TODO: REQUEST food on index [= index ] of all foods
-        //   let _foods = require('@assets/examples/foods.js')
-        //   this.foods.unshift(this.remapping(_foods[index]))
-        // }
-        // console.log('foods now = ', JSON.stringify(this.foods))
-        this.showFormFood = false
-        this.$bvToast.show('add-food-success')
+      console.log('Add food = ', food, ', current page = ', this.pagination.currentPage)
+      this.showFormFood = false
+      this.$bvToast.show('add-food-success')
 
-        this.$refs.foodTable.refresh()// after request
-
-      }.bind(this), 300)
+      this.$refs.foodTable.refresh()
     },
     removeFood(){
       throw new Error('Remove food not implemented!')
@@ -449,7 +461,6 @@ export default {
     },
     onChangeFood(food, row){
       this.modifyFood[row.index].edit = false
-      //TODO: REQUEST patch FOOD
 
       let oldF = row.item
       oldF.aliment = food.name
@@ -484,6 +495,7 @@ export default {
       this.search.clickedSearch = true
       setTimeout(function (){
         let foods = require('@assets/examples/foods.js')
+
         let alimentStartWith = this.search.value
         let barcodeStartWith = this.search.barcode.value
 
@@ -516,7 +528,7 @@ export default {
   created() {
     window.addEventListener('resize', this.onResize.bind(this))
 
-    setTimeout(this.getShoppingList.bind(this), 1000)
+    if(this.isSignedUser) this.getShoppingList()
   },
 
   beforeDestroy() {
