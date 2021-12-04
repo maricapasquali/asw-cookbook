@@ -317,7 +317,7 @@ export default {
 
     // Shopping List
     addInShoppingList(food){
-      console.log(food)
+      console.debug(food)
       this.foodSelected = food._id
       let index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
       if(index === -1) {
@@ -326,11 +326,11 @@ export default {
         api.shoppingList
            .createShoppingListPoint(this.userIdentifier, _food, Session.accessToken())
            .then(({data})=>{
-              console.log('New point = ', data)
+              console.debug('New point = ', data)
               // this.shopping_list.push(data)
               this.shopping_list.unshift(data)
 
-              console.log('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
+              console.debug('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
            }).catch(err => {
             //TODO: HANDLER ERROR add element of SHOPPING LIST
               //no dovrebbe avvenire mai
@@ -351,7 +351,7 @@ export default {
          .updateShoppingListPoint(this.userIdentifier, point._id, { checked: checked } , Session.accessToken())
          .then(({data}) => {
            point.checked = checked
-           console.log(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(point))
+           console.debug(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(point))
          }).catch(err => {
           //TODO: HANDLER ERROR patch element of SHOPPING LIST
             console.error(err)
@@ -363,7 +363,7 @@ export default {
       api.shoppingList
          .deleteShoppingListPoint(this.userIdentifier, point._id, Session.accessToken())
          .then(({data}) => {
-            console.log('Remove from shopping list: ', JSON.stringify(point))
+            console.debug('Remove from shopping list: ', JSON.stringify(point))
             this.shopping_list.splice(index, 1)
          }).catch(err => {
             //todo: HANDLER ERROR remove element of SHOPPING LIST
@@ -444,7 +444,7 @@ export default {
       this.$bvToast.show('duplicate-food')
     },
     onSaveFood(food){
-      console.log('Add food = ', food, ', current page = ', this.pagination.currentPage)
+      console.debug('Add food = ', food, ', current page = ', this.pagination.currentPage)
       this.showFormFood = false
       this.$bvToast.show('add-food-success')
 
@@ -457,7 +457,7 @@ export default {
       let old = this.modifyFood[row.index]
       old.edit = true
       old.food = clone(row.item.details)
-      console.log(this.$bvModal)
+      console.debug(this.$bvModal)
     },
     onChangeFood(food, row){
       this.modifyFood[row.index].edit = false
@@ -490,38 +490,18 @@ export default {
       this.search.clickedSearch = false
     },
     onSearchFood(){
-      //TODO: REQUEST SEARCH FOOD with 'alimentStartWith' and/or 'barcodeStartWith'
       this.search.isBusy = true
       this.search.clickedSearch = true
-      setTimeout(function (){
-        let foods = require('@assets/examples/foods.js')
-
-        let alimentStartWith = this.search.value
-        let barcodeStartWith = this.search.barcode.value
-
-        let filterForName = (food, _alimentStartWith) => _alimentStartWith && food.name.startsWith(_alimentStartWith)
-        let filterForBarcode = (food, _barcodeStartWith) => food.barcode && _barcodeStartWith && food.barcode.startsWith(_barcodeStartWith)
-
-        let _items = []
-
-        if(!alimentStartWith && barcodeStartWith){
-          console.debug(`Search: Only Barcode (${barcodeStartWith}) ...`)
-          _items = foods.filter(f => filterForBarcode(f, barcodeStartWith))
-        }
-        else if(alimentStartWith && !barcodeStartWith){
-          console.debug(`Search: Only Aliment Name (${alimentStartWith})...`)
-          _items = foods.filter(f => filterForName(f, alimentStartWith))
-        }
-        else if(alimentStartWith && barcodeStartWith){
-          console.debug(`Search: Aliment (${alimentStartWith}) & Barcode (${barcodeStartWith})...`)
-          _items = foods.filter(f => filterForName(f, alimentStartWith) && filterForBarcode(f, barcodeStartWith))
-        }
-
-        this.search.items = _items.map(food => this.remapping(food))
-        console.debug('Search -> items = ', this.search.items)
-        this.search.isBusy = false
-
-      }.bind(this), 500)
+      console.debug(`Search food with name = '${this.search.value}' and barcode = '${this.search.barcode.value}'`)
+      api.foods.getFoods(Session.accessToken(),
+          { name: this.search.value, barcode: this.search.barcode.value })
+      .then(({data}) => {
+          console.debug(data)
+          this.search.items = data.items.map(food => this.remapping(food))
+      })
+       //TODO: HANDLER ERROR SEARCH FOOD with 'alimentStartWith' and/or 'barcodeStartWith'
+      .catch(err => console.error(err))
+      .finally(() => this.search.isBusy = false)
     },
   },
 

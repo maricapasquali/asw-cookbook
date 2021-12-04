@@ -9,12 +9,17 @@ export function createFood(food: object, token: string): Promise<AxiosResponse> 
     })
 }
 
-export function getFoods(token: string, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse>  {
+export type FoodsQueryOptions = {name?: string, barcode?: string, owner?: string}
+export function getFoods(token: string, query?: FoodsQueryOptions, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse>  {
+
     return methods.get('/foods', {
         headers: {
             authorization: 'Bearer ' + token
         },
-        params: paginationOptions,
+        params: {
+            ...paginationOptions,
+            ...query
+        },
     })
 }
 

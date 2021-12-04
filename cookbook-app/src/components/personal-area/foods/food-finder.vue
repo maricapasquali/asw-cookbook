@@ -9,7 +9,7 @@
       <b-col :cols="foodAdder ? 10: 12" :sm="foodAdder ? 11: 12" :class="{'pr-0': !foodAdder}">
         <b-form-group label="Trova" label-for="find-ingredient" id="ingredient-group" :class="{'with-barcode': barcodeSearch}">
           <div v-outside="_hideDropdownOutSide" >
-            <b-form-input @focus="_showDropdown" id="find-ingredient" placeholder="Ingrediente" v-model="startWith" ref="find-ingredient" type="search" autocomplete="off"/>
+            <b-form-input @focus="_showDropdown" id="find-ingredient" placeholder="Ingrediente" v-model="startWith" @input="findFoods" ref="find-ingredient" type="search" autocomplete="off"/>
             <div v-show="!hideDropdown && startWith.length>0">
               <b-list-group class="find-foods" v-if="atLeastResult">
                 <b-list-group-item v-for="food in foods" :key="food._id" @click="onSelectFood(food)" v-html="_boldStartWith(food.name)" />
@@ -50,7 +50,6 @@ export default {
   },
   data(){
     return {
-
       addFood: {
         show: false,
         food: {},
@@ -58,21 +57,14 @@ export default {
 
       hideDropdown: false,
       startWith: '',
-      allFoods:[],
+
+      foods: []
     }
   },
   computed: {
     atLeastResult(){
       return this.foods.length > 0
     },
-    foods(){
-      if(this.startWith.length === 0) return [];
-      else {
-        let founds = this.findFoods(this.startWith)
-        this.hideDropdown = false
-        return founds
-      }
-    }
   },
   methods: {
     _boldStartWith(text){
@@ -90,11 +82,22 @@ export default {
     onDecode (barcodeNumber) {
      if(this.barcodeSearch){
        console.debug('FoodFinder : On found = ', barcodeNumber)
-       //TODO: REQUEST FOUND FOOD WITH BARCODE == 'barcodeNumber'
-       let found = this.allFoods.filter(food => food.barcode && food.barcode.startsWith(barcodeNumber))
-       if(found.length) this.$emit('found', found)
-       else this.onError({ barcode: barcodeNumber, error: 'not found' })
+
+       api.foods
+          .getFoods(Session.accessToken(), {barcode: barcodeNumber})
+          .then(({data}) => {
+            console.debug(data)
+            if (data.total === 0) throw new Error(`Barcode (${barcodeNumber}) is not found`)
+            else this.$emit('found', data.items[0])
+          })
+          .catch(err => {
+            //TODO: HANDLER ERROR FOUND FOOD WITH BARCODE == 'barcodeNumber'
+            console.error(err);
+            this.onError({ barcode: barcodeNumber, error: 'not found' })
+          })
+
      } else throw new Error('BarcodeSearch: Funzionalità non attivata.')
+
     },
     onError(e){
       console.debug('FoodFinder : On Error = ', e)
@@ -108,13 +111,24 @@ export default {
     /*endbarcode*/
 
     findFoods(_startWith){
-      //TODO: REQUEST LIST INGREDIENT that start with 'ingredientStart'
-      return this.allFoods.filter(ingredient => ingredient.name.toLowerCase().startsWith(_startWith.toLowerCase()))
+      if(_startWith.length === 0) {
+        this.foods = []
+      }
+      else {
+        api.foods
+           .getFoods(Session.accessToken(), {name: _startWith})
+           .then(({data}) => {
+             console.debug(data)
+             this.foods = data.items
+             this.hideDropdown = false
+           })
+           //TODO: HANDLER ERROR LIST INGREDIENT that start with 'ingredientStart'
+           .catch(err => this.foods = [])
+      }
     },
 
     onSaveFood(food){
       if(this.foodAdder){
-        this.allFoods.push(food)
         this.$emit('found', food)
         this.addFood = { show: false, food: {} }
       } else throw new Error('FoodAdder: Funzionalità non attivata.')
@@ -125,27 +139,18 @@ export default {
       this.startWith = ''
     },
 
-
-    requestAllFoods(){
-      //TODO: REQUEST ALL FOODS
-      //this.allFoods = require('@assets/examples/foods.js')
-      api.foods
-         .getFoods(Session.accessToken())
-         .then(({data}) => {
-           console.debug('All foods = ', data)
-           this.allFoods = data.items
-         })
-         .catch(err => console.error(err))
-    },
-
-    getNutritionalValues(id){
-      let food = this.allFoods.find(food => food._id === id)
-      return food ? food.nutritional_values : {}
+    async getNutritionalValues(foodID){
+      return await api.foods
+                      .getFood(foodID, Session.accessToken())
+                      .then(({data}) => data.nutritional_values)
+                      .catch(err => {
+                        //TODO: HANDLER ERROR GET ONE FOOD
+                        console.error(err);
+                        return {}
+                      })
     },
   },
-  mounted() {
-   this.requestAllFoods()
-  }
+
 }
 </script>
 
