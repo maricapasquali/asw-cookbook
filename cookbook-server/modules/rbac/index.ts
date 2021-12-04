@@ -18,7 +18,6 @@ export class RBAC implements IRbac {
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.USER_CREDENTIAL },
 
             { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.FOOD },
-            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.FOOD, others: true },
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.FOOD },
             { roles: [RBAC.Role.ADMIN], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.FOOD, others: true },
 

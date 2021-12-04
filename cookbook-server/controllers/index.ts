@@ -11,7 +11,7 @@ import {Document, Model, Query} from "mongoose";
 export const tokensManager: IJwtToken = new JwtToken()
 export const accessManager: IRbac = new RBAC()
 
-export function getRestrictedUser(req: any, res: any, options: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
+export function getRestrictedUser(req: any, res: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
     const {access_token} = extractAuthorization(req.headers)
     if(!access_token) {
         res.status(400).json({description: 'Missing authorization.'})
@@ -22,10 +22,12 @@ export function getRestrictedUser(req: any, res: any, options: {operation: Opera
         res.status(401).json({description: 'User is not authenticated'})
         return false
     }
-    options.others = options.others || (() => false)
-    if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.subject, options.others(decoded_token))) {
-        res.status(403).json({description: 'User is unauthorized'})
-        return false
+    if(options){
+        options.others = options.others || (() => false)
+        if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.subject, options.others(decoded_token))) {
+            res.status(403).json({description: 'User is unauthorized'})
+            return false
+        }
     }
     return decoded_token
 }
@@ -85,12 +87,14 @@ export const FileConfigurationVideo: UploaderConfiguration = {
 
 export type PaginationOptions = { page: number, limit: number }
 export type PaginationResult = { items: Document[], total: number, paginationInfo?: PaginationOptions }
-export function pagination(lazyQuery: () => Query<Document[], Document, {}, Document>, options?: PaginationOptions): Promise<PaginationResult> {
-    return lazyQuery().countDocuments()
+export function pagination(query: Query<Document[], Document, {}, Document>, options?: PaginationOptions): Promise<PaginationResult> {
+    let qc = query.toConstructor()
+    return query.countDocuments()
                 .then(nDocs => {
-                    let _query = lazyQuery()
+                    if(nDocs == 0) return Promise.resolve({ items: [] as Document[] , total: nDocs, paginationInfo: options })
+                    let _query = new qc()
                     let _paginationInfo = options
-                    if(options && (options.page && options.limit)) _query = _query.limit(options.limit).skip((options.page - 1) * options.limit)
+                    if(options) _query = _query.limit(options.limit).skip((options.page - 1) * options.limit)
                     else _paginationInfo = undefined
                     return _query.then(docs => Promise.resolve({ items: docs, total: nDocs, paginationInfo: _paginationInfo }), err => Promise.reject(err))
                 }, err => Promise.reject(err))

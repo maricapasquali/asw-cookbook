@@ -8,19 +8,19 @@ import {
 } from '../../modules/utilities'
 import {User, EmailLink} from '../../models'
 
-import {IJwtToken, JwtToken} from '../../modules/jwt.token'
-import {IRbac, RBAC} from '../../modules/rbac'
+import {DecodedTokenType, IJwtToken, JwtToken} from '../../modules/jwt.token'
+import {RBAC} from '../../modules/rbac'
 import {Mailer, IMailer} from "../../modules/mailer";
-import {client_origin, server_origin} from "../../../modules/hosting/variables";
+import {client_origin} from "../../../modules/hosting/variables";
+import {IUser} from "../../models/schemas/user";
+import {tokensManager, accessManager} from "../index";
 
 import {ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
 import * as path from "path";
-import {FileConfigurationImage, fileUploader} from "../index";
+import {FileConfigurationImage, fileUploader, getUser, pagination} from "../index";
 
 const app_name = require('../../../app.config.json').app_name
 
-const tokensManager: IJwtToken = new JwtToken()
-const accessManager: IRbac = new RBAC()
 const mailer: IMailer = new Mailer(`no-reply@${app_name.toLowerCase()}.com`);
 
 const send_email_signup = function (user) {
@@ -115,27 +115,77 @@ export function check_account(req, res){
                        })
 }
 
+function infoUsers(users: Array<IUser>, me: DecodedTokenType): Array<object> {
+    let usersObject = users.map(u => u.toObject())
+    if(accessManager.isAdminUser(me)){
+        console.debug('like admin')
+        return usersObject.map(u => {
+            let userInfo = {userID: u.credential.userID, role: u.credential.role}
+            delete u.credential
+            delete u.friends
+            return {...u, ...userInfo}
+        })
+    }
+    else {
+        console.debug('like '+(me ? 'signed': 'anonymous'))
+        return usersObject.map(u => {
+            let userInfo = {userID: u.credential.userID, role: u.credential.role}
+            delete u.credential
+            delete u.strike
+            return {...u, ...userInfo}
+        })
+    }
+}
 export function all_users(req, res){
-    const {nickname} = req.query
 
-    let {page, limit} = req.query
+    let {fullname, userID, page, limit} = req.query
 
-    if(page && limit){
-        page = +page
-        limit = +limit
+    const searchAvailableValue = ['full', 'partial']
+
+    let filters = { 'credential.role': 'signed' }
+
+    if(userID) {
+        try {
+            userID = JSON.parse(userID)
+            if(!userID.search || !userID.value) throw new Error()
+        } catch (e) {
+            return res.status(400).json({ description: 'Parameter \'userID\' is malformed. It must be of form: {"search": string, "value": string}' })
+        }
+
+        if(!searchAvailableValue.includes(userID.search)) return res.status(400).json({ description: `Parameter \'userID.search\' must be in ${searchAvailableValue}.` })
+        let regexObject = {$regex: `^${userID.value}`, $options: "i"}
+        if(userID.search === 'full') regexObject['$regex']+='$'
+        filters['credential.userID'] = regexObject
     }
 
-    const query = nickname ? User.find().where('credential.userID').equals(nickname) : User.find()
-    query.where('signup').equals('checked')
-         .where('credential.role', 'signed')
-         .select({information: 1, 'credential.userID': 1})
-         .collation({'locale':'en'}) // sort case insensitive
-         .sort({'credential.userID': 1})
-         .limit(limit).skip((page-1)* limit)
-         .then(users => {
-             if(users.length === 0) return res.status(404).json({description: 'User is not found'});
-             res.status(200).json(users)
-         }, err => res.status(500).json({description: err.message}))
+    if(fullname) {
+        try {
+            fullname = JSON.parse(fullname)
+            if(!fullname.search || !fullname.value) throw new Error()
+        } catch (e) {
+            return res.status(400).json({ description: 'Parameter \'fullname\' is malformed.  It must be of form: {"search": string, "value": string}' })
+        }
+
+        if(!searchAvailableValue.includes(fullname.search)) return res.status(400).json({ description: `Parameter \'fullname.search\' must be in ${searchAvailableValue}.`  })
+        let regexObject = {$regex: `^${fullname.value}`, $options: "i"}
+        if(fullname.search === 'full') regexObject['$regex']+='$'
+        filters['$or'] = [ { 'information.firstname': regexObject  },  { 'information.lastname': regexObject } ]
+    }
+
+    getUser(req, res)
+        .then(user => {
+
+            if(!accessManager.isAdminUser(user)) filters['signup'] = 'checked'
+            console.debug(JSON.stringify(filters, null, 2))
+
+            pagination(
+                User.find(filters).collation({'locale':'en'}  /* sort case insensitive*/ ).sort({'credential.userID': 1}),
+                page && limit ? {page: +page, limit: +limit}: undefined
+            )
+            .then(result => res.status(200).json(Object.assign(result, {items: infoUsers(result.items as Array<IUser>, user)})),
+                  err => res.status(500).json({description: err.message}))
+
+        }, err => console.error(err))
 }
 
 export function reset_password(req, res){

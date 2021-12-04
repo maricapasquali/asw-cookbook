@@ -2,20 +2,19 @@ import {Food} from '../../models'
 import {Types} from "mongoose";
 
 import {RBAC} from "../../modules/rbac";
-import Operation = RBAC.Operation
-import Subject = RBAC.Subject
-import {pagination, getRestrictedUser} from "../index";
+import {getRestrictedUser, getUser, pagination} from "../index";
 import {DecodedTokenType} from "../../modules/jwt.token";
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
-
+import Operation = RBAC.Operation;
+import Subject = RBAC.Subject;
 export function uploadImage() {}
 
 function authorized(req, res, options: {operation: Operation, others?: (decodedToken: DecodedTokenType) => boolean}): {_id: string, role: string} | false {
-    return getRestrictedUser(req, res, {operation: options.operation, subject: Subject.FOOD, others: options.others || (() => true)})
+    return getRestrictedUser(req, res, {operation: options.operation, subject: Subject.FOOD, others: options.others || (() => false)})
 }
 
 export function create_food(req, res) {
-    let user = authorized(req, res, {operation: Operation.CREATE, others: () => false})
+    let user = authorized(req, res, { operation: Operation.CREATE })
     if(user){
         const new_food = new Food({...(req.body), owner: user._id})
         new_food.save()
@@ -32,29 +31,46 @@ export function create_food(req, res) {
 }
 
 export function list_foods(req, res) {
-    if(authorized(req, res, {operation: Operation.RETRIEVE})){
-        let { page, limit } = req.query
-        if(page && limit && (isNaN(page) || isNaN(limit))) return res.status(400).json({ description: 'Required that page and limit are number'})
+    let { page, limit, name, barcode, owner } = req.query
+    if(page && limit && (isNaN(page) || isNaN(limit))) return res.status(400).json({ description: 'Required that page and limit are number'})
 
-        pagination(() =>
-            Food.find().collation({ 'locale': 'en' } /* sort case insensitive */ ).sort({ 'name': 1 }), page && limit ? {page: +page, limit: +limit}: undefined
-        ).then(paginationResult => res.status(200).json(paginationResult), err => res.status(500).json({description: err.message}))
-    }
+    getUser(req, res)
+        .then(user => {
+
+            let filters = {}
+            if(name || barcode){
+                filters = { name: { $regex: `^${name}`, $options: "i" }, barcode: { $regex: `^${barcode}`, $options: "i" }  }
+                if(!name) delete filters['name']
+                if(!barcode) delete filters['barcode']
+            }
+            if(owner) filters['owner'] = { $eq: owner }
+            console.debug('Foods filters = ', JSON.stringify(filters, null, 2))
+            pagination(
+                Food.find(filters).collation({ 'locale': 'en' } /* sort case insensitive */ ).sort({ createdAt: -1 }),
+                page && limit ? {page: +page, limit: +limit}: undefined
+            )
+            .then(paginationResult => res.status(200).json(paginationResult),
+                  err => res.status(500).json({description: err.message}))
+
+        }, err => console.error(err))
 
 }
 
 export function one_food(req, res) {
-    if(authorized(req, res, {operation: Operation.RETRIEVE})){
-        let {id} = req.params
-        if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+    let {id} = req.params
+    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
 
-        Food.findOne()
-            .where('_id').equals(id)
-            .then(food => {
-                if(!food) return res.status(404).json({description: 'Food is not found'})
-                return res.status(200).json(food)
-            }, err => res.status(500).json({ description: err.message }))
-    }
+    getUser(req, res)
+        .then(user => {
+
+            Food.findOne()
+                .where('_id').equals(id)
+                .then(food => {
+                    if(!food) return res.status(404).json({description: 'Food is not found'})
+                    return res.status(200).json(food)
+                }, err => res.status(500).json({ description: err.message }))
+
+        }, err => console.error(err))
 }
 
 export function update_food(req, res){
