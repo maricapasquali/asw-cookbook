@@ -472,6 +472,74 @@ components:
       schema:
         type: string
 
+    searchName:
+      name : name
+      in: query
+      description: partial/full name of recipe
+      required: false
+      schema:
+        type: string
+
+    searchCountry:
+      name : countries
+      in: query
+      description: countries of recipe
+      required: false
+      schema:
+        type: array
+        example:
+          - IT
+          - US
+
+    searchDiet:
+      name : diets
+      in: query
+      description: diets of recipe
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+            - gluten free
+            - lactose free
+            - light
+            - vegetarian
+            - vegan
+
+        example:
+          - lactose free
+          - light
+
+    searchCategory:
+      name : categories
+      in: query
+      description: categories of recipe
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+            - appetizers
+            - first courses
+            - second courses
+            - desserts
+            - drink
+            - side dish
+        example:
+          - second courses
+          - side dish
+    searchIngredients:
+      name : ingredients
+      in: query
+      description: food identifiers used as an ingredient in the recipe
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+
   securitySchemes:
     BasicAuth:
       type: http
@@ -542,13 +610,38 @@ paths:
       description: List of all users of the platform
       tags:
         - Users
+      security:
+        - BearerAuth: []
       parameters:
-        - name: nickname
+        - name: userID
           in: query
-          description: user's nickname 
+          description: Search user by username
           required: false
           schema:
-            type: string  
+            type: object
+            properties:
+              search:
+                type: string
+                enum:
+                  - full
+                  - partial
+              value:
+                type: string
+        - name: fullname
+          in: query
+          description: Search user by firstname or lastname
+          required: false
+          schema:
+            type: object
+            properties:
+              search:
+                type: string
+                enum:
+                  - full
+                  - partial
+              value:
+                type: string
+
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/limit"
       responses:
@@ -557,16 +650,42 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    information:
-                      $ref: "#/components/schemas/user/properties/information"
-                    userID:
-                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
-        404:
-          description: User not found
+                type: object
+                properties:
+                  items:
+                    type: array
+                    required: true
+                    items:
+                      type: object
+                      properties:
+                        information:
+                          $ref: "#/components/schemas/user/properties/information"
+                        userID:
+                          $ref: "#/components/schemas/user/properties/credential/properties/userID"
+                        role:
+                          $ref: "#/components/schemas/user/properties/credential/properties/role"
+                        strike:
+                          $ref: "#/components/schemas/user/properties/strike"
+                        friends:
+                          $ref: "#/components/schemas/user/properties/friends"
+                  total:
+                    type: number
+                    description: Number of all user
+                    required: true
+                  paginationInfo:
+                    type: object
+                    required: false
+                    properties:
+                      page:
+                        type: number
+                        description: Selected page
+                      limit:
+                        type: number
+                        description: the maximum number of user to take
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1044,9 +1163,16 @@ paths:
       description: Retrieve all shared recipe from all users
       tags:
         - Recipes
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/searchName"
+        - $ref: "#/components/parameters/searchCountry"
+        - $ref: "#/components/parameters/searchDiet"
+        - $ref: "#/components/parameters/searchCategory"
+        - $ref: "#/components/parameters/searchIngredients"
       responses:
         200:
           description: ''
@@ -1073,7 +1199,9 @@ paths:
                         description: Selected page
                       limit:
                         type: number
-                        description: the maximum number od recipe to take
+                        description: the maximum number of recipe to take
+        401:
+          $ref: "#/components/responses/unauthorized_error"
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1082,6 +1210,8 @@ paths:
       description: Number of shared recipes for country
       tags:
         - Recipes
+      security:
+        - BearerAuth: [ ]
       responses:
         200:
           description: ""
@@ -1096,6 +1226,8 @@ paths:
                       type: string
                     number:
                       type: number
+        401:
+          $ref: "#/components/responses/unauthorized_error"
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1163,6 +1295,11 @@ paths:
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/typeRecipe"
+        - $ref: "#/components/parameters/searchName"
+        - $ref: "#/components/parameters/searchCountry"
+        - $ref: "#/components/parameters/searchDiet"
+        - $ref: "#/components/parameters/searchCategory"
+        - $ref: "#/components/parameters/searchIngredients"
       responses:
         200:
           description: ""
@@ -1642,6 +1779,24 @@ paths:
     parameters:
       - $ref: "#/components/parameters/page"
       - $ref: "#/components/parameters/limit"
+      - name: name
+        in: query
+        description: partial/full name of food
+        required: false
+        schema:
+          type: string
+      - name: barcode
+        in: query
+        description: partial/barcode of food
+        required: false
+        schema:
+          type: string
+      - name: owner
+        in: query
+        description: identifier of the owner
+        required: false
+        schema:
+          type: string
     responses:
       200:
         description: ""
@@ -1673,8 +1828,6 @@ paths:
         $ref: "#/components/responses/bad_request"
       401:
         $ref: "#/components/responses/unauthorized_error"
-      403:
-        $ref: "#/components/responses/forbidden_get_error"
       500:
           $ref: "#/components/responses/general_error"
 
@@ -1703,8 +1856,6 @@ paths:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_get_error"
         404:
           description: "Food not found"           
         500:
@@ -1837,7 +1988,7 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
-          description: User/Shopping List/Food not found
+          description: Shopping List/Food not found
         500:
           $ref: "#/components/responses/general_error" 
 
@@ -1856,7 +2007,7 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
-          description: User/Shopping List/Food not found
+          description: Shopping List/Food not found
         500:
           $ref: "#/components/responses/general_error" 
 
@@ -2229,264 +2380,6 @@ paths:
           $ref: "#/components/responses/general_error"
 
 
-#SEARCHES
-  /search/recipes:
-    get:
-      description: Users' shared recipes. Use to find specific recipes in base to filters.
-      tags:
-        - Searches
-      parameters:
-        - name : name
-          in: query
-          description: name of recipe
-          required: false
-          schema:
-            type: string
-        - name : country
-          in: query
-          description: country of recipe
-          required: false
-          schema:
-            type: string
-        - name : diet
-          in: query
-          description: diet of recipe 
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-              - gluten free
-              - lactose free
-              - light
-              - vegetarian
-              - vegan
-        - name : category
-          in: query
-          description: category of recipe
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-              - appetizers
-              - first courses
-              - second courses
-              - desserts
-              - drink
-              - side dish
-
-        - name : ingredients
-          in: query
-          description: ingredients of recipe
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/limit"
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/recipe"
-        400:
-          $ref: "#/components/responses/bad_request"
-        404:
-          description: Recipes are not found
-        500:
-          $ref: "#/components/responses/general_error" 
-    
-  /search/users/{id}/recipes/saved:
-    get:
-      description: Search between the user's saved recipes.
-      tags:
-        - Searches
-      security:
-        - BearerAuth: []      
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-        - name : name
-          in: query
-          description: partial/full name of recipe
-          required: true
-          schema:
-            type: string
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/limit"
-      
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/recipe"
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_get_error"
-        404:
-          description: Recipes are not found
-        500:
-          $ref: "#/components/responses/general_error" 
-
-  /search/users/{id}/chats:
-    get:
-      description: Search between the user's opened chat
-      tags:
-        - Searches
-      security:
-        - BearerAuth: []
-     
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-        - name : name
-          in: query
-          description: partial/full name of friends
-          required: true
-          schema:
-            type: string
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/limit"
-
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/chat"
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_get_error"
-        404:
-          description: Chats are not found
-        500:
-          $ref: "#/components/responses/general_error" 
-
-  /search/users:
-    get:
-      description: Search between the users of the platform
-      tags:
-        - Searches
-      parameters:
-        - name: name
-          in: query
-          description: partial/full user's real name or nickname
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: ""
-          content: 
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    information:
-                      $ref: "#/components/schemas/user/properties/information"
-                    userID:
-                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
-        400:
-          $ref: "#/components/responses/bad_request"
-        404:
-          description: Users are not found
-        500:
-          $ref: "#/components/responses/general_error"
-
-  /search/users/{id}/friends:
-    get:
-      description: Search between the user's friends
-      tags:
-        - Searches
-      parameters:
-        - name: name
-          in: query
-          description: partial/full friend's real name or nickname
-          required: true
-          schema:
-            type: string
-
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    information:
-                      $ref: "#/components/schemas/user/properties/information"
-                    userID:
-                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
-        400:
-          $ref: "#/components/responses/bad_request"
-        404:
-          description: Friends are not found
-        500:
-          $ref: "#/components/responses/general_error" 
-
-  /search/foods:
-    get:
-      description: Search between the foods of the platform
-      tags:
-        - Searches
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: name
-          in: query
-          description: partial/full name of food
-          required: false
-          schema:
-            type: string
-        - name: barcode
-          in: query
-          description: barcode of food
-          required: false
-          schema:
-            type: string
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items: 
-                  $ref: "#/components/schemas/food"
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        404:
-          description: Foods are not found
-        500:
-          $ref: "#/components/responses/general_error"
-
 #NOTIFICATIONS
   /users/{id}/notifications:
     parameters:
@@ -2560,5 +2453,80 @@ paths:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
           description: Notifications are not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+
+#SEARCHES
+  /search/users/{id}/chats:
+    get:
+      description: Search between the user's opened chat
+      tags:
+        - Searches
+      security:
+        - BearerAuth: []
+
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+        - name : name
+          in: query
+          description: partial/full name of friends
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/chat"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Chats are not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+  /search/users/{id}/friends:
+    get:
+      description: Search between the user's friends
+      tags:
+        - Searches
+      parameters:
+        - name: name
+          in: query
+          description: partial/full friend's real name or nickname
+          required: true
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    information:
+                      $ref: "#/components/schemas/user/properties/information"
+                    userID:
+                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
+        400:
+          $ref: "#/components/responses/bad_request"
+        404:
+          description: Friends are not found
         500:
           $ref: "#/components/responses/general_error"
