@@ -10,7 +10,7 @@ import {
     FileConfigurationImage,
     FileConfigurationVideo,
     fileUploader,
-    getRestrictedUser,
+    getRestrictedUser, getUser,
 } from '../index'
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 import {RBAC} from "../../modules/rbac";
@@ -78,6 +78,24 @@ async function getBody(req: any, res: any): Promise<any> {
 }
 
 
+function getFilters(query: any, user?: string): object {
+
+    let {name, countries, diets, categories, ingredients} = query
+
+    let filters = user ? {} : { shared: true }
+
+    if(name) filters['name'] = { $regex: `^${name}`, $options: "i" }
+    if(countries) filters['country'] = { $in: countries }
+    if(diets) filters['diet'] = { $in: diets }
+    if(categories) filters['category'] =  { $in: categories }
+    if(ingredients) filters['ingredients.food'] = { $all: ingredients.filter(i => Types.ObjectId.isValid(i)).map(i => Types.ObjectId(i)) }
+    // if(ingredients) filters['ingredients.food.name'] = { $all: ingredients } not work
+
+    console.log(filters)
+    return filters
+}
+
+
 export function uploadImageAndTutorial(){
     let _configurationImage = {
         ...FileConfigurationImage, ...{
@@ -134,26 +152,29 @@ export function create_recipe(req, res){
     }
 }
 
-function queryListRecipes(user: string, type: string): Query<Document[], Document, {}, Document> {
+function queryListRecipes(user: string, type: string, filters: object): Query<Document[], Document, {}, Document> {
     switch (type) {
         case 'shared':
-            return Recipe.find()
+            return Recipe.find(filters)
                          .where('owner').equals(user)
                          .where('shared').equals(true)
         case 'saved':
-            return Recipe.find()
+            return Recipe.find(filters)
                          .where('owner').equals(user)
                          .where('shared').equals(false)
         case 'loved':
-            return Recipe.find()
+            return Recipe.find(filters)
                          .where('shared').equals(true)
                          .where('likes.user').equals(Types.ObjectId(user))
         case 'shared-in-chat':
-            return Recipe.find()
+            return Recipe.find(filters)
                          .where('permission.user').equals(user)
                          .where('owner').ne(user)
-        default:
-           return Recipe.find({$or: [{ 'owner': user }, { 'permission.user': user }]})
+        default: {
+            filters['$or'] = [{ 'owner': user }, { 'permission.user': user }]
+            return Recipe.find(filters)
+        }
+
     }
 }
 export function list_recipes(req, res){
@@ -167,14 +188,20 @@ export function list_recipes(req, res){
     existById(User, [id])
         .then(() => {
 
-            if(
-                type === 'shared' ||
-                authorized(req, res, {operation: Operation.RETRIEVE, others: noAuthorizationForOther(id) })
-            ){
-                pagination(() => queryListRecipes(id, type), page && limit ? {page: +page, limit: +limit}: undefined)
-                    .then(paginationResult => res.status(200).json(paginationResult),
-                          err => res.status(500).json({code: err.code || 0, description: err.message}))
+            const retrieveRecipes = () => {
+
+                let filters = getFilters(req.query, id)
+
+                pagination(
+                    queryListRecipes(id, type, filters),
+                    page && limit ? {page: +page, limit: +limit}: undefined
+                )
+                .then(paginationResult => res.status(200).json(paginationResult),
+                      err => res.status(500).json({code: err.code || 0, description: err.message}))
             }
+
+            if(type === 'shared') getUser(req, res).then(user => retrieveRecipes(), err => console.error(err))
+            else if(authorized(req, res, {operation: Operation.RETRIEVE, others: noAuthorizationForOther(id) })) retrieveRecipes()
 
         }, ids => res.status(404).json({description: 'User ('+ids[0]+') is not found.'}))
 }
@@ -191,14 +218,19 @@ export function one_recipe(req, res){
     switch (type){
         case 'shared':
 
-                Recipe.findOne()
-                    .where('_id').equals(recipeID)
-                    .where('owner').equals(id)
-                    .where('shared').equals(true)
-                    .then(recipe => {
-                        if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-                        return  res.status(200).json(recipe)
-                    }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+            getUser(req, res)
+                .then(user => {
+
+                    Recipe.findOne()
+                        .where('_id').equals(recipeID)
+                        .where('owner').equals(id)
+                        .where('shared').equals(true)
+                        .then(recipe => {
+                            if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
+                            return  res.status(200).json(recipe)
+                        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+
+                }, err => console.error(err))
 
             break
         case 'saved':
@@ -358,20 +390,33 @@ export function delete_recipe(req, res){
 }
 
 export function list_all_recipes(req, res){
-    let {page, limit} = req.query
-    pagination(
-        () => Recipe.find().where('shared').equals(true).sort({timestamp: -1, _id: -1}),
-        page && limit ? {page: +page, limit: +limit}: undefined
-    ).then(recipes => res.status(200).json(recipes),
-            err => res.status(500).json({code: err.code || 0, description: err.message}))
+    getUser(req, res)
+        .then(user => {
+
+            let {page, limit} = req.query
+
+            let filters = getFilters(req.query)
+            pagination(
+                Recipe.find(filters).sort({ createdAt: -1, _id: -1 }),
+                page && limit ? {page: +page, limit: +limit}: undefined,
+            )
+            .then(recipes => res.status(200).json(recipes),
+                  err => res.status(500).json({code: err.code || 0, description: err.message}))
+
+        }, err => console.error(err))
 }
 
 export function numberRecipesForCountry(req, res){
-    Recipe.aggregate([
-        { $match: { shared: true } },
-        { $group: { _id: "$country",  number: { $sum : 1 } } },
-        { $project: { country: "$_id", number: 1, _id: 0 } }
-    ])
-    .then(items => res.status(200).json(items),
-            err => res.status(500).json({code: err.code || 0, description: err.message}))
+    getUser(req, res)
+        .then(user => {
+
+            Recipe.aggregate([
+                { $match: { shared: true } },
+                { $group: { _id: "$country",  number: { $sum : 1 } } },
+                { $project: { country: "$_id", number: 1, _id: 0 } }
+            ])
+            .then(items => res.status(200).json(items),
+                  err => res.status(500).json({code: err.code || 0, description: err.message}))
+
+        }, err => console.error(err))
 }
