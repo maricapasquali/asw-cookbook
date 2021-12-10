@@ -3,13 +3,12 @@ import {AxiosResponse} from "axios";
 
 import * as _likes from './likes'
 import * as _comments from './comments'
-import * as variables from "../../../../../modules/hosting/variables";
-
-const serverImage = process.env.VUE_APP_IMAGES_ORIGIN || variables.images_origin
+import {Server} from "../index";
+import {getHeaderBearerAuthorization} from "../utils";
 
 function setImageUrl(recipe: any){
-    if(recipe.img){
-        recipe.img = `${serverImage}/${recipe.img}`
+    if(recipe.img) {
+        recipe.img = Server.images.path(recipe.img)
         console.log('image = ' + recipe.img)
     }
 }
@@ -17,9 +16,11 @@ function setImageUrl(recipe: any){
 export const likes = _likes
 export const comments = _comments
 
-export function allSharedRecipes(optionsPagination?: {page: number, limit: number}): Promise<AxiosResponse>  {
+type RecipeFilters = {name?: string, countries?: string[], diets?: string[], categories?: string[], ingredients?: string[]}
+export function allSharedRecipes(token?: string, optionsPagination?: {page: number, limit: number}, filters?: RecipeFilters): Promise<AxiosResponse>  {
     return methods.get('/recipes', {
-        params: optionsPagination
+        headers: getHeaderBearerAuthorization(token),
+        params: {...optionsPagination, ...filters}
     })
     .then(response => {
         response.data.items.forEach(recipe => setImageUrl(recipe))
@@ -27,8 +28,10 @@ export function allSharedRecipes(optionsPagination?: {page: number, limit: numbe
     })
 }
 
-export function recipesForCountry(): Promise<AxiosResponse>  {
-    return methods.get('/recipes-for-country')
+export function numberRecipesForCountry(token?: string): Promise<AxiosResponse>  {
+    return methods.get('/recipes-for-country', {
+        headers: getHeaderBearerAuthorization(token),
+    })
 }
 
 export function createRecipe(user: string, data: any, token: string): Promise<AxiosResponse>{
@@ -47,22 +50,14 @@ export function createRecipe(user: string, data: any, token: string): Promise<Ax
     })
 }
 
-export function getRecipes(user: string, token?: string, type?: string, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse>  {
-    let headers =  { authorization: 'Bearer ' + token }
-    if(!token) delete headers.authorization
-    let params = {
-        type: undefined,
-        page: undefined,
-        limit : undefined,
-    }
-    if(type) params.type = type
-    if(paginationOptions) {
-        params.page = paginationOptions.page
-        params.limit = paginationOptions.limit
-    }
+export function getRecipes(user: string, token?: string, type?: string, paginationOptions?: {page: number, limit: number}, filters?: RecipeFilters): Promise<AxiosResponse>  {
     return methods.get('/users/:userID/recipes', {
-        headers: headers,
-        params: params,
+        headers: getHeaderBearerAuthorization(token),
+        params: {
+            ...paginationOptions,
+            type: type,
+            ...filters,
+        },
         urlParams:{
             userID: user
         }
@@ -74,10 +69,8 @@ export function getRecipes(user: string, token?: string, type?: string, paginati
 }
 
 export function getRecipe(user: string, id: string, type: string, token?: string): Promise<AxiosResponse>  {
-    let headers =  { authorization: 'Bearer ' + token }
-    if(!token) delete headers.authorization
     return methods.get('/users/:userID/recipes/:recipeID', {
-        headers: headers,
+        headers: getHeaderBearerAuthorization(token),
         params:{
           type: type
         },

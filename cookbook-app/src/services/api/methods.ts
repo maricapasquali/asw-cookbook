@@ -63,6 +63,7 @@ instance.interceptors.response.use(function(res) {
                 });
             } catch (_error) {
                 console.error("Refresh token err: ", _error)
+                if(_error.response && _error.response.status === 401) Session.end()
                 return Promise.reject(_error);
             }
         }

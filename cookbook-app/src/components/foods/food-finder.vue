@@ -139,14 +139,14 @@ export default {
       this.startWith = ''
     },
 
-    async getNutritionalValues(foodID){
+    async getFood(foodID){
       return await api.foods
                       .getFood(foodID, Session.accessToken())
-                      .then(({data}) => data.nutritional_values)
+                      .then(({data}) => data)
                       .catch(err => {
                         //TODO: HANDLER ERROR GET ONE FOOD
                         console.error(err);
-                        return {}
+                        return { nutritional_values: {} }
                       })
     },
   },

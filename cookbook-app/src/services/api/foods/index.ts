@@ -1,5 +1,6 @@
 import * as methods from "../methods";
 import {AxiosResponse} from "axios";
+import {getHeaderBearerAuthorization} from "../utils";
 
 export function createFood(food: object, token: string): Promise<AxiosResponse>  {
     return methods.post('/foods', food, {
@@ -10,12 +11,9 @@ export function createFood(food: object, token: string): Promise<AxiosResponse> 
 }
 
 export type FoodsQueryOptions = {name?: string, barcode?: string, owner?: string}
-export function getFoods(token: string, query?: FoodsQueryOptions, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse>  {
-
+export function getFoods(token?: string, query?: FoodsQueryOptions, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse>  {
     return methods.get('/foods', {
-        headers: {
-            authorization: 'Bearer ' + token
-        },
+        headers: getHeaderBearerAuthorization(token),
         params: {
             ...paginationOptions,
             ...query
@@ -23,11 +21,9 @@ export function getFoods(token: string, query?: FoodsQueryOptions, paginationOpt
     })
 }
 
-export function getFood(foodID: string, token: string): Promise<AxiosResponse>  {
+export function getFood(foodID: string, token?: string): Promise<AxiosResponse>  {
     return methods.get('/foods/:id', {
-        headers: {
-            authorization: 'Bearer ' + token
-        },
+        headers: getHeaderBearerAuthorization(token),
         urlParams:{
             id: foodID
         }

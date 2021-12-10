@@ -8,15 +8,27 @@
 </template>
 
 <script>
-import FoodFinder from '@components/personal-area/foods/food-finder'
-import ComponentFactory from '@services/component.factory'
 
 export default {
   name: "nutrients-table",
   props:{
     value: Object,
     ingredients: {
-      type: Array,
+      type: Array, /*
+        [{
+           quantity: number,
+           food: {
+              nutritional_values: {
+                  energy: number,
+                  protein?: number,
+                  sale?: number,
+                  fat?: { unsaturated?: number, saturated?: number },
+                  carbohydrates?: { complex?: number, sugar?: number }
+              },
+              ...
+           }
+         }]
+      */
       default: function (){
         return []
       }
@@ -131,16 +143,17 @@ export default {
     },
 
     makeTable(ingredients){
-      let nutrientsForIngredient = ingredients.map(ingredient =>{
-         return ({quantity: ingredient.quantity || 0, nutrients: this.calc(ingredient.quantity || 0,
-               ingredient.food.nutritional_values || this.foodFinder.getNutritionalValues(ingredient.food._id) ,  100)})
-    })
+      let nutrientsForIngredient = ingredients.map(ingredient =>
+          ({
+           quantity: ingredient.quantity || 0,
+           nutrients: this.calc(ingredient.quantity || 0, ingredient.food.nutritional_values || {},  100)
+          })
+      )
       this.fillNutritionalTable(this.table, nutrientsForIngredient)
       this.$emit('input', this.table)
     }
   },
   created() {
-    this.foodFinder = ComponentFactory(FoodFinder)
     this.table = this.convertObjToArray(this.value)
     if(this.ingredients.length > 0) this.makeTable(this.ingredients)
   }

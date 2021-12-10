@@ -2,14 +2,21 @@ import * as methods from "../methods";
 import  {AxiosResponse} from "axios";
 
 import * as handlerErrors from "./handlerErrors"
-import * as variables from "../../../../../modules/hosting/variables"
+import {Server} from "../index";
+import {getHeaderBearerAuthorization} from "../utils";
 
-const serverImage = process.env.VUE_APP_IMAGES_ORIGIN || variables.images_origin
+
+function setImageUrl(user: any){
+    if(user.information.img){
+        user.information.img = Server.images.path(user.information.img)
+        console.log('image = ' + user.information.img)
+    }
+}
 
 export const HandlerErrors = handlerErrors
 
 export function login(credential: {userID: string, password: string}): Promise<AxiosResponse> {
-    return methods.post('/users/login',null,{
+    return methods.post('/users/login',{},{
         headers: {
             authorization: 'Basic ' +
                 Buffer.from(credential.userID+':'+credential.password, 'utf-8')
@@ -39,19 +46,13 @@ export function checkAccount(data: object): Promise<AxiosResponse> {
 }
 
 export function getUser(id: string, token?: string){
-    let headers = {}
-    if(token) headers['authorization'] = 'Bearer ' + token
-
     return methods.get('/users/:id', {
-        headers: headers,
+        headers: getHeaderBearerAuthorization(token),
         urlParams:{
             id: id
         }
     }).then(response =>{
-        if(response.data.information.img){
-            response.data.information.img = `${serverImage}/${response.data.information.img}`
-            console.log('image = ' + response.data.information.img)
-        }
+        setImageUrl(response.data)
         return response
     })
 }
@@ -80,7 +81,7 @@ export function updateUserInfo(id: string, info: object,  token: string){
         }
     }).then(response =>{
         if(response.data.info.img){
-            response.data.info.img = `${serverImage}/${response.data.info.img}`
+            response.data.info.img =  Server.images.path(response.data.info.img)
             console.log('image = ' + response.data.info.img)
         }
         return response
@@ -149,5 +150,18 @@ export function getUserFromNickname(nickname: string){
         params: { // QUERY
             nickname: nickname
         }
+    })
+}
+
+export type UserSearch = { search: 'full' | 'partial', value: string }
+export type UserQueryOptions = { userID?: UserSearch, fullname?: UserSearch }
+export function getUsers(query?: UserQueryOptions, token?: string, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse>{
+    return methods.get('/users', {
+        headers: getHeaderBearerAuthorization(token),
+        params: {...query, ...paginationOptions}
+    })
+    .then(response => {
+        response.data.items.forEach(user => setImageUrl(user))
+        return response
     })
 }

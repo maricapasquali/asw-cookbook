@@ -25,7 +25,7 @@
       </b-modal>
       <!-- SEARCHES -->
       <b-container fluid class="search-section" v-if="total">
-        <!-- TODO: SFUTTARE GLIE ELEMENTI DELLA SEZIONE SEARCH -->
+        <search-recipes @reset="stopSearch" @searching="onSearching" :trigger-search="search" :with-history=false :with-all-filters-visible=false :show-results=false />
       </b-container>
 
       <b-skeleton-wrapper :loading="processing">
@@ -59,6 +59,7 @@
 
         <!-- TABS OF RECIPES -->
         <b-container fluid class="recipes-section" v-show="!formUpdate.show">
+          <strong v-if="searching.on"> Risultati: </strong>
           <b-list-group>
             <b-list-group-item v-for="(item, index) in itemsRecipes" :key="item.id" >
               <b-row class="ml-2" cols="1" cols-md="2">
@@ -211,6 +212,14 @@ export default {
         show: false,
         index: -1
       },
+
+
+      searching: {
+        on: false,
+        result: [],
+        backupItems: []
+      },
+
       tabs: [
         {
           title: 'Condivise',
@@ -247,10 +256,15 @@ export default {
   computed:{
     itemsRecipes: {
       get(){
-        let items = this.tabs.find(e => e.type === this.active)
-        return items ? items.itemsRecipes : []
+        if(this.searching.on){
+          return this.searching.result
+        }else {
+          let items = this.tabs.find(e => e.type === this.active)
+          return items ? items.itemsRecipes : []
+        }
       },
       set(val){
+        if(this.searching.on) this.searching.result = []
         if(Array.isArray(val)) this.itemsRecipes.push(...val)
         else this.itemsRecipes.push(val)
       }
@@ -267,7 +281,7 @@ export default {
       return this.$route.query.tab
     },
     areOthers(){
-      return this.itemsRecipes.length >0 && this.itemsRecipes.length < this.total
+      return !this.searching.on && this.itemsRecipes.length >0 && this.itemsRecipes.length < this.total
     },
     isLoved(){
       return this.active === 'loved'
@@ -328,7 +342,7 @@ export default {
             console.log(data)
             this.setDefaultValueOn(data.items)
 
-           let _remapData = data.items.map(r => this.remapping(r))
+            let _remapData = data.items.map(r => this.remapping(r))
             if(currentPage) this.itemsRecipes.push(..._remapData)
             else this.itemsRecipes = _remapData
 
@@ -362,8 +376,19 @@ export default {
     },
 
     /* search */
-    search(recipeStartWith){
-      //TODO: SFUTTARE GLIE ELEMENTI DELLA SEZIONE SEARCH
+    search(filters){
+      return api.recipes.getRecipes(Session.userInfo()._id,  Session.accessToken(), this.active, {}, filters)
+    },
+    onSearching(data){
+      console.debug('SEARCHING Recipes '+ this.active + ' are '+data.total)
+      //RENDER RESULT OF SEARCH
+      this.searching.on = true
+      this.setDefaultValueOn(data.items)
+      this.itemsRecipes = data.items.map(r => this.remapping(r))
+    },
+    stopSearch(){
+      console.debug('STOP SEARCHING')
+      this.searching.on = false
     },
 
     /* ACTIONS: MODIFY, DELETE, REMOVE ...*/

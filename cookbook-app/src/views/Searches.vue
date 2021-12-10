@@ -1,8 +1,10 @@
 <template>
-  <!-- TODO: TEMPLATE SEARCHES -->
-  <div v-if="searchRecipes">Ricerca RICETTE</div>
-  <div v-else-if="searchUsers">Ricerca UTENTI</div>
-  <div v-else><not-found/></div>
+  <b-container fluid v-if="item">
+    <b-row class="mx-auto"> <b-col class="mb-5"> <header> <h1>{{ item.title }}</h1> </header> </b-col> </b-row>
+    <search-recipes v-if="item.isRecipes" with-map with-history with-all-filters-visible show-results/>
+    <search-users v-else-if="item.isUsers"/>
+  </b-container>
+  <not-found v-else/>
 </template>
 
 <script>
@@ -11,11 +13,21 @@ export default {
   name: "Searches",
   components: {NotFound},
   computed:{
-    searchRecipes: function (){
-      return this.$route.params.what === 'recipes'
-    },
-    searchUsers: function (){
-      return this.$route.params.what === 'users'
+    item(){
+      switch (this.$route.params.what){
+        case 'recipes':
+          return {
+            title: 'Ricette',
+            isRecipes: true
+          }
+        case 'users':
+          return {
+            title: 'Utenti',
+            isUsers: true
+          }
+        default:
+          return false
+      }
     }
   }
 }

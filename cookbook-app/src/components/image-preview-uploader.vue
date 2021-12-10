@@ -10,7 +10,7 @@
          ref="uploader"
          accept="image/*"
      ></b-form-file>
-     <b-img
+     <b-img v-if="profile_img"
          id="img-profile"
          :thumbnail="isSetImage"
          width="200"
@@ -22,6 +22,7 @@
          @click="openZoomImage"
          @error="imgError"
          alt="Imagine profilo"></b-img>
+     <b-icon-person-circle v-else :width="100" :height="100" class="mx-auto"/>
    </b-row>
    <b-row>
     <b-container fluid class="text-center">
@@ -46,9 +47,7 @@ export default {
       type: Boolean,
       default: false
     },
-    default: {
-      default: require('@assets/icons/person-circle.svg'),
-    },
+    default: String | File,
     removable: {
       type: Boolean,
       default: false
@@ -57,7 +56,6 @@ export default {
 
   data: function (){
     return {
-      p_default: require('@assets/icons/person-circle.svg'),
       profile_img: '',
       zoom: false,
       remove: false,
@@ -65,26 +63,28 @@ export default {
   },
   computed: {
     isSetImage: function (){
-      return !this.isDefaultImage()
+      return !this.isDefaultImage
+    },
+    isDefaultImage: function (){
+      return this.profile_img === this.getDefault //(this.default === this.profile_img || this.profile_img === '')
+    },
+    getDefault(){
+      return this.default || ''
     }
   },
-  created() {
-    this.readFile(this.value)
-  },
   methods:{
-    isDefaultImage: function (){
-      return this.default === this.profile_img
-    },
-    imgError: function (){
-      this.profile_img = this.default
+
+    imgError: function (err){
+      if(err) console.error(err)
+      this.profile_img = this.getDefault
     },
     openZoomImage: function (){
-      if(!this.zoomable || this.isDefaultImage()) return ;
+      if(!this.zoomable || this.isDefaultImage) return ;
       console.log('Open Zoom ...')
       this.zoom = true
     },
     closeZoomImage: function (){
-      if(!this.zoomable || this.isDefaultImage()) return ;
+      if(!this.zoomable || this.isDefaultImage) return ;
       console.log('Close Zoom ...')
       this.zoom = false
     },
@@ -92,10 +92,10 @@ export default {
       this.$refs.uploader.$el.firstChild.click()
     },
     cancelImage: function (){
-      if(this.isDefaultImage()) return ;
+      if(this.isDefaultImage) return ;
       this.$refs.uploader.reset()
-      this.profile_img = this.default
-      this.$emit('selectImage', new File([], "", undefined))
+      this.profile_img = this.getDefault
+      this.$emit('selectImage')
     },
     loadImage: function (e){
      this.readFile(e.target.files[0], true)
@@ -103,16 +103,22 @@ export default {
     readFile: function(files, emit = false){
       if(ReaderStreamImage.isValid(files)){
         if(emit) this.$emit('selectImage', files)
-        ReaderStreamImage.read(files,  function (e){
-          console.log('Load image preview...')
-          this.profile_img = e.target.result
-        }.bind(this), function (err){ console.error(err) })
-      }
+        ReaderStreamImage.read(files,
+            function (e){
+              console.log('Load image preview...')
+              this.profile_img = e.target.result
+              // console.debug(this.profile_img)
+            }.bind(this),
+            this.imgError.bind(this))
+      } else this.imgError('File is not image')
     },
     removeImg: function (){
       //TODO: REMOVABLE IMAGE
     }
-  }
+  },
+  created() {
+    this.readFile(this.value)
+  },
 }
 </script>
 

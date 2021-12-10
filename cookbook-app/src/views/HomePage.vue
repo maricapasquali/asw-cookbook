@@ -144,7 +144,7 @@ export default {
 
     getPost(currentPage){
       this.optionsPagination.page = currentPage || 1
-      api.recipes.allSharedRecipes(this.optionsPagination)
+      api.recipes.allSharedRecipes(Session.accessToken(), this.optionsPagination)
       .then(({data}) => {
 
         console.log(data)
@@ -201,7 +201,8 @@ export default {
   height: 300px;
 }
 
-.description-post, .details-recipes {
+//.description-post, .details-recipes {
+.description-post {
   position: absolute;
   background-color: $overlay;
   color: white;
@@ -213,9 +214,9 @@ export default {
   width: 100%;
 }
 .details-recipes{
-  left: 0;
-  bottom: 0;
-  border-radius: 0;
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
 }
 
 .recipe-post {

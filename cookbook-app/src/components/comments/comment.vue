@@ -19,18 +19,18 @@
         <b-col align="center"><b-button variant="link" @click="showReportedComment">Visualizza comunque</b-button></b-col>
       </b-row>
       <b-row v-else class="comment-container" cols="1">
-        <b-col class="comment-header">
-          <b-row align-h="center">
+        <b-col class="comment-header pl-0">
+          <b-row>
             <b-col>
-              <div class="avatar">
-              <b-img v-if="isThereProfileImg(comment.user)" fluid id="img-user" width="100" height="100" rounded="circle" :src="comment.user.img" @error="imgNotFound" alt="immagine profilo" />
-              <b-img v-else fluid id="img-user" width="100" height="100" :src="defaultImageProfile"></b-img>
-            </div>
-
-               <div class="userID">
-                 <router-link v-if="comment.user" :to="{name: 'single-user', params: {id: comment.user._id }}">{{ comment.user | name }}</router-link>
-                 <span v-else>{{ comment.user | name }}</span>
-               </div>
+              <b-row cols="1" align-v="center" class="avatar-userID-container ml-1">
+                <b-col align="center" class="avatar mt-4 px-0">
+                  <avatar :value="isThereProfileImg(comment.user)" />
+                </b-col>
+                <b-col align="center" class="userID px-0">
+                  <router-link v-if="comment.user" :to="{name: 'single-user', params: {id: comment.user._id }}">{{ comment.user | name }}</router-link>
+                  <span v-else>{{ comment.user | name }}</span>
+                </b-col>
+              </b-row>
              </b-col>
             <b-col cols="3" align="end" class="mt-3 mr-2">
               <div class="right">
@@ -111,7 +111,6 @@ export default {
   },
   data(){
     return {
-      defaultImageProfile: require('@assets/icons/person-circle.svg'),
       showReportComment: false,
       showDeleteComment: false,
 
@@ -156,11 +155,6 @@ export default {
   methods:{
     isThereProfileImg(user){
       return user && user.img
-    },
-
-    imgNotFound(e){
-      console.error('image profile not found...')
-      e.target.src = this.defaultImageProfile
     },
 
     /* REPORT */
@@ -281,16 +275,10 @@ li {
   & .comment-header {
     position: relative;
 
-    & .avatar {
-      & img {
-        margin-top: 10px;
-        margin-left: 10px;
-      }
+     & .avatar-userID-container {
+      width: fit-content;
     }
 
-    & .userID {
-      margin-left: 25px;
-    }
   }
 
   & .comment-content {

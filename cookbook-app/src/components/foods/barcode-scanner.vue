@@ -76,16 +76,16 @@ export default {
       this.$bvModal.hide('barcode-scanner')
     },
     onLoaded(){
-      console.debug('Bracode-Scanner: On Loaded ')
+      console.debug('Barcode-Scanner: On Loaded ')
       this.$data._loadedScanner = true
     },
     onDecode(barcodeNumber) {
-      console.debug('Bracode-Scanner: On Decode = ', barcodeNumber)
+      console.debug('Barcode-Scanner: On Decode = ', barcodeNumber)
       this.$emit('onFound', barcodeNumber)
       this.resetFormBarcode()
     },
     onError(e){
-      console.debug('Bracode-Scanner: On Error = ', {barcode: 'not-found'})
+      console.debug('Barcode-Scanner: On Error = ', {barcode: 'not-found'})
       this.$emit('onError', {barcode: 'not-found'})
       this.resetFormBarcode();
     },
@@ -97,7 +97,7 @@ export default {
 }
 </script>
 
-<style  scoped>
+<style lang="scss" scoped>
 #barcode-scan{
   position: var(--position);
   right: 10px;

@@ -107,8 +107,7 @@
 
           <b-row align-h="between" class="text-center">
             <b-col class="d-flex justify-content-start">
-              <b-img v-if="user.information.img" width="100" height="100" rounded="circle" :src="user.information.img" alt="immagine profilo" @error="imgErr"></b-img>
-              <b-img v-else width="100" height="100" :src="img_profile" alt="immagine profilo"></b-img>
+              <avatar v-model="user.information.img" />
             </b-col>
             <b-col align-self="center" class="d-flex justify-content-end">
               <country-image v-model="user.information.country" width="100" height="70" />
@@ -208,7 +207,6 @@ export default {
   },
   data: function (){
     return {
-      img_profile: require('@assets/icons/person-circle.svg'),
       countries: Countries.get(),
       genders: Genders.get(),
       changeableUser: { information: {}, userID: '', _id: ''},
@@ -273,10 +271,6 @@ export default {
     }
   },
   methods:{
-    imgErr: function (){
-      this.changeableUser.information.img = this.img_profile
-      this.user.information.img = this.img_profile
-    },
     onSessionExpired: function (){
       this.$emit('onSessionExpired')
     },
@@ -288,7 +282,9 @@ export default {
 
     changeImage: function (val){
       console.log(val)
-      this.changeableUser.information.img = val && val.size === 0 ? this.user.information.img : val
+      console.log(val instanceof File)
+      // this.changeableUser.information.img = val && val.size === 0 ? this.user.information.img : val
+      this.changeableUser.information.img = val || this.user.information.img
     },
 
     // selectCountry: function (e){

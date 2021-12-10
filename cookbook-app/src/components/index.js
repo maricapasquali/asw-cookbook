@@ -13,6 +13,7 @@ import Navigator from "./app/navigator"
 import Footer from "./app/footer"
 import NutrientsTable from "./app/nutrients-table"
 import CountryImage from "./app/country-image"
+import Avatar from "./app/avatar"
 
 import SignUp from "./login/SignUp";
 
@@ -22,17 +23,22 @@ import ChangeUserID from "./personal-area/change-userid"
 import ChangePassword from "./personal-area/change-password"
 import RecipesSections from "./personal-area/recipes/recipe-sections"
 import RecipeForm from "./personal-area/recipes/recipe-form"
-import FoodForm from "./personal-area/foods/food-form"
-import FoodFinder from "./personal-area/foods/food-finder"
 import FoodSection from "./personal-area/foods/food-section"
-import BarcodeScanner from "./personal-area/foods/barcode-scanner"
 
+import FoodForm from "./foods/food-form"
+import FoodFinder from "./foods/food-finder"
+import BarcodeScanner from "./foods/barcode-scanner"
 
 import Comments from "./comments/comments"
 import Comment from "./comments/comment"
 import Like from "./app/like"
-import Details from "./homepage/details"
+import RecipeDetails from "./app/recipe-details"
 import IngredientList from "./app/ingredient-list"
+
+import SearchUsers from "./searches/user/search-users"
+import SearchRecipes from "./searches/recipe/search-recipes"
+import CheckboxPillButton from "./searches/recipe/checkbox-pill-button"
+import WorldMap from "./searches/recipe/world-map"
 
 import ContainerCollapsable from './one-user/container-collapsable'
 
@@ -53,6 +59,7 @@ export default {
     Footer,
     NutrientsTable,
     CountryImage,
+    Avatar,
 
     SignUp,
 
@@ -70,9 +77,13 @@ export default {
     Comments,
     Comment,
     Like,
-    Details,
+    RecipeDetails,
     IngredientList,
 
+    SearchUsers,
+    SearchRecipes,
+    CheckboxPillButton,
+    WorldMap,
 
     ContainerCollapsable
 }

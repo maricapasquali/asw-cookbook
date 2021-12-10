@@ -1,11 +1,13 @@
 const path = require('path')
 const fs = require('fs')
 const {port_server, hostname, protocol, port_client} = require("./modules/hosting/variables");
+const appConfig = require('./app.config.json')
 
 module.exports = {
     pages: {
         index: {
             entry: 'cookbook-app/src/main.js',
+            title: appConfig.app_name,
             template: 'cookbook-app/public/index.html'
         }
     },
@@ -21,7 +23,14 @@ module.exports = {
                 '@services': path.resolve(__dirname, 'cookbook-app/src/services'),
                 '@api': path.resolve(__dirname, 'cookbook-app/src/services/api')
             }
-        }
+        },
+    },
+    chainWebpack: (config) => {
+        const svgRule = config.module.rule('svg');
+        svgRule.uses.clear();
+        svgRule
+            .use('vue-svg-loader')
+            .loader('vue-svg-loader');
     },
     css: {
         loaderOptions: {

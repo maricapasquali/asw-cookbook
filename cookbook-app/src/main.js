@@ -22,15 +22,21 @@ import {
     faSearchMinus,
     faSearchPlus,
     faTimes,
-    faBars
-
+    faBars,
+    faUsers,
+    faUndo
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faBarcode, faMinus, faPlusCircle, faTimesCircle, faSearch,
-            faSearchMinus, faSearchPlus,faTimes, faBars)
+            faSearchMinus, faSearchPlus,faTimes, faBars, faUsers, faUndo)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.config.productionTip = false
 
+// Import Vue Zommer component
+import VueZoomer from 'vue-zoomer'
+Vue.use(VueZoomer)
+
+// Import my components
 import components from "@components"
 Object.values(components).forEach(comp => Vue.component(comp.name, comp))
 

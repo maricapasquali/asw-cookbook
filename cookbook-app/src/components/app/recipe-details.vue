@@ -1,6 +1,7 @@
 <template>
   <div>
-    <b-button variant="link" @click="showDetails">Dettagli</b-button>
+    <b-button :id="recipeInfoId(recipe._id)" variant="info" @click="showDetails"><b-icon-info-circle/></b-button>
+    <b-tooltip :target="recipeInfoId(recipe._id)">Dettagli</b-tooltip>
     <b-modal v-model="show" title="Dettagli" centered hide-footer @hide="hideDetails">
       <template>
         <b-skeleton-wrapper :loading="isNotLoaded">
@@ -78,7 +79,8 @@ import {isEmpty} from "@services/utils"
 export default {
   name: "recipe-details",
   props:{
-    recipe: Object
+    recipe: Object,
+    allInfo: Boolean
   },
   data(){
     return {
@@ -94,13 +96,16 @@ export default {
     }
   },
   methods:{
+    recipeInfoId(id){
+      return 'recipe-details-'+id
+    },
     showDetails(){
       this.show = true
     },
     hideDetails(){
       console.debug('Close details modal.')
     }
-  }
+  },
 }
 </script>
 
