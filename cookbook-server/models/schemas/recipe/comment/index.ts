@@ -33,6 +33,6 @@ CommentSchema.set('toJSON', {
 })
 
 CommentSchema.pre(['find', 'findOne'], function() {
-    this.populate({ path: 'user likes.user', select: { 'userID' : '$credential.userID'} })
+    this.populate({ path: 'user likes.user', select: { userID : '$credential.userID', img: '$information.img'} })
     this.populate({ path: 'responses' })
 });

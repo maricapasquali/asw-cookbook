@@ -176,6 +176,8 @@ export function all_users(req, res){
         .then(user => {
 
             if(!accessManager.isAdminUser(user)) filters['signup'] = 'checked'
+
+            if(user) filters['_id'] = {$ne: user._id}
             console.debug(JSON.stringify(filters, null, 2))
 
             pagination(
