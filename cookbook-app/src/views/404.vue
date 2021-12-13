@@ -16,8 +16,13 @@
 </template>
 
 <script>
+import {bus} from "@/main";
+
 export default {
   name: "NotFound",
+  created() {
+    bus.$emit('hideNavigationBar', this.$route.name)
+  }
 }
 </script>
 

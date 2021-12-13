@@ -1,5 +1,5 @@
 import CenterContainer from './center-container'
-import ImagePreviewUploader from "./image-preview-uploader";
+import PreviewUploader from "./preview-uploader";
 import InputPassword from "./input-password";
 import Loading from "./loading"
 import ModalAlert from "./modal-alert"
@@ -14,6 +14,7 @@ import Footer from "./app/footer"
 import NutrientsTable from "./app/nutrients-table"
 import CountryImage from "./app/country-image"
 import Avatar from "./app/avatar"
+import Like from "./app/like"
 
 import SignUp from "./login/SignUp";
 
@@ -24,20 +25,25 @@ import ChangePassword from "./personal-area/change-password"
 import RecipesSections from "./personal-area/recipes/recipe-sections"
 import RecipeForm from "./personal-area/recipes/recipe-form"
 import FoodSection from "./personal-area/foods/food-section"
+import ReportsSection from "./personal-area/admin/reports/reports-section"
+import UsersSection from "./personal-area/admin/users/users-section"
 
 import FoodForm from "./foods/food-form"
 import FoodFinder from "./foods/food-finder"
 import BarcodeScanner from "./foods/barcode-scanner"
 
+import PreviewRecipeTutorial from "./recipes/preview-recipe-tutorial"
+import PreviewRecipeImage from "./recipes/preview-recipe-image"
+import RecipeDetails from "./recipes/recipe-details"
+import IngredientList from "./recipes/ingredient-list"
+
 import Comments from "./comments/comments"
 import Comment from "./comments/comment"
-import Like from "./app/like"
-import RecipeDetails from "./app/recipe-details"
-import IngredientList from "./app/ingredient-list"
 
 import SearchUsers from "./searches/user/search-users"
 import SearchRecipes from "./searches/recipe/search-recipes"
 import CheckboxPillButton from "./searches/recipe/checkbox-pill-button"
+import FilterApply from "./searches/recipe/filter-apply"
 import WorldMap from "./searches/recipe/world-map"
 
 import ContainerCollapsable from './one-user/container-collapsable'
@@ -45,7 +51,7 @@ import ContainerCollapsable from './one-user/container-collapsable'
 
 export default {
     CenterContainer,
-    ImagePreviewUploader,
+    PreviewUploader,
     InputPassword,
     Loading,
     ModalAlert,
@@ -60,6 +66,7 @@ export default {
     NutrientsTable,
     CountryImage,
     Avatar,
+    Like,
 
     SignUp,
 
@@ -73,16 +80,21 @@ export default {
     FoodFinder,
     FoodSection,
     BarcodeScanner,
+    ReportsSection,
+    UsersSection,
+
+    PreviewRecipeTutorial,
+    PreviewRecipeImage,
+    RecipeDetails,
+    IngredientList,
 
     Comments,
     Comment,
-    Like,
-    RecipeDetails,
-    IngredientList,
 
     SearchUsers,
     SearchRecipes,
     CheckboxPillButton,
+    FilterApply,
     WorldMap,
 
     ContainerCollapsable

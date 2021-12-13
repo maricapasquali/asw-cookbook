@@ -8,6 +8,10 @@
   }
 }
 
+.no-clickable {
+  cursor: auto;
+}
+
 .mt-6 {
   margin-top: 6rem!important;
 }
@@ -20,14 +24,6 @@
   height: 80px;
   bottom: 0;
   width: 100%;
-}
-.sticky-top {
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: 1030;
-  margin-bottom: 10px;
 }
 
 button.rounded-left {

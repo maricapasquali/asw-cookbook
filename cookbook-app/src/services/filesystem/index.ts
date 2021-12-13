@@ -1,5 +1,5 @@
 interface IReader{
-    read(file: File, onLoad: (event) => void, onError: (event) => void): void
+    read(file: File, onLoad: (event) => void, onError?: (event) => void): void
 }
 
 export class ReaderStream implements IReader {
@@ -13,7 +13,8 @@ export class ReaderStream implements IReader {
         return file && new RegExp(this.type + '\/.*').test(file.type)
     }
 
-    read(file: File, onLoad: (event) => void, onError: (event) => void): void {
+    read(file: File, onLoad: (event) => void, onError?: (event) => void): void {
+        onError = onError || ((e) => console.error(e))
         if(this.isValid(file)){
             const fileReader = new FileReader();
             fileReader.readAsDataURL(file);

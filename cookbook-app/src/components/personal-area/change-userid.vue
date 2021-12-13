@@ -18,8 +18,8 @@
 
 <script>
 import api from '@api'
-import {Session} from "@services/session";
 import {isString} from "@services/utils";
+import {mapGetters} from "vuex";
 
 export default {
   name: "change-userid",
@@ -43,6 +43,9 @@ export default {
   mounted() {
     this.userID = this.old_userID
   },
+  computed: {
+    ...mapGetters(['accessToken'])
+  },
   methods: {
     check: function (){
       this.validation = this.userID.length===0 ? false : (this.old_userID === this.userID ? null : true)
@@ -55,7 +58,7 @@ export default {
       this.error = { show: false, message: '' }
       this.processing = true
 
-      api.users.changeUserID(this.id, {old_userID: this.old_userID, new_userID: this.userID}, Session.accessToken())
+      api.users.changeUserID(this.id, {old_userID: this.old_userID, new_userID: this.userID}, this.accessToken)
       .then(response => {
         console.log("CHANGE USER ID...")
         this.$emit("changeUserID", this.userID)

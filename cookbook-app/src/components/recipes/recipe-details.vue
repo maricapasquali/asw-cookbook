@@ -3,6 +3,9 @@
     <b-button :id="recipeInfoId(recipe._id)" variant="info" @click="showDetails"><b-icon-info-circle/></b-button>
     <b-tooltip :target="recipeInfoId(recipe._id)">Dettagli</b-tooltip>
     <b-modal v-model="show" title="Dettagli" centered hide-footer @hide="hideDetails">
+      <template #modal-title>
+        <em>{{recipe.name}}</em>
+      </template>
       <template>
         <b-skeleton-wrapper :loading="isNotLoaded">
           <template #loading>
@@ -43,7 +46,6 @@
           </template>
 
           <b-container fluid>
-            {{recipe.name}}
             <b-row cols="1" :cols-lg="areThereNotes? 4: 3">
               <div class="details-component">
                 <p>Valori nutrizionali</p>
@@ -79,8 +81,7 @@ import {isEmpty} from "@services/utils"
 export default {
   name: "recipe-details",
   props:{
-    recipe: Object,
-    allInfo: Boolean
+    recipe: Object
   },
   data(){
     return {

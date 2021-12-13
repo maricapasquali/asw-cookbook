@@ -1,6 +1,6 @@
 import axios, {AxiosRequestConfig, AxiosResponse} from 'axios'
 import * as variables from "../../../../modules/hosting/variables"
-import {Session} from "../session";
+import store from '../../store'
 
 declare module 'axios' {
     interface AxiosRequestConfig {
@@ -46,15 +46,20 @@ instance.interceptors.response.use(function(res) {
         const originalConfig = err.config;
         console.error("interceptors.response : err = ", err)
 
-        let userInfo = Session.userInfo()
-        console.debug('User is logged = ', userInfo)
-        if (err.response && err.response.status === 401 && userInfo && !originalConfig._retry && !originalConfig.url.includes('refreshToken')) {
+        let userIdentifier = store.getters.userIdentifier
+        console.debug('User is logged = ', userIdentifier)
+        if (err.response && err.response.status === 401 && userIdentifier && !originalConfig._retry && !originalConfig.url.includes('refreshToken')) {
             originalConfig._retry = true;
             try {
-                const rs = await newAccessToken(userInfo._id,{ refresh_token: Session.refreshToken() }, Session.accessToken())
+                const oldAccessToken = store.getters.accessToken
+                const refreshToken = store.getters.refreshToken
+
+                const rs = await newAccessToken(userIdentifier,{ refresh_token: refreshToken }, oldAccessToken)
                 const { access_token } = rs.data;
                 console.debug("Interceptors : after refresh => access token = ", access_token)
-                Session.setAccessToken(access_token)
+
+                store.commit('setAccessToken', access_token)
+
                 return instance({
                     ...originalConfig,
                     headers: {
@@ -63,7 +68,9 @@ instance.interceptors.response.use(function(res) {
                 });
             } catch (_error) {
                 console.error("Refresh token err: ", _error)
-                if(_error.response && _error.response.status === 401) Session.end()
+                if(_error.response && _error.response.status === 401) {
+                    store.commit('endSession')
+                }
                 return Promise.reject(_error);
             }
         }

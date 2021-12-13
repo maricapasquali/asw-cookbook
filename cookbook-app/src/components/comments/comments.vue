@@ -2,7 +2,7 @@
   <b-card class="card-comments">
 
     <!-- Commenting -->
-    <div class="add-comment">
+    <div class="add-comment" v-if="!isAdmin">
       <b-row>
         <b-col>
           <div class="d-flex justify-content-end">
@@ -19,16 +19,17 @@
 
     <!-- LIST  COMMENTS -->
     <b-row v-for="comment in value" :key="comment._id" class="comment-text" align-h="center" cols="1" cols-sm="1">
-      <b-col> <comment :comment="comment" :recipe="recipe" :language="language"/> </b-col>
+      <b-col> <comment :comment="comment" :recipe="recipe" :language="language" /> </b-col>
     </b-row>
+    <b-row v-if="value.length === 0"> <span class="no-comments"> Nessun commento. </span> </b-row>
   </b-card>
 
 </template>
 
 <script>
-import {Session} from "@services/session";
 
 import api from '@api'
+import {mapGetters} from "vuex";
 
 export default {
   name: "comments",
@@ -45,6 +46,8 @@ export default {
     editorAddComment(){
       return 'editor-comment-'+ this.recipe.id
     },
+
+    ...mapGetters(['accessToken', 'isAdmin'])
   },
 
   methods: {
@@ -56,7 +59,7 @@ export default {
     addComments(text){
       api.recipes
          .comments
-         .createComment(this.recipe.ownerID, this.recipe.id, {content: text}, Session.accessToken())
+         .createComment(this.recipe.ownerID, this.recipe.id, {content: text}, this.accessToken)
          .then(({data})=> {
            this.value.push(data)
            //this.$emit('input', [...this.value, ...[data]])
@@ -80,6 +83,10 @@ export default {
   }
   & .card-body{
     color: black
+  }
+  & .no-comments{
+    color: white;
+    padding-left: 10px;
   }
 }
 

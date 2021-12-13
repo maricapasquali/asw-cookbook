@@ -72,16 +72,16 @@
             <b-container fluid class="px-0 py-3">
               <b-row cols="2" align-h="between">
                 <b-col cols="8"><span class="timestamp">{{ comment.timestamp, language | dateFormat }}</span> </b-col>
-                <b-col cols="3" align="end"><like v-model="comment.likes" :recipe="recipe" :commentID="comment._id" :no-like="isOwnerComment"/> </b-col>
+                <b-col cols="3" align="end"><like v-model="comment.likes" :recipe="recipe" :commentID="comment._id" :no-like="youNotMakeLike"/> </b-col>
               </b-row>
             </b-container>
             <b-button-group class="actions">
-              <b-button variant="link" @click="showReportComment = true" v-if="!isOwnerComment">Segnala</b-button>
-              <b-button variant="link" :ref="editorCommentId" v-if="!isOwnerComment"  v-b-toggle="editorCommentId">Rispondi</b-button>
+              <b-button variant="link" @click="showReportComment = true" v-if="youCanCommentOrReport">Segnala</b-button>
+              <b-button variant="link" :ref="editorCommentId" v-if="youCanCommentOrReport"  v-b-toggle="editorCommentId">Rispondi</b-button>
             </b-button-group>
           </b-container>
 
-          <b-collapse class="col" :id="editorCommentId"  v-if="!isOwnerComment">
+          <b-collapse class="col" :id="editorCommentId"  v-if="youCanCommentOrReport">
             <mini-text-editor @end-edit="addResponse" @close="closeEditorResponse">
               <template #edit>Rispondi</template>
             </mini-text-editor>
@@ -97,10 +97,10 @@
   </li>
 </template>
 <script>
-import {Session} from "@services/session";
 import {dateFormat} from "@services/utils";
 
 import api from '@api'
+import {mapGetters} from "vuex";
 
 export default {
   name: "comment",
@@ -141,8 +141,15 @@ export default {
     },
 
     isOwnerComment: function (){
-      let userInfo = Session.userInfo()
-      return userInfo && this.comment.user && this.comment.user._id === userInfo._id
+      return this.comment.user && this.comment.user._id === this.userIdentifier
+    },
+
+    youNotMakeLike(){
+      return this.isAdmin || this.isOwnerComment
+    },
+
+    youCanCommentOrReport(){
+      return !this.isAdmin && !this.isOwnerComment
     },
 
     isDeletedComment(){
@@ -150,7 +157,9 @@ export default {
     },
     isReportedComment(){
       return this.comment.reported !== false
-    }
+    },
+
+    ...mapGetters(['accessToken', 'userIdentifier', 'isAdmin'])
   },
   methods:{
     isThereProfileImg(user){
@@ -167,7 +176,7 @@ export default {
     report(){
       api.recipes
          .comments
-         .updateComment(this.recipe.ownerID, this.recipe.id, this.comment._id, Session.accessToken(), {action: 'report'})
+         .updateComment(this.recipe.ownerID, this.recipe.id, this.comment._id, this.accessToken, {action: 'report'})
          .then(({data})=> {
            this.comment.reported = true
            this.$emit('reporting', this.comment)
@@ -190,7 +199,7 @@ export default {
     addResponse(text){
       api.recipes
          .comments
-         .createResponse(this.recipe.ownerID, this.recipe.id, this.comment._id, {content: text}, Session.accessToken())
+         .createResponse(this.recipe.ownerID, this.recipe.id, this.comment._id, {content: text}, this.accessToken)
          .then(({data}) => {
            this.comment.responses.push(data)
            console.debug('You answered.')
@@ -216,7 +225,7 @@ export default {
            .updateComment(this.recipe.ownerID,
                this.recipe.id,
                this.comment._id,
-               Session.accessToken(),
+               this.accessToken,
             { data: { content: this.changeMode.content } })
            .then(({data}) => {
              console.debug('Update comment = ', data)
@@ -234,7 +243,7 @@ export default {
     removeComment(){
       api.recipes
          .comments
-         .deleteComment(this.recipe.ownerID, this.recipe.id, this.comment._id, Session.accessToken())
+         .deleteComment(this.recipe.ownerID, this.recipe.id, this.comment._id, this.accessToken)
          .then(({data}) => {
            this.comment.content = ""
            this.$emit('remove', this.comment)

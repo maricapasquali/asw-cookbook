@@ -1,39 +1,45 @@
 <template>
   <div>
     <b-container class="p-0" fluid>
-      <div v-if="changeMode">
+      <div v-if="personalArea && changeMode">
         <wrap-loading v-model="processing">
           <template>
-            <image-preview-uploader v-if="changeableUser.information.img" :default="changeableUser.information.img" @selectImage="changeImage($event)" ></image-preview-uploader>
-            <image-preview-uploader v-else @selectImage="changeImage($event)"></image-preview-uploader>
+            <b-form-group label-for="input-image-profile" label="Immagine Profilo" label-sr-only>
+              <preview-uploader avatar id="input-image-profile"
+                  :default="oldProfileImage"
+                  @selectFile="changeableUser.information.img = $event"
+                  @cancelSelectFile="changeableUser.information.img = oldProfileImage"
+                  zoomable
+                  removable/>
+            </b-form-group>
 
-            <b-form-group>
-              <label for="input-country"><b>Paese</b></label>
+            <b-form-group label-for="input-country">
+              <template #label> <b>Paese</b> </template>
               <select-with-image id="input-country" placeholder="Seleziona paese ..." v-model="changeableUser.information.country" :options="countries"></select-with-image>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-name"><b>Nome *</b></label>
+            <b-form-group label-for="input-name">
+              <template #label> <b>Nome *</b> </template>
               <b-form-input id="input-name" type="text" :state="validation.firstname" v-model="changeableUser.information.firstname" @input="checkRequiredField($event, 'firstname')"></b-form-input>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-lastname"><b>Cognome *</b></label>
+            <b-form-group label-for="input-lastname">
+              <template #label> <b>Cognome *</b> </template>
               <b-form-input id="input-lastname" type="text" :state="validation.lastname" v-model="changeableUser.information.lastname" @input="checkRequiredField($event, 'lastname')"></b-form-input>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-birth-date"><b>Data di nascita</b></label>
+            <b-form-group label-for="input-birth-date">
+              <template #label> <b>Data di nascita</b> </template>
               <b-form-input id="input-birth-date" type="date" v-model="changeableUser.information.birth_date"></b-form-input>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-gender"><b>Genere</b></label>
+            <b-form-group label-for="input-gender">
+              <template #label> <b>Genere</b> </template>
               <select-with-image id="input-gender" placeholder="Seleziona genere ..." v-model="changeableUser.information.sex" :options="genders"></select-with-image>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-occupation"><b>Occupazione</b></label>
+            <b-form-group label-for="input-occupation">
+              <template #label> <b>Occupazione</b> </template>
               <b-form-input id="input-occupation" type="text" v-model="changeableUser.information.occupation"></b-form-input>
             </b-form-group>
 
@@ -41,21 +47,21 @@
               <b>Contatti</b>
               <ul>
                 <li>
-                  <b-form-group>
-                    <label for="input-email"><b>Email * </b></label>
+                  <b-form-group label-for="input-email">
+                    <template #label> <b>Email *</b> </template>
                     <b-form-input id="input-email" type="email" :state="validation.email" v-model="changeableUser.information.email" @input="checkRequiredField($event, 'email')"></b-form-input>
                   </b-form-group>
                 </li>
                 <li>
-                  <b-form-group>
-                    <label for="input-tel-num"><b>Numero di telefono</b></label>
+                  <b-form-group label-for="input-tel-num">
+                    <template #label> <b>Numero di telefono</b> </template>
                     <b-form-input id="input-tel-num" type="tel" v-model="changeableUser.information.tel_number"></b-form-input>
                   </b-form-group>
                 </li>
               </ul>
             </div>
 
-            <b-row align-h="between" v-if="accessToken">
+            <b-row align-h="between">
               <b-col class="d-flex justify-content-start"><b-button variant="secondary" @click="cancel"> Annulla </b-button></b-col>
               <b-col class="d-flex justify-content-end"><b-button v-if="isChangedSomething" variant="primary" @click="save"> Salva </b-button></b-col>
             </b-row>
@@ -107,7 +113,7 @@
 
           <b-row align-h="between" class="text-center">
             <b-col class="d-flex justify-content-start">
-              <avatar v-model="user.information.img" />
+              <avatar v-model="user.information.img" variant="light" />
             </b-col>
             <b-col align-self="center" class="d-flex justify-content-end">
               <country-image v-model="user.information.country" width="100" height="70" />
@@ -150,7 +156,7 @@
                 </b-col>
               </b-row>
             </b-col>
-            <b-col  v-if="accessToken" align-self="end" class="d-flex justify-content-end px-0">
+            <b-col  v-if="personalArea" align-self="end" class="d-flex justify-content-end px-0">
               <b-button-group vertical>
                 <b-button v-if="!changeMode" variant="secondary" @click="changeMode = true"> Modifica </b-button>
                 <b-button v-if="user.isSigned && !user.isAdmin" variant="secondary" @click="changeUserID=true"> Cambia userID </b-button>
@@ -158,8 +164,11 @@
                 <b-button v-if="user.isSigned && !user.isAdmin" variant="secondary" @click="deleteAccount=true"> Cancella Account </b-button>
               </b-button-group>
             </b-col>
-            <b-col  v-if="isOtherUser" align-self="end" class="d-flex justify-content-end px-0">
-              <b-button-group vertical>
+            <b-col  v-else align-self="end" class="d-flex justify-content-end px-0">
+              <b-button-group v-if="isAdmin" vertical>
+                <b-button variant="secondary" @click="goChat"> Chat </b-button>
+              </b-button-group>
+              <b-button-group v-else-if="isSigned" vertical>
                 <b-button v-if="!friendship.request && !friendship.just" variant="secondary" @click="requestFriendShip"> Segui </b-button>
                 <b-button v-else v-if="friendship.just" variant="secondary" @click="removeFriendShip">Smetti di seguire</b-button>
                 <b-button v-else v-if="friendship.request && !friendship.just" variant="primary" disabled>Richiesta inviata</b-button>
@@ -177,7 +186,7 @@
       <template v-slot:msg> {{error.message}} </template>
     </modal-alert>
     <!-- DELETE ACCOUNT -->
-    <delete-account v-if="deleteAccount" @close="deleteAccount=false" :id="user._id" @sessionExpired="onSessionExpired"/>
+    <delete-account v-model="deleteAccount" :id="user._id" @sessionExpired="onSessionExpired"/>
     <!-- CHANGE PASSWORD -->
     <change-password v-if="changePassword" @close="changePassword=false" :id="user._id" @sessionExpired="onSessionExpired"/>
     <!-- CHANGE USERID-->
@@ -191,18 +200,17 @@
 import api from '@api'
 import {EmailValidator} from '@app/modules/validator'
 import {clone, equals, isString} from "@services/utils"
-import {Session} from "@services/session"
-import {bus} from "@/main";
 
 import {Countries, Genders} from '@services/app'
+import {mapGetters} from "vuex";
 
 export default {
   name: "user-information",
   props:{
     id: String,
-    accessToken: {
-      type: String,
-      default: undefined
+    personalArea: {
+      type: Boolean,
+      default: false
     }
   },
   data: function (){
@@ -256,6 +264,12 @@ export default {
     }
   },
   computed:{
+    ...mapGetters(['userIdentifier', 'isAdmin', 'isSigned', 'accessToken']),
+
+    oldProfileImage(){
+      return this.user.information.img
+    },
+
     isNotLoaded() {
       return this.user._id.length === 0;
     },
@@ -267,7 +281,7 @@ export default {
       return Genders.find(this.user.information.sex).text
     },
     isOtherUser: function (){
-      return Session.accessToken() && Session.userInfo()._id !== this.id
+      return this.userIdentifier !== this.id
     }
   },
   methods:{
@@ -277,24 +291,8 @@ export default {
     onChangeUserID: function(val){
       this.user.userID = val
       this.changeUserID = false
-      bus.$emit('userID', val);
+      this.$store.commit('changeUserId', val)
     },
-
-    changeImage: function (val){
-      console.log(val)
-      console.log(val instanceof File)
-      // this.changeableUser.information.img = val && val.size === 0 ? this.user.information.img : val
-      this.changeableUser.information.img = val || this.user.information.img
-    },
-
-    // selectCountry: function (e){
-    //   console.log("select contry = ", e)
-    //   this.changeableUser.information.country = e.value
-    // },
-    // selectGender: function (e){
-    //   console.log("select gender = ", e)
-    //   this.changeableUser.information.sex = e.value
-    // },
 
     checkRequiredField: function (val, field){
       // if(val.length === 0) this.changeableUser.information[field] = this.user.information[field]

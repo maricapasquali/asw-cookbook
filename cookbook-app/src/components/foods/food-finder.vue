@@ -9,34 +9,37 @@
       <b-col :cols="foodAdder ? 10: 12" :sm="foodAdder ? 11: 12" :class="{'pr-0': !foodAdder}">
         <b-form-group label="Trova" label-for="find-ingredient" id="ingredient-group" :class="{'with-barcode': barcodeSearch}">
           <div v-outside="_hideDropdownOutSide" >
-            <b-form-input @focus="_showDropdown" id="find-ingredient" placeholder="Ingrediente" v-model="startWith" @input="findFoods" ref="find-ingredient" type="search" autocomplete="off"/>
+            <b-input-group>
+              <b-form-input @focus="_showDropdown" id="find-ingredient" placeholder="Ingrediente" v-model="startWith" @input="findFoods" ref="find-ingredient" type="search" autocomplete="off"/>
+              <template #append> <barcode-scanner @onFound="onDecode" @onError="onError" :show="barcodeSearch"/> </template>
+            </b-input-group>
             <div v-show="!hideDropdown && startWith.length>0">
               <b-list-group class="find-foods" v-if="atLeastResult">
                 <b-list-group-item v-for="food in foods" :key="food._id" @click="onSelectFood(food)" v-html="_boldStartWith(food.name)" />
               </b-list-group>
               <b-list-group class="find-foods" v-else><b-list-group-item><strong>Nessun risultato ...</strong></b-list-group-item></b-list-group>
             </div>
-            <barcode-scanner position="absolute" @onFound="onDecode" @onError="onError" :show="barcodeSearch"/>
           </div>
         </b-form-group>
       </b-col>
       <b-col cols="2" sm="1" align="center" class="pl-0 pr-3 mt-3" v-if="foodAdder">
-        <font-awesome-icon size="2x" icon="plus-circle" class="icon" @click="addFood.show = true"/>
+        <b-button id="btn-add-food" @click="addFood.show = true" variant="primary" pill>
+          <font-awesome-icon icon="plus-circle" class="icon" />
+        </b-button>
+       <b-tooltip target="btn-add-food">Aggiungi alimento</b-tooltip>
       </b-col>
     </b-row>
   </div>
 </template>
 
 <script>
-import outside from '@components/directives/outside' // CLICK FUORI
 import {ImageBarcodeReader, StreamBarcodeReader} from "vue-barcode-reader";
 
 import api from '@api'
-import {Session} from "@services/session";
+import {mapGetters} from "vuex";
 
 export default {
   name: "food-finder",
-  directives: {outside},
   components:{ImageBarcodeReader, StreamBarcodeReader },
   props: {
     barcodeSearch: {
@@ -65,6 +68,7 @@ export default {
     atLeastResult(){
       return this.foods.length > 0
     },
+    ...mapGetters(['accessToken'])
   },
   methods: {
     _boldStartWith(text){
@@ -84,7 +88,7 @@ export default {
        console.debug('FoodFinder : On found = ', barcodeNumber)
 
        api.foods
-          .getFoods(Session.accessToken(), {barcode: barcodeNumber})
+          .getFoods(this.accessToken, {barcode: barcodeNumber})
           .then(({data}) => {
             console.debug(data)
             if (data.total === 0) throw new Error(`Barcode (${barcodeNumber}) is not found`)
@@ -116,7 +120,7 @@ export default {
       }
       else {
         api.foods
-           .getFoods(Session.accessToken(), {name: _startWith})
+           .getFoods(this.accessToken, {name: _startWith})
            .then(({data}) => {
              console.debug(data)
              this.foods = data.items
@@ -141,7 +145,7 @@ export default {
 
     async getFood(foodID){
       return await api.foods
-                      .getFood(foodID, Session.accessToken())
+                      .getFood(foodID, this.accessToken)
                       .then(({data}) => data)
                       .catch(err => {
                         //TODO: HANDLER ERROR GET ONE FOOD

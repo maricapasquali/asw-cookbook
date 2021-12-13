@@ -1,8 +1,5 @@
 <template>
-  <div ref="avatar-container" >
-    <b-img v-if="$data._image" ref="avatar-image" :width="width" :height="height" rounded="circle" :src="$data._image" alt="immagine profilo" @error="imageError" />
-    <b-icon-person-circle v-else :width="100" :height="100" class="mx-auto"/>
-  </div>
+  <b-avatar :variant="variant" :src="$data._image" :size="size" @img-error="imageError" />
 </template>
 
 <script>
@@ -13,13 +10,13 @@ export default {
   name: "avatar",
   props: {
     value: String,
-    width: {
-      type: String,
-      default: "100"
+    size: {
+      type: Number,
+      default: 70
     },
-    height: {
+    variant: {
       type: String,
-      default: "100"
+      default: 'dark'
     }
   },
   data: function(){
@@ -29,8 +26,9 @@ export default {
   },
   methods: {
     imageError(e){
+      console.error('Image ' + this.$data._image + ' is not found.')
       this.$data._image = ''
-      this.$emit('onNotFound', { container: this.$refs["avatar-container"], imageElement: this.$refs["avatar-image"] })
+      this.$emit('onNotFound')
     }
   },
   mounted() {

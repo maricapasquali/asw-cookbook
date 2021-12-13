@@ -23,8 +23,8 @@
 
 import api from '@api'
 import {PasswordValidator} from "@app/modules/validator";
-import {Session} from "@services/session";
 import {isString} from "@services/utils";
+import {mapGetters} from "vuex";
 
 export default {
   name: "change-password",
@@ -47,6 +47,7 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['accessToken']),
     validation: function (){
       return this.validationOld && this.newPassword.length > 0 && this.checkNewPassword
     }
@@ -62,7 +63,7 @@ export default {
       this.error = { show: false, message: '' }
       console.log("Change password ...")
       this.processing = true
-      api.users.changeOldPassword(this.id,{old_password: this.oldPassword, new_hash_password: this.newPassword}, Session.accessToken())
+      api.users.changeOldPassword(this.id,{old_password: this.oldPassword, new_hash_password: this.newPassword}, this.accessToken)
                .then(response => {
                  this.success = true
                  console.log(response.data)

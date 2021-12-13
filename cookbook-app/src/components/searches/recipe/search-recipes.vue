@@ -12,9 +12,9 @@
                     <b-form-group label-for="search-recipe-input">
                       <template #label> <strong>Ricerca</strong> </template>
                       <b-input-group >
-                        <b-input-group-prepend>
-                          <b-icon-book scale="2x" class="mt-2 ml-2 mr-3"/>
-                        </b-input-group-prepend>
+                        <template #prepend>
+                          <b-input-group-text><b-icon-book /></b-input-group-text>
+                        </template>
                         <b-form-input id="search-recipe-input" type="search" v-model="filters.name" @keypress.enter="search" placeholder="Inserisci nome ricetta completo o parziale" :disabled="loading"/>
                         <b-input-group-append>
                           <b-button id="filters-form" variant="info" v-b-toggle.search-filters> <b-icon-filter scale="2x" /></b-button>
@@ -86,21 +86,27 @@
       <b-col class="search-result-header" >
         <b-container v-if="!this.noApplyFilters" fluid>
           <b-row cols="1" cols-sm="2" cols-md="3" cols-lg="4" cols-xl="5" align-v="center">
-            <b-col v-if="filters.name" class="filters">
-              <font-awesome-icon icon="minus" @click="removeFilter('name')"/> <span> {{filters.name}} </span>
-            </b-col>
-            <b-col v-for="(diet, index) in filters.diets" :key="diet" class="filters">
-              <font-awesome-icon icon="minus" @click="removeFilter('diets', index)"/> <span>{{diet | fullName}}</span>
-            </b-col>
-            <b-col v-for="(category, index) in filters.categories" :key="category" class="filters">
-              <font-awesome-icon icon="minus" @click="removeFilter('categories', index)"/> <span>{{category | fullName }}</span>
-            </b-col>
-            <b-col v-for="(country, index) in filters.countries" :key="country" class="filters">
-              <font-awesome-icon icon="minus" @click="removeFilter('countries', index)"/> <span>{{country | fullName}}</span>
-            </b-col>
-            <b-col v-for="(ingredient, index) in filters.ingredients" :key="ingredient._id" class="filters">
-              <font-awesome-icon icon="minus" @click="removeFilter('ingredients', index)"/> <span>{{ingredient.name}}</span>
-            </b-col>
+            <filter-apply v-if="filters.name" class="filters"
+                          @remove="removeFilter('name')" :filter-name="filters.name" />
+
+            <filter-apply  v-for="(diet, index) in filters.diets" :key="diet" class="filters"
+                           @remove="removeFilter('diets', index)">
+                <template #filter-name>{{ diet | fullName }} </template>
+            </filter-apply>
+
+            <filter-apply v-for="(category, index) in filters.categories" :key="category" class="filters"
+                          @remove="removeFilter('categories', index)">
+              <template #filter-name>{{ category | fullName }} </template>
+            </filter-apply>
+
+            <filter-apply v-for="(country, index) in filters.countries" :key="country" class="filters"
+                          @remove="removeFilter('countries', index)">
+              <template #filter-name>{{ country | fullName }} </template>
+            </filter-apply>
+
+            <filter-apply v-for="(ingredient, index) in filters.ingredients" :key="ingredient._id" class="filters"
+                          @remove="removeFilter('ingredients', index)" :filter-name="ingredient.name" />
+
           </b-row>
         </b-container>
         <div v-else>Nessun filtro.</div>
@@ -109,29 +115,30 @@
       <b-col class="search-result-body mt-2">
         <b-container fluid v-if="docs.length" >
           <b-row cols="1" cols-sm="2" cols-md="2" cols-lg="3" cols-xl="4">
-            <b-col v-for="doc in docs" :key="doc._id" class="mb-3">
-              <b-card class="recipe-found" :style="cssRecipeFound(doc)">
-                <b-container fluid>
-                  <b-row cols="1">
-                    <b-col class="base-info py-2">
-                      <b-row align-v="center">
-                        <b-col cols="7">
-                          <router-link :to="{name: 'single-recipe', params: {id: doc.owner._id, recipe_id: doc._id}}">
-                            {{doc.name}}
-                          </router-link>
-                        </b-col>
-                        <b-col cols="5" align="end" v-if="doc.category || doc.country">
-                          <span style="float: left">{{ doc.category | fullName }}</span>
-                          <country-image v-model="doc.country"  heigth="0"/>
-                        </b-col>
-                      </b-row>
-                    </b-col>
-                    <b-col align="end" class="mt-2">
-                      <recipe-details :recipe="doc" class="details-recipes" all-info/>
-                    </b-col>
-                  </b-row>
-                </b-container>
-              </b-card>
+            <b-col v-for="doc in docs" :key="doc._id" class="recipe-found-container mb-3 ">
+              <router-link :to="{name: 'single-recipe', params: {id: doc.owner._id, recipe_id: doc._id}}">
+                <b-card class="recipe-found" body-class="py-0">
+                  <preview-recipe-image v-model="doc.img" />
+                  <b-container fluid>
+                    <b-row cols="1">
+                      <b-col class="base-info py-2">
+                        <b-row align-v="center" align-h="between">
+                          <b-col cols="7"> {{doc.name}} </b-col>
+                          <b-col cols="5" align="end" v-if="doc.category || doc.country">
+                            <b-row>
+                              <b-col> <span>{{ doc.category | fullName }}</span> </b-col>
+                              <b-col v-if="doc.country" class="pl-0"> <country-image v-model="doc.country" heigth="0"/> </b-col>
+                            </b-row>
+                          </b-col>
+                        </b-row>
+                      </b-col>
+                    </b-row>
+                  </b-container>
+                </b-card>
+              </router-link>
+              <div class="recipe-found-details-container">
+                <recipe-details :recipe="doc" class="details-recipes"/>
+              </div>
             </b-col>
           </b-row>
         </b-container>
@@ -147,7 +154,7 @@ import {Diets, RecipeCategories, Countries} from '@services/app'
 import {pushIfAbsent, isString, isEmpty, clone, equals} from '@services/utils'
 
 import api from '@api'
-import {Session} from "@services/session";
+import {mapGetters} from "vuex";
 
 export default {
   name: "search-recipes",
@@ -218,6 +225,8 @@ export default {
     }
   },
   computed:{
+    ...mapGetters(['accessToken']),
+
     showMap(){
       return this.withMap && this.$data._showMap
     },
@@ -264,16 +273,10 @@ export default {
       return 'info-recipe-'+doc._id
     },
 
-    cssRecipeFound(doc){
-      return {
-        '--imageBackground': `url(${doc.img}), url(${require('@assets/images/recipe-image.jpg')})`,
-      }
-    },
-
     getNumberRecipesForCountry() {
       this.loading = true
       api.recipes
-         .numberRecipesForCountry(Session.accessToken())
+         .numberRecipesForCountry(this.accessToken)
          .then(({data}) => {
            console.debug('Result rest api = ', data)
 
@@ -368,7 +371,7 @@ export default {
 
       let promiseSearch = undefined
       if(this.triggerSearch) promiseSearch = this.triggerSearch(filters)
-      else promiseSearch = api.recipes.allSharedRecipes(Session.accessToken(), {}, filters)
+      else promiseSearch = api.recipes.allSharedRecipes(this.accessToken, {}, filters)
 
       promiseSearch
          .then(({data}) => {
@@ -402,7 +405,11 @@ export default {
     this.diets = Diets.get().filter(d => d.value !== '')
     this.categories = RecipeCategories.get()
 
-    if(this.withHistory) window.onpopstate = this._setFiltersFromRoute.bind(this)
+    if(this.withHistory) {
+      window.onpopstate = function (e) {
+        this._setFiltersFromRoute()
+      }.bind(this)
+    }
   },
   mounted() {
     if(!this.triggerSearch) this.getNumberRecipesForCountry()
@@ -436,19 +443,36 @@ export default {
     }
   }
   .search-result-body {
-    & .recipe-found{
-      background-image: var(--imageBackground);
-      background-size: cover;
 
-      & div.card-body {
-        padding: 1.25rem 0 ;
-        color: white;
-        & .base-info{
-          background: $overlay;
-        }
-        & a {
+    & .recipe-found-container {
+      & a {
+        display: block;
+        height: 150px;
+      }
+
+      & .recipe-found-details-container {
+        position: absolute;
+        right: 20px;
+        bottom: 5px;
+      }
+
+      & .recipe-found{
+        height: 100%;
+
+        & div.card-body {
+          padding: 1.25rem 0 ;
           color: white;
-          text-decoration: underline;
+          & img {
+           height: 100%;
+          }
+          & .container-fluid {
+            position: absolute;
+            top: 10px;
+            & .base-info{
+              background: $overlay;
+            }
+          }
+
         }
       }
     }

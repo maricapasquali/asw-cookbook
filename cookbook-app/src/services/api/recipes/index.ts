@@ -6,10 +6,14 @@ import * as _comments from './comments'
 import {Server} from "../index";
 import {getHeaderBearerAuthorization} from "../utils";
 
-function setImageUrl(recipe: any){
+function setUrlPath(recipe: any){
     if(recipe.img) {
         recipe.img = Server.images.path(recipe.img)
         console.log('image = ' + recipe.img)
+    }
+    if(recipe.tutorial) {
+        recipe.tutorial = Server.videos.path(recipe.tutorial)
+        console.log('tutorial = ' + recipe.tutorial)
     }
 }
 
@@ -23,7 +27,7 @@ export function allSharedRecipes(token?: string, optionsPagination?: {page: numb
         params: {...optionsPagination, ...filters}
     })
     .then(response => {
-        response.data.items.forEach(recipe => setImageUrl(recipe))
+        response.data.items.forEach(recipe => setUrlPath(recipe))
         return response
     })
 }
@@ -45,7 +49,7 @@ export function createRecipe(user: string, data: any, token: string): Promise<Ax
         }
     })
     .then(response => {
-        setImageUrl(response.data)
+        setUrlPath(response.data)
         return response
     })
 }
@@ -63,7 +67,7 @@ export function getRecipes(user: string, token?: string, type?: string, paginati
         }
     })
     .then(response => {
-        response.data.items.forEach(recipe => setImageUrl(recipe))
+        response.data.items.forEach(recipe => setUrlPath(recipe))
         return response
     })
 }
@@ -80,7 +84,7 @@ export function getRecipe(user: string, id: string, type: string, token?: string
         }
     })
     .then(response => {
-        setImageUrl(response.data)
+        setUrlPath(response.data)
         return response
     })
 }
@@ -97,7 +101,7 @@ export function updateRecipe(user: string, id: string, data: object, token: stri
         }
     })
     .then(response => {
-        setImageUrl(response.data)
+        setUrlPath(response.data)
         return response
     })
 }

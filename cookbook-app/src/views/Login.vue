@@ -118,8 +118,7 @@
 import api from '@api'
 import configuration from '@app/app.config.json'
 import {EmailValidator} from "@app/modules/validator";
-import {Session} from "@services/session";
-import {bus} from "@/main";
+import {mapMutations} from "vuex";
 
 
 export default {
@@ -208,14 +207,15 @@ export default {
       })
     },
 
+    ...mapMutations(['startSession']),
+
     login: function (){
       api.users.login(this.credential)
          .then(({data}) => {
            this.error.show = false
            let {token, userInfo} = data
 
-           Session.start(token, userInfo)
-           bus.$emit('session-start', {token: token.access, userID: userInfo.userID})
+           this.startSession({...token, user: userInfo})
 
            let location = {
              name: data.firstLogin ? 'change-password' : 'p-user-account',

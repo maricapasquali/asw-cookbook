@@ -8,7 +8,9 @@ export function login(err: any): string {
             {
                 if(err.response.data.signup){
                     error += 'Utente ancora da verificare.'
-                }else{
+                }else if(err.response.data.blocked){
+                    error += 'Account Bloccato.'
+                }else {
                     error += 'Credenziali non corrette.'
                 }
             }

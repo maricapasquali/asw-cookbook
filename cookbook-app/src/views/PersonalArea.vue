@@ -4,7 +4,7 @@
         <b-tabs content-class="mt-1" ref="tabs">
           <!-- BOTH -->
           <b-tab ref="account-tab" title="Account" class="p-3" @click="getInformation" lazy>
-            <user-information :id="$route.params.id" :access-token="accessToken" @onSessionExpired="sessionTimeout=true"/>
+            <user-information :id="user" personal-area @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- SIGNED -->
           <b-tab v-if="isSignedUser" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy>
@@ -15,9 +15,13 @@
             <food-section @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- ADMIN -->
-          <b-tab v-if="isAdminUser" title="Segnalazioni" @click="getReports" :active="isActive('reports')" lazy><p>Segnalazioni</p></b-tab>
+          <b-tab v-if="isAdminUser" title="Segnalazioni" @click="getReports" :active="isActive('reports')" lazy>
+            <reports-section @onSessionExpired="sessionTimeout=true"/>
+          </b-tab>
           <!-- ADMIN -->
-          <b-tab v-if="isAdminUser" title="Utenti" @click="getUsers" :active="isActive('users')" lazy><p>Utenti</p></b-tab>
+          <b-tab v-if="isAdminUser" title="Utenti" @click="getUsers" :active="isActive('users')" lazy>
+            <users-section @onSessionExpired="sessionTimeout=true"/>
+          </b-tab>
           <!-- SIGNED -->
           <b-tab v-if="isSignedUser" title="Amici" @click="getFriends" :active="isActive('friends')" lazy><p>Amici</p></b-tab>
           <!-- BOTH -->
@@ -42,8 +46,7 @@
 <script>
 import {isString} from '@services/utils'
 import api from "@api"
-import {Session} from "@services/session";
-import {bus} from "@/main"
+import {mapGetters, mapMutations} from "vuex";
 export default {
   name: "PersonalArea",
   props:{
@@ -61,16 +64,14 @@ export default {
         show: false,
         message: ''
       },
-      userRole: '',
-      accessToken: ''
+      userRole: ''
     }
   },
 
   created(){
     console.log(`CHECK IF YOU IS AUTHORIZED ...`)
-    this.accessToken = Session.accessToken()
     if(this.accessToken){
-      api.users.isAuthorized(this.$route.params.id, this.accessToken)
+      api.users.isAuthorized(this.user, this.accessToken)
           .then(response =>{
             this.authorized = true
             this.userRole = response.data.isSigned ? 'signed' : response.data.isAdmin ? 'admin' : ''
@@ -85,7 +86,7 @@ export default {
             }
             else if(error.response.status === 401){
               console.error("isAuthorized: Error 401")
-              bus.$emit("session-end")
+              this.endSession()
               this.$router.replace({name: 'login'});
             }
           })
@@ -94,6 +95,12 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['accessToken']),
+
+    user(){
+      return this.$route.params.id
+    },
+
     loading: function (){
       return !(this.authorized || this.error.show || this.sessionTimeout)
     },
@@ -106,6 +113,8 @@ export default {
 
   },
   methods: {
+    ...mapMutations(['endSession']),
+
     isActive: function (target){
       return target === this.active
     },

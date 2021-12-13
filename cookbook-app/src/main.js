@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from '@/App'
 import router from '@router'
+import store from '@/store'
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 // Import Bootstrap an BootstrapVue CSS files (order is important)
 import 'bootstrap/dist/css/bootstrap.css'
@@ -40,9 +41,14 @@ Vue.use(VueZoomer)
 import components from "@components"
 Object.values(components).forEach(comp => Vue.component(comp.name, comp))
 
+// Import my directives
+import directives from '@components/directives'
+Object.entries(directives).forEach(([id, directive]) => Vue.directive(id, directive))
+
 export const bus = new Vue();
 
 new Vue({
     router,
+    store,
     render: h => h(App),
 }).$mount('#app')

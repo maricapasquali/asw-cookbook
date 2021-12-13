@@ -15,7 +15,7 @@
       </b-col>
       <b-col class="text-selected "> <span> {{selected.text}} </span> </b-col>
     </b-row>
-    <b-container v-if="showDropdown" class="select-dropdown" >
+    <b-container fluid v-if="showDropdown" class="select-dropdown" >
       <b-row v-if="placeholder" :class="classObjOptions()" class="options-select disabled">
         <b-col>{{placeholder}}</b-col>
       </b-row>
@@ -32,10 +32,8 @@
 </template>
 
 <script>
-import outside from '@components/directives/outside' // CLICK FUORI
 export default {
   name: "select-with-image",
-  directives:{ outside },
   props:{
     id: String,
     options: Array,
@@ -149,10 +147,10 @@ export default {
     border: 1px solid #a8a8a8;
     box-shadow: 0 4px 4px grey;
     position: absolute;
-    width: 100%;
     top: 37px;
     right: 0;
-    z-index: 1;
+    left: 0;
+    z-index: 3;
 
     .options-select{
       background-color: white;

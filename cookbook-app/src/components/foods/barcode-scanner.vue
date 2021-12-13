@@ -16,7 +16,10 @@
       </b-row>
     </b-modal>
 
-    <font-awesome-icon :style="cssProps" id="barcode-scan" :size="iconSize" :class="'icon ' + iconClass" icon="barcode" @click="$data._show = true" v-if="show"/>
+    <b-button variant="primary" id="barcode-scan" @click="$data._show = true" v-if="show">
+      <font-awesome-icon :size="iconSize" :class="'icon ' + iconClass" icon="barcode" />
+    </b-button>
+    <b-tooltip target="barcode-scan">Scansiona barcode</b-tooltip>
   </div>
 </template>
 
@@ -38,10 +41,6 @@ export default {
     iconClass: {
       type: String,
       default: ""
-    },
-    position: {
-      type: String,
-      default: "unset"
     }
   },
   components: {
@@ -54,13 +53,6 @@ export default {
       _show: false,
       _loadedScanner: false
     }
-  },
-  computed: {
-    cssProps() {
-      return {
-        '--position': this.position
-      }
-    },
   },
   watch: {
     '$data._show'(val){
@@ -97,10 +89,5 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-#barcode-scan{
-  position: var(--position);
-  right: 10px;
-  top: 62%;
-}
+<style scoped>
 </style>

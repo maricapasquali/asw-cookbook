@@ -103,42 +103,31 @@
           <!-- IMAGE -->
           <b-col>
             <b-row cols="1" cols-sm="1">
-              <b-col>
-                <b-row>
-                  <b-col cols="9">
-                    <b-form-group label="Immagine" label-for="r-image" >
-                      <b-form-file id="r-image" type="file" accept="image/jpeg, image/png" @change="selectImage" ref="r-image"/>
-                    </b-form-group>
-                  </b-col>
-                  <b-col cols="3" align-self="center" class="px-0">
-                    <b-button class="mt-3" tabindex="-1" @click="_onResetFile('image')">Reset</b-button>
-                  </b-col>
-                </b-row>
-              </b-col>
-              <b-col v-show="preview.img">
-                <b-img fluid id="img-preview" :src="preview.img"/>
-              </b-col>
+              <b-form-group label="Immagine" label-for="r-image" >
+                <preview-uploader id="r-image" ref="r-image"
+                                  zoomable
+                                  file-type="image"
+                                  :default="oldImage"
+                                  @selectFile="selectFile('image', $event)"
+                                  @cancelSelectFile="_onResetFile('image')"
+                                  :removable="isChangeMode"
+                />
+              </b-form-group>
             </b-row>
           </b-col>
           <!-- TUTORIAL -->
           <b-col>
             <b-row cols="1" cols-sm="1">
-              <b-col>
-                <b-row>
-                  <b-col cols="9">
-                    <b-form-group label="Tutorial" label-for="r-tutorial" >
-                      <b-form-file id="r-tutorial" type="file" accept="video/mp4" @change="selectTutorial" ref="r-tutorial"/>
-                    </b-form-group>
-                  </b-col>
-                  <b-col cols="3" align-self="center" class="px-0" >
-                    <b-button class="mt-3" tabindex="-1" @click="_onResetFile('video')">Reset</b-button>
-                  </b-col>
-                </b-row>
-
-              </b-col>
-              <b-col v-show="preview.tutorial">
-                <video id="tutorial-preview" :src="preview.tutorial" controls />
-              </b-col>
+              <b-form-group label="Tutorial" label-for="r-tutorial" >
+                <preview-uploader id="r-tutorial"
+                                  ref="r-tutorial"
+                                  file-type="video"
+                                  :default="oldTutorial"
+                                  @selectFile="selectFile('video', $event)"
+                                  @cancelSelectFile="_onResetFile('video')"
+                                  :removable="isChangeMode"
+                />
+              </b-form-group>
             </b-row>
           </b-col>
         </b-row>
@@ -182,12 +171,12 @@
 </template>
 
 <script>
-import { ReaderStreamImage, ReaderStreamVideo } from '@services/filesystem'
+
 import {clone, equals, isBoolean} from '@services/utils'
 import {Countries, Diets, RecipeCategories} from '@services/app'
 
-import {Session} from "@services/session";
 import api from '@api'
+import {mapGetters} from "vuex";
 
 export default {
   name: "recipe-form",
@@ -197,15 +186,9 @@ export default {
   },
   data(){
     return {
-      defaultImgRecipe: require("@assets/images/recipe-image.jpg"),
       optionsCountry: Countries.get(),
       optionsDiet: Diets.get(),
       optionsCategory: RecipeCategories.get(),
-
-      preview: {
-        img: '',
-        tutorial: ''
-      },
 
       processing: false,
       show: false,
@@ -215,6 +198,9 @@ export default {
     }
   },
   computed:{
+
+    ...mapGetters(['accessToken', 'userIdentifier']),
+
     resetButtonClass(){
       return {
         'rounded-left': this.validateRecipe,
@@ -234,15 +220,22 @@ export default {
       }
     },
 
+    oldImage(){
+      return this.value ? this.value.img: ''
+    },
+    oldTutorial(){
+      return this.value ? this.value.tutorial : ''
+    },
+
     isChangeMode(){
-      return this.value
+      return typeof this.value !== 'undefined'
     },
 
     equalsRecipes(){
      return this.value.country === this.recipe.country &&
              this.value.diet.value === this.recipe.diet &&
              this.value.category.value === this.recipe.category &&
-             (this.value.img === this.recipe.img || '' === this.recipe.img)
+             this.value.img === this.recipe.img
       && this.recipe.name === this.value.name &&
          this.recipe.preparation === this.value.preparation &&
          this.recipe.note === this.value.note &&
@@ -251,14 +244,15 @@ export default {
          equals(this.recipe.ingredients, this.value.ingredients)
     },
     validateRecipe(){
+      // const formValid = Object.values(this.validation).every(p => (Array.isArray(p) && p.every(pp => pp === true)) || p === true)
+      // return (!this.isChangeMode && formValid) || (this.isChangeMode && formValid && !this.equalsRecipes)
       const formValid = Object.values(this.validation).every(p => (Array.isArray(p) && p.every(pp => pp === true)) || p === true)
-      // let debugStr = this.isChangeMode ? 'ChangeMode: ' : ''; debugStr += ('formValid = ' + formValid)
-      // if(this.isChangeMode) debugStr += (', equals = ' + equals(this.recipe, this.value))
-      return (!this.isChangeMode && formValid) || (this.isChangeMode && formValid && !this.equalsRecipes)
-      // let validity = (!this.isChangeMode && formValid) || (this.isChangeMode && formValid && !this.equalsRecipes)
-      // console.debug(debugStr, ' => validity = ', validity)
-      // console.debug('validation = ', JSON.stringify(this.validation, null, 2))
-      // return validity
+      let debugStr = this.isChangeMode ? 'ChangeMode: ' : ''; debugStr += ('formValid = ' + formValid)
+      if(this.isChangeMode) debugStr += (', equals = ' + equals(this.recipe, this.value))
+      let validity = (!this.isChangeMode && formValid) || (this.isChangeMode && formValid && !this.equalsRecipes)
+      console.debug(debugStr, ' => validity = ', validity)
+      console.debug('validation = ', JSON.stringify(this.validation, null, 2))
+      return validity
     },
 
     /* Nutritional table */
@@ -275,7 +269,7 @@ export default {
       deep: false
     },
     value(val){
-      console.log('Val = ' , val)
+      console.debug('Val = ' , val)
       this.recipe = val
     }
   },
@@ -318,52 +312,26 @@ export default {
     /* end Ingredient*/
 
     /* Image & Tutorial load/error */
-    _onLoadFile(fileType, event){
-      switch (fileType){
-        case 'image':
-          this.preview.img = event.target.result
-          console.debug('load image')
-          break;
-        case 'video':
-          this.preview.tutorial = event.target.result
-          console.debug('load video')
-          break;
-      }
-    },
-    _onErrorFile(fileType, error){
-      console.error(fileType, ' -> ' , error)
-    },
     _onResetFile(fileType){
       switch (fileType){
         case 'image':
-          this.recipe.img = this.isChangeMode && this.value.img !== this.defaultImgRecipe ? this.value.img : ''
-          this.preview.img = this.isChangeMode && this.value.img !== this.defaultImgRecipe ? this.value.img : ''
-
-          let inputImage = this.$refs['r-image']
-          if(inputImage) inputImage.reset()
+          this.recipe.img = this.isChangeMode ? this.value.img : ''
           break;
         case 'video':
           this.recipe.tutorial = this.isChangeMode ? this.value.tutorial: ''
-          this.preview.tutorial = this.isChangeMode ? this.value.tutorial: ''
-
-          let inputTutorial = this.$refs['r-tutorial']
-          if(inputTutorial) inputTutorial.reset()
           break;
       }
     },
-    selectImage(event){
-      let fileType = 'image'
-      this.recipe.img = event.target.files[0]
-      ReaderStreamImage.read(event.target.files[0],
-          this._onLoadFile.bind(this, fileType),
-          this._onErrorFile.bind(this, fileType))
-    },
-    selectTutorial(event){
-      let fileType = 'video'
-      this.recipe.tutorial = event.target.files[0]
-      ReaderStreamVideo.read(event.target.files[0],
-          this._onLoadFile.bind(this, fileType),
-          this._onErrorFile.bind(this, fileType))
+    selectFile(fileType, val){
+      switch (fileType){
+        case 'image':
+          this.recipe.img  = val
+          break;
+        case 'video':
+          this.recipe.tutorial = val
+          break;
+      }
+      console.debug('Select '+ fileType+ ' = ', val)
     },
     /*end  Image & Tutorial load/error */
 
@@ -390,8 +358,10 @@ export default {
       }
       console.debug('Reset form create recipe ...')
 
-      this._onResetFile('image')
-      this._onResetFile('video')
+      if(this.$refs['r-image']) this.$refs['r-image'].cancelChanges()
+      else this._onResetFile('image')
+      if(this.$refs['r-tutorial']) this.$refs['r-tutorial'].cancelChanges()
+      else this._onResetFile('video')
 
 
       if(this.value){
@@ -403,7 +373,8 @@ export default {
           ingredientQuantity: Array.from(this.value.ingredients).fill(true)
         }
 
-        this.recipe = clone(this.value)
+        Object.assign(this.recipe, clone(this.value))
+
         delete this.recipe._id
         delete this.recipe.owner
         delete this.recipe.permission
@@ -414,19 +385,17 @@ export default {
         delete this.recipe.updatedAt
         this._setOptionSelection(this.recipe, true)
 
-        console.debug(`Reset form update recipe (value) = ${JSON.stringify(this.value)}...`)
-        console.debug(`Reset form update recipe (recip) = ${JSON.stringify(this.recipe)}...`)
+        console.debug(`Reset form update recipe (value) = ${JSON.stringify(this.value, null,1 )}...`)
+        console.debug(`Reset form update recipe (recipe) = ${JSON.stringify(this.recipe, null, 1)}...`)
 
       }
     },
 
     _setOptionSelection(_recipe, before){
       if(before){
-        if(this.defaultImgRecipe === _recipe.img) _recipe.img = ''
         _recipe.category = _recipe.category ? _recipe.category.value: undefined
         _recipe.diet =  _recipe.diet ? _recipe.diet.value : undefined
       }else{
-        if('' === _recipe.img) _recipe.img = this.defaultImgRecipe
         _recipe.category = RecipeCategories.find(_recipe.category) || ''
         _recipe.diet = Diets.find(_recipe.diet) || ''
       }
@@ -435,8 +404,8 @@ export default {
     _newRecipe(eventType, options = {shared: undefined, new: false}){
       console.debug('OPT = ', options, ', changeMode = ', this.isChangeMode !== undefined)
 
-      let userInfo = Session.userInfo()
-      if(!userInfo) { return; /* TODO: ERROR NOT AUTHORIZED */ }
+      const _id = this.userIdentifier
+      if(!_id) { return; /* TODO: ERROR NOT AUTHORIZED */ }
 
       let request = null
 
@@ -447,12 +416,12 @@ export default {
       if(options.new === false){
         console.log('Changed recipe ')
         // console.debug(this.recipe)
-        request = api.recipes.updateRecipe(userInfo._id, this.value._id, formData, Session.accessToken())
+        request = api.recipes.updateRecipe(_id, this.value._id, formData, this.accessToken)
       }
       else{
         console.log('New recipe ')
         // console.debug(this.recipe)
-        request = api.recipes.createRecipe(userInfo._id, formData, Session.accessToken())
+        request = api.recipes.createRecipe(_id, formData, this.accessToken)
       }
 
       request

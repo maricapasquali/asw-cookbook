@@ -16,7 +16,7 @@
               <b-skeleton width="25%"></b-skeleton>
             </b-col>
           </b-row>
-          <b-button class="details-recipes"  variant="link">Dettagli</b-button>
+          <b-button variant="info" class="details-recipes" disabled><b-icon-info-circle/></b-button>
           <template #footer>
             <b-row align-h="between">
               <b-col><b-skeleton-icon  icon="heart" :icon-props="{ variant: 'light' }"></b-skeleton-icon></b-col>
@@ -26,56 +26,72 @@
         </b-card>
       </template>
 
-     <div>
-      <b-row >
-        <b-card v-for="(doc, ind) in docs" :key="doc._id" class="recipe-post p-0 mt-3 mx-auto col-lg-7">
-          <template #header>
-            <b-row align-h="between">
-              <b-col>
-                <router-link :to="{name: 'single-user', params: {id: doc.owner._id }}">
-                  <strong><em>{{doc.owner.userID }}</em></strong>
+     <b-container fluid class="recipe-post-container px-0">
+      <b-row cols="1">
+        <b-col v-for="(doc, ind) in docs" :key="doc._id" class="mx-auto px-1 mb-3" cols="12" sm="10" md="9" lg="7">
+          <b-card  class="recipe-post">
+            <!-- Author and date -->
+            <template #header>
+              <b-row align-h="between" align-v="center">
+                <b-col>
+                  <b-row cols="1" cols-sm="1" cols-md="2">
+                    <b-col md="3"> <avatar v-model="doc.owner.img" variant="light" :size=30 /> </b-col>
+                    <b-col md="9">
+                      <router-link :to="{name: 'single-user', params: {id: doc.owner._id }}">
+                        <strong> <em> {{ doc.owner.userID }}</em></strong>
+                      </router-link>
+                    </b-col>
+                  </b-row>
+                </b-col>
+                <b-col align="end">
+                  <elapsed-time v-model="doc.createdAt" :language="language" />
+                </b-col>
+              </b-row>
+            </template>
+
+            <!-- Image / Tutorial -->
+            <preview-recipe-tutorial class="recipes-tutorial" v-model="doc.tutorial" :poster="doc.img" with-image/>
+
+            <!-- Description: name, country, category -->
+            <b-row :class="{'description-post': true, 'py-2': !doc.country}" align-h="between">
+              <b-col class="d-flex align-items-center pl-2">
+                <router-link :to="redirectToRecipe(doc)" class="recipe-post-link">
+                  {{doc.name}}
                 </router-link>
               </b-col>
-              <b-col align="end">
-                <elapsed-time v-model="doc.createdAt" :language="language" />
+              <b-col class="d-flex justify-content-end pr-1" >
+                <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.category.text}} </span>
+                <country-image v-model="doc.country" :id="imageId(doc._id)"/>
               </b-col>
             </b-row>
-          </template>
-          <router-link :to="{name: 'single-recipe', params: {id: doc.owner._id, recipe_id: doc._id}}">
-            <b-img fluid class="recipes-image" :src="doc.img" @error="imgNotFound"/>
-          </router-link>
-          <b-row :class="{'description-post': true, 'py-2': !doc.country}" align-h="between">
-            <b-col class="d-flex align-items-center pl-2">  {{doc.name}} </b-col>
-            <b-col class="d-flex justify-content-end pr-1" >
-              <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.category.text}} </span>
-              <country-image v-model="doc.country" :id="imageId(doc._id)"/>
-            </b-col>
-          </b-row>
 
-          <recipe-details :recipe="doc" class="details-recipes"/>
+            <!-- Details -->
+            <recipe-details :recipe="doc" class="details-recipes" />
 
-          <template #footer>
-            <b-row align-h="between">
-              <b-col>
-                <!-- Like of a RECIPE -->
-                <like v-model="doc.likes" :recipe="{id: doc._id, ownerID: doc.owner._id}" :no-like="isOwnerRecipe(ind)"/>
-              </b-col>
-              <b-col align="end">
-                <b-icon-chat class="icon" v-b-toggle="commentsId(doc._id)"/>
-              </b-col>
-            </b-row>
-            <b-collapse :id="commentsId(doc._id)" class="mt-2">
-              <!-- LIST COMMENT for a RECIPE -->
-              <comments v-model="doc.comments" :recipe="{id: doc._id, ownerID: doc.owner._id}" :language="language" />
-            </b-collapse>
-          </template>
+            <!-- Likes and Comments -->
+            <template #footer>
+              <b-row align-h="between">
+                <b-col>
+                  <!-- Like of a RECIPE -->
+                  <like v-model="doc.likes" :recipe="{id: doc._id, ownerID: doc.owner._id}" :no-like="youNotMakeLike(ind)"/>
+                </b-col>
+                <b-col align="end">
+                  <b-icon-chat class="icon" v-b-toggle="commentsId(doc._id)" :class="{'no-clickable': !showCollapse(doc)}"/>
+                </b-col>
+              </b-row>
+              <b-collapse :id="commentsId(doc._id)" class="mt-2" v-if="showCollapse(doc)">
+                <!-- LIST COMMENT for a RECIPE -->
+                <comments v-model="doc.comments" :recipe="{id: doc._id, ownerID: doc.owner._id}" :language="language" />
+              </b-collapse>
+            </template>
 
-        </b-card>
+          </b-card>
+        </b-col>
       </b-row>
       <b-row class="mt-3" align-h="center" v-if="areOthers">
         <b-button variant="link" @click="others">Altri ...</b-button>
       </b-row>
-     </div>
+     </b-container>
     </b-skeleton-wrapper>
 
   </b-container>
@@ -83,8 +99,8 @@
 
 <script>
 import {RecipeCategories} from "@services/app";
-import {Session} from "@services/session";
 import api from '@api'
+import {mapGetters} from "vuex";
 
 export default {
   name: "HomePage",
@@ -93,9 +109,6 @@ export default {
       skeletons: 5,
 
       language: 'it',
-      defaultImageRecipes: require('@assets/images/recipe-image.jpg'),
-
-      showDetails: false,
 
       docs: [],
       total: 0,
@@ -114,29 +127,32 @@ export default {
     areOthers(){
       return this.docs.length >0 && this.docs.length < this.total
     },
+
+    ...mapGetters(['userIdentifier', 'accessToken', 'isAdmin'])
   },
   methods: {
+    redirectToRecipe(rec){
+      return { name: 'single-recipe', params: { id: rec.owner._id, recipe_id: rec._id } }
+    },
+
     imageId(id){
       return 'country-image-'+ id
     },
     commentsId(id){
       return 'comments-'+ id
     },
-    imgNotFound(e){
-      console.error('image recipes not found...')
-      e.target.src = this.defaultImageRecipes
+
+    showCollapse(doc){
+      return !(this.isAdmin && doc.comments.length === 0)
     },
 
-    isOwnerRecipe(index){
-      let userInfo = Session.userInfo()
-      return userInfo && this.docs[index].owner._id === userInfo._id
+    youNotMakeLike(index){
+      return this.isAdmin || this.docs[index].owner._id === this.userIdentifier
     },
     /* -- REQUEST --*/
 
     updateDocs(){
       this.docs.forEach(p => {
-        p.img = p.img || this.defaultImageRecipes
-
         let category = RecipeCategories.find(p.category)
         if(category) p.category = category
       })
@@ -144,7 +160,7 @@ export default {
 
     getPost(currentPage){
       this.optionsPagination.page = currentPage || 1
-      api.recipes.allSharedRecipes(Session.accessToken(), this.optionsPagination)
+      api.recipes.allSharedRecipes(this.accessToken, this.optionsPagination)
       .then(({data}) => {
 
         console.log(data)
@@ -195,20 +211,10 @@ export default {
 
 <style scoped lang="scss">
 
-.recipes-image{
-  position: relative;
-  width: 100%;
-  height: 300px;
-}
-
-//.description-post, .details-recipes {
 .description-post {
   position: absolute;
   background-color: $overlay;
   color: white;
-}
-
-.description-post{
   top:10%;
   left: 15px;
   width: 100%;
@@ -216,7 +222,7 @@ export default {
 .details-recipes{
   position: absolute;
   right: 5px;
-  bottom: 5px;
+  bottom: 185px
 }
 
 .recipe-post {
@@ -227,6 +233,7 @@ export default {
       color: white;
     }
   }
+
   & >.card-body{
     position: relative;
     padding: 0;
@@ -235,6 +242,14 @@ export default {
   & .country-image{
     width: 50px;
     height: 40px
+  }
+
+  & .recipe-post-link{
+    color: white;
+  }
+
+  & .recipes-tutorial{
+    height: 300px;
   }
 }
 

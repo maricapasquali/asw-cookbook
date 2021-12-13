@@ -8,8 +8,8 @@
 
 <script>
 
-import {Session} from "@services/session";
 import api from "@api";
+import {mapGetters} from "vuex";
 
 export default {
   name: "like",
@@ -32,6 +32,7 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['accessToken', 'userIdentifier', 'isAdmin']),
     classesLike(){
       return {
         'mr-1': true,
@@ -40,20 +41,19 @@ export default {
     }
   },
   mounted() {
-    let userInfo = Session.userInfo()
-    if(userInfo) this.makeLike = this.value.find(l => l.user && l.user._id === userInfo._id) !== undefined
+    this.makeLike = this.value.find(l => l.user && l.user._id === this.userIdentifier) !== undefined
   },
   methods: {
     onLike(){
       if(!this.noLike){
         if(this.makeLike) {
-          let userInfo = Session.userInfo()
-          //let like = null; if(userInfo) like = this.value.find(l => l.user && l.user._id === userInfo._id); else like = this.value.find(l => !l.user)
-          let like = this.value.find(l => (userInfo && l.user && l.user._id === userInfo._id) || (!userInfo && !l.user))
+          let like = null;
+          if(this.userIdentifier) like = this.value.find(l => l.user && l.user._id === this.userIdentifier);
+          else like = this.value.find(l => !l.user)
           console.debug('Like to remove = ', JSON.stringify(like, null, 1))
           api.recipes
              .likes
-             .unLike(this.recipe.ownerID, this.recipe.id, like._id , Session.accessToken(), this.commentID)
+             .unLike(this.recipe.ownerID, this.recipe.id, like._id , this.accessToken, this.commentID)
              .then(({data})=> {
                 console.debug('Unlike ', data)
                 this.$emit('input', this.value.filter(l => l._id !== like._id))
@@ -66,7 +66,7 @@ export default {
         else {
           api.recipes
              .likes
-             .like(this.recipe.ownerID, this.recipe.id, Session.accessToken(), this.commentID)
+             .like(this.recipe.ownerID, this.recipe.id, this.accessToken, this.commentID)
              .then(({data})=> {
                   console.debug('Like ', data)
 

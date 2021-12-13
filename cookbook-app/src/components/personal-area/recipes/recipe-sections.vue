@@ -1,11 +1,14 @@
 <template>
-  <b-tabs card :vertical="!isMobileDevice" :pills="!isMobileDevice">
-    <b-tab v-for="tab in tabs" :key="tab.type" :title="tab.title" :active="active === tab.type" @click="select(tab.type)" lazy>
+  <b-tabs card :vertical="!isMobileDevice" :pills="!isMobileDevice" v-resize="onResize">
+    <b-tab v-for="tab in tabs" :key="tab.type" :title="tab.title" :active="active === tab.type" @click="select(tab.type)"  lazy>
       <!-- UPDATE RECIPE -->
       <div ref="update-recipe" v-if="formUpdate.show">
         <b-row >
           <b-col align="end">
-            <font-awesome-icon @click="formUpdate.show = false" size="2x" icon="times-circle" id="btn-add-recipes" class="icon" />
+            <b-button id="btn-add-recipes" class="mr-3" variant="danger" pill @click="formUpdate.show = false" >
+              <font-awesome-icon icon="times-circle"  class="icon" />
+            </b-button>
+            <b-tooltip target="btn-add-recipes">Chiudi modifica</b-tooltip>
           </b-col>
         </b-row>
         <b-row>
@@ -24,7 +27,7 @@
         <p v-else> Vuoi davvero cancellare la ricetta <b><em>{{deleteRecipe.name}}</em></b>?</p>
       </b-modal>
       <!-- SEARCHES -->
-      <b-container fluid class="search-section" v-if="total">
+      <b-container fluid class="search-section" v-if="itemsRecipes.length" v-show="!formUpdate.show">
         <search-recipes @reset="stopSearch" @searching="onSearching" :trigger-search="search" :with-history=false :with-all-filters-visible=false :show-results=false />
       </b-container>
 
@@ -58,19 +61,14 @@
         </template>
 
         <!-- TABS OF RECIPES -->
-        <b-container fluid class="recipes-section" v-show="!formUpdate.show">
+        <b-container fluid class="recipes-section" v-show="!formUpdate.show" >
           <strong v-if="searching.on"> Risultati: </strong>
           <b-list-group>
             <b-list-group-item v-for="(item, index) in itemsRecipes" :key="item.id" >
               <b-row class="ml-2" cols="1" cols-md="2">
                 <b-col class="mb-2">
                   <b-row>
-                    <b-col class="px-0" align-self="center" align="center" v-if="item.recipe.img" cols="3" >
-                      <b-img fluid :src="item.recipe.img" :alt="'image-'+item.recipe.name" />
-                    </b-col>
-                    <b-col class="px-0" align-self="center" align="center" cols="3" v-else >
-                      <b-img fluid :src="defaultImgRecipe" />
-                    </b-col>
+                    <preview-recipe-image class="col col-3 px-0" v-model="item.recipe.img" />
                     <b-col class="ml-3">
                       <b-row>
                         <strong>
@@ -102,14 +100,10 @@
               <!-- Details -->
               <b-card class="mt-3" v-show="item.showDetails">
                 <!-- Tutorial -->
-                <b-row class="tutorial mb-4">
-                  <b-col align="center" v-if="item.recipe.tutorial" >
-                    <b-embed style="object-fit: cover; height: auto" type="video" :poster="item.recipe.img" controls >
-                      <source :src="item.recipe.tutorial" type="video/mp4"  @error="tutorialNotFound">
-                      Your browser does not support the video tag.
-                    </b-embed>
-                  </b-col>
+                <b-row class="tutorial mb-4" align-h="center" v-if="item.recipe.tutorial">
+                  <preview-recipe-tutorial class="col col-6" v-model="item.recipe.tutorial" :poster="item.recipe.img" @onVideoNotFound="tutorialNotFound" />
                 </b-row>
+
                 <!-- Country, Diet & Category -->
                 <b-row class="country-diet-category" cols="1" cols-sm="3">
                   <b-col v-if="item.recipe.diet && item.recipe.diet.value">
@@ -156,9 +150,9 @@
                   <b-col> <!-- TODO: migliorare css on list of liker -->
                     <strong>Chi ha messo 'Mi piace'</strong>
                     <ul>
-                      <li v-for="(liker, ind) in item.recipe.likes" :key="ind">
+                      <li v-for="(liker, ind) in mappedLike(item.recipe.likes)" :key="ind">
                         <router-link v-if="liker.user" :to="{name: 'single-user', params: {id: liker.user._id}}">{{liker.user.userID}}</router-link>
-                        <p v-else>Anonimo</p>
+                        <p v-else-if="liker.anonymous">Anonimo <span v-if="liker.anonymous > 1">( x {{ liker.anonymous }} )</span> </p>
                       </li>
                     </ul>
                   </b-col>
@@ -193,13 +187,12 @@ import {dateFormat} from "@services/utils";
 import {Diets, RecipeCategories} from '@services/app'
 
 import api from '@api'
-import {Session} from "@services/session";
+import {mapGetters} from "vuex";
 
 export default {
   name: "recipe-sections",
   data(){
     return {
-      defaultImgRecipe: require("@assets/images/recipe-image.jpg"),
       skeletons: 7,
 
       deleteRecipe :{
@@ -242,7 +235,7 @@ export default {
           itemsRecipes: []
         }
       ],
-      windowWidth: window.innerWidth,
+      isMobileDevice: false,
 
       processing: true,
       total: 0,
@@ -254,6 +247,11 @@ export default {
   },
 
   computed:{
+    ...mapGetters([
+      'accessToken',
+      'userIdentifier'
+    ]),
+
     itemsRecipes: {
       get(){
         if(this.searching.on){
@@ -270,13 +268,6 @@ export default {
       }
     },
 
-    userIdentifier: function (){
-      return this.$route.params.id
-    },
-
-    isMobileDevice(){
-      return this.windowWidth < 768
-    },
     active(){
       return this.$route.query.tab
     },
@@ -291,21 +282,22 @@ export default {
     }
   },
   filters: {
-    dateFormat: dateFormat
+    dateFormat: dateFormat,
+
   },
   methods:{
     tutorialNotFound(e){
       console.error('tutorial ('+e.target.src+') not found')
-      e.path[4].remove()
-    },
-    imgNotFound(e){
-      console.error('image ('+e.target.src+') not found')
-      e.target.src = this.defaultImgRecipe
+      e.target.parentNode.parentNode.remove()
     },
 
-    onResize(){
+    onResize({screenWidth}){
       // console.debug('on resize ...')
-      this.windowWidth = window.innerWidth
+      this.isMobileDevice = screenWidth < 768
+    },
+
+    mappedLike(likes){
+      return [ { anonymous: likes.filter(l => !l.user).length }, ...likes.filter(l => l.user) ]
     },
 
     /* documentations */
@@ -337,7 +329,7 @@ export default {
       console.debug('Pagination = ', JSON.stringify(this.paginationOptions, null, 1))
 
       api.recipes
-         .getRecipes(this.userIdentifier, Session.accessToken(), this.active, this.paginationOptions)
+         .getRecipes(this.userIdentifier, this.accessToken, this.active, this.paginationOptions)
          .then(({data}) => {
             console.log(data)
             this.setDefaultValueOn(data.items)
@@ -362,7 +354,6 @@ export default {
 
     setDefaultValueOn(docs){
       const setting = (recipe) => {
-        recipe.img = recipe.img || this.defaultImgRecipe
 
         let category = RecipeCategories.find(recipe.category)
         if(category) recipe.category = category
@@ -377,7 +368,7 @@ export default {
 
     /* search */
     search(filters){
-      return api.recipes.getRecipes(Session.userInfo()._id,  Session.accessToken(), this.active, {}, filters)
+      return api.recipes.getRecipes(this.userIdentifier,  this.accessToken, this.active, {}, filters)
     },
     onSearching(data){
       console.debug('SEARCHING Recipes '+ this.active + ' are '+data.total)
@@ -410,7 +401,7 @@ export default {
 
       this.openChangeMode(index)
 
-      if(!this.$route.query.mode) this.$router.push({query: {tab: this.$route.query.tab, mode: 'change'}}) //TODO: find a way to push change mode state but no in history
+      // if(!this.$route.query.mode) this.$router.push({query: {tab: this.$route.query.tab, mode: 'change'}}) //TODO: find a way to push change mode state but no in history
     },
     onChangedRecipe(cRecipe){
       console.debug('onChangedRecipe ... ')
@@ -474,7 +465,7 @@ export default {
         console.debug(like)
         api.recipes
            .likes
-           .unLike(recipe.owner._id, recipe._id, like._id , Session.accessToken())
+           .unLike(recipe.owner._id, recipe._id, like._id , this.accessToken)
            .then(({data}) => this._afterDelete(data))
            .catch(err => {
               // TODO: HANDLER ERROR REMOVE LIKE ON RECIPE
@@ -485,7 +476,7 @@ export default {
       {
         console.log('DELETE RECIPE')
         api.recipes
-           .deleteRecipe(this.userIdentifier, recipe._id, Session.accessToken())
+           .deleteRecipe(this.userIdentifier, recipe._id, this.accessToken)
            .then(({data}) => this._afterDelete(data))
            .catch(err => {
              // TODO: HANDLER ERROR DELETE RECIPE
@@ -523,28 +514,30 @@ export default {
   },
 
   created() {
-    this.$router.beforeResolve((to, from, next) =>{
-      console.debug('from ', from.fullPath, ' ->  to ', to.fullPath);  console.debug(JSON.stringify(this.formUpdate))
-      if(from.query.mode) this.formUpdate.show = false
-      if(to.query.mode) {
-        if(this.formUpdate.index===-1) {
-          this.formUpdate.show = false
-          return next(from.fullPath)
-        }
-        else this.formUpdate.show = true
-      }
-      next()
-    })
+    //TODO: find a way to push change mode state but no in history
+    // this.$router.beforeResolve((to, from, next) =>{
+    //   console.debug('from ', from.fullPath, ' ->  to ', to.fullPath);  console.debug(JSON.stringify(this.formUpdate))
+    //   if(from.query.mode) this.formUpdate.show = false
+    //   if(to.query.mode) {
+    //     if(this.formUpdate.index===-1) {
+    //       this.formUpdate.show = false
+    //       return next(from.fullPath)
+    //     }
+    //     else this.formUpdate.show = true
+    //   }
+    //   next()
+    // })
     let isValidTab = this.tabs.find(t => t.type === this.active) || this.isAddRecipeTab
     if(!isValidTab) this.$router.push({query: { tab: 'shared'}})
-    window.addEventListener('resize', this.onResize.bind(this))
+
+    window.onpopstate = function (e){
+      if(this.formUpdate.show) this.closeChangeMode()
+    }.bind(this)
+
   },
   mounted() {
     this.select()
   },
-  beforeDestroy() {
-    window.removeEventListener('resize',this.onResize.bind(this))
-  }
 }
 </script>
 

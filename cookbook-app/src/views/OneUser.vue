@@ -1,9 +1,9 @@
 <template>
   <div>
     <!-- Public User Information  -->
-    <user-information :id="identifierUser"></user-information>
+    <user-information :id="user" />
     <!-- Shared Recipe of one specific user -->
-    <container-collapsable title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="areOthers" @load-others="othersRecipes">
+    <container-collapsable v-if="recipes.length"  title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="areOthers" @load-others="othersRecipes">
       <template #collapse-content>
         <b-list-group class="my-3">
           <b-list-group-item v-for="(recipe, ind) in recipes" :key="ind">
@@ -11,7 +11,7 @@
               <b-col align="start">
                 <b-row cols="1">
                   <b-col>
-                    <router-link :to="{name: 'single-recipe', params: {id: identifierUser, recipe_id: recipe._id}}">
+                    <router-link :to="{name: 'single-recipe', params: {id: user, recipe_id: recipe._id}}">
                       {{ recipe.name }}
                     </router-link>
                   </b-col>
@@ -37,18 +37,19 @@
 import {dateFormat} from "@services/utils";
 import {RecipeCategories} from "@services/app";
 
-import {Session} from "@services/session";
 import api from '@api'
+import {mapGetters} from "vuex";
 
 export default {
   name: "OneUser",
   computed: {
-    identifierUser(){
+    user(){
       return this.$route.params.id
     },
     areOthers(){
       return this.recipes.length >0 && this.recipes.length < this.total
     },
+    ...mapGetters(['accessToken'])
   },
   filters: {
     dataFormatter: dateFormat
@@ -57,7 +58,6 @@ export default {
     return {
       /* User Recipes Section */
       showRecipeSection: false,
-      defaultRecipeImage: require('@assets/images/recipe-image.jpg'),
       total: 0,
       recipes: [],
       paginationOptions: {
@@ -81,7 +81,7 @@ export default {
       console.debug('Pagination = ', JSON.stringify(this.paginationOptions, null, 1))
 
       api.recipes
-         .getRecipes(this.identifierUser, Session.accessToken(), 'shared', this.paginationOptions)
+         .getRecipes(this.user, this.accessToken, 'shared', this.paginationOptions)
          .then(({data}) =>{
            let _remapData = data.items.map(recipe => this.remappingRecipe(recipe))
 
@@ -102,9 +102,12 @@ export default {
 
     onCollapsedRecipes({show}){
       console.debug('Recipe: collapsed show = ', show)
-      if(show && this.recipes.length === 0) this.getRecipes()
+     // if(show && this.recipes.length === 0) this.getRecipes()
     }
   },
+  mounted() {
+    this.getRecipes()
+  }
 }
 </script>
 

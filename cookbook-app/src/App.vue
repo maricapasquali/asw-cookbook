@@ -1,7 +1,7 @@
 <template>
   <div>
-    <app-navigator class="sticky-top" v-if="navigatorVisibility"/>
-    <router-view :class="classObject"></router-view>
+    <app-navigator v-if="navigatorVisibility"/>
+    <router-view :class="classObject" />
     <app-footer v-if="footerVisibility" />
     <loading v-model="processing" />
   </div>
@@ -38,10 +38,17 @@ export default {
     onLogout(isLogout){
       console.debug('Logout = ', isLogout)
       this.processing = isLogout
+    },
+    hideNavigationBar(route){
+      console.debug('Hide navigation bar on route ', route)
+      this.notNav.push(route)
     }
   },
   created() {
+    this.$store.commit('setSession')
+    // console.debug('App created ', this.$store.state)
     bus.$on('onLogout', this.onLogout.bind(this))
+    bus.$on('hideNavigationBar', this.hideNavigationBar.bind(this))
   }
 }
 </script>

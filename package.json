@@ -45,6 +45,7 @@
     "vue-barcode-reader": "^0.0.3",
     "vue-router": "^3.5.2",
     "vue-zoomer": "^0.3.9",
+    "vuex": "^3.6.2",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {

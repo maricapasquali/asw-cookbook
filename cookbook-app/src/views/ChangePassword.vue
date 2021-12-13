@@ -63,7 +63,7 @@
 
 <script>
 import api from "@api";
-import {Session} from "@services/session";
+import {mapGetters} from "vuex";
 export default {
   name: "ChangePassword",
   data: function (){
@@ -86,7 +86,7 @@ export default {
         userID: null,
         password: null
       },
-      token: Session.accessToken(),
+      token: '',
       _id: '',
       success: {
         userID: false,
@@ -99,14 +99,18 @@ export default {
       }
     }
   },
+  computed: {
+    ...mapGetters(['isLoggedIn', 'accessToken'])
+  },
   created() {
-   this.checkLink()
+    this.token = this.accessToken;
+    this.checkLink()
   },
 
   methods: {
     checkLink: function (){
       console.log("CHANGE PASSW ", this.$route)
-      this.changeDefaultPassword = Session.isStart()
+      this.changeDefaultPassword = this.isLoggedIn
       if(this.changeDefaultPassword){
         if(this.$route.params.firstLogin){
           this.link.valid = true

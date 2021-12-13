@@ -1,8 +1,8 @@
 <template>
   <div id="navigator-app">
     <!-- NAV BAR -->
-    <b-navbar ref="navigator" toggleable="lg" type="dark" class="navigator-bar">
-      <b-navbar-brand href="#">{{ app_name }}</b-navbar-brand>
+    <b-navbar ref="navigator" toggleable="sm" type="dark" class="navigator-bar" fixed="top">
+      <b-navbar-brand :to="{name: 'homepage'}" :active="isHomePageActive">{{ app_name }}</b-navbar-brand>
 
       <b-navbar-toggle target="nav-collapse">
         <template #default="{ expanded }">
@@ -13,8 +13,8 @@
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-          <b-nav-item :active="isHomePageActive" :to="{name: 'homepage'}" > HomePage </b-nav-item>
-          <b-nav-item-dropdown text="Ricerca" right>
+<!--          <b-nav-item :active="isHomePageActive" :to="{name: 'homepage'}" > HomePage </b-nav-item>-->
+          <b-nav-item-dropdown text="Ricerca" v-if="isGuestOrSigned" right>
             <b-dropdown-item :active="isSearchRecipesActive" :to="{name:'search', params: {what: 'recipes'}}">ricette</b-dropdown-item>
             <b-dropdown-item :active="isSearchUsersActive" :to="{name:'search', params: {what: 'users'}}">utenti</b-dropdown-item>
           </b-nav-item-dropdown>
@@ -24,18 +24,18 @@
         <b-navbar-nav class="ml-auto">
           <b-nav-item-dropdown v-if="isLoggedIn" right>
             <template #button-content>
-              <em>{{ userInfo.userID }}</em>
+              <em>{{ username }}</em>
             </template>
-            <b-dropdown-item :active="isAccountActive" :to="{name: 'p-user-account', params: {id: userInfo._id}}">Account</b-dropdown-item>
+            <b-dropdown-item :active="isAccountActive" :to="{name: 'p-user-account', params: {id: userIdentifier }}">Account</b-dropdown-item>
 
-            <b-dropdown-item v-if="userInfo.isSigned" :active="isRecipesActive" :to="{name: 'p-user-recipes', params: {id: userInfo._id}, query: {tab: 'shared'}}">Ricette</b-dropdown-item>
-            <b-dropdown-item v-if="userInfo.isSigned" :active="isFoodsActive" :to="{name: 'p-user-foods', hash: '#shopping-list', params: {id: userInfo._id}}">Lista della spesa</b-dropdown-item>
-            <b-dropdown-item v-if="userInfo.isAdmin" :active="isReportsActive" :to="{name: 'p-user-reports', params: {id: userInfo._id}}">Segnalazioni</b-dropdown-item>
-            <b-dropdown-item v-if="userInfo.isAdmin" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userInfo._id}}">Alimenti</b-dropdown-item>
-            <b-dropdown-item v-if="userInfo.isAdmin" :active="isUsersActive" :to="{name: 'p-user-users', params: {id: userInfo._id}}">Utenti</b-dropdown-item>
+            <b-dropdown-item v-if="isSigned" :active="isRecipesActive" :to="{name: 'p-user-recipes', params: {id: userIdentifier}, query: {tab: 'shared'}}">Ricette</b-dropdown-item>
+            <b-dropdown-item v-if="isSigned" :active="isFoodsActive" :to="{name: 'p-user-foods', hash: '#shopping-list', params: {id: userIdentifier}}">Lista della spesa</b-dropdown-item>
+            <b-dropdown-item v-if="isAdmin" :active="isReportsActive" :to="{name: 'p-user-reports', params: {id: userIdentifier}}">Segnalazioni</b-dropdown-item>
+            <b-dropdown-item v-if="isAdmin" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userIdentifier}}">Alimenti</b-dropdown-item>
+            <b-dropdown-item v-if="isAdmin" :active="isUsersActive" :to="{name: 'p-user-users', params: {id: userIdentifier}}">Utenti</b-dropdown-item>
 
-            <b-dropdown-item :active="isNotificationsActive" :to="{name: 'p-user-notifications', params: {id: userInfo._id}}">Notifiche</b-dropdown-item>
-            <b-dropdown-item :active="isChatsActive" :to="{name: 'p-user-chats', params: {id: userInfo._id}}">Chats</b-dropdown-item>
+            <b-dropdown-item :active="isNotificationsActive" :to="{name: 'p-user-notifications', params: {id: userIdentifier}}">Notifiche</b-dropdown-item>
+            <b-dropdown-item :active="isChatsActive" :to="{name: 'p-user-chats', params: {id: userIdentifier}}">Chats</b-dropdown-item>
             <b-dropdown-item @click="logout">Sign Out</b-dropdown-item>
 
           </b-nav-item-dropdown>
@@ -56,41 +56,34 @@
 <script>
 
 import api from '@api'
-import {Session} from "@services/session";
 import {bus} from "@/main";
 
 import {isString} from '@services/utils'
+
+import {mapGetters, mapMutations} from 'vuex'
 
 export default {
   name: "app-navigator",
   data: function (){
     return {
       app_name : require("@app/app.config.json").app_name,
-      userInfo:  {
-        _id: null,
-        userID: null,
-        isSigned: null,
-        isAdmin: null
-      },
-      access_token: null,
       error: {
         show: false,
         message: ''
       }
     }
   },
-  created() {
-    this.userInfo = Session.userInfo()
-    this.access_token = Session.accessToken()
-    bus.$on('userID', this.userId.bind(this))
-    bus.$on('session-start', this.startSession.bind(this))
-    bus.$on('session-end', this.endSession.bind(this))
-  },
 
   computed:{
-    isLoggedIn: function (){
-      return this.access_token !== null && this.userInfo.userID !== null
-    },
+    ...mapGetters([
+      'isLoggedIn',
+      'userIdentifier',
+      'username',
+      'isAdmin',
+      'isSigned',
+      'isGuestOrSigned',
+      'accessToken'
+    ]),
 
     isHomePageActive: function (){
       return this.$route.name === 'homepage'
@@ -122,37 +115,20 @@ export default {
     isChatsActive: function (){
       return this.$route.name === 'p-user-chats'
     },
-
   },
   methods:{
-    userId: function (userID){
-      console.debug('change UserID (nav bar): ', userID)
-      // this.userInfo.userID = userID
-      Session.changeUserID(userID)
-    },
-    startSession: function (session){
-      console.debug('session start (nav bar) : ', session)
-      this.access_token = session.token
-      // this.userInfo.userID = session.userID
-    },
-    endSession: function (){
-      Session.end()
-      this.access_token = null
-      this.userInfo = {
-        _id: null,
-        userID: null,
-        isSigned: null,
-        isAdmin: null
-      }
-      console.debug("LOGOUT OK.")
-    },
+    ...mapMutations([
+      'endSession'
+    ]),
 
     logout: function (){
       bus.$emit('onLogout', true)
-      console.log(this.userInfo._id)
-      api.users.logout(this.userInfo._id, Session.accessToken())
+      console.log(this.userIdentifier)
+      console.log(this.accessToken)
+      api.users.logout(this.userIdentifier, this.accessToken)
                .then(response => {
                  this.endSession()
+                 console.debug("LOGOUT OK.")
                  if(this.$route.name === 'homepage') this.$router.go()
                  else this.$router.replace({name: 'homepage'})
                })
@@ -162,6 +138,7 @@ export default {
                    this.error.show = true
                  } else if(err.response.status === 409){
                    this.endSession()
+                   console.debug("LOGOUT 409.")
                  } else{
                    this.error.show = true
                  }

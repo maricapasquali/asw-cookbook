@@ -16,14 +16,12 @@
               <b-form-group
                   id="input-group-0"
                   label-for="input-0"
+                  label="Immagine Profilo" label-sr-only
               >
-                <image-preview-uploader
-                    zoomable
-                    id="input-0"
-                    :value="user.img"
-                    @selectImage="user.img=$event"
-                >
-                </image-preview-uploader>
+                <preview-uploader avatar zoomable id="input-0"
+                    @selectFile="user.img=$event"
+                    @cancelSelectFile="user.img=null"
+                />
               </b-form-group>
               <b-row cols-md="2" cols-sm="1" cols="1">
 

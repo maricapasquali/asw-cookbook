@@ -105,10 +105,10 @@
 </template>
 
 <script>
-import {Session} from '@services/session'
 import {isEmpty, clone, equals} from '@services/utils'
 
 import api from '@api'
+import {mapGetters} from "vuex";
 
 export default {
   name: "food-form",
@@ -145,7 +145,9 @@ export default {
     },
     createMode: function (){
       return this.mode === 'create'
-    }
+    },
+
+    ...mapGetters(['accessToken'])
   },
   watch: {
     validation: {
@@ -232,10 +234,10 @@ export default {
       let request = null
       switch (this.mode) {
         case 'create':
-          request = api.foods.createFood(this.food, Session.accessToken())
+          request = api.foods.createFood(this.food, this.accessToken)
           break;
         case 'update':
-          request = api.foods.updateFood(this.value._id, this.food, Session.accessToken())
+          request = api.foods.updateFood(this.value._id, this.food, this.accessToken)
           break;
           default: throw new Error('mode is not valid.')
       }

@@ -81,7 +81,7 @@
         <b-breadcrumb :items="itemsBreadcrumb" />
       </b-col>
 
-      <b-col class="header-recipe py-3">
+      <b-col class="header-recipe py-3 mb-4">
         <b-container fluid>
           <b-row align-h="between" align-v="center">
             <b-col>
@@ -95,7 +95,7 @@
               </b-row>
             </b-col>
             <b-col cols="2" align="end">
-              <like v-model="doc.likes" :recipe="{id: doc._id, ownerID: doc.owner._id}" :no-like="isOwnerRecipe"/>
+              <like v-model="doc.likes" :recipe="{id: doc._id, ownerID: doc.owner._id}" :no-like="youNotMakeLike"/>
             </b-col>
           </b-row>
           <b-row class="mt-2" align-h="between">
@@ -107,19 +107,8 @@
       </b-col>
 
       <!-- TODO: improve view for image and tutorial video -->
-      <b-col  v-if="doc.img || doc.tutorial">
-        <b-row class="mt-5">
-          <b-col v-if="thereIsImage">
-            <b-img fluid :src="doc.img" @error="imageNotFound"/>
-          </b-col>
-          <b-col v-if="doc.tutorial">
-            <b-embed style="object-fit: cover; height: auto" type="video" :poster="posterTutorial" controls >
-              <source :src="doc.tutorial" type="video/mp4"  @error="tutorialNotFound">
-              Your browser does not support the video tag.
-            </b-embed>
-          </b-col>
-        </b-row>
-      </b-col>
+      <preview-recipe-image class="col col-6" v-model="doc.img" without-default/>
+      <preview-recipe-tutorial class="col col-6" v-model="doc.tutorial" :poster="doc.img" />
 
       <b-col class="mt-5">
         <strong>Ingredienti</strong>
@@ -151,11 +140,12 @@
 </template>
 
 <script>
-import {Session} from "@services/session"
 import {isEmpty, dateFormat} from "@services/utils"
 import {Diets, RecipeCategories} from "@services/app"
 
 import api from '@api'
+
+import {mapGetters} from "vuex";
 
 export default {
   name: "OneRecipe",
@@ -163,23 +153,19 @@ export default {
     return {
       loading: true,
       itemsBreadcrumb: [],
-      defaultImageRecipe: require('@assets/images/recipe-image.jpg'),
       doc: {}
     }
   },
   computed: {
+
+    ...mapGetters(['userIdentifier', 'username', 'accessToken', 'isAdmin']),
+
     isNotLoaded(){
       return !this.doc || (isEmpty(this.doc.owner) && isEmpty(this.doc.recipe))
     },
-    posterTutorial(){
-      return this.doc.img || this.defaultImageRecipe
-    },
-    thereIsImage(){
-      return this.doc.img && this.doc.img !== this.defaultImageRecipe
-    },
-    isOwnerRecipe(){
-      let userInfo = Session.userInfo()
-      return userInfo && this.doc.owner._id === userInfo._id
+
+    youNotMakeLike(){
+      return this.isAdmin || this.doc.owner._id === this.userIdentifier
     }
   },
   filters: {
@@ -192,24 +178,15 @@ export default {
       let diet = Diets.find(text)
       return diet ? diet.text : ''
     },
-
   },
   methods: {
-    tutorialNotFound(e){
-      e.target.parent.parent.remove()
-    },
-    imageNotFound(e){
-      e.target.parent.remove()
-    },
-
     isOwner(owner_recipe) {
-      let session = Session.userInfo()
-      return session && owner_recipe._id === session._id && owner_recipe.userID === session.userID
+      return owner_recipe._id === this.userIdentifier && owner_recipe.userID === this.username
     },
     getRecipe() {
       let {id, recipe_id} = this.$route.params;
 
-      api.recipes.getRecipe(id, recipe_id, 'shared', Session.accessToken())
+      api.recipes.getRecipe(id, recipe_id, 'shared', this.accessToken)
       .then(({data})=>{
         this.doc = data
         console.debug(this.doc)
