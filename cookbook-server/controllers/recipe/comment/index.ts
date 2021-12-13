@@ -1,4 +1,4 @@
-import {Comment, Recipe, Report} from "../../../models";
+import {Comment, Recipe, Report, User} from "../../../models";
 import {accessManager, checkRequestHeaders, getUser, getRestrictedUser} from "../../index";
 import {RBAC} from "../../../modules/rbac";
 import {MongooseValidationError} from "../../../modules/custom.errors";
@@ -170,7 +170,7 @@ export function update_comment(req, res){
 export function remove_comment(req, res){
     getComment(req, res)
         .then(comment => {
-            let user: DecodedTokenType | false = getRestrictedUser(req, res, {
+            const user: DecodedTokenType | false = getRestrictedUser(req, res, {
                 operation: Operation.DELETE,
                 subject: Subject.COMMENT,
                 others: (decodedToken => !comment.user || decodedToken._id != comment.user._id)
@@ -185,13 +185,21 @@ export function remove_comment(req, res){
                 let filters = { recipe: recipeID, _id: commentID, reported:{ $ne: [] } }
                 if(accessManager.isSignedUser(user)) delete filters.reported
 
-                Comment.updateOne(filters, {$unset: {content: ''}})
-                    .then(result => {
-                        if(result.n === 0) return res.status(404).json({description: 'Comment is not found'})
-                        if(result.nModified === 0) return res.status(500).json({description: 'Comment is found but it is not deleted.'})
-                        return res.status(200).json({description: 'Comment content has been deleted.'})
-                    }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-
+                Comment.findOne(filters)
+                       .then(comment => {
+                            if(!comment) return res.status(404).json({description: 'Comment is not found'})
+                            comment.content = ''
+                            comment.save()
+                                   .then(_comment => {
+                                       res.status(200).json({description: 'Comment content has been deleted.'})
+                                       if(accessManager.isAdminUser(user) && _comment.user){
+                                           console.log('Strike to '+ _comment.user.userID)
+                                           User.updateOne({ _id: _comment.user._id }, { $inc : { strike: 1 } })
+                                               .then(result => console.log(result.n > 0 && result.nModified > 0 ? 'Add strike.': 'No ad strike'),
+                                                       err => console.error(err))
+                                       }
+                                   }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+                       }, err => res.status(500).json({code: err.code || 0, description: err.message}))
             }
         })
 
@@ -202,7 +210,10 @@ export function list_reported_comments(req, res){
 
         Comment.find()
                .where('reported').ne([])
-               .populate('recipe')
+               .populate([
+                   { path: 'recipe' },
+                   { path: 'reported.user', select: { userID: '$credential.userID', img: '$information.img' } }
+               ])
                .then(comments => {
                     return res.status(200).json(
                         comments.map(c => c.toObject()).map(c => {

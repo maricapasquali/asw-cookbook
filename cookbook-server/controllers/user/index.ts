@@ -215,6 +215,7 @@ export function login(req, res){
     User.findOne().where("credential.userID").equals(userID).then(user => {
         if(user==null) return res.status(404).json({description: 'User is not found'});
         if(user.signup === 'pending') return res.status(403).json({signup: user.signup, description: 'User yet to be verified'});
+        if(user.strike >= 3) return res.status(403).json({ blocked: true, description: 'Blocked account.'})
         const result = bcrypt.compareSync(password, user.credential.hash_password)
         console.debug('Password is correct = ', result)
         if(result) {
@@ -325,21 +326,32 @@ export function delete_user(req, res){
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
     const deleteUser = (id, decoded_token) => {
-        User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
-            if(!user) return res.status(404).json({description: 'User not found'})
-            if(accessManager.isSignedUser(decoded_token) && isAlreadyLoggedOut(user))
-                return res.status(401).send({description: 'User is not authenticated'})
-            //res.status(200).json({delete: user})
-            user.remove().then(() => res.status(200).json({delete: true}),
-                err => res.status(500).json({description: err.message}))
-        }, err => res.status(500).json({description: err.message}))
+        let query =  User.findOne()
+                         .where('_id').equals(id)
+
+        if(!accessManager.isAdminUser(decoded_token)) query.where('signup').equals('checked')
+
+        query
+            .then(user => {
+                if(!user) return res.status(404).json({description: 'User not found'})
+                if(accessManager.isSignedUser(decoded_token) && isAlreadyLoggedOut(user))
+                    return res.status(401).send({description: 'User is not authenticated'})
+                //res.status(200).json({delete: user})
+                //TODO: SEND EMAIL FOR DELETE ACCOUNT (user.email)
+                user.remove()
+                    .then(() => res.status(200).json({delete: true}),
+                          err => res.status(500).json({description: err.message}))
+            }, err => res.status(500).json({description: err.message}))
     }
 
     if(accessManager.isAdminUser(decoded_token)){
-        User.findOne().where('_id').equals(decoded_token._id).then(admin => {
-            if (isAlreadyLoggedOut(admin)) return res.status(401).send({description: 'User is not authenticated'})
-            deleteUser(id, decoded_token)
-        })
+        User.findOne()
+            .where('credential.role').equals('admin')
+            .where('_id').equals(decoded_token._id)
+            .then(admin => {
+                if (isAlreadyLoggedOut(admin)) return res.status(401).send({description: 'User is not authenticated'})
+                deleteUser(id, decoded_token)
+            }, err => res.status(500).json({description: err.message}))
     }else deleteUser(id, decoded_token)
 }
 

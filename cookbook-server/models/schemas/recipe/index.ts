@@ -73,7 +73,7 @@ RecipeSchema.pre(['find', 'findOne'], function() {
 export const RecipePopulationPipeline = [
     {
         path: 'owner permission.user likes.user comments.likes.user ',
-        select: { 'userID' : '$credential.userID'}
+        select: { userID : '$credential.userID', img: '$information.img' }
     },
     {
         path: 'ingredients.food'
