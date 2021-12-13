@@ -1,8 +1,10 @@
 import {Schema, Document} from "mongoose";
 import {EmailValidator} from "../../../../modules/validator";
+import {signup} from "../../../../cookbook-app/src/services/api/users";
 
 export interface IUser extends Document{
     signup: string,
+    createdAt: number,
     information: {
         img?:string
         firstname:string
@@ -37,6 +39,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
       },
       enum: ['pending', 'checked'],
     },
+    createdAt:{ type: Number, required: false, default: Date.now() },
     information: {
         img: {
             type: String,
