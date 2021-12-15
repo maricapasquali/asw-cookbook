@@ -48,3 +48,8 @@ export function decodeToArray(encodedString: string): Array<any> {
     if(!Array.isArray(array)) throw new Error("it's not array.")
     return array
 }
+
+export function areThereDuplicatesIn(array: Array<any>, mapper?: (value: any) => any): Boolean {
+    mapper = mapper || ( (p) => p )
+    return new Set(array.map(p => mapper(p))).size < array.length
+}
