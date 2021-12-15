@@ -8,6 +8,8 @@ import Subject = RBAC.Subject;
 import Operation = RBAC.Operation;
 import {IShoppingList} from "../../models/schemas/shopping-list";
 import {DecodedTokenType} from "../../modules/jwt.token";
+import Role = RBAC.Role;
+import {SignUp} from "../../models/schemas/user";
 
 function authorized(req, res, options: {operation: Operation, subject?: Subject}): {_id: string, role: string} | false {
     let id = req.params.id
@@ -23,7 +25,7 @@ function authorized(req, res, options: {operation: Operation, subject?: Subject}
 }
 
 function getExistsUserChecked(id: string, res): Promise<string> {
-    return User.exists({ _id: { $eq: id }, signup: 'checked', 'credential.role': 'signed' })
+    return User.exists({ _id: { $eq: id }, signup: SignUp.State.CHECKED, 'credential.role': Role.SIGNED })
                .then(exist => {
                    console.debug('User exist = ', exist)
                    if (exist) return Promise.resolve(id);

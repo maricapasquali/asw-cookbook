@@ -1,4 +1,5 @@
 import userRoute from './user'
+import friendRoute from './user/friend'
 import foodRoute from './food'
 import shoppingListRoute from './shopping-list'
 import recipeRoute from './recipe'
@@ -12,6 +13,7 @@ export = function (app: any) {
         path.resolve('cookbook-server/videos/' + req.params.filename)
     ))
     userRoute(app)
+    friendRoute(app)
     foodRoute(app)
     shoppingListRoute(app)
     recipeRoute(app)

@@ -43,6 +43,12 @@ export class RBAC implements IRbac {
 
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.COMMENT_REPORT},
             { roles: [RBAC.Role.ADMIN], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.COMMENT_REPORT, others: true },
+
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.FRIEND },
+            { roles: [RBAC.Role.ADMIN, RBAC.Role.SIGNED], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.FRIEND },
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.FRIEND },
+            { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.FRIEND },
+
         ]
     }
 
@@ -61,9 +67,14 @@ export class RBAC implements IRbac {
 
 export namespace RBAC{
     export enum Role{ADMIN = 'admin', SIGNED = 'signed'}
+    export namespace Role {
+        export function value(): Array<Role>{
+            return [Role.SIGNED, Role.ADMIN]
+        }
+    }
     export enum Operation{CREATE, RETRIEVE, UPDATE, DELETE}
     export enum Subject{
-        USER, USER_CREDENTIAL, SESSION,
+        USER, USER_CREDENTIAL, SESSION, FRIEND,
         FOOD, SHOPPING_LIST, SHOPPING_LIST_POINT,
         RECIPE, LIKE,
         COMMENT, COMMENT_REPORT,

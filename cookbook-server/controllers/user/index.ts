@@ -8,16 +8,17 @@ import {
 } from '../../modules/utilities'
 import {User, EmailLink} from '../../models'
 
-import {DecodedTokenType, IJwtToken, JwtToken} from '../../modules/jwt.token'
+import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
 import {Mailer, IMailer} from "../../modules/mailer";
 import {client_origin} from "../../../modules/hosting/variables";
-import {IUser} from "../../models/schemas/user";
+import {IUser, SignUp, Strike} from "../../models/schemas/user";
 import {tokensManager, accessManager} from "../index";
 
 import {ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
 import * as path from "path";
 import {FileConfigurationImage, fileUploader, getUser, pagination} from "../index";
+import Role = RBAC.Role;
 
 const app_name = require('../../../app.config.json').app_name
 
@@ -103,9 +104,9 @@ export function check_account(req, res){
 
                            User.findOne().where('credential.userID').equals(userID).then((user) =>{
                                if(!user) return res.status(404).json({description: 'User not found'})
-                               if(user.signup === 'checked') return res.status(200).json({just_check_account: true})
-                               if(user.signup === 'pending') {
-                                   user.signup = 'checked'
+                               if(SignUp.State.isChecked(user.signup)) return res.status(200).json({just_check_account: true})
+                               if(SignUp.State.isPending(user.signup)) {
+                                   user.signup = SignUp.State.CHECKED
                                    user.save()
                                        .then((u) => res.status(200).json({check_account: true}),
                                              (e) => res.status(500).json({check_account: false, description: e.message}))
@@ -122,7 +123,6 @@ function infoUsers(users: Array<IUser>, me: DecodedTokenType): Array<object> {
         return usersObject.map(u => {
             let userInfo = {userID: u.credential.userID, role: u.credential.role}
             delete u.credential
-            delete u.friends
             return {...u, ...userInfo}
         })
     }
@@ -142,7 +142,7 @@ export function all_users(req, res){
 
     const searchAvailableValue = ['full', 'partial']
 
-    let filters = { 'credential.role': 'signed' }
+    let filters = { 'credential.role': Role.SIGNED }
 
     if(userID) {
         try {
@@ -175,7 +175,7 @@ export function all_users(req, res){
     getUser(req, res)
         .then(user => {
 
-            if(!accessManager.isAdminUser(user)) filters['signup'] = 'checked'
+            if(!accessManager.isAdminUser(user)) filters['signup'] = SignUp.State.CHECKED
 
             if(user) filters['_id'] = {$ne: user._id}
             console.debug(JSON.stringify(filters, null, 2))
@@ -195,7 +195,7 @@ export function reset_password(req, res){
     const {hash_password} = req.body
     if(!nickname) return res.status(400).json({description: 'nickname is required'});
     if(!hash_password) return res.status(400).json({description: 'hash_password is required'});
-    User.findOne().where('signup').equals('checked').where("credential.userID").equals(nickname)
+    User.findOne().where('signup').equals(SignUp.State.CHECKED).where("credential.userID").equals(nickname)
         .then(user => {
                 if(user==null) return res.status(404).json({description: 'User is not found'});
                 user.credential.hash_password = hash_password
@@ -214,8 +214,8 @@ export function login(req, res){
 
     User.findOne().where("credential.userID").equals(userID).then(user => {
         if(user==null) return res.status(404).json({description: 'User is not found'});
-        if(user.signup === 'pending') return res.status(403).json({signup: user.signup, description: 'User yet to be verified'});
-        if(user.strike >= 3) return res.status(403).json({ blocked: true, description: 'Blocked account.'})
+        if(SignUp.State.isPending(user.signup)) return res.status(403).json({signup: user.signup, description: 'User yet to be verified'});
+        if(Strike.isBlocked(user.strike)) return res.status(403).json({ blocked: true, description: 'Blocked account.'})
         const result = bcrypt.compareSync(password, user.credential.hash_password)
         console.debug('Password is correct = ', result)
         if(result) {
@@ -226,7 +226,12 @@ export function login(req, res){
                 let isAdmin = accessManager.isAdminUser(u.credential)? true: undefined
                 res.status(200).json({
                     token: u.credential.tokens,
-                    userInfo: {_id: u._id, userID: u.credential.userID, isSigned: isSigned, isAdmin: isAdmin},
+                    userInfo: {
+                        _id: u._id,
+                        userID: u.credential.userID,
+                        isSigned: isSigned,
+                        isAdmin: isAdmin
+                    },
                     firstLogin: firstLogin ? true: undefined})
                 },
                 err => res.status(500).json({description: err.message}))
@@ -243,7 +248,7 @@ export function check_authorization(req, res) {
     let decoded_token = tokensManager.checkValidityOfToken(access_token);
     if(!decoded_token) return res.status(401).json({description: 'Token is expired. You request another.'})
     if(decoded_token._id === id) {
-        User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
+        User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
             if (user == null) return res.status(404).json({description: 'User is not found'});
             let isSigned = accessManager.isSignedUser(user.credential) ? true : undefined
             let isAdmin = accessManager.isAdminUser(user.credential) ? true : undefined
@@ -257,7 +262,7 @@ export function check_authorization(req, res) {
 export function one_user(req, res){
     const {access_token} = extractAuthorization(req.headers)
     let {id} = req.params
-    User.findOne().where('signup').equals('checked').where('_id').equals(id)
+    User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id)
         .then(user => {
                 if (user == null) return res.status(404).json({description: 'User is not found'});
                 let isSigned = accessManager.isSignedUser(user.credential) ? true : undefined
@@ -298,7 +303,7 @@ export function update_user(req, res){
     if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
     console.log("Update info user = ", userBody)
 
-    User.findOne().where('signup').equals('checked').where('_id').equals(id)
+    User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id)
         .then(user =>{
                 if (!user) return res.status(404).json({description: 'User is not found'});
                 if(isAlreadyLoggedOut(user)) return res.status(401).send({description: 'User is not authenticated'})
@@ -329,7 +334,7 @@ export function delete_user(req, res){
         let query =  User.findOne()
                          .where('_id').equals(id)
 
-        if(!accessManager.isAdminUser(decoded_token)) query.where('signup').equals('checked')
+        if(!accessManager.isAdminUser(decoded_token)) query.where('signup').equals(SignUp.State.CHECKED)
 
         query
             .then(user => {
@@ -346,7 +351,7 @@ export function delete_user(req, res){
 
     if(accessManager.isAdminUser(decoded_token)){
         User.findOne()
-            .where('credential.role').equals('admin')
+            .where('credential.role').equals(Role.ADMIN)
             .where('_id').equals(decoded_token._id)
             .then(admin => {
                 if (isAlreadyLoggedOut(admin)) return res.status(401).send({description: 'User is not authenticated'})
@@ -357,7 +362,7 @@ export function delete_user(req, res){
 
 export function state_user(req, res){
     let {id} = req.params
-    User.findOne().where('signup').equals('checked').where("_id").equals(id)
+    User.findOne().where('signup').equals(SignUp.State.CHECKED).where("_id").equals(id)
         .then(user => {
                 if (!user) return res.status(404).json({description: 'User is not found'});
                 res.status(200).json({
@@ -393,7 +398,7 @@ export function update_credential_user(req, res){
             if(!(old_userID && new_userID))
                 return res.status(400).send({description: 'Update userID: required [old_userID, new_userID] '})
 
-            User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
+            User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
                     if (!user) return res.status(404).json({description: 'User is not found'});
                     if(user.credential.userID === old_userID) {
                         user.credential.userID = new_userID
@@ -408,7 +413,7 @@ export function update_credential_user(req, res){
             if(!reset && !(old_password && new_hash_password))
                 return res.status(400).send({description: 'Update password: required [old_password, new_hash_password] '})
 
-            User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
+            User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
                     if (!user) return res.status(404).json({description: 'User is not found'});
                     let result = reset || bcrypt.compareSync(old_password, user.credential.hash_password)
                     if(result) {
@@ -435,7 +440,7 @@ export function logout(req, res){
     let authorized = accessManager.isAuthorized(decoded_token.role, RBAC.Operation.DELETE, RBAC.Subject.SESSION, decoded_token._id !== id);
     if(!authorized) return res.status(403).send({description: 'User is unauthorized'})
 
-    User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
+    User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
         if(!user) return res.status(404).json({description: 'User not found'})
         if(isAlreadyLoggedOut(user)) return res.status(409).json({ description: 'User is already logged out' })
 
@@ -463,7 +468,7 @@ export function update_access_token(req, res){
     if(!accessManager.isAuthorized(decoded_rToken.role, RBAC.Operation.UPDATE, RBAC.Subject.SESSION, decoded_rToken._id !== id))
         return res.status(403).send({description: 'User is unauthorized to update session.'})
 
-    User.findOne().where('signup').equals('checked').where('_id').equals(id).then(user => {
+    User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
             if(!user) return res.status(404).json({description: 'User not found'})
             // TODO: found a way to use access token in db
             // let {access, refresh} = user.credential.tokens
@@ -507,7 +512,7 @@ export function foundUserForNickname(req, res){
 
     User.findOne()
         .where('credential.userID').equals(nickname)
-        .where('signup').equals('checked')
+        .where('signup').equals(SignUp.State.CHECKED)
         .then(user => {
             if(!user) return res.status(404).json({description: 'User is not found'});
             let token = tokensManager.createToken({_id: user._id, userID: user.credential.userID, role: user.credential.role}, "5 minutes")
@@ -520,7 +525,7 @@ export function send_email_password(req, res){
     let {email} = req.query
     if(!email) return res.status(400).json({description: 'Missing email.'})
 
-    User.findOne().where('signup').equals('checked').where('information.email').equals(email).then(user => {
+    User.findOne().where('signup').equals(SignUp.State.CHECKED).where('information.email').equals(email).then(user => {
         if(!user) return res.status(404).json({description: 'Email is not associated with any account'});
 
         let randomKey: string = randomString()
