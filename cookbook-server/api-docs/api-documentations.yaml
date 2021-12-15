@@ -71,28 +71,32 @@ components:
           type: array
           default: []
           items:
-            type: object            
-            properties:
-              user: 
-                type: string
-                description: identifier of friend (= another user)
-              timestamp:
-                type: number
-              state: 
-                type: string
-                enum:
-                 - pending
-                 - accepted
-                 - rejected 
-            required:
-              - user
-              - state
-              - timestamp
+            $ref: "#/components/schemas/friend"
         strike:
           type: integer
           default: 0
           minimum: 0
           maximum: 3
+
+    friend:
+      type: object
+      properties:
+        user:
+          type: string
+          description: identifier of friend (= another user)
+        createdAt:
+            type: number
+        updatedAt:
+          type: number
+        state:
+          type: string
+          default: pending
+          enum:
+            - pending
+            - accepted
+            - rejected
+      required:
+        - user
 
     recipe:
       type: object
@@ -539,6 +543,21 @@ components:
         type: array
         items:
           type: string
+    searchUserID:
+      name: userID
+      in: query
+      description: Search user by username
+      required: false
+      schema:
+        type: object
+        properties:
+          search:
+            type: string
+            enum:
+              - full
+              - partial
+          value:
+            type: string
 
   securitySchemes:
     BasicAuth:
@@ -613,20 +632,7 @@ paths:
       security:
         - BearerAuth: []
       parameters:
-        - name: userID
-          in: query
-          description: Search user by username
-          required: false
-          schema:
-            type: object
-            properties:
-              search:
-                type: string
-                enum:
-                  - full
-                  - partial
-              value:
-                type: string
+        - $ref: "#/components/parameters/searchUserID"
         - name: fullname
           in: query
           description: Search user by firstname or lastname
@@ -2023,54 +2029,34 @@ paths:
         - Friends
       security:
         - BearerAuth: []
-      requestBody:
-       required: true
-       content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              user:
-                type: string
       responses:
         201:
-          description: "Friendship request has been sent"
+          description: Friendship request has been sent
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  from:
-                    description: user that has made the request
+                  user:
                     type: string
-                  to:
-                    description: recipient user 
-                    type: string
-                  timestamp:
-                    type: number
+                    description: identifier of the recipient of the friend request
                   state:
                     type: string
                     default: pending
-                    enum: 
-                      - pending
-                      - accepted
-                      - rejected
-          links:
-            acceptOrRejectFriendship:
-              operationId: acceptOrRejectFriendship
-              parameters:
-                id: $response.body#/to
-                friendID: $response.body#/from
-              description: >
-                The `from` and `to` values returned in the response must be used as
-                the `friendID` and `id` parameters in
-                `PUT /users/{id}/friends/{friendID}` respectively.
+                  createdAt:
+                    type: number
+                  updatedAt:
+                    type: number
         400:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
         404:
-          description: "User not found"    
+          description: User not found
+        409:
+          description: Request has already been sent/exist
         500:
           $ref: "#/components/responses/general_error"
 
@@ -2078,9 +2064,22 @@ paths:
       description: "User's circle of friends"
       tags:
         - Friends
+      security:
+      - BearerAuth: [ ]
       parameters:
         - $ref: "#/components/parameters/page"
         - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/searchUserID"
+        - name: state
+          in: query
+          description: state of friendship. Available only user with identifier 'id' and in session.
+          required: false
+          schema:
+            type: string
+            enum:
+              - pending
+              - accepted
+              - rejected
 
       responses:
         200:
@@ -2088,13 +2087,33 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/user"
+                type: object
+                properties:
+                  items:
+                    type: array
+                    required: true
+                    items:
+                      $ref: "#/components/schemas/friend"
+                  total:
+                    type: number
+                    description: Number of friends
+                    required: true
+                  paginationInfo:
+                    type: object
+                    required: false
+                    properties:
+                      page:
+                        type: number
+                        description: Selected page
+                      limit:
+                        type: number
+                        description: the maximum number of friend to take
         400:
           $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
         404:
-          description: "User not found"
+          description: User not found
         500:
           $ref: "#/components/responses/general_error"  
     
@@ -2113,7 +2132,6 @@ paths:
        - Friends
       security:
         - BearerAuth: []
-      operationId: acceptOrRejectFriendship
       requestBody:
         required: true
         content:
@@ -2128,7 +2146,24 @@ paths:
                     - rejected
       responses:
         200:
-          description: "Friendship request has been accepted or rejected"
+          description: Friendship request has been accepted or rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: string
+                    description: identifier of the sender of the friend request
+                  state:
+                    type: string
+                    enum:
+                      - accepted
+                      - rejected
+                  createdAt:
+                    type: number
+                  updatedAt:
+                    type: number
         400:
           $ref: "#/components/responses/bad_request"  
         401:
@@ -2136,7 +2171,9 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
-          description: "User not found"
+          description: Friend not found
+        409:
+          description: Request has already been changed
         500:
           $ref: "#/components/responses/general_error"
     delete:
@@ -2147,7 +2184,7 @@ paths:
         - BearerAuth: []
       responses:
         200:
-          description: "Friendship is over"
+          description: Friendship is over
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -2155,7 +2192,7 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
-          description: "User not found"
+          description: Friend not found
         500:
           $ref: "#/components/responses/general_error"
 
@@ -2494,39 +2531,5 @@ paths:
           $ref: "#/components/responses/forbidden_get_error"
         404:
           description: Chats are not found
-        500:
-          $ref: "#/components/responses/general_error"
-
-  /search/users/{id}/friends:
-    get:
-      description: Search between the user's friends
-      tags:
-        - Searches
-      parameters:
-        - name: name
-          in: query
-          description: partial/full friend's real name or nickname
-          required: true
-          schema:
-            type: string
-
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    information:
-                      $ref: "#/components/schemas/user/properties/information"
-                    userID:
-                      $ref: "#/components/schemas/user/properties/credential/properties/userID"
-        400:
-          $ref: "#/components/responses/bad_request"
-        404:
-          description: Friends are not found
         500:
           $ref: "#/components/responses/general_error"
