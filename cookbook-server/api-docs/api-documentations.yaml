@@ -67,11 +67,6 @@ components:
           required:
             - userID
             - hash_password
-        friends: 
-          type: array
-          default: []
-          items:
-            $ref: "#/components/schemas/friend"
         strike:
           type: integer
           default: 0
@@ -81,9 +76,12 @@ components:
     friend:
       type: object
       properties:
-        user:
+        from:
           type: string
-          description: identifier of friend (= another user)
+          description: identifier of the sender of the request
+        to:
+          type: string
+          description: identifier of the receiver of the request
         createdAt:
             type: number
         updatedAt:
@@ -96,7 +94,8 @@ components:
             - accepted
             - rejected
       required:
-        - user
+        - from
+        - to
 
     recipe:
       type: object
@@ -2035,18 +2034,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  user:
-                    type: string
-                    description: identifier of the recipient of the friend request
-                  state:
-                    type: string
-                    default: pending
-                  createdAt:
-                    type: number
-                  updatedAt:
-                    type: number
+                $ref: "#/components/schemas/friend"
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -2150,20 +2138,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  user:
-                    type: string
-                    description: identifier of the sender of the friend request
-                  state:
-                    type: string
-                    enum:
-                      - accepted
-                      - rejected
-                  createdAt:
-                    type: number
-                  updatedAt:
-                    type: number
+                $ref: "#/components/schemas/friend"
         400:
           $ref: "#/components/responses/bad_request"  
         401:
