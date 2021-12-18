@@ -30,6 +30,7 @@
 
             <b-dropdown-item v-if="isSigned" :active="isRecipesActive" :to="{name: 'p-user-recipes', params: {id: userIdentifier}, query: {tab: 'shared'}}">Ricette</b-dropdown-item>
             <b-dropdown-item v-if="isSigned" :active="isFoodsActive" :to="{name: 'p-user-foods', hash: '#shopping-list', params: {id: userIdentifier}}">Lista della spesa</b-dropdown-item>
+            <b-dropdown-item v-if="isSigned" :active="isFriendsActive" :to="{name: 'p-user-friends', params: {id: userIdentifier}}">Amici</b-dropdown-item>
             <b-dropdown-item v-if="isAdmin" :active="isReportsActive" :to="{name: 'p-user-reports', params: {id: userIdentifier}}">Segnalazioni</b-dropdown-item>
             <b-dropdown-item v-if="isAdmin" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userIdentifier}}">Alimenti</b-dropdown-item>
             <b-dropdown-item v-if="isAdmin" :active="isUsersActive" :to="{name: 'p-user-users', params: {id: userIdentifier}}">Utenti</b-dropdown-item>
@@ -102,6 +103,9 @@ export default {
     },
     isFoodsActive: function (){
       return this.$route.name === 'p-user-foods'
+    },
+    isFriendsActive: function (){
+      return this.$route.name === 'p-user-friends'
     },
     isReportsActive: function (){
       return this.$route.name === 'p-user-reports'

@@ -5,12 +5,12 @@
       <b-col>
         <span v-if="!docsReported.length"> Nessun commento segnalato.</span>
         <b-row v-else cols="1" cols-sm="1" cols-md="2" cols-lg="3" cols-xl="4">
-          <b-col v-for="(doc, index) in docsReported" :key="doc" class="mb-2">
+          <b-col v-for="(doc, index) in docsReported" :key="doc._id" class="mb-2">
             <b-card>
                 <div>
                   <span> Utenti segnalanti: </span>
                   <ul>
-                    <li v-for="report in doc.reported" >
+                    <li v-for="report in doc.reported"  :key="report._id">
                       <span> {{ report.user | name }} </span>
                       <span> ({{ report.timestamp | dateFormat }}) </span>
                     </li>
@@ -42,11 +42,11 @@
       <b-col>
         <span v-if="!docsDeleted.length"> Nessun commento cancellato.</span>
         <b-row v-else cols="1" cols-sm="1" cols-md="2" cols-lg="3" cols-xl="4">
-          <b-col v-for="doc in docsDeleted"  :key="doc"  class="mb-2">
+          <b-col v-for="doc in docsDeleted"  :key="doc._id"  class="mb-2">
             <b-card>
               <div> Utenti segnalanti:
                 <ul>
-                  <li v-for="report in doc.reported"  :key="report" >
+                  <li v-for="report in doc.reported"  :key="report._id" >
                     <span> {{ report.user | name }} </span>
                     <span> ({{ report.timestamp | dateFormat }}) </span>
                   </li>

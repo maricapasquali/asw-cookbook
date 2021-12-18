@@ -115,7 +115,7 @@
       <b-col class="search-result-body mt-2">
         <b-container fluid v-if="docs.length" >
           <b-row cols="1" cols-sm="2" cols-md="2" cols-lg="3" cols-xl="4">
-            <b-col v-for="doc in docs" :key="doc._id" class="recipe-found-container mb-3 ">
+            <b-col v-for="(doc, index) in docs" :key="doc._id" class="recipe-found-container mb-3 ">
               <router-link :to="{name: 'single-recipe', params: {id: doc.owner._id, recipe_id: doc._id}}">
                 <b-card class="recipe-found" body-class="py-0">
                   <preview-recipe-image v-model="doc.img" />
@@ -127,7 +127,7 @@
                           <b-col cols="5" align="end" v-if="doc.category || doc.country">
                             <b-row>
                               <b-col> <span>{{ doc.category | fullName }}</span> </b-col>
-                              <b-col v-if="doc.country" class="pl-0"> <country-image v-model="doc.country" heigth="0"/> </b-col>
+                              <b-col v-if="doc.country" class="pl-0"> <country-image v-model="doc.country" heigth="0" :id="index"/> </b-col>
                             </b-row>
                           </b-col>
                         </b-row>

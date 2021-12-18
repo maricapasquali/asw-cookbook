@@ -116,7 +116,7 @@
               <avatar v-model="user.information.img" variant="light" />
             </b-col>
             <b-col align-self="center" class="d-flex justify-content-end">
-              <country-image v-model="user.information.country" width="100" height="70" />
+              <country-image id="owner" v-model="user.information.country" width="100" height="70" />
             </b-col>
           </b-row>
 
@@ -164,15 +164,9 @@
                 <b-button v-if="user.isSigned && !user.isAdmin" variant="secondary" @click="deleteAccount=true"> Cancella Account </b-button>
               </b-button-group>
             </b-col>
-            <b-col  v-else align-self="end" class="d-flex justify-content-end px-0">
-              <b-button-group v-if="isAdmin" vertical>
-                <b-button variant="secondary" @click="goChat"> Chat </b-button>
-              </b-button-group>
-              <b-button-group v-else-if="isSigned" vertical>
-                <b-button v-if="!friendship.request && !friendship.just" variant="secondary" @click="requestFriendShip"> Segui </b-button>
-                <b-button v-else v-if="friendship.just" variant="secondary" @click="removeFriendShip">Smetti di seguire</b-button>
-                <b-button v-else v-if="friendship.request && !friendship.just" variant="primary" disabled>Richiesta inviata</b-button>
-                <b-button variant="secondary" @click="goChat"> Chat </b-button>
+            <b-col  v-else-if="isLoggedIn && isOtherUser" align-self="end" class="d-flex justify-content-end px-0">
+              <b-button-group vertical>
+                <b-friendship :other-user="user" with-chat/>
               </b-button-group>
             </b-col>
           </b-row>
@@ -229,28 +223,15 @@ export default {
         lastname: true,
       },
       processing: false,
-      error:{
+      error: {
         show: false,
         message: ''
-      },
-      friendship: {
-        request: false,
-        just: false,
       }
     }
   },
   created() {
     console.log(`CREATE GUI INFO USER (${this.id})...`)
-    api.users.getUser(this.id, this.accessToken).then((response)=>{
-      this.user = response.data
-      this.changeableUser = clone(this.user)
-      console.log(this.user)
-      console.log(this.changeableUser)
-    }).catch(err => {
-      this.error.show = true
-      this.error.message = api.users.HandlerErrors.getUser(err)
-      console.error(err)
-    })
+    this.getUser()
   },
   filters: {
     localDate: function (text, country){
@@ -264,7 +245,7 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['userIdentifier', 'isAdmin', 'isSigned', 'accessToken']),
+    ...mapGetters(['userIdentifier', 'isAdmin', 'isSigned', 'accessToken', 'isLoggedIn', 'userFriends']),
 
     oldProfileImage(){
       return this.user.information.img
@@ -285,6 +266,23 @@ export default {
     }
   },
   methods:{
+
+    getUser(_id){
+      api.users
+         .getUser(_id || this.id, this.accessToken)
+         .then(({data}) =>{
+            this.user = data
+            this.changeableUser = clone(this.user)
+            console.log(this.user)
+            console.log(this.changeableUser)
+         })
+         .catch(err => {
+            this.error.show = true
+            this.error.message = api.users.HandlerErrors.getUser(err)
+            console.error(err)
+         })
+    },
+
     onSessionExpired: function (){
       this.$emit('onSessionExpired')
     },
@@ -345,15 +343,6 @@ export default {
       }
     },
 
-    requestFriendShip: function (){
-      this.friendship.request = true
-      //TODO: REQUEST FRIENDSHIP
-    },
-    removeFriendShip: function (){
-      this.friendship.request = false
-      this.friendship.just = false
-      //TODO: REMOVE FRIENDSHIP
-    },
     goChat: function (){
       //TODO: GO IN CHAT
     }
@@ -362,6 +351,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+::v-deep .accept-request{
+  background-color: #f8f9fa;
+  border-color: #f8f9fa;
+  color: $component-color;
+}
 .user-infos {
   border: 1px dashed black;
   border-radius: 10px;

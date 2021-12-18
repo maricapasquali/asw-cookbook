@@ -1,13 +1,13 @@
 <template>
   <b-container class="collapsable-container" fluid>
-    <b-row align-h="between" v-b-toggle:element-collapse>
+    <b-row align-h="between" v-b-toggle="identifier">
       <b-col>{{title}}</b-col>
       <b-col align="end">
         <b-icon-chevron-up v-if="showSectionCollapse" />
         <b-icon-chevron-down v-else/>
       </b-col>
     </b-row>
-    <b-collapse id="element-collapse">
+    <b-collapse :id="identifier" class="element-collapse">
       <b-row cols="1" class="mx-3">
         <slot name="collapse-content"></slot>
       </b-row>
@@ -22,6 +22,7 @@
 export default {
   name: "container-collapsable",
   props: {
+    id: String,
     title: String,
     withLoadingOthers: {
       type: Boolean,
@@ -31,6 +32,11 @@ export default {
   data(){
     return {
       showSectionCollapse: false
+    }
+  },
+  computed: {
+    identifier(){
+      return 'element-collapse-'+ this.id
     }
   },
   methods: {
@@ -72,7 +78,7 @@ export default {
     }
   }
 
-  & > div#element-collapse {
+  & > div.element-collapse {
     color: black;
 
     & .load-others{

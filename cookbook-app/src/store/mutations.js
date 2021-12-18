@@ -35,5 +35,31 @@ export default {
         Vue.set(state, 'accessToken', newAccessToken)
         localStorage.setItem('token.access', newAccessToken)
         console.log('Refresh access token .')
-    }
+    },
+    // FRIENDS
+    setFriend(state, friends){
+        Vue.set(state.user, 'friends', friends)
+        console.log('Set friends.')
+    },
+    pushFriend(state, friend){
+        let _index = state.user.friends.length
+        Vue.set(state.user.friends, _index, friend)
+        console.log('Push friend.')
+    },
+    updateFriend(state, friend){
+        let _index = state.user.friends.findIndex(f => f.from._id === friend.from._id && f.to._id === state.user._id)
+        if(_index !== -1) {
+            Vue.set(state.user.friends, _index, friend)
+            console.log('Update friend. ')
+        }
+    },
+    popFriend(state, friendID){
+        let _index = state.user.friends.findIndex(f =>
+            (f.from._id === friendID && f.to._id === state.user._id) ||
+            (f.from._id === state.user._id && f.to._id === friendID))
+        if(_index !== -1) {
+            Vue.delete(state.user.friends, _index)
+            console.log('Pop friend.')
+        }
+    },
 }

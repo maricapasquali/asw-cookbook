@@ -15,6 +15,7 @@ import NutrientsTable from "./app/nutrients-table"
 import CountryImage from "./app/country-image"
 import Avatar from "./app/avatar"
 import Like from "./app/like"
+import BFriendship from "./app/b-friendship"
 
 import SignUp from "./login/SignUp";
 
@@ -27,6 +28,7 @@ import RecipeForm from "./personal-area/recipes/recipe-form"
 import FoodSection from "./personal-area/foods/food-section"
 import ReportsSection from "./personal-area/admin/reports/reports-section"
 import UsersSection from "./personal-area/admin/users/users-section"
+import FriendsSection from "./personal-area/friends/friends-section"
 
 import FoodForm from "./foods/food-form"
 import FoodFinder from "./foods/food-finder"
@@ -67,6 +69,7 @@ export default {
     CountryImage,
     Avatar,
     Like,
+    BFriendship,
 
     SignUp,
 
@@ -82,6 +85,7 @@ export default {
     BarcodeScanner,
     ReportsSection,
     UsersSection,
+    FriendsSection,
 
     PreviewRecipeTutorial,
     PreviewRecipeImage,

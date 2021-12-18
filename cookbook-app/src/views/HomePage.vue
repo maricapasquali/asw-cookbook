@@ -61,7 +61,7 @@
               </b-col>
               <b-col class="d-flex justify-content-end pr-1" >
                 <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.category.text}} </span>
-                <country-image v-model="doc.country" :id="imageId(doc._id)"/>
+                <country-image v-model="doc.country" :id="doc._id"/>
               </b-col>
             </b-row>
 
@@ -135,9 +135,6 @@ export default {
       return { name: 'single-recipe', params: { id: rec.owner._id, recipe_id: rec._id } }
     },
 
-    imageId(id){
-      return 'country-image-'+ id
-    },
     commentsId(id){
       return 'comments-'+ id
     },

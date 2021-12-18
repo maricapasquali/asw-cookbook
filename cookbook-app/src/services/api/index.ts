@@ -1,8 +1,9 @@
 import * as users from './users'
+import * as friends from './users/friends'
 import * as foods from './foods'
 import * as recipes from './recipes'
 import * as shoppingList from './shopping-list'
-import {images_origin, server_origin, video_origin} from "../../../../modules/hosting/variables";
+import {images_origin, server_origin, videos_origin} from "../../../../modules/hosting/variables";
 
 function _path(origin: string, endPoint: string): string {
     if(endPoint.search(origin) !== -1) return endPoint
@@ -20,7 +21,7 @@ export const Server = {
         }
     },
     videos: {
-        origin: process.env.VUE_APP_VIDEOS_ORIGIN || video_origin,
+        origin: process.env.VUE_APP_VIDEOS_ORIGIN || videos_origin,
         path: function (endPoint){
             return _path(this.origin, endPoint)
         }
@@ -29,6 +30,7 @@ export const Server = {
 
 export default {
     users,
+    friends,
     foods,
     recipes,
     shoppingList

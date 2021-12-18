@@ -1,7 +1,7 @@
 <template>
-  <div  v-if="selected"  >
-    <b-img :id="id" :width="width" :height="height" class="country-image" :src="selected.src"></b-img>
-    <b-tooltip v-if="selected" :target="id" triggers="hover">
+  <div v-if="selected">
+    <b-img :id="imgId" :width="width" :height="height" class="country-image" :src="selected.src"></b-img>
+    <b-tooltip :target="imgId" triggers="hover">
       <p>{{selected.text}}</p>
     </b-tooltip>
   </div>
@@ -15,7 +15,7 @@ export default {
   props: {
     value: String,
     id: {
-      type: String,
+      type: String | Number,
       default: 'country-image'
     },
     width: {
@@ -35,6 +35,11 @@ export default {
   watch: {
     value(val, old){
       this.select(val)
+    }
+  },
+  computed: {
+    imgId(){
+      return  'country-image-'+ this.id
     }
   },
   methods: {

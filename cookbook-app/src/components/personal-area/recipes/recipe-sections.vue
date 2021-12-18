@@ -117,7 +117,7 @@
                     </b-form-group>
                   </b-col>
                   <b-col v-if="item.recipe.country" align-self="center" align="end">
-                    <country-image v-model="item.recipe.country" width="50" height="50" :id="'recipe-'+item.recipe._id + '-country'" />
+                    <country-image v-model="item.recipe.country" width="50" height="50" :id="index" />
                   </b-col>
                 </b-row>
 

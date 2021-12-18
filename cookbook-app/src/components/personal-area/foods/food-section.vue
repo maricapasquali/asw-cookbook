@@ -67,7 +67,7 @@
                   <b-button id="reset-search-food" variant="secondary" @click="onResetSearch" v-if="thereIsFilters">
                     <font-awesome-icon icon="undo" />
                   </b-button>
-                  <b-tooltip target="reset-search-food">Reset ricerca</b-tooltip>
+                  <b-tooltip target="reset-search-food" v-if="thereIsFilters" >Reset ricerca</b-tooltip>
                 </b-col>
               </b-row>
             </b-container>

@@ -46,6 +46,7 @@ export default {
   },
   created() {
     this.$store.commit('setSession')
+    this.$store.dispatch('getFriends')
     // console.debug('App created ', this.$store.state)
     bus.$on('onLogout', this.onLogout.bind(this))
     bus.$on('hideNavigationBar', this.hideNavigationBar.bind(this))

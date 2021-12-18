@@ -11,6 +11,8 @@ export default {
 
     userIdentifier: state => state.user && state.user._id,
 
+    userFriends: state => state.user && state.user.friends,
+
     accessToken: state => state.accessToken,
 
     refreshToken: state => state.refreshToken

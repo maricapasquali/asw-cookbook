@@ -23,7 +23,9 @@
             <users-section @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- SIGNED -->
-          <b-tab v-if="isSignedUser" title="Amici" @click="getFriends" :active="isActive('friends')" lazy><p>Amici</p></b-tab>
+          <b-tab v-if="isSignedUser" title="Amici" @click="getFriends" :active="isActive('friends')" lazy>
+            <friends-section @onSessionExpired="sessionTimeout=true" />
+          </b-tab>
           <!-- BOTH -->
           <b-tab title="Chats" @click="getChats" :active="isActive('chats')" lazy><p>Chats</p></b-tab>
           <!-- BOTH -->

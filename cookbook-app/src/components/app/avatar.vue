@@ -24,15 +24,23 @@ export default {
       _image: ''
     }
   },
+  watch: {
+    value(vl){
+     this.setImage(vl)
+    }
+  },
   methods: {
     imageError(e){
       console.error('Image ' + this.$data._image + ' is not found.')
       this.$data._image = ''
       this.$emit('onNotFound')
+    },
+    setImage(vl){
+        this.$data._image = vl ? Server.images.path(vl) : ''
     }
   },
   mounted() {
-    if(this.value) this.$data._image = Server.images.path(this.value)
+    this.setImage(this.value)
   }
 }
 </script>

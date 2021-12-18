@@ -1,8 +1,5 @@
 <template>
   <b-container fluid >
-    <b-modal v-model="stopFollow.show" title="Cancella amico" ok-only @ok="sendRemoveFriendShip" centered>
-      Sei sicura/o di voler smette di seguire <strong><em>{{stopFollow.userID}}</em></strong>?
-    </b-modal>
     <b-row>
       <b-col>
         <b-form-group label-for="search-user-input">
@@ -58,15 +55,10 @@
                   <b-row cols="1">
 
                     <b-col v-if="user.information.country">
-                      <country-image v-model="user.information.country" :id="countryId(index)" width="70" height="60"/>
+                      <country-image v-model="user.information.country" :id="user._id" width="70" height="60"/>
                     </b-col>
 
-                    <b-col v-if="isLoggedIn" class="friends-buttons mt-3">
-                      <b-button variant="danger" v-if="justFollow(index)" @click="toggleStopFollow(index)">Smetti di seguire</b-button>
-                      <span class="request-send" v-else-if="requestJustSend(index)">Richiesta inviata</span>
-                      <span class="request-reject" v-else-if="requestRejected(index)"> Richiesta rifiutata </span>
-                      <b-button variant="success" v-else @click="sendRequestFriendShip(index)">Segui</b-button>
-                    </b-col>
+                    <b-friendship class="col mt-3" :other-user="otherUser(index)"/>
 
                   </b-row>
                 </b-col>
@@ -109,12 +101,6 @@ export default {
         page: 1,
         limit: 3 //TODO: CHANGE
       },
-      // stop follow
-      stopFollow: {
-        show: false,
-        index: -1,
-        userID: ''
-      },
 
     }
   },
@@ -125,25 +111,10 @@ export default {
     areOthers(){
       return this.users.length >0 && this.users.length < this.total
     },
-    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn' ])
+    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'userFriends'])
   },
   methods: {
-    countryId(index){
-      return 'country-'+index
-    },
-    amIinFriends(index, state){
-      let me = this.users[index].friends.find(f => f.user === this.userIdentifier)
-      return me ? me.state === state : false
-    },
-    justFollow(index){
-      return this.amIinFriends(index, 'accepted')
-    },
-    requestJustSend(index){
-      return this.amIinFriends(index, 'pending')
-    },
-    requestRejected(index){
-      return this.amIinFriends(index, 'rejected')
-    },
+    // SEARCH
     searchUser(){
        if(this.search.value.length === 0) return this.resetSearch();
 
@@ -168,6 +139,7 @@ export default {
         this.getUsers(1, this.pagination.page * this.pagination.limit)
       }
     },
+    // USERS
     getUsers(currentPage, limit){
       const page = currentPage || 1
       const _limit = limit || this.pagination.limit
@@ -194,10 +166,6 @@ export default {
            if(currentPage) this.users.push(..._data)
            else this.users = _data
 
-           // this.users[0].friends.push({user: this.userIdentifier, timestamp: Date.now(), state: 'accepted'})  //TODO: REMOVE
-           // this.users[1].friends.push({user: this.userIdentifier, timestamp: Date.now(), state: 'pending'})  //TODO: REMOVE
-           // this.users[2].friends.push({user: this.userIdentifier, timestamp: Date.now(), state: 'rejected'})  //TODO: REMOVE
-
            this.total = data.total
 
            if(!limit) this.pagination.page = page
@@ -211,26 +179,10 @@ export default {
     others(){
       this.getUsers(this.pagination.page + 1)
     },
-
-    sendRequestFriendShip(index){
-      //todo: request add friend POST /users/:id/friends
-      this.users[index]
-          .friends
-          .push({ user: this.userIdentifier, state: 'pending', timestamp: Date.now() })
+    //FRIENDSHIP
+    otherUser(index){
+      return this.users[index]
     },
-    toggleStopFollow(index, show = true){
-      this.stopFollow = {
-        show: show,
-        index: index,
-        userID: index >= 0 && index < this.users.length ? this.users[index].userID: ''
-      }
-    },
-    sendRemoveFriendShip(){
-      //todo: request add friend DELETE /users/:id/friends/:user_id
-      let friends = this.users[this.stopFollow.index].friends
-      let _index = friends.findIndex(i => i.user === this.userIdentifier)
-      if(_index !== -1) friends.splice(_index, 1)
-    }
   },
   mounted() {
     this.getUsers()
@@ -243,19 +195,4 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
-.user-container {
-  //overflow-y: auto;
-  //height: 700px;
-
-  & .friends-buttons{
-    & > .request-send {
-      color: #80bdff;
-    }
-    & > .request-reject {
-      color: red;
-    }
-  }
-}
-
 </style>

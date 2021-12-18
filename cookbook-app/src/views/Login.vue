@@ -216,6 +216,7 @@ export default {
            let {token, userInfo} = data
 
            this.startSession({...token, user: userInfo})
+           this.$store.dispatch('getFriends')
 
            let location = {
              name: data.firstLogin ? 'change-password' : 'p-user-account',
