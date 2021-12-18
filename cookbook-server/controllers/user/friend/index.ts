@@ -1,12 +1,11 @@
 import {existById, getRestrictedUser, getUser} from "../../index";
 import {Friend, User} from "../../../models";
-import {Query, Types} from "mongoose";
+import {Types} from "mongoose";
 import {DecodedTokenType} from "../../../modules/jwt.token";
 import {RBAC} from "../../../modules/rbac";
 import {FriendShip, IFriend} from "../../../models/schemas/user/friend";
 import {MongooseDuplicateError, MongooseValidationError} from "../../../modules/custom.errors";
 import * as _ from "lodash";
-import {IUser, SignUp} from "../../../models/schemas/user";
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
 
@@ -15,32 +14,17 @@ const FriendShipPopulateOptions = {
     select: {
         userID: '$credential.userID',
         img: '$information.img',
-        country: '$information.country'
+        country: '$information.country',
+        occupation: '$information.occupation',
     },
     match: {}
-}
-
-
-function mappingFriend(friend: IFriend, me: string, filtered: boolean = false): any {
-    let _friend = { ...(friend.toObject()), ...{ user: {} }}
-    if(filtered){
-        console.debug('Filtered ...')
-        if(friend.from) _friend.user = _friend.from
-        else if(friend.to) _friend.user = _friend.to
-    }else {
-        if(friend.from._id == me) _friend.user = _friend.to
-        else if(friend.to._id == me) _friend.user = _friend.from
-    }
-    delete _friend.from
-    delete _friend.to
-    return _friend
 }
 
 
 function sendPopulateFriendShip(friendShip: IFriend, me: string, responseOptions: {response: any, status: number}) {
     friendShip.populate(FriendShipPopulateOptions, function (err, populateFriend){
         if(err) return responseOptions.response.status(500).json({description: err.message})
-        return responseOptions.response.status(responseOptions.status).json(mappingFriend(populateFriend, me, false))
+        return responseOptions.response.status(responseOptions.status).json(populateFriend)
     })
 }
 
@@ -125,15 +109,6 @@ export function list_friends(req, res){
             Friend.find(filters)
                   .populate(populatePipeline)
                   .then((friends) =>{
-                      let start: number = 0
-                      let end: number = friends.length
-                      let paginationOptions = page && limit ? { page: +page, limit: +limit } : undefined
-                      if(paginationOptions){
-                          start = (paginationOptions.page - 1) * paginationOptions.limit
-                          end = start + paginationOptions.limit
-                          console.debug('start = ', start, ', end = ', end)
-                      }
-
                       let mapperItems = friends
                       if(userID) {
                           mapperItems = friends.filter(
@@ -141,8 +116,21 @@ export function list_friends(req, res){
                                         ( ( friend.from && friend.from._id != id ) || ( friend.to && friend.to._id != id ))
                           )
                       }
-                      mapperItems = mapperItems.map((friend) => mappingFriend(friend, id, userID))
-                                               .sort((f1, f2) => f1.user.userID.localeCompare(f2.user.userID))
+                      const fieldToSort = (friend: any): string => {
+                          if(!friend.from || friend.from._id == id) return friend.to.userID
+                          else if(!friend.to || friend.to._id == id) return friend.from.userID
+                      }
+                      mapperItems = mapperItems.map(friend => friend.toObject())
+                                               .sort((f1, f2) => fieldToSort(f1).localeCompare(fieldToSort(f2))) as Array<IFriend>
+
+                      let start: number = 0
+                      let end: number = mapperItems.length
+                      let paginationOptions = page && limit ? { page: +page, limit: +limit } : undefined
+                      if(paginationOptions){
+                          start = (paginationOptions.page - 1) * paginationOptions.limit
+                          end = start + paginationOptions.limit
+                          console.debug('start = ', start, ', end = ', end)
+                      }
 
                       return res.status(200).json({ items: mapperItems.slice(start, end), total: mapperItems.length, paginationInfo: paginationOptions })
 
