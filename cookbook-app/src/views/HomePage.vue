@@ -35,7 +35,7 @@
               <b-row align-h="between" align-v="center">
                 <b-col>
                   <b-row cols="1" cols-sm="1" cols-md="2">
-                    <b-col md="3"> <avatar v-model="doc.owner.img" variant="light" :size=30 /> </b-col>
+                    <b-col md="3"> <avatar v-model="doc.owner.img" :user="doc.owner._id"  variant="light" :size=30 /> </b-col>
                     <b-col md="9">
                       <router-link :to="{name: 'single-user', params: {id: doc.owner._id }}">
                         <strong> <em> {{ doc.owner.userID }}</em></strong>

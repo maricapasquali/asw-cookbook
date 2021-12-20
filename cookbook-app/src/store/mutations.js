@@ -1,19 +1,34 @@
 import Vue from "vue";
 
+import socket, {setSocket} from "../services/socket";
+
+function _setSocket(state){
+    setSocket({
+        key: state.accessToken,
+        userinfo: state.user ? { _id: state.user._id , userID: state.user.userID, isAdmin: state.user.isAdmin } : undefined
+    })
+    Vue.set(state, 'socket', socket)
+    console.log('Set Socket.')
+}
+
 export default {
+    _setSocket,
+
     startSession(state, session){
         Vue.set(state, 'user', session.user)
         Vue.set(state, 'accessToken', session.access)
         Vue.set(state, 'refreshToken', session.refresh)
         console.log('Start session : ', state)
+        _setSocket(state)
         localStorage.setItem('user.info', JSON.stringify(session.user))
         localStorage.setItem('token.access', session.access)
         localStorage.setItem('token.refresh',  session.refresh)
     },
-    setSession(state){
+    setSession: function (state){
         Vue.set(state, 'user', JSON.parse(localStorage.getItem('user.info')))
         Vue.set(state, 'accessToken', localStorage.getItem('token.access'))
         Vue.set(state, 'refreshToken', localStorage.getItem('token.refresh'))
+        _setSocket(state)
         console.log('Set session : ', state)
     },
     endSession(state){
@@ -21,6 +36,7 @@ export default {
         Vue.set(state, 'accessToken', null)
         Vue.set(state, 'refreshToken', null)
         console.log('End session : ', state)
+        _setSocket(state)
         localStorage.removeItem('user.info')
         localStorage.removeItem('token.access')
         localStorage.removeItem('token.refresh')
@@ -29,37 +45,13 @@ export default {
         if(state.user){
             Vue.set(state.user, 'userID', newUserID)
             console.log('Change userID .')
+            _setSocket(state)
         }
     },
     setAccessToken(state, newAccessToken) {
         Vue.set(state, 'accessToken', newAccessToken)
         localStorage.setItem('token.access', newAccessToken)
         console.log('Refresh access token .')
-    },
-    // FRIENDS
-    setFriend(state, friends){
-        Vue.set(state.user, 'friends', friends)
-        console.log('Set friends.')
-    },
-    pushFriend(state, friend){
-        let _index = state.user.friends.length
-        Vue.set(state.user.friends, _index, friend)
-        console.log('Push friend.')
-    },
-    updateFriend(state, friend){
-        let _index = state.user.friends.findIndex(f => f.from._id === friend.from._id && f.to._id === state.user._id)
-        if(_index !== -1) {
-            Vue.set(state.user.friends, _index, friend)
-            console.log('Update friend. ')
-        }
-    },
-    popFriend(state, friendID){
-        let _index = state.user.friends.findIndex(f =>
-            (f.from._id === friendID && f.to._id === state.user._id) ||
-            (f.from._id === state.user._id && f.to._id === friendID))
-        if(_index !== -1) {
-            Vue.delete(state.user.friends, _index)
-            console.log('Pop friend.')
-        }
-    },
+        _setSocket(state)
+    }
 }

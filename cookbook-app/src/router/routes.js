@@ -7,6 +7,7 @@ import OneUser from "@views/OneUser";
 import Searches from "@views/Searches";
 import ChangePassword from "@views/ChangePassword";
 import OneRecipe from "@views/OneRecipe";
+import Chats from "@views/Chats";
 
 export default [
     {
@@ -28,6 +29,11 @@ export default [
       path: '/reset-password',
       name: 'reset-password',
       component: ChangePassword
+    },
+    {
+        path: '/chats',
+        name: 'global-chats',
+        component: Chats
     },
     {
         path: '/users/:id/change-default-password', //PRIVATE: ONLY FIRST LOGIN ADMIN

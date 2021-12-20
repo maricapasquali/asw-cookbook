@@ -13,6 +13,7 @@ export class Hosting {
 
     private readonly app = null
     private instanceServer: http.Server | https.Server
+    private socket: (server: http.Server | https.Server) => void
 
     constructor(app: core.Express) {
         this.app = app
@@ -37,6 +38,11 @@ export class Hosting {
         return this
     }
 
+    setSocket(socket: (server: http.Server | https.Server) => void) {
+        this.socket = socket
+        return this
+    }
+
     build(): Hosting {
         switch (this.protocol) {
             case "http":
@@ -52,6 +58,11 @@ export class Hosting {
             }
                 break
         }
+
+        if(this.socket && typeof this.socket === 'function') {
+            this.socket(this.instanceServer)
+        }
+
         return this
     }
 

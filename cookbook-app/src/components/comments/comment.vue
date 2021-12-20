@@ -24,7 +24,7 @@
             <b-col>
               <b-row cols="1" align-v="center" class="avatar-userID-container ml-1">
                 <b-col align="center" class="avatar mt-4 px-0">
-                  <avatar :value="isThereProfileImg(comment.user)" />
+                  <avatar :value="isThereProfileImg(comment.user)" :user="comment.user._id"/>
                 </b-col>
                 <b-col align="center" class="userID px-0">
                   <router-link v-if="comment.user" :to="{name: 'single-user', params: {id: comment.user._id }}">{{ comment.user | name }}</router-link>

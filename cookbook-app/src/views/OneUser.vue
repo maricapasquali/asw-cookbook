@@ -37,7 +37,7 @@
             <b-row>
               <b-col align="start">
                 <b-row align-v="center" cols="1" cols-sm="2">
-                  <b-col class="pr-3" sm="5"> <avatar v-model="friend.user.img" /> </b-col>
+                  <b-col class="pr-3" sm="5"> <avatar v-model="friend.user.img" :user="friend.user._id"/> </b-col>
                   <b-col class="mt-2">
                     <router-link @click.native="fetchData(friend)" :to="{name: 'single-user', params: {id: friend.user._id}}">{{friend.user.userID}}</router-link>
                     <p class="mb-0">{{friend.user.occupation}}</p>

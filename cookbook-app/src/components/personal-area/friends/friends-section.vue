@@ -47,7 +47,9 @@
 
       <template #cell(user)="row">
         <b-row class="pl-4">
-          <b-col class="pr-0 mt-2"> <avatar v-model="row.item.user.img" :size="40"/> </b-col>
+          <b-col class="pr-0 mt-2">
+            <avatar v-model="row.item.user.img" :user="row.item.user._id" :size="40"/>
+          </b-col>
           <b-col cols="9" class="pl-0">
             <b-row cols="1">
               <b-col> {{ row.item.user.userID }} </b-col>
@@ -138,6 +140,9 @@ export default {
     }
   },
   methods: {
+    friendsId(_id){
+      return 'avatar-'+_id
+    },
 
     onResize({screenWidth}){
       this.isMobile = screenWidth <= 576

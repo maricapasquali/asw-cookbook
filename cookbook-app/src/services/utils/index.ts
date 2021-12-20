@@ -40,6 +40,13 @@ export function removeIfPresent(v1: Array<any>, val: any,  predicate?: (v: any) 
     if(isPresent) v1.splice(v1.indexOf(val),1)
 }
 
-export function dateFormat(timestamp: number, lang: string = 'it'): string {
-    return new Date(timestamp).toLocaleString([lang], {year: 'numeric', day: '2-digit',month:'2-digit', hour: '2-digit', minute: '2-digit'})
+export function dateFormat(timestamp: number, lang: string = 'it', seconds?: boolean ): string {
+    return new Date(timestamp).toLocaleString([lang], {
+        year: 'numeric',
+        day: '2-digit',
+        month:'2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: seconds ? '2-digit':  undefined
+    })
 }

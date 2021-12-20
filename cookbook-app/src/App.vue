@@ -9,6 +9,9 @@
 
 <script>
 import  {bus} from "@/main";
+import {mapGetters} from "vuex";
+
+import notifications from "@/notifications";
 
 export default {
   name: 'App',
@@ -16,10 +19,16 @@ export default {
     return {
       notNav: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password'],
       notFooter: this.notNav,
-      processing: false
+      processing: false,
+
+      optionsToastFriendShip: {
+        title: 'Richiesta di amicizia',
+        solid: true
+      }
     }
   },
   computed:{
+    ...mapGetters(['socket', 'userIdentifier']),
     navigatorVisibility: function (){
       return !this.notNav.includes(this.$route.name)
     },
@@ -42,14 +51,19 @@ export default {
     hideNavigationBar(route){
       console.debug('Hide navigation bar on route ', route)
       this.notNav.push(route)
-    }
+    },
+
+    // NOTIFICATIONS
+    ...notifications.friends
   },
   created() {
     this.$store.commit('setSession')
-    this.$store.dispatch('getFriends')
     // console.debug('App created ', this.$store.state)
     bus.$on('onLogout', this.onLogout.bind(this))
     bus.$on('hideNavigationBar', this.hideNavigationBar.bind(this))
+
+    // NOTIFICATIONS
+    this.friendShipListeners()
   }
 }
 </script>

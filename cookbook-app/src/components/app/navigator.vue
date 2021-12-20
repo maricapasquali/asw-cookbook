@@ -18,6 +18,7 @@
             <b-dropdown-item :active="isSearchRecipesActive" :to="{name:'search', params: {what: 'recipes'}}">ricette</b-dropdown-item>
             <b-dropdown-item :active="isSearchUsersActive" :to="{name:'search', params: {what: 'users'}}">utenti</b-dropdown-item>
           </b-nav-item-dropdown>
+          <b-nav-item :active="isGlobalChatsActive" :to="{name: 'global-chats'}" > Chats </b-nav-item>
         </b-navbar-nav>
 
         <!-- Right aligned nav items -->
@@ -85,7 +86,9 @@ export default {
       'isGuestOrSigned',
       'accessToken'
     ]),
-
+    isGlobalChatsActive: function (){
+      return this.$route.name === 'global-chats'
+    },
     isHomePageActive: function (){
       return this.$route.name === 'homepage'
     },

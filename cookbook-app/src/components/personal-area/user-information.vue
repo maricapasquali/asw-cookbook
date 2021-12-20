@@ -113,7 +113,7 @@
 
           <b-row align-h="between" class="text-center">
             <b-col class="d-flex justify-content-start">
-              <avatar v-model="user.information.img" variant="light" />
+              <avatar v-model="user.information.img" variant="light" :user="user._id"/>
             </b-col>
             <b-col align-self="center" class="d-flex justify-content-end">
               <country-image id="owner" v-model="user.information.country" width="100" height="70" />

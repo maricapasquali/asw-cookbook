@@ -15,5 +15,7 @@ export default {
 
     accessToken: state => state.accessToken,
 
-    refreshToken: state => state.refreshToken
+    refreshToken: state => state.refreshToken,
+
+    socket: state => state.socket
 }

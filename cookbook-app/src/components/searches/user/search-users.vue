@@ -42,7 +42,7 @@
             <div class="mb-2" v-if="search.mode"><strong > Risultati: </strong></div>
             <b-card v-for="(user, index) in users" :key="user._id">
               <b-row>
-                <b-col align-self="center" align="center" cols="3" class="px-0"><avatar v-model="user.information.img" /></b-col>
+                <b-col align-self="center" align="center" cols="3" class="px-0"><avatar v-model="user.information.img" :user="user._id"/></b-col>
                 <b-col align-self="center" cols="5">
                   <b-row cols="1">
                     <b-col>
