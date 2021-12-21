@@ -344,14 +344,17 @@ components:
       properties:
         user: 
           type: string
-        from:
+        type:
           type: string
           enum:
-            - server
-            - admin
-            - user
-            - friend
-            - me
+            - friendship
+            - recipe
+            - comment
+            - like
+            - food
+            - user-info
+            - report
+            - strike
         content:
           type: string
         timestamp:
@@ -359,11 +362,12 @@ components:
         read:
           type: boolean
           default: false
+        otherInfo:
+          type: object
       required:
         - user
-        - from
+        - type
         - content
-        - timestamp
 
   responses:
     general_error:
@@ -2416,17 +2420,33 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/notification"
+                type: object
+                properties:
+                  items:
+                    type: array
+                    required: true
+                    items:
+                      $ref: "#/components/schemas/notification"
+                  total:
+                    type: number
+                    description: Number of notifications
+                    required: true
+                  paginationInfo:
+                    type: object
+                    required: false
+                    properties:
+                      page:
+                        type: number
+                        description: Selected page
+                      limit:
+                        type: number
+                        description: the maximum number of notification to take
         400:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
         403:
           $ref: "#/components/responses/forbidden_get_error"
-        404:
-          description: Notifications are not found
         500:
           $ref: "#/components/responses/general_error"
 
@@ -2440,7 +2460,7 @@ paths:
           type: string
 
     patch:
-      description: Read notification
+      description: Marks the notification as read/unread
       tags:
         - Notifications
       security:
@@ -2453,10 +2473,9 @@ paths:
               properties:
                 read: 
                   type: boolean
-                  default: true
       responses:
         200:
-          description: Notification has been readed
+          description: Notification marked as read/unread
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -2464,7 +2483,27 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
-          description: Notifications are not found
+          description: Notification not found
+        500:
+          $ref: "#/components/responses/general_error"
+
+    delete:
+      description: ''
+      tags:
+        - Notifications
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Notification has been deleted
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: Notification not found
         500:
           $ref: "#/components/responses/general_error"
 
