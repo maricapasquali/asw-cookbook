@@ -11,41 +11,41 @@ import {Document, Model, Query} from "mongoose";
 export const tokensManager: IJwtToken = new JwtToken()
 export const accessManager: IRbac = new RBAC()
 
-export function getRestrictedUser(req: any, res: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
+export function getRestrictedUser(req: any, res?: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
     const {access_token} = extractAuthorization(req.headers)
     if(!access_token) {
-        res.status(400).json({description: 'Missing authorization.'})
+        if(res) res.status(400).json({description: 'Missing authorization.'})
         return false
     }
     let decoded_token = tokensManager.checkValidityOfToken(access_token);
     if(!decoded_token) {
-        res.status(401).json({description: 'User is not authenticated'})
+        if(res) res.status(401).json({description: 'User is not authenticated'})
         return false
     }
     if(options){
         options.others = options.others || (() => false)
         if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.subject, options.others(decoded_token))) {
-            res.status(403).json({description: 'User is unauthorized'})
+            if(res) res.status(403).json({description: 'User is unauthorized'})
             return false
         }
     }
     return decoded_token
 }
 
-export function getUser(req: any, res: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): Promise<DecodedTokenType | undefined>{
+export function getUser(req: any, res?: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): Promise<DecodedTokenType | undefined>{
     const {access_token} = extractAuthorization(req.headers)
     let user: DecodedTokenType = undefined;
     if(access_token){
         let decoded_token = tokensManager.checkValidityOfToken(access_token);
         if(!decoded_token) {
-            res.status(401).json({description: 'User is not authenticated'})
+            if(res) res.status(401).json({description: 'User is not authenticated'})
             return Promise.reject(401)
         }
 
         if(options) {
             options.others = options.others || (() => false)
             if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.subject, options.others(decoded_token))){
-                res.status(403).json({description: 'User is unauthorized to execute this function.'})
+                if(res) res.status(403).json({description: 'User is unauthorized to execute this function.'})
                 return Promise.reject(403)
             }
         }

@@ -3,6 +3,7 @@ import friendRoute from './user/friend'
 import foodRoute from './food'
 import shoppingListRoute from './shopping-list'
 import recipeRoute from './recipe'
+import notificationRoute from './notification'
 import * as path from "path";
 
 export = function (app: any) {
@@ -17,5 +18,6 @@ export = function (app: any) {
     foodRoute(app)
     shoppingListRoute(app)
     recipeRoute(app)
+    notificationRoute(app)
     //TODO: ADD OTHER ROUTES
 }
