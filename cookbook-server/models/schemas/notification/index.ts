@@ -1,8 +1,11 @@
 import {Document, Schema} from "mongoose";
 import {IUser} from "../user";
+import {RBAC} from "../../../modules/rbac";
+import Role = RBAC.Role;
+import {Types} from "mongoose"
 
 export interface INotification extends Document {
-    user: IUser['_id']
+    user: IUser['_id'] | 'admin'
     type: string
     content: string
     timestamp?: number
@@ -31,7 +34,13 @@ export namespace Notification {
 }
 
 export const NotificationSchema: Schema<INotification> = new Schema<INotification>({
-    user: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    user: {
+        type: Schema.Types.Mixed,
+        required: true,
+        validate: function (){
+            return this.user as Role === Role.ADMIN || Types.ObjectId.isValid(this.user)
+        }
+    },
     type: { type: String, required: true, enum: Notification.Type.values() },
     content: { type: String, required: true },
     timestamp: { type: Number, required: false, default: Date.now() },

@@ -52,7 +52,7 @@ function addCommentOn(doc: IComment | IRecipe, options: {body: any, user_id: str
                 doc.save()
                     .then(doc => {
                             _doc.populate({path: 'user', select: { userID: '$credential.userID' }},function (err, populateComment){
-                                if(populateComment) return res.status(500).json({description: err.message})
+                                if(err) return res.status(500).json({description: err.message})
                                 return res.status(201).json(populateComment)
                             })
                         },
