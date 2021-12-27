@@ -147,7 +147,7 @@ export default {
       return this.mode === 'create'
     },
 
-    ...mapGetters(['accessToken'])
+    ...mapGetters(['accessToken', 'socket'])
   },
   watch: {
     validation: {
@@ -246,6 +246,9 @@ export default {
             console.debug(data)
             if(this.createMode) this.food = data
             this.$emit('onSave', data)
+
+            this.socket.emit('food:create', data)
+
           })
           .catch(err => {
             //TODO: HANDLER ANOTHER ERROR ADD FOOD

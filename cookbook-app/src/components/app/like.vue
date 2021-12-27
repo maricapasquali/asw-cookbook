@@ -7,7 +7,7 @@
 </template>
 
 <script>
-
+import {bus} from "@/main";
 import api from "@api";
 import {mapGetters} from "vuex";
 
@@ -17,7 +17,7 @@ export default {
     value: Array,
     noLike: Boolean,
     recipe: Object,
-    commentID: String
+    comment: Object
   },
   watch:{
     value(val, old){
@@ -32,7 +32,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['accessToken', 'userIdentifier', 'isAdmin']),
+    ...mapGetters(['accessToken', 'userIdentifier', 'isAdmin', 'socket']),
     classesLike(){
       return {
         'mr-1': true,
@@ -46,6 +46,9 @@ export default {
   methods: {
     onLike(){
       if(!this.noLike){
+
+        const commentID = this.comment ? this.comment._id: undefined
+
         if(this.makeLike) {
           let like = null;
           if(this.userIdentifier) like = this.value.find(l => l.user && l.user._id === this.userIdentifier);
@@ -53,7 +56,7 @@ export default {
           console.debug('Like to remove = ', JSON.stringify(like, null, 1))
           api.recipes
              .likes
-             .unLike(this.recipe.ownerID, this.recipe.id, like._id , this.accessToken, this.commentID)
+             .unLike(this.recipe.owner._id, this.recipe._id, like._id , this.accessToken, commentID)
              .then(({data})=> {
                 console.debug('Unlike ', data)
                 this.$emit('input', this.value.filter(l => l._id !== like._id))
@@ -66,18 +69,38 @@ export default {
         else {
           api.recipes
              .likes
-             .like(this.recipe.ownerID, this.recipe.id, this.accessToken, this.commentID)
+             .like(this.recipe.owner._id, this.recipe._id, this.accessToken, commentID)
              .then(({data})=> {
                   console.debug('Like ', data)
 
                   this.$emit('input', [...this.value, ...[data]])
                   this.$emit('like')
+
+                  if(commentID) this.socket.emit('like:comment', { _id: this.comment._id, user: this.comment.user, recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner } }, data)
+                  else this.socket.emit('like:recipe', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
+
              })
               //TODO: HANDLER ERROR LIKE
              .catch(err => console.error(err) )
         }
       }
+    },
+
+    /* Listeners notification */
+    onLikeRecipeListener(notification, like){
+      if(like && notification.otherInfo.recipe === this.recipe._id) this.value.push(like)
+    },
+    onLikeCommentListener(notification, like){
+      if(like && this.comment && notification.otherInfo.comment === this.comment._id) this.value.push(like)
     }
+  },
+  created() {
+    bus.$on('like:recipe', this.onLikeRecipeListener.bind(this))
+    if(this.comment) bus.$on('like:comment', this.onLikeCommentListener.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('like:recipe', this.onLikeRecipeListener.bind(this))
+    if(this.comment) bus.$off('like:comment', this.onLikeCommentListener.bind(this))
   }
 }
 </script>

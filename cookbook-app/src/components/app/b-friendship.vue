@@ -88,7 +88,7 @@ export default {
             console.log('Friendship is over. ')
             this.justFollow = false
             this.isMyFriend = false
-            this.socket.emit('friendship:remove', this.otherUser._id, this.userIdentifier)
+            this.socket.emit('friendship:remove', this.otherUser)
           })
           //TODO: HANDLER ERROR DELETE FRIENDSHIP
           .catch(err => console.error(err))
@@ -134,7 +134,10 @@ export default {
        }
     },
 
-    onListenFriendshipRequest(_id){
+    /* Listeners notification */
+    onListenFriendshipRequest(notification){
+      let _id = notification.otherInfo.from
+
       if(this.otherUser._id === _id) {
         this.requestToUpdate = true
 
@@ -143,8 +146,11 @@ export default {
         this.requestRejected = false
         this.isMyFriend = false
       }
+      this.$emit('add-friend')
     },
-    onListenFriendshipUpdate({user, state}){
+    onListenFriendshipUpdate(notification){
+      let {state, to: user } = notification.otherInfo
+
       if(this.otherUser._id === user) {
 
         this.requestRejected = state === 'rejected'
@@ -155,7 +161,8 @@ export default {
         this.requestJustSend = false
       }
     },
-    onListenFriendshipRemove(_id){
+    onListenFriendshipRemove(notification){
+      let _id = notification.otherInfo.exFriend
       if(this.otherUser._id === _id) {
         this.requestToUpdate = false
         this.requestJustSend = false
@@ -163,32 +170,23 @@ export default {
         this.requestRejected = false
         this.isMyFriend = false
       }
+      this.$emit('remove-friend')
     }
   },
   mounted() {
     console.debug('mounted b-friendship')
     this.onCheckFriendshipState(this.otherUser)
-
-    bus.$on('friendship:request', this.onListenFriendshipRequest.bind(this))
-    bus.$on('friendship:update', this.onListenFriendshipUpdate.bind(this))
-    bus.$on('friendship:remove', this.onListenFriendshipRemove.bind(this))
+    bus.$on('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
+    bus.$on('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
+    bus.$on('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
   },
   beforeDestroy() {
-    bus.$off('friendship:request', this.onListenFriendshipRequest.bind(this))
-    bus.$off('friendship:update', this.onListenFriendshipUpdate.bind(this))
-    bus.$off('friendship:remove', this.onListenFriendshipRemove.bind(this))
+    bus.$off('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
+    bus.$off('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
+    bus.$off('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.friends-buttons{
-
-  & > .request-send {
-      //color: #80bdff;
-  }
-  & > .request-reject {
-      //color: red;
-  }
-}
 </style>

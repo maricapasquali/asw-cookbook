@@ -43,6 +43,7 @@
              :busy.sync="pagination.isBusy"
              :stacked="isMobile"
              :style="cssTable"
+             ref="friendTable"
              show-empty>
 
       <template #cell(user)="row">
@@ -63,7 +64,7 @@
 
       <template #cell(state)="row" >
         <b-button-group class="pl-4" vertical>
-          <b-friendship :other-user="row.item.user" with-chat/>
+          <b-friendship :other-user="row.item.user" with-chat @add-friend="fetchData" @remove-friend="fetchData"/>
         </b-button-group>
       </template>
 
@@ -87,6 +88,7 @@
 </template>
 
 <script>
+import {bus} from '@/main'
 import api from '@api'
 import {mapGetters} from "vuex";
 import {mapping} from "@services/api/users/friends/utils";
@@ -185,6 +187,19 @@ export default {
                 .finally(() => this.pagination.isBusy = false)
     },
 
+    fetchData(){
+      let table = this.$refs.friendTable
+      table && table.refresh()
+      console.debug('fetch table friends :', table)
+    }
+  },
+  created() {
+    bus.$on('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
+    bus.$on('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
+    bus.$off('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
   }
 }
 </script>

@@ -29,7 +29,9 @@
           <!-- BOTH -->
           <b-tab title="Chats" @click="getChats" :active="isActive('chats')" lazy><p>Chats</p></b-tab>
           <!-- BOTH -->
-          <b-tab title="Notifiche" @click="getNotifications" :active="isActive('notifications')" lazy><p>Notifiche</p></b-tab>
+          <b-tab title="Notifiche" @click="getNotifications" :active="isActive('notifications')" lazy>
+            <notifications-section @onSessionExpired="sessionTimeout=true" />
+          </b-tab>
 
         </b-tabs>
       </b-card>

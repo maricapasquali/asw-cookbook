@@ -1,6 +1,7 @@
 import axios, {AxiosRequestConfig, AxiosResponse} from 'axios'
 import * as variables from "../../../../modules/hosting/variables"
 import store from '../../store'
+import router from '../../router'
 
 declare module 'axios' {
     interface AxiosRequestConfig {
@@ -48,6 +49,7 @@ instance.interceptors.response.use(function(res) {
 
         let userIdentifier = store.getters.userIdentifier
         console.debug('User is logged = ', userIdentifier)
+
         if (err.response && err.response.status === 401 && userIdentifier && !originalConfig._retry && !originalConfig.url.includes('refreshToken')) {
             originalConfig._retry = true;
             try {

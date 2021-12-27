@@ -150,7 +150,7 @@
                   <b-col> <!-- TODO: migliorare css on list of liker -->
                     <strong>Chi ha messo 'Mi piace'</strong>
                     <ul>
-                      <li v-for="(liker, ind) in mappedLike(item.recipe.likes)" :key="ind">
+                      <li v-for="(liker, ind) in mappedLike(item.recipe.likes)" :key="ind" v-if="liker.anonymous || liker.user">
                         <router-link v-if="liker.user" :to="{name: 'single-user', params: {id: liker.user._id}}">{{liker.user.userID}}</router-link>
                         <p v-else-if="liker.anonymous">Anonimo <span v-if="liker.anonymous > 1">( x {{ liker.anonymous }} )</span> </p>
                       </li>
@@ -160,7 +160,7 @@
                 <!-- Comments -->
                 <b-row cols="1" class="comments mx-1" v-if="item.recipe.shared && item.recipe.comments.length>0">
                  <b-col class="px-0"><strong>Commenti</strong></b-col>
-                 <b-col> <comments v-model="item.recipe.comments" :recipe="{id: item.recipe._id, ownerID: item.recipe.owner._id}" /></b-col>
+                 <b-col> <comments v-model="item.recipe.comments" :recipe="item.recipe" /></b-col>
                 </b-row>
 
               </b-card>
@@ -183,6 +183,7 @@
 </template>
 
 <script>
+import {bus} from '@/main'
 import {dateFormat} from "@services/utils";
 import {Diets, RecipeCategories} from '@services/app'
 
@@ -249,7 +250,8 @@ export default {
   computed:{
     ...mapGetters([
       'accessToken',
-      'userIdentifier'
+      'userIdentifier',
+      'socket'
     ]),
 
     itemsRecipes: {
@@ -324,12 +326,14 @@ export default {
       }
       return {recipe: recipe, actions: operation, showDetails: false}
     },
-    getDocs(currentPage){
-      this.paginationOptions.page = currentPage || 1
-      console.debug('Pagination = ', JSON.stringify(this.paginationOptions, null, 1))
+    getDocs(currentPage, _limit){
+      // this.paginationOptions.page = currentPage || 1
+      const page = currentPage || 1
+      const limit = _limit || this.paginationOptions.limit
+      console.debug('Pagination = ', {page, limit})
 
       api.recipes
-         .getRecipes(this.userIdentifier, this.accessToken, this.active, this.paginationOptions)
+         .getRecipes(this.userIdentifier, this.accessToken, this.active, {page, limit})
          .then(({data}) => {
             console.log(data)
             this.setDefaultValueOn(data.items)
@@ -339,6 +343,7 @@ export default {
             else this.itemsRecipes = _remapData
 
             this.total = data.total
+            if(!_limit) this.paginationOptions.page = page
          })
          .catch(err => {
            //TODO: HANDLER ERROR N RECIPES OF USER id
@@ -477,7 +482,10 @@ export default {
         console.log('DELETE RECIPE')
         api.recipes
            .deleteRecipe(this.userIdentifier, recipe._id, this.accessToken)
-           .then(({data}) => this._afterDelete(data))
+           .then(({data}) => {
+             this._afterDelete(data)
+             this.socket.emit('recipe:delete', recipe)
+           })
            .catch(err => {
              // TODO: HANDLER ERROR DELETE RECIPE
              console.log(err)
@@ -510,6 +518,25 @@ export default {
     },
     onSaveRecipe(recipe){
       //AFTER ADD NEW SAVED RECIPE ON SERVER
+    },
+
+    /* Listeners notification */
+    onUpdatedRecipeListeners(_, recipe){
+      if(recipe){
+        for (const tab of this.tabs){
+          let index = tab.itemsRecipes.findIndex(t => t.recipe._id === recipe._id)
+          if(index !== -1) tab.itemsRecipes.splice(index, 1, this.remapping(recipe))
+        }
+      }
+    },
+
+    onDeletedRecipeListeners(_, recipe){
+      if(recipe){
+        for (const tab of this.tabs){
+          let index = tab.itemsRecipes.findIndex(t => t.recipe._id === recipe)
+          if(index !== -1) this.getDocs(0, this.paginationOptions.page * this.paginationOptions.limit)
+        }
+      }
     }
   },
 
@@ -534,10 +561,16 @@ export default {
       if(this.formUpdate.show) this.closeChangeMode()
     }.bind(this)
 
+    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
   },
   mounted() {
     this.select()
   },
+  beforeDestroy() {
+    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+  }
 }
 </script>
 

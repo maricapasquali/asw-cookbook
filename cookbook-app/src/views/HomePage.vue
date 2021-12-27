@@ -73,15 +73,15 @@
               <b-row align-h="between">
                 <b-col>
                   <!-- Like of a RECIPE -->
-                  <like v-model="doc.likes" :recipe="{id: doc._id, ownerID: doc.owner._id}" :no-like="youNotMakeLike(ind)"/>
+                  <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike(ind)"/>
                 </b-col>
                 <b-col align="end">
-                  <b-icon-chat class="icon" v-b-toggle="commentsId(doc._id)" :class="{'no-clickable': !showCollapse(doc)}"/>
+                  <b-icon-chat class="icon" v-b-toggle="commentsId(doc._id)"/>
                 </b-col>
               </b-row>
-              <b-collapse :id="commentsId(doc._id)" class="mt-2" v-if="showCollapse(doc)">
+              <b-collapse :id="commentsId(doc._id)" class="mt-2">
                 <!-- LIST COMMENT for a RECIPE -->
-                <comments v-model="doc.comments" :recipe="{id: doc._id, ownerID: doc.owner._id}" :language="language" />
+                <comments v-model="doc.comments" :recipe="doc" :language="language" />
               </b-collapse>
             </template>
 
@@ -98,6 +98,7 @@
 </template>
 
 <script>
+import {bus} from "@/main";
 import {RecipeCategories} from "@services/app";
 import api from '@api'
 import {mapGetters} from "vuex";
@@ -117,7 +118,6 @@ export default {
         limit: 2
       },
 
-      _newPostInd: 0,
     }
   },
   computed: {
@@ -125,7 +125,7 @@ export default {
       return this.docs.length === 0
     },
     areOthers(){
-      return this.docs.length >0 && this.docs.length < this.total
+      return this.docs.length > 0 && this.docs.length < this.total
     },
 
     ...mapGetters(['userIdentifier', 'accessToken', 'isAdmin'])
@@ -139,69 +139,79 @@ export default {
       return 'comments-'+ id
     },
 
-    showCollapse(doc){
-      return !(this.isAdmin && doc.comments.length === 0)
-    },
-
     youNotMakeLike(index){
       return this.isAdmin || this.docs[index].owner._id === this.userIdentifier
     },
     /* -- REQUEST --*/
 
-    updateDocs(){
-      this.docs.forEach(p => {
-        let category = RecipeCategories.find(p.category)
-        if(category) p.category = category
-      })
+    _remapRecipe(recipe){
+      let category = RecipeCategories.find(recipe.category)
+      if(category) recipe.category = category
     },
 
-    getPost(currentPage){
-      this.optionsPagination.page = currentPage || 1
-      api.recipes.allSharedRecipes(this.accessToken, this.optionsPagination)
-      .then(({data}) => {
+    getPost(currentPage, _limit){
+      const page = currentPage || 1
+      const limit = _limit || this.optionsPagination.limit
 
-        console.log(data)
+      console.log('POST pagination: ', {page, limit})
+      api.recipes
+         .allSharedRecipes(this.accessToken, {page, limit})
+         .then(({data}) => {
 
-        if(currentPage) this.docs.push(...data.items)
-        else this.docs = data.items
+            console.log(data)
+            data.items.forEach(r => this._remapRecipe(r))
+            if(currentPage) this.docs.push(...data.items)
+            else this.docs = data.items
 
-        this.total = data.total
-        this.updateDocs()
-      })
-      .catch(err => {
-      //TODO: HANDLER ERROR HOME-PAGE
-        console.error(err)
-      })
+            this.total = data.total
+            if(!_limit) this.optionsPagination.page = page
+         })
+          //TODO: HANDLER ERROR HOME-PAGE
+         .catch(err => {
+            console.error(err)
+            if(err.response && err.response === 401) this.$router.go()
+         })
     },
     others(){
       console.debug("Altri "+this.optionsPagination.limit+" post ..")
       this.getPost(this.optionsPagination.page + 1)
     },
 
-
-    newPost(){
-      setInterval(function (){
-        this.docs.unshift({
-          _id: '12345'+this.$data._newPostInd,
-          owner: {
-            _id: '612bce9f8710a153e80ca4cf',
-            userID: 'hannah_smith'
-          },
-          createdAt: Date.now(),
-          name: 'Funghi in padella - '+this.$data._newPostInd,
-          category: 'Contorni',
-          country: 'IT',
-          likes: [],
-          comments: [],
-        })
-        this.$data._newPostInd++
-        this.updateDocs()
-      }.bind(this), 10000)
+    /* Listener notification */
+    onUpdatedRecipeListeners(_, recipe) {
+      if (recipe) {
+        let index = this.docs.findIndex(r => r._id === recipe._id)
+        if (index !== -1) {
+          this._remapRecipe(recipe)
+          this.docs.splice(index, 1, recipe)
+        }
+      }
     },
+    onDeletedRecipeListeners(_, recipe) {
+      if (recipe) this.getPost(0, this.optionsPagination.page * this.optionsPagination.limit)
+    },
+
+    onNewRecipeListeners(_, recipe){
+      if(recipe) {
+        this._remapRecipe(recipe)
+        this.docs.unshift(recipe)
+        this.total+=1
+      }
+    }
+
+  },
+  created() {
+    bus.$on('recipe:create', this.onNewRecipeListeners.bind(this))
+    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
+    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
   },
   mounted() {
     this.getPost()
-    //this.newPost()
   },
 }
 </script>

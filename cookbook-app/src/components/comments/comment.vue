@@ -1,5 +1,5 @@
 <template>
-  <li>
+  <li :id="commentId">
     <div>
       <!-- Modal for reporting-->
       <b-modal v-model="showReportComment" title="Segnala commento"  @ok="report" centered ok-only>
@@ -24,7 +24,7 @@
             <b-col>
               <b-row cols="1" align-v="center" class="avatar-userID-container ml-1">
                 <b-col align="center" class="avatar mt-4 px-0">
-                  <avatar :value="isThereProfileImg(comment.user)" :user="comment.user._id"/>
+                  <avatar :value="isThereProfileImg(comment.user)" :user="comment.user && comment.user._id"/>
                 </b-col>
                 <b-col align="center" class="userID px-0">
                   <router-link v-if="comment.user" :to="{name: 'single-user', params: {id: comment.user._id }}">{{ comment.user | name }}</router-link>
@@ -72,7 +72,7 @@
             <b-container fluid class="px-0 py-3">
               <b-row cols="2" align-h="between">
                 <b-col cols="8"><span class="timestamp">{{ comment.timestamp, language | dateFormat }}</span> </b-col>
-                <b-col cols="3" align="end"><like v-model="comment.likes" :recipe="recipe" :commentID="comment._id" :no-like="youNotMakeLike"/> </b-col>
+                <b-col cols="3" align="end"><like v-model="comment.likes" :recipe="recipe" :comment="comment" :no-like="youNotMakeLike"/> </b-col>
               </b-row>
             </b-container>
             <b-button-group class="actions">
@@ -97,7 +97,8 @@
   </li>
 </template>
 <script>
-import {dateFormat} from "@services/utils";
+import {bus} from "@/main";
+import {dateFormat, clone} from "@services/utils";
 
 import api from '@api'
 import {mapGetters} from "vuex";
@@ -127,6 +128,9 @@ export default {
     dateFormat: dateFormat
   },
   computed:{
+    commentId(){
+      return 'comment-'+ this.comment._id
+    },
     editorCommentId(){
       return 'editor-' + this.comment._id
     },
@@ -159,7 +163,7 @@ export default {
       return this.comment.reported !== false
     },
 
-    ...mapGetters(['accessToken', 'userIdentifier', 'isAdmin'])
+    ...mapGetters(['accessToken', 'userIdentifier', 'username', 'isAdmin', 'isLoggedIn', 'socket'])
   },
   methods:{
     isThereProfileImg(user){
@@ -176,10 +180,16 @@ export default {
     report(){
       api.recipes
          .comments
-         .updateComment(this.recipe.ownerID, this.recipe.id, this.comment._id, this.accessToken, {action: 'report'})
+         .updateComment(this.recipe.owner._id, this.recipe._id, this.comment._id, this.accessToken, {action: 'report'})
          .then(({data})=> {
            this.comment.reported = true
            this.$emit('reporting', this.comment)
+
+           const _comment = clone(this.comment)
+           this.socket.emit('comment:report',
+               Object.assign(_comment, { recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner} }),
+               this.isLoggedIn ? {_id: this.userIdentifier, userID: this.username}: undefined)
+
          })
           //TODO: HANDLER ERROR REPORT COMMENT
          .catch(err => {
@@ -199,11 +209,16 @@ export default {
     addResponse(text){
       api.recipes
          .comments
-         .createResponse(this.recipe.ownerID, this.recipe.id, this.comment._id, {content: text}, this.accessToken)
+         .createResponse(this.recipe.owner._id, this.recipe._id, this.comment._id, {content: text}, this.accessToken)
          .then(({data}) => {
            this.comment.responses.push(data)
            console.debug('You answered.')
            this.$emit('add-response', data)
+
+           const _comment = clone(this.comment)
+           this.socket.emit('comment:response', Object.assign(_comment,
+               { recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner} }), data)
+
          })
           //TODO: HANDLER ERROR ADD RESPONSE TO COMMENT
          .catch(err => console.error(err))
@@ -222,8 +237,8 @@ export default {
       if(this.comment.content !== this.changeMode.content) {
         api.recipes
            .comments
-           .updateComment(this.recipe.ownerID,
-               this.recipe.id,
+           .updateComment(this.recipe.owner._id,
+               this.recipe._id,
                this.comment._id,
                this.accessToken,
             { data: { content: this.changeMode.content } })
@@ -243,15 +258,31 @@ export default {
     removeComment(){
       api.recipes
          .comments
-         .deleteComment(this.recipe.ownerID, this.recipe.id, this.comment._id, this.accessToken)
+         .deleteComment(this.recipe.owner._id, this.recipe._id, this.comment._id, this.accessToken)
          .then(({data}) => {
            this.comment.content = ""
            this.$emit('remove', this.comment)
          })
           //TODO: HANDLER ERROR REMOVE COMMENT
          .catch(err => console.error(err))
+    },
+
+    /* Listeners notification */
+    renderReportedComment(notification){
+      if(this.comment._id === notification.otherInfo.comment) this.comment.reported = true
+    },
+    renderResponseComment(notification, response){
+      if(response && this.comment._id === response.comment) this.comment.responses.push(response.data)
     }
   },
+  created() {
+    bus.$on('comment:report', this.renderReportedComment.bind(this))
+    bus.$on('comment:response',  this.renderResponseComment.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('comment:report', this.renderReportedComment.bind(this))
+    bus.$off('comment:response', this.renderResponseComment.bind(this))
+  }
 }
 </script>
 

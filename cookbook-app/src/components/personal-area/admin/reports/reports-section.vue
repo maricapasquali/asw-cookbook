@@ -5,7 +5,7 @@
       <b-col>
         <span v-if="!docsReported.length"> Nessun commento segnalato.</span>
         <b-row v-else cols="1" cols-sm="1" cols-md="2" cols-lg="3" cols-xl="4">
-          <b-col v-for="(doc, index) in docsReported" :key="doc._id" class="mb-2">
+          <b-col v-for="(doc, index) in docsReported" :key="doc._id" class="mb-2" :id="reportId(doc._id)">
             <b-card>
                 <div>
                   <span> Utenti segnalanti: </span>
@@ -62,9 +62,9 @@
 </template>
 
 <script>
-
+import {bus} from '@/main'
 import api from '@api'
-
+import {scrollToRouterHash} from "@router";
 import {dateFormat} from "@services/utils";
 import {mapGetters} from "vuex";
 
@@ -83,9 +83,14 @@ export default {
     dateFormat: dateFormat
   },
   computed:{
-    ...mapGetters(['accessToken'])
+    ...mapGetters(['accessToken', 'socket'])
   },
   methods: {
+    scrollToRouterHash,
+
+    reportId(id){
+      return 'reported-comment-' +id
+    },
     deleteCommentId(index){
       return 'delete-comment-'+index
     },
@@ -99,6 +104,8 @@ export default {
          .getReportedComment(this.accessToken)
          .then(({data}) => {
            console.log(data)
+           this.docsReported = []
+           this.docsDeleted = []
            data.forEach(comment => {
              if(comment.content) this.docsReported.push(comment)
              else this.docsDeleted.push(comment)
@@ -118,6 +125,8 @@ export default {
             console.log(data)
             this.docsDeleted.push(this.docsReported[index])
             this.docsReported.splice(index, 1)
+
+            if(comment.user) this.socket.emit('user:strike', comment.user._id)
          })
          //TODO: HANDLER ERROR DELETE COMMENT WITH admin
          .catch(err => console.error(err))
@@ -136,8 +145,17 @@ export default {
          .catch(err => console.error(err))
     }
   },
+  created() {
+    bus.$on('comment:report', this.getReports.bind(this) )
+  },
   mounted() {
     this.getReports()
+  },
+  updated() {
+    this.scrollToRouterHash()
+  },
+  beforeDestroy() {
+    bus.$off('comment:report', this.getReports.bind(this) )
   }
 }
 </script>

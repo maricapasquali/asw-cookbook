@@ -1,5 +1,5 @@
 <template>
-  <b-skeleton-wrapper :loading="isNotLoaded">
+  <b-skeleton-wrapper :loading="processing">
     <template #loading>
       <b-row cols="1" class="mx-0">
         <b-col class="mb-3">
@@ -75,7 +75,7 @@
       </b-row>
     </template>
 
-    <b-row cols="1" class="mx-0" v-if="!isNotLoaded">
+    <b-row cols="1" class="mx-0" v-if="doc">
 
       <b-col class="mb-3">
         <b-breadcrumb :items="itemsBreadcrumb" />
@@ -95,7 +95,7 @@
               </b-row>
             </b-col>
             <b-col cols="2" align="end">
-              <like v-model="doc.likes" :recipe="{id: doc._id, ownerID: doc.owner._id}" :no-like="youNotMakeLike"/>
+              <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike"/>
             </b-col>
           </b-row>
           <b-row class="mt-2" align-h="between">
@@ -132,37 +132,39 @@
 
       <b-col class="mt-5">
         <strong>Commenti</strong>
-        <comments v-model="doc.comments" :recipe="{id: doc._id, ownerID: doc.owner._id}" />
+        <comments v-model="doc.comments" :recipe="doc" />
       </b-col>
     </b-row>
+    <not-found v-else asset="recipe"/>
 
   </b-skeleton-wrapper>
 </template>
 
 <script>
-import {isEmpty, dateFormat} from "@services/utils"
+import {bus} from "@/main";
+import {dateFormat} from "@services/utils"
 import {Diets, RecipeCategories} from "@services/app"
 
 import api from '@api'
 
 import {mapGetters} from "vuex";
+import {scrollToRouterHash} from "@router";
+import NotFound from "./404";
 
 export default {
   name: "OneRecipe",
+  components: {NotFound},
   data(){
     return {
       loading: true,
       itemsBreadcrumb: [],
-      doc: {}
+      processing: false,
+      doc: ''
     }
   },
   computed: {
 
     ...mapGetters(['userIdentifier', 'username', 'accessToken', 'isAdmin']),
-
-    isNotLoaded(){
-      return !this.doc || (isEmpty(this.doc.owner) && isEmpty(this.doc.recipe))
-    },
 
     youNotMakeLike(){
       return this.isAdmin || this.doc.owner._id === this.userIdentifier
@@ -180,31 +182,53 @@ export default {
     },
   },
   methods: {
+    scrollToRouterHash,
+
     isOwner(owner_recipe) {
       return owner_recipe._id === this.userIdentifier && owner_recipe.userID === this.username
     },
     getRecipe() {
       let {id, recipe_id} = this.$route.params;
+      this.processing = true
+      api.recipes
+         .getRecipe(id, recipe_id, 'shared', this.accessToken)
+         .then(({data})=>{
+            this.doc = data
+            console.debug(this.doc)
+            if(this.doc) {
+              this.itemsBreadcrumb = [
+                {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.$route.params.id} } },
+                {text: this.doc.name, active: true}
+              ]
+            }
+         })
+          //TODO: HANDLER ERROR ONE RECIPE
+         .catch(err => console.error(err.response))
+         .finally(() => this.processing = false)
+    },
 
-      api.recipes.getRecipe(id, recipe_id, 'shared', this.accessToken)
-      .then(({data})=>{
-        this.doc = data
-        console.debug(this.doc)
-        if(this.doc) {
-          this.itemsBreadcrumb = [
-            {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.$route.params.id} } },
-            {text: this.doc.name, active: true}
-          ]
-        }
-      }).catch(err => {
-        //TODO: HANDLER ERROR ONE RECIPE
-        console.error(err.response)
-      })
+    /* Listeners notification */
+    onUpdatedRecipeListeners(_, recipe){
+      if(recipe && this.doc._id === recipe._id) this.doc = recipe
+    },
+    onDeletedRecipeListeners(_, recipe){
+      if(recipe && this.doc._id === recipe) this.doc = ''
     }
   },
+  created() {
+    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+  },
   mounted() {
-    // setTimeout(this.getRecipe.bind(this), 1000)
     this.getRecipe()
+  },
+  updated() {
+    console.log('Update one recipe page....')
+    this.scrollToRouterHash()
   }
 }
 </script>

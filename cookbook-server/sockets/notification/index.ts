@@ -1,48 +1,36 @@
-import {findConnectedUserBy} from "../user";
+import * as friendsHandler from './friends'
+import * as foodsHandler from './foods'
+import * as commentsHandler from './comments'
+import * as recipesHandler from './recipes'
+import * as likesHandler from './likes'
+import * as userInfosHandler from './user-infos'
 
 export default function (io: any, socket: any): void {
-    //TODO: add mongoose notification
 
     //USER
-    socket.on('user:update-password', data => {})
+    socket.on('user:update:password', () => userInfosHandler.password(socket))
+    socket.on('user:strike', user => userInfosHandler.strike(socket, user))
+
     //SHARED RECIPE
-    socket.on('recipe:create', data => {})
-    socket.on('recipe:update', data => {})
-    socket.on('recipe:delete', data => {})
-    socket.on('recipe:comment', data => {})
+    socket.on('recipe:create', recipe => recipesHandler.create(socket, recipe))
+    socket.on('recipe:update', recipe => recipesHandler.update(socket, recipe))
+    socket.on('recipe:delete', recipe => recipesHandler.erase(socket, recipe))
+    socket.on('recipe:comment', (recipe, comment) => recipesHandler.comment(socket, recipe, comment))
+
     //FOOD
-    socket.on('food:create', data => {})
+    socket.on('food:create', food => foodsHandler.create(socket, food))
+
     // LIKE ON RECIPE OR COMMENT
-    socket.on('like:recipe', data => {})
-    socket.on('like:comment', data => {})
+    socket.on('like:recipe', (recipe, like) => likesHandler.recipe(socket, recipe, like))
+    socket.on('like:comment', (comment, like) => likesHandler.comment(socket, comment, like))
+
     // COMMENT
-    socket.on('comment:comment', data => {})
-    socket.on('comment:report', data => {})
+    socket.on('comment:response', (comment, response) => commentsHandler.response(socket, comment, response))
+    socket.on('comment:report', (comment, reporter) => commentsHandler.report(socket, comment, reporter))
 
     // FRIENDS
-    socket.on('friendship:request', request => {
-        let user = findConnectedUserBy('_id', request.to._id)
-        if(user.info) {
-            console.log('Request = ', request)
-            socket.to(user.info.socketID).emit('friendship:request:' + request.to._id, request)
-        } else console.log(request.to._id + ' not online.')
-    })
-
-    socket.on('friendship:update', request => {
-        let user = findConnectedUserBy('_id', request.from._id)
-        if(user.info) {
-            console.log('Request update = ', request)
-            socket.to(user.info.socketID).emit('friendship:update:' + request.from._id, request)
-        } else console.log(request.from._id + ' not online.')
-    })
-
-    socket.on('friendship:remove', (id, fromId) => {
-        let toUser = findConnectedUserBy('_id', id)
-        if(toUser.info) {
-            let fromUser = findConnectedUserBy('_id', fromId)
-            console.log('Remove friend = ', id)
-            socket.to(toUser.info.socketID).emit('friendship:remove:' + id, {from: fromUser.info.user, to: toUser.info.user })
-        } else console.log(id +' not online.')
-    })
+    socket.on('friendship:request', request => friendsHandler.request(socket, request))
+    socket.on('friendship:update', request => friendsHandler.update(socket, request))
+    socket.on('friendship:remove', otherUser => friendsHandler.remove(socket, otherUser))
 
 }

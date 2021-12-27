@@ -29,6 +29,7 @@ import FoodSection from "./personal-area/foods/food-section"
 import ReportsSection from "./personal-area/admin/reports/reports-section"
 import UsersSection from "./personal-area/admin/users/users-section"
 import FriendsSection from "./personal-area/friends/friends-section"
+import NotificationsSection from "./personal-area/notifications/notifications-section"
 
 import FoodForm from "./foods/food-form"
 import FoodFinder from "./foods/food-finder"
@@ -86,6 +87,7 @@ export default {
     ReportsSection,
     UsersSection,
     FriendsSection,
+    NotificationsSection,
 
     PreviewRecipeTutorial,
     PreviewRecipeImage,

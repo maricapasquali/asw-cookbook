@@ -1,6 +1,7 @@
 import registerUserHandlers, {findConnectedUserBy, popConnectedUser, pushIfIsAbsentConnectedUser} from './user'
 import registerChatHandlers, {popIfInChatRoom} from './chat'
 import registerNotificationHandlers from './notification'
+import registerUpdateHandlers from './update'
 
 import {client_origin} from "../../modules/hosting/variables";
 import {Server} from 'socket.io'
@@ -30,6 +31,9 @@ export = function (server: http.Server | https.Server): void {
 
         //NOTIFICATIONs
         registerNotificationHandlers(io, socket)
+
+        //UPDATEs
+        registerUpdateHandlers(io, socket)
 
         // DISCONNECT
         socket.on('disconnect', (reason) => {

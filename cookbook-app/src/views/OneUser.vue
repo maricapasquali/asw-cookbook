@@ -58,12 +58,14 @@
 </template>
 
 <script>
+import {bus} from "@/main";
 import {dateFormat} from "@services/utils";
 import {RecipeCategories} from "@services/app";
 
 import api from '@api'
 import {mapGetters} from "vuex";
 import {mapping} from "@services/api/users/friends/utils";
+import socket from "../services/socket";
 
 export default {
   name: "OneUser",
@@ -78,7 +80,7 @@ export default {
       return this.friends.length >0 && this.friends.length < this.friendsTotal
     },
 
-    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned'])
+    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned', 'socket'])
   },
   filters: {
     dataFormatter: dateFormat
@@ -121,12 +123,13 @@ export default {
       return recipe
     },
 
-    getRecipes(currentPage){
-      this.recipePaginationOptions.page = currentPage || 1
-      console.debug('Recipe Pagination = ', JSON.stringify(this.recipePaginationOptions, null, 1))
+    getRecipes(currentPage, _limit){
+      const page = currentPage || 1
+      const limit = _limit || this.recipePaginationOptions.limit
 
+      console.debug('Recipe Pagination = ', {page, limit})
       api.recipes
-         .getRecipes(this.user, this.accessToken, 'shared', this.recipePaginationOptions)
+         .getRecipes(this.user, this.accessToken, 'shared', {page, limit})
          .then(({data}) =>{
            let _remapData = data.items.map(recipe => this.remappingRecipe(recipe))
 
@@ -134,6 +137,7 @@ export default {
            else this.recipes = _remapData
 
            this.recipesTotal = data.total
+           if(!_limit) this.recipePaginationOptions.page = page
            console.debug('Recipes : ',  this.recipes)
          })
           //TODO: HANDLER ERROR N RECIPE (shared) OF USER WITH 'id'
@@ -153,20 +157,22 @@ export default {
     /* User Friends Section */
     remappingFriend: mapping,
 
-    getFriends(currentPage) {
-      this.friendsPaginationOptions.page = currentPage || 1
-      console.debug('Friend Pagination = ', JSON.stringify(this.friendsPaginationOptions, null, 1))
+    getFriends(currentPage, _limit) {
+      const page = currentPage || 1
+      const limit = _limit || this.friendsPaginationOptions.limit
+      console.debug('Friend Pagination = ', {page, limit})
 
       let state = this.userIdentifier === this.user ? 'accepted': undefined
       api.friends
-         .getFriendOf(this.user, this.accessToken, { state: state }, this.friendsPaginationOptions)
+         .getFriendOf(this.user, this.accessToken, { state: state }, {page, limit})
          .then(({data}) => {
-           let _remapData = data.items.map(recipe => this.remappingFriend(recipe, this.user))
+           let _remapData = data.items.map(friend => this.remappingFriend(friend, this.user))
 
            if(currentPage) this.friends.push(..._remapData)
            else this.friends = _remapData
 
            this.friendsTotal = data.total
+           if(!_limit) this.friendsPaginationOptions.page = page
            console.debug('Friends : ',  this.friends)
 
          })
@@ -183,6 +189,44 @@ export default {
       console.debug('Friend: collapsed show = ', show)
       // if(show && this.recipes.length === 0) this.getRecipes()
     },
+
+    /*Listener notification*/
+    onUpdatedRecipeListeners(_, recipe){
+      if(recipe) {
+        let index = this.recipes.findIndex(r => r._id === recipe._id)
+        if(index !== -1){
+          this.remappingRecipe(recipe)
+          this.recipes.splice(index, 1, recipe)
+        }
+      }
+    },
+
+    fetchRecipe(_, recipe){
+      if(recipe) this.getRecipes(0, this.recipePaginationOptions.page * this.recipePaginationOptions.limit)
+    },
+    fetchFriend(friendship){
+      console.debug('Friend ship ', friendship)
+      if(friendship && (this.user === friendship.from._id || this.user === friendship.to._id)) {
+        this.getFriends(0, this.friendsPaginationOptions.page * this.friendsPaginationOptions.limit)
+      }
+    }
+
+  },
+  created() {
+    bus.$on('recipe:create', this.fetchRecipe.bind(this))
+    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$on('recipe:delete', this.fetchRecipe.bind(this))
+
+    bus.$on('friend:add', this.fetchFriend.bind(this))
+    bus.$on('friend:remove', this.fetchFriend.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('recipe:create', this.fetchRecipe.bind(this))
+    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$off('recipe:delete', this.fetchRecipe.bind(this))
+
+    bus.$off('friend:add', this.fetchFriend.bind(this))
+    bus.$off('friend:remove', this.fetchFriend.bind(this))
   },
   mounted() {
     this.getRecipes()

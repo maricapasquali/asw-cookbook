@@ -187,6 +187,7 @@
 </template>
 
 <script>
+import {bus} from '@/main'
 import {clone, dateFormat} from '@services/utils'
 
 import api from '@api'
@@ -426,12 +427,23 @@ export default {
     onResetSearch(){
       this.filters.name = ''
       this.filters.barcode = ''
+    },
+
+    /* Listeners notification */
+    onCreateFood(){
+      let table = this.$refs.foodTable
+      table && table.refresh()
     }
   },
 
   created() {
     if(this.isSigned) this.getShoppingList()
+
+    bus.$on('food:create', this.onCreateFood.bind(this))
   },
+  beforeDestroy() {
+    bus.$off('food:create', this.onCreateFood.bind(this))
+  }
 }
 </script>
 

@@ -199,7 +199,7 @@ export default {
   },
   computed:{
 
-    ...mapGetters(['accessToken', 'userIdentifier']),
+    ...mapGetters(['accessToken', 'userIdentifier', 'socket']),
 
     resetButtonClass(){
       return {
@@ -430,9 +430,13 @@ export default {
             if(this.isChangeMode) {
               this._setOptionSelection(data, false)
               this.$emit('onChanged', data)
+
+              this.socket.emit('recipe:update', data)
+
             } else {
               this.$emit(eventType, data)
               this.resetFormRecipe()
+              if(data.shared) this.socket.emit('recipe:create', data)
             }
           })
           .catch(err => {
@@ -452,6 +456,7 @@ export default {
 
       const copyRecipe = clone(this.recipe)
       copyRecipe.ingredients.forEach(i => i.food = i.food._id)
+      if(!copyRecipe.diet) copyRecipe.diet = ''
       if(isBoolean(options.shared)) copyRecipe.shared = options.shared
       if(!(copyRecipe.img instanceof File)) delete copyRecipe.img
       if(!(copyRecipe.tutorial instanceof File)) delete copyRecipe.tutorial

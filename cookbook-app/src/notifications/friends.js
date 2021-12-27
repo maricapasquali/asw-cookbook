@@ -1,27 +1,38 @@
 import {bus} from "@/main";
 
-function friendShipRequest(data){
-    console.debug('friendship request => ', data)
-    this.$bvToast.toast(data.from.userID + ' vuole essere tuo amico.', this.optionsToastFriendShip)
-    bus.$emit('friendship:request', data.from._id)
+const options = {
+    title: 'Amicizia',
+    solid: true
 }
 
-function friendShipRemove(data){
-    console.debug('friendship remove => ', data)
-    this.$bvToast.toast(data.from.userID + ' ha smesso di seguirti.', this.optionsToastFriendShip)
-    bus.$emit('friendship:remove', data.from._id)
+function friendShipRequest(notification){
+    console.debug('friendship request => ', notification)
+    this.$bvToast.toast(notification.content, options)
+    bus.$emit('friendship:request:' + notification.user, notification)
 }
 
-function friendShipUpdate(data){
-    console.debug('friendship update => ', data)
-    this.$bvToast.toast(data.to.userID + ' ha ' + (data.state==='accepted' ? 'accettato': 'rifiutato') + ' la tua richiesta.', this.optionsToastFriendShip)
-    bus.$emit('friendship:update', {user: data.to._id, state: data.state})
+function friendShipRemove({notification, friendship}){
+    console.debug('friendship remove => ', {notification, friendship})
+    if(notification) {
+        this.$bvToast.toast(notification.content, options)
+        bus.$emit('friendship:remove:' + notification.user, notification)
+    }
+    if(friendship) bus.$emit('friend:remove', friendship)
+}
+
+function friendShipUpdate({notification, friendship}){
+    console.debug('friendship update => ', {notification, friendship})
+    if(notification) {
+        this.$bvToast.toast(notification.content, options)
+        bus.$emit('friendship:update:' + notification.otherInfo.to, notification)
+    }
+    if(friendship) bus.$emit('friend:add', friendship)
 }
 
 function friendShipListeners(){
-    this.socket.on('friendship:request:' + this.userIdentifier, this.friendShipRequest.bind(this))
-    this.socket.on('friendship:remove:' + this.userIdentifier, this.friendShipRemove.bind(this))
-    this.socket.on('friendship:update:' + this.userIdentifier, this.friendShipUpdate.bind(this))
+    this.socket.on('friendship:request', this.friendShipRequest.bind(this))
+    this.socket.on('friendship:remove', this.friendShipRemove.bind(this))
+    this.socket.on('friendship:update', this.friendShipUpdate.bind(this))
 }
 
 export default {

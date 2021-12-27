@@ -3,17 +3,30 @@ import {Friend} from "../../models";
 type UserSessionSocket = { auth: string, user: { userID: string, _id: string, isAdmin?: boolean }, socketID: string }
 const users: Array<UserSessionSocket> = []
 
-export function findConnectedUserBy(field: 'auth' | '_id' | 'userID', value: any): { index: number, info: UserSessionSocket | undefined  } {
+export function getSocketIDs(excludeSocketIDs?: Array<string>): Array<string> {
+    let _users: Array<UserSessionSocket> = users
+    if(excludeSocketIDs) _users = _users.filter(uss => !excludeSocketIDs.includes(uss.socketID))
+    return _users.map(uss => uss.socketID)
+}
+
+export function findAdminSocketIDs(): Array<string> {
+    return users.filter(uss => uss.user.isAdmin).map(uss => uss.socketID)
+}
+
+export function findConnectedUserBy(field: 'auth' | '_id' | 'userID' | 'socketID', value: any): { index: number, info: UserSessionSocket | undefined  } {
     let index: number = -1;
     switch (field){
         case "auth":
             index = users.findIndex(u => u.auth === value)
             break;
         case "_id":
-            index = users.findIndex(u => u.user._id === value)
+            index = users.findIndex(u => u.user._id == value)
             break;
         case "userID":
             index = users.findIndex(u => u.user.userID === value)
+            break;
+        case "socketID":
+            index = users.findIndex(u => u.socketID === value)
             break;
     }
     return { index: index, info: (index !== -1 ? users[index] : undefined) }

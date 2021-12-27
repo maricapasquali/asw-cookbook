@@ -19,12 +19,7 @@ export default {
     return {
       notNav: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password'],
       notFooter: this.notNav,
-      processing: false,
-
-      optionsToastFriendShip: {
-        title: 'Richiesta di amicizia',
-        solid: true
-      }
+      processing: false
     }
   },
   computed:{
@@ -54,7 +49,7 @@ export default {
     },
 
     // NOTIFICATIONS
-    ...notifications.friends
+    ...notifications
   },
   created() {
     this.$store.commit('setSession')
@@ -64,6 +59,11 @@ export default {
 
     // NOTIFICATIONS
     this.friendShipListeners()
+    this.foodListeners()
+    this.commentListeners()
+    this.recipeListeners()
+    this.userInfoListeners()
+    this.likeListeners()
   }
 }
 </script>
