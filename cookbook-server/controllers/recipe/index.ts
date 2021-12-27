@@ -193,7 +193,7 @@ export function list_recipes(req, res){
                 let filters = getFilters(req.query, id)
 
                 pagination(
-                    queryListRecipes(id, type, filters),
+                    queryListRecipes(id, type, filters).sort({ createdAt: -1 , _id: -1 }),
                     page && limit ? {page: +page, limit: +limit}: undefined
                 )
                 .then(paginationResult => res.status(200).json(paginationResult),
