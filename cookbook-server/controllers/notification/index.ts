@@ -34,7 +34,7 @@ export function list_notification(req, res){
         pagination(
             Notification.find(filters)
                         .where('user').in(notificationUser(user))
-                        .sort({ timestamp: -1 }),
+                        .sort({ timestamp: -1, _id: -1 }),
             page && limit ? { page: +page, limit: +limit } : undefined
         ).then(result => res.status(200).json(result),
                err => res.status(500).json({code: err.code, description: err.message}))
