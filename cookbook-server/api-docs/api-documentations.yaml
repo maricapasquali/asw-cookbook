@@ -1214,6 +1214,31 @@ paths:
         500:
           $ref: "#/components/responses/general_error"
 
+  /recipes/{recipeID}:
+      get:
+        description: A specific shared ecipe
+        tags:
+          - Recipes
+        security:
+          - BearerAuth: [ ]
+        parameters:
+          - $ref: "#/components/parameters/recipeIdentifier"
+        responses:
+          200:
+            description: ""
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/recipe"
+          400:
+            $ref: "#/components/responses/bad_request"
+          401:
+            $ref: "#/components/responses/unauthorized_error"
+          404:
+            description: Recipe not found
+          500:
+            $ref: "#/components/responses/general_error"
+
   /recipes-for-country:
     get:
       description: Number of shared recipes for country
