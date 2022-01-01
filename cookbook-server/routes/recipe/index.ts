@@ -6,6 +6,8 @@ export default function (app) {
     // for ALL users
     app.route('/api/recipes')
        .get(recipeController.list_all_recipes)
+    app.route('/api/recipes/:recipeID')
+       .get(recipeController.one_shared_recipe)
 
     app.route('/api/recipes-for-country')
        .get(recipeController.numberRecipesForCountry)

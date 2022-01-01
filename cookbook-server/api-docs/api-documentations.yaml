@@ -756,6 +756,9 @@ paths:
                     check_account:
                       type: boolean
                       default: true
+                    _id:
+                      type: string
+                      description: user's identifier
                 - type: object
                   properties:
                     just_check_account:
@@ -1213,6 +1216,31 @@ paths:
           $ref: "#/components/responses/unauthorized_error"
         500:
           $ref: "#/components/responses/general_error"
+
+  /recipes/{recipeID}:
+      get:
+        description: A specific shared ecipe
+        tags:
+          - Recipes
+        security:
+          - BearerAuth: [ ]
+        parameters:
+          - $ref: "#/components/parameters/recipeIdentifier"
+        responses:
+          200:
+            description: ""
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/recipe"
+          400:
+            $ref: "#/components/responses/bad_request"
+          401:
+            $ref: "#/components/responses/unauthorized_error"
+          404:
+            description: Recipe not found
+          500:
+            $ref: "#/components/responses/general_error"
 
   /recipes-for-country:
     get:

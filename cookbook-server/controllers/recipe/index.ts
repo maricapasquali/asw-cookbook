@@ -206,6 +206,23 @@ export function list_recipes(req, res){
         }, ids => res.status(404).json({description: 'User ('+ids[0]+') is not found.'}))
 }
 
+export function one_shared_recipe(req, res){
+    let {recipeID} = req.params
+    if(!Types.ObjectId.isValid(recipeID))  return res.status(400).json({ description: 'Required a valid \'recipeID\''})
+    getUser(req, res)
+        .then(user => {
+
+            Recipe.findOne(req.locals && req.locals.filters)
+                .where('_id').equals(recipeID)
+                .where('shared').equals(true)
+                .then(recipe => {
+                    if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
+                    return  res.status(200).json(recipe)
+                }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+
+        }, err => console.error(err))
+}
+
 export function one_recipe(req, res){
     let {id, recipeID} = req.params
     let {type} = req.query
@@ -217,21 +234,8 @@ export function one_recipe(req, res){
     console.debug({...req.params, ...req.query})
     switch (type){
         case 'shared':
-
-            getUser(req, res)
-                .then(user => {
-
-                    Recipe.findOne()
-                        .where('_id').equals(recipeID)
-                        .where('owner').equals(id)
-                        .where('shared').equals(true)
-                        .then(recipe => {
-                            if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-                            return  res.status(200).json(recipe)
-                        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-
-                }, err => console.error(err))
-
+            req.locals = { filters: { owner: id } }
+            one_shared_recipe(req, res)
             break
         case 'saved':
             if(authorized(req, res, {operation: Operation.RETRIEVE, others: noAuthorizationForOther(id) })){
