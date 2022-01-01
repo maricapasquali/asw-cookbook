@@ -6,7 +6,7 @@ import {
     randomString,
     unixTimestampToString
 } from '../../modules/utilities'
-import {User, EmailLink} from '../../models'
+import {User, EmailLink, ShoppingList, Notification, Friend} from '../../models'
 
 import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
@@ -316,6 +316,23 @@ export function update_user(req, res){
             err => res.status(500).json({description: err.message}))
 }
 
+function deleteUserRef(user: IUser): void {
+    const userID: string = user.credential.userID
+    ShoppingList.deleteOne()
+                .where('user').equals(user._id)
+                .then(result => console.log('Delete shopping list of user ', userID, ' : ', result),
+                      err => console.error('Delete shopping list of user ', userID, ' : ', err))
+
+    Notification.deleteMany()
+                .where('user').in([user._id, user._id.toString()])
+                .then(result => console.log('Delete notifications of user ', userID, ' : ', result),
+                    err => console.error('Delete notifications of user ', userID, ' : ', err))
+
+    Friend.deleteMany({ $or: [{ from: {$eq: user._id} }, { to: {$eq: user._id} }] })
+          .where('user').in([user._id, user._id.toString()])
+          .then(result => console.log('Delete friendships of user ', userID, ' : ', result),
+                err => console.error('Delete friendships of user ', userID, ' : ', err))
+}
 //use token
 export function delete_user(req, res){
 
@@ -344,8 +361,10 @@ export function delete_user(req, res){
                 //res.status(200).json({delete: user})
                 //TODO: SEND EMAIL FOR DELETE ACCOUNT (user.email)
                 user.remove()
-                    .then(() => res.status(200).json({delete: true}),
-                          err => res.status(500).json({description: err.message}))
+                    .then(_user => {
+                        res.status(200).json({delete: true})
+                        deleteUserRef(_user)
+                    }, err => res.status(500).json({description: err.message}))
             }, err => res.status(500).json({description: err.message}))
     }
 
