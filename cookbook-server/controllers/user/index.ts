@@ -108,7 +108,7 @@ export function check_account(req, res){
                                if(SignUp.State.isPending(user.signup)) {
                                    user.signup = SignUp.State.CHECKED
                                    user.save()
-                                       .then((u) => res.status(200).json({check_account: true}),
+                                       .then((u) => res.status(200).json({ _id: user._id, check_account: true}),
                                              (e) => res.status(500).json({check_account: false, description: e.message}))
                                }
 
