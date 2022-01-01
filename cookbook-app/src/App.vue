@@ -12,6 +12,7 @@ import  {bus} from "@/main";
 import {mapGetters} from "vuex";
 
 import notifications from "@/notifications";
+import updates from "@/updates";
 
 export default {
   name: 'App',
@@ -49,7 +50,9 @@ export default {
     },
 
     // NOTIFICATIONS
-    ...notifications
+    ...notifications,
+    //UPDATES
+    ...updates
   },
   created() {
     this.$store.commit('setSession')
@@ -64,6 +67,9 @@ export default {
     this.recipeListeners()
     this.userInfoListeners()
     this.likeListeners()
+
+    //UPDATES
+    this.updateListeners()
   }
 }
 </script>

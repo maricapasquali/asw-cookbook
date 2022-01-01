@@ -4,7 +4,7 @@
       <!-- UPDATE RECIPE -->
       <div ref="update-recipe" v-if="formUpdate.show">
         <b-row >
-          <b-col align="end">
+          <b-col class="text-right">
             <b-button id="btn-add-recipes" class="mr-3" variant="danger" pill @click="formUpdate.show = false" >
               <font-awesome-icon icon="times-circle"  class="icon" />
             </b-button>
@@ -38,7 +38,7 @@
               <b-row class="ml-2" cols="1" cols-md="2">
                 <b-col class="mb-2">
                   <b-row>
-                    <b-col class="px-0" align-self="center" align="center" cols="3" >
+                    <b-col class="text-center px-0" align-self="center" cols="3" >
                       <b-skeleton-img />
                     </b-col>
                     <b-col class="ml-3">
@@ -48,7 +48,7 @@
                     </b-col>
                   </b-row>
                 </b-col>
-                <b-col class="mb-2" align="end">
+                <b-col class="text-right mb-2">
                   <b-button-group>
                     <b-skeleton type="button"></b-skeleton>
                     <b-skeleton type="button"></b-skeleton>
@@ -72,7 +72,7 @@
                     <b-col class="ml-3">
                       <b-row>
                         <strong>
-                          <router-link v-if="isLoved"  :to="{name: 'single-recipe', params: {id: item.recipe.owner._id, recipe_id: item.recipe._id } }">{{item.recipe.name}}</router-link>
+                          <router-link v-if="isLoved && item.recipe.owner"  :to="{name: 'single-recipe', params: {id: item.recipe.owner._id, recipe_id: item.recipe._id } }">{{item.recipe.name}}</router-link>
                           <span v-else> {{item.recipe.name}} </span>
                         </strong>
                       </b-row>
@@ -84,7 +84,7 @@
                     </b-col>
                   </b-row>
                 </b-col>
-                <b-col class="mb-2" align="end">
+                <b-col class="text-right mb-2" >
                   <b-button-group>
                     <b-button :id="item.recipe._id+'-details'" v-if="item.actions.includes('details')" variant="info" @click="item.showDetails = !item.showDetails"> <b-icon-info-circle/> </b-button>
                     <b-button :id="item.recipe._id+'-edit'"  v-if="item.actions.includes('change')" variant="primary" @click="onModify(index)"> <b-icon-pencil-square /> </b-button>
@@ -116,7 +116,7 @@
                       <b-form-input id="r-d-category" :value="item.recipe.category.text" readonly/>
                     </b-form-group>
                   </b-col>
-                  <b-col v-if="item.recipe.country" align-self="center" align="end">
+                  <b-col v-if="item.recipe.country" align-self="center" class="text-right">
                     <country-image v-model="item.recipe.country" width="50" height="50" :id="index" />
                   </b-col>
                 </b-row>
@@ -149,12 +149,7 @@
                 <b-row v-if="item.recipe.shared && item.recipe.likes.length>0">
                   <b-col> <!-- TODO: migliorare css on list of liker -->
                     <strong>Chi ha messo 'Mi piace'</strong>
-                    <ul>
-                      <li v-for="(liker, ind) in mappedLike(item.recipe.likes)" :key="ind" v-if="liker.anonymous || liker.user">
-                        <router-link v-if="liker.user" :to="{name: 'single-user', params: {id: liker.user._id}}">{{liker.user.userID}}</router-link>
-                        <p v-else-if="liker.anonymous">Anonimo <span v-if="liker.anonymous > 1">( x {{ liker.anonymous }} )</span> </p>
-                      </li>
-                    </ul>
+                    <liker-list v-model="item.recipe.likes"/>
                   </b-col>
                 </b-row>
                 <!-- Comments -->
@@ -168,7 +163,7 @@
             <div v-if="!itemsRecipes.length"> Nessuna ricetta trovata. </div>
           </b-list-group>
           <b-row v-if="areOthers">
-            <b-col align="center">
+            <b-col class="text-center">
               <b-button variant="link" @click="others"> carica altre ... </b-button>
             </b-col>
           </b-row>
@@ -281,11 +276,13 @@ export default {
     },
     isAddRecipeTab(){
       return this.active === 'add'
+    },
+    likes(){
+      return this.itemsRecipes.map(item => item.recipe.likes)
     }
   },
   filters: {
     dateFormat: dateFormat,
-
   },
   methods:{
     tutorialNotFound(e){
@@ -298,12 +295,8 @@ export default {
       this.isMobileDevice = screenWidth < 768
     },
 
-    mappedLike(likes){
-      return [ { anonymous: likes.filter(l => !l.user).length }, ...likes.filter(l => l.user) ]
-    },
-
     /* documentations */
-    remapping(recipe){
+    remapping(recipe, _showDetails = false){
       let operation = []
       switch (this.active){
         case 'saved':
@@ -317,14 +310,14 @@ export default {
           operation.push('delete')
           break
         case 'loved':
-          operation.push('remove')
+          operation.push(recipe.owner ? 'remove' : 'details')
           break
         case 'shared-in-chat':
           operation.push('details')
           //in the FUTURE: operation.push('change'); operation.push('delete')
           break
       }
-      return {recipe: recipe, actions: operation, showDetails: false}
+      return {recipe: recipe, actions: operation, showDetails: _showDetails}
     },
     getDocs(currentPage, _limit){
       // this.paginationOptions.page = currentPage || 1
@@ -537,6 +530,34 @@ export default {
           if(index !== -1) this.getDocs(0, this.paginationOptions.page * this.paginationOptions.limit)
         }
       }
+    },
+
+    /* Listeners update */
+    onUpdateInfos(userInfo) {
+      if(userInfo && userInfo.userID){
+        for (const tab of this.tabs){
+          tab.itemsRecipes.forEach(item => {
+            if(item.recipe.owner && item.recipe.owner._id === userInfo._id && item.recipe.owner.userID !== userInfo.userID)
+              item.recipe.owner.userID = userInfo.userID
+
+            item.recipe.likes.filter(like => like.user && like.user._id === userInfo._id && like.user.userID !== userInfo.userID)
+                             .forEach(like => like.user.userID = userInfo.userID)
+          })
+        }
+      }
+    },
+
+    onDeletedUserListeners(id){
+      for (const tab of this.tabs){
+        for(const [index, item] of tab.itemsRecipes.entries()) {
+          if(item.recipe.owner && item.recipe.owner._id === id) {
+            item.recipe.owner = null
+            tab.itemsRecipes.splice(index, 1, this.remapping(item.recipe, item.showDetails))
+          }
+
+          item.recipe.likes.filter(like => like.user && like.user._id === id).forEach(like => like.user = null)
+        }
+      }
     }
   },
 
@@ -563,6 +584,10 @@ export default {
 
     bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+
   },
   mounted() {
     this.select()
@@ -570,6 +595,9 @@ export default {
   beforeDestroy() {
     bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   }
 }
 </script>

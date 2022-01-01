@@ -12,8 +12,8 @@
             <b-row v-for="(mex,index) in messages" :key="index" cols="1" class="message my-2 p-2">
               <b-col>
                 <b-row align-v="center" align-h="between">
-                  <b-col align="start"> <strong>{{ mex.user.userID }}</strong></b-col>
-                  <b-col align="end"><small>{{ mex.timestamp | dateFormat }}</small></b-col>
+                  <b-col class="text-left"> <strong>{{ mex.user.userID }}</strong></b-col>
+                  <b-col class="text-right"><small>{{ mex.timestamp | dateFormat }}</small></b-col>
                 </b-row>
               </b-col>
               <b-col>{{ mex.content }}</b-col>
@@ -35,7 +35,7 @@
       </b-col>
 
 
-      <b-col sm="4" align="center">
+      <b-col sm="4" class="text-center">
         <section>
           <strong> Utenti in chat: </strong>
           <ul class="users-in-chat-room">

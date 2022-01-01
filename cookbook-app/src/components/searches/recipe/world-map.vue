@@ -11,10 +11,10 @@
           <b-tooltip target="zoom-out">Zoom -</b-tooltip>
         </b-button-group>
         <b-row v-if="hoverCountry" class="country-label-hover px-0 " cols="1" align-h="center" align-v="center">
-          <b-col class="px-0" align="center" v-if="hoverCountry.value && hoverCountry.text">
+          <b-col class="text-center px-0" v-if="hoverCountry.value && hoverCountry.text">
             <country-image v-model="hoverCountry.value"/> <span>{{hoverCountry.text}}</span>
           </b-col>
-          <b-col  class="px-0" align="center" v-if="hoverCountry.recipes">
+          <b-col  class="text-center px-0" v-if="hoverCountry.recipes">
             <span># Ricette {{hoverCountry.recipes}} </span>
           </b-col>
         </b-row>

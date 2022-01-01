@@ -20,7 +20,7 @@
                   <b-col class="px-0">  <b-skeleton width="55%" /> </b-col>
                 </b-row>
               </b-col>
-              <b-col cols="2" align="end">
+              <b-col cols="2" class="text-right">
                 <b-skeleton-icon icon="heart"></b-skeleton-icon>
               </b-col>
             </b-row>
@@ -35,7 +35,7 @@
                   </b-col>
                 </b-row>
               </b-col>
-              <b-col align="end" cols="2" >  <b-skeleton width="100%" /></b-col>
+              <b-col class="text-right" cols="2" >  <b-skeleton width="100%" /></b-col>
             </b-row>
           </b-container>
         </b-col>
@@ -77,7 +77,7 @@
 
     <b-row cols="1" class="mx-0" v-if="doc">
 
-      <b-col class="mb-3">
+      <b-col class="mb-3" v-if="itemsBreadcrumb.length">
         <b-breadcrumb :items="itemsBreadcrumb" />
       </b-col>
 
@@ -86,7 +86,7 @@
           <b-row align-h="between" align-v="center">
             <b-col>
               <b-row align-h="center" align-v="center">
-                <b-col align="start" cols="2" class="px-0" v-if="doc.country">
+                <b-col cols="2" class="text-left px-0" v-if="doc.country">
                   <country-image v-model="doc.country"/>
                 </b-col>
                 <b-col class="px-0">
@@ -94,14 +94,14 @@
                 </b-col>
               </b-row>
             </b-col>
-            <b-col cols="2" align="end">
+            <b-col cols="2" class="text-right">
               <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike"/>
             </b-col>
           </b-row>
           <b-row class="mt-2" align-h="between">
             <b-col class="px-0" v-if="doc.category"> {{ doc.category | nameCategory }} </b-col>
             <b-col v-if="doc.diet"> {{ doc.diet | nameDiet }} </b-col>
-            <b-col align="end"> {{ doc.createdAt | dateFormat }}</b-col>
+            <b-col class="text-right"> {{ doc.createdAt | dateFormat }}</b-col>
           </b-row>
         </b-container>
       </b-col>
@@ -158,7 +158,7 @@ export default {
     return {
       loading: true,
       itemsBreadcrumb: [],
-      processing: false,
+      processing: true,
       doc: ''
     }
   },
@@ -167,7 +167,7 @@ export default {
     ...mapGetters(['userIdentifier', 'username', 'accessToken', 'isAdmin']),
 
     youNotMakeLike(){
-      return this.isAdmin || this.doc.owner._id === this.userIdentifier
+      return this.isAdmin || !this.doc.owner || this.doc.owner._id === this.userIdentifier
     }
   },
   filters: {
@@ -195,7 +195,7 @@ export default {
          .then(({data})=>{
             this.doc = data
             console.debug(this.doc)
-            if(this.doc) {
+            if(this.doc && this.doc.owner) {
               this.itemsBreadcrumb = [
                 {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.$route.params.id} } },
                 {text: this.doc.name, active: true}
@@ -213,15 +213,26 @@ export default {
     },
     onDeletedRecipeListeners(_, recipe){
       if(recipe && this.doc._id === recipe) this.doc = ''
+    },
+    onDeletedUserListeners(id){
+      if(this.doc && this.doc.owner && this.doc.owner._id === id) {
+        this.doc.owner = null
+        this.itemsBreadcrumb = []
+        if(this.$route.name !== 'recipe') this.$router.replace({ name: 'recipe', params: { recipe_id: this.doc._id }})
+      }
     }
   },
   created() {
     bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
     bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   },
   mounted() {
     this.getRecipe()

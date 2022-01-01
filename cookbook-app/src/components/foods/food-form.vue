@@ -239,16 +239,19 @@ export default {
         case 'update':
           request = api.foods.updateFood(this.value._id, this.food, this.accessToken)
           break;
-          default: throw new Error('mode is not valid.')
+        default: throw new Error('mode is not valid.')
       }
       request
           .then(({data}) => {
             console.debug(data)
-            if(this.createMode) this.food = data
+
+            if(this.createMode) {
+              this.food = data
+              this.socket.emit('food:create', data)
+            }
+            else if(this.updateMode) this.socket.emit('food:update', data)
+
             this.$emit('onSave', data)
-
-            this.socket.emit('food:create', data)
-
           })
           .catch(err => {
             //TODO: HANDLER ANOTHER ERROR ADD FOOD

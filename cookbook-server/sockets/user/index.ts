@@ -1,6 +1,6 @@
 import {Friend} from "../../models";
 
-type UserSessionSocket = { auth: string, user: { userID: string, _id: string, isAdmin?: boolean }, socketID: string }
+type UserSessionSocket = { auth?: string, user?: { userID: string, _id: string, isAdmin?: boolean }, socketID: string }
 const users: Array<UserSessionSocket> = []
 
 export function getSocketIDs(excludeSocketIDs?: Array<string>): Array<string> {
@@ -10,7 +10,7 @@ export function getSocketIDs(excludeSocketIDs?: Array<string>): Array<string> {
 }
 
 export function findAdminSocketIDs(): Array<string> {
-    return users.filter(uss => uss.user.isAdmin).map(uss => uss.socketID)
+    return users.filter(uss => uss.user && uss.user.isAdmin).map(uss => uss.socketID)
 }
 
 export function findConnectedUserBy(field: 'auth' | '_id' | 'userID' | 'socketID', value: any): { index: number, info: UserSessionSocket | undefined  } {
@@ -20,10 +20,10 @@ export function findConnectedUserBy(field: 'auth' | '_id' | 'userID' | 'socketID
             index = users.findIndex(u => u.auth === value)
             break;
         case "_id":
-            index = users.findIndex(u => u.user._id == value)
+            index = users.findIndex(u => u.user && u.user._id == value)
             break;
         case "userID":
-            index = users.findIndex(u => u.user.userID === value)
+            index = users.findIndex(u => u.user && u.user.userID === value)
             break;
         case "socketID":
             index = users.findIndex(u => u.socketID === value)
@@ -42,9 +42,10 @@ export function pushIfIsAbsentConnectedUser(io: any, socket: any): void {
             io.emit('user:online:' + _id, { online: true, _id: _id })
         }
     }
+    else users.push({ socketID: socket.id })
 }
 
-export function popConnectedUser(io: any, field: 'auth' | '_id' | 'userID' | 'index', value: any): void {
+export function popConnectedUser(io: any, field: 'auth' | '_id' | 'userID' | 'index' | 'socketID', value: any): void {
     let _user:  { info: UserSessionSocket, index: number }
     if(field === 'index') {
         _user = {info: users[value], index: value}
@@ -54,8 +55,8 @@ export function popConnectedUser(io: any, field: 'auth' | '_id' | 'userID' | 'in
         _user = findConnectedUserBy(field, value)
         if(_user.index !== -1) users.splice(_user.index, 1)
     }
-    let _id = _user.info.user._id
-    io.emit('user:offline:' + _user.info.user._id, { online: false, _id: _id })
+    let _id = _user.info && _user.info.user && _user.info.user._id
+    if(_id) io.emit('user:offline:' + _user.info.user._id, { online: false, _id: _id })
 }
 
 export default function (io: any, socket: any) {
@@ -73,10 +74,10 @@ export default function (io: any, socket: any) {
     //CHECK USER FRIEND
     socket.on('check:user:friendship', (id) => {
         let userBy = findConnectedUserBy('auth', socket.handshake.auth.key)
-        if(userBy.info) {
+        if(userBy.info && userBy.info.user) {
             let me = userBy.info.user._id
             Friend.findOne({ $or: [ { from: { $eq: me }, to: { $eq: id } }, { from: { $eq: id },  to: { $eq: me } } ]})
-                  .then(friendship => socket.emit('friendship:state:' + id, friendship), err => console.error(err))
+                .then(friendship => socket.emit('friendship:state:' + id, friendship), err => console.error(err))
 
             console.debug('check:user:friendship (id) =', id)
         }

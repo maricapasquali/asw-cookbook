@@ -40,10 +40,11 @@ export = function (server: http.Server | https.Server): void {
             console.log('Disconnected: reason ', reason)
             let userBy = findConnectedUserBy('auth', socket.handshake.auth.key)
             let _id: string
-            if(userBy.info) {
+            if(userBy.info && userBy.info.user) {
                 _id = userBy.info.user._id
                 popConnectedUser(io, '_id', _id)
             }
+            else popConnectedUser(io, 'socketID', socket.id)
             console.log(username +' is disconnected');
             popIfInChatRoom(io, _id)
         });

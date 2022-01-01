@@ -24,6 +24,7 @@ import DeleteAccount from "./personal-area/delete-account"
 import ChangeUserID from "./personal-area/change-userid"
 import ChangePassword from "./personal-area/change-password"
 import RecipesSections from "./personal-area/recipes/recipe-sections"
+import LikerList from "./personal-area/recipes/liker-list"
 import RecipeForm from "./personal-area/recipes/recipe-form"
 import FoodSection from "./personal-area/foods/food-section"
 import ReportsSection from "./personal-area/admin/reports/reports-section"
@@ -79,6 +80,7 @@ export default {
     ChangeUserID,
     ChangePassword,
     RecipesSections,
+    LikerList,
     RecipeForm,
     FoodForm,
     FoodFinder,

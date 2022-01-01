@@ -126,6 +126,7 @@ export default {
             this.docsDeleted.push(this.docsReported[index])
             this.docsReported.splice(index, 1)
 
+            this.socket.emit('comment:delete', comment._id)
             if(comment.user) this.socket.emit('user:strike', comment.user._id)
          })
          //TODO: HANDLER ERROR DELETE COMMENT WITH admin
@@ -140,13 +141,60 @@ export default {
          .then(({data}) =>{
            console.log(data)
            this.docsReported.splice(index, 1)
+
+           this.socket.emit('comment:unreport', comment._id)
          })
           //TODO: HANDLER ERROR UNREPORTED COMMENT WITH admin
          .catch(err => console.error(err))
+    },
+
+    /*Listeners update*/
+    renderDeleteComment(commentID){
+      const index = this.docsReported.findIndex(rC => rC._id === commentID)
+      if(index !== -1){
+        this.docsDeleted.push(this.docsReported[index])
+        this.docsReported.splice(index, 1)
+      }
+    },
+    renderUnreportedComment(commentID){
+      const index = this.docsReported.findIndex(rC => rC._id === commentID)
+      if(index !== -1) this.docsReported.splice(index, 1)
+    },
+
+    _onUpdate(array, userInfo){
+      for (const [index, comment] of array.entries()){
+        if(comment.user && comment.user._id === userInfo._id && comment.user.userID !== userInfo.userID) {
+          if(userInfo.userID) comment.user.userID = userInfo.userID
+          array.splice(index, 1, comment)
+        }
+        if(comment.reported) this._onUpdate(comment.reported, userInfo)
+      }
+    },
+    onUpdateInfos(userInfo) {
+      if(userInfo && userInfo.userID){
+        this._onUpdate(this.docsReported, userInfo)
+        this._onUpdate(this.docsDeleted, userInfo)
+      }
+    },
+    _onDelete(array, id){
+      for (const comment of array){
+        if(comment.user && comment.user._id === id) comment.user = null
+        if(comment.reported) this._onDelete(comment.reported, id)
+      }
+    },
+    onDeletedUserListeners(id){
+      this._onDelete(this.docsReported, id)
+      this._onDelete(this.docsDeleted, id)
     }
   },
   created() {
     bus.$on('comment:report', this.getReports.bind(this) )
+
+    bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
+    bus.$on('comment:unreport',  this.renderUnreportedComment.bind(this))
+
+    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   mounted() {
     this.getReports()
@@ -156,6 +204,12 @@ export default {
   },
   beforeDestroy() {
     bus.$off('comment:report', this.getReports.bind(this) )
+
+    bus.$off('comment:delete',  this.renderDeleteComment.bind(this))
+    bus.$off('comment:unreport',  this.renderUnreportedComment.bind(this))
+
+    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   }
 }
 </script>

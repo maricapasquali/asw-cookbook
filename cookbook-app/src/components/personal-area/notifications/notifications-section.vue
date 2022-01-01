@@ -17,7 +17,7 @@
                 </b-col>
               </b-row>
             </b-col>
-            <b-col cols="2" align="end">
+            <b-col cols="2" class="text-right">
               <button :ref="deleteNotificationId(doc._id)" :id="deleteNotificationId(doc._id)" type="button" aria-label="Close" class="close">
                 <font-awesome-icon icon="times" size="xs"/>
               </button>
@@ -25,7 +25,7 @@
             </b-col>
           </b-row>
           <b-row>
-            <b-col class="mt-3" align="end">
+            <b-col class="mt-3" class="text-right">
               <small>{{doc.timestamp | dateFormat}}</small>
             </b-col>
           </b-row>

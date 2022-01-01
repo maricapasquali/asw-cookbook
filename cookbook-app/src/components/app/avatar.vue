@@ -37,7 +37,7 @@ export default {
      this.setImage(vl)
     },
     user(vl){
-      console.debug('avatar: set other user => ', vl._id)
+      console.debug('avatar: set other user => ', vl && vl._id)
       this.onCheckUserState(vl)
     }
   },
@@ -68,7 +68,7 @@ export default {
         this.socket.emit('check:user:state', vl)
         this.socket.on('user:online:' + vl, this.setOnline.bind(this))
         this.socket.on('user:offline:' + vl, this.setOnline.bind(this))
-      }
+      } else this.setOnline(false)
     }
   },
   mounted() {

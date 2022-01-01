@@ -28,6 +28,8 @@ export default {
       switch (this.asset){
         case 'recipe':
           return 'Recipe Not Found'
+        case 'user':
+          return 'User Not Found'
         default:
           return 'Page Not Found'
       }
@@ -36,6 +38,8 @@ export default {
       switch (this.asset){
         case 'recipe':
           return require('@assets/images/404-recipe.png')
+        case 'user':
+          return require('@assets/images/404-user.png')
         default:
           return require('@assets/images/404-page.png')
       }

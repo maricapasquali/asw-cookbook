@@ -6,13 +6,13 @@ const options = {
 }
 
 function likeRecipe({notification, like}){
-    console.debug('like recipe => ', notification)
-    if(notification) this.$bvToast.toast(notification.content, options)
+    console.debug('like recipe => ', notification, like)
+    if(notification.content) this.$bvToast.toast(notification.content, options)
     bus.$emit('like:recipe', notification, like)
 }
 
 function likeComment({notification, like}){
-    console.debug('like comment => ', notification)
+    console.debug('like comment => ', notification, like)
     if(notification.content) this.$bvToast.toast(notification.content, options)
     bus.$emit('like:comment', notification, like)
 }

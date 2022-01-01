@@ -2,7 +2,7 @@
   <b-card class="card-comments">
 
     <!-- Commenting -->
-    <div class="add-comment" v-if="!isAdmin">
+    <div class="add-comment" v-if="couldComment">
       <b-row>
         <b-col>
           <div class="d-flex justify-content-end">
@@ -47,7 +47,10 @@ export default {
       return 'editor-comment-'+ this.recipe.id
     },
 
-    ...mapGetters(['accessToken', 'isAdmin', 'socket'])
+    ...mapGetters(['accessToken', 'isAdmin', 'socket']),
+    couldComment(){
+      return !this.isAdmin && this.recipe.owner
+    }
   },
 
   methods: {

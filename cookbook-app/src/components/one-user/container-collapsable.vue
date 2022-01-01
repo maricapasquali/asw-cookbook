@@ -2,7 +2,7 @@
   <b-container class="collapsable-container" fluid>
     <b-row align-h="between" v-b-toggle="identifier">
       <b-col>{{title}}</b-col>
-      <b-col align="end">
+      <b-col class="text-right">
         <b-icon-chevron-up v-if="showSectionCollapse" />
         <b-icon-chevron-down v-else/>
       </b-col>

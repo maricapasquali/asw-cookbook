@@ -8,6 +8,7 @@
 </template>
 
 <script>
+import {bus} from "@/main";
 
 export default {
   name: "nutrients-table",
@@ -151,11 +152,25 @@ export default {
       )
       this.fillNutritionalTable(this.table, nutrientsForIngredient)
       this.$emit('input', this.table)
+    },
+
+    /* Listeners update */
+    onUpdateFood(food){
+      const index = this.ingredients.findIndex(i => i.food._id === food._id)
+      if(index !== -1) {
+        this.ingredients.splice(index, 1 , Object.assign(this.ingredients[index], {food}))
+        this.makeTable(this.ingredients)
+      }
     }
   },
   created() {
     this.table = this.convertObjToArray(this.value)
     if(this.ingredients.length > 0) this.makeTable(this.ingredients)
+
+    bus.$on('food:update', this.onUpdateFood.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('food:update', this.onUpdateFood.bind(this))
   }
 }
 </script>

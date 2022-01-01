@@ -19,7 +19,7 @@ export function recipe(socket: any, recipe: any, like: ILike): void {
             user: like.user._id,
             type: Notification.Type.LIKE,
             content: 'Ti piace la ricetta ' + recipe.name + ' di ' + recipe.owner.userID,
-            otherInfo: otherInfo
+            otherInfo
         })
         .then(notification => socket.emit('like:recipe', {notification}), err => console.error(err))
     }
@@ -28,7 +28,7 @@ export function recipe(socket: any, recipe: any, like: ILike): void {
         user: recipe.owner._id,
         type: Notification.Type.LIKE,
         content: 'A ' + likerName + ' piace la tua ricetta ' + recipe.name,
-        otherInfo: otherInfo
+        otherInfo
     })
     .then(notification => {
         if(recipeOwner.info) socket.to(recipeOwner.info.socketID).emit('like:recipe', {notification, like})
@@ -37,7 +37,7 @@ export function recipe(socket: any, recipe: any, like: ILike): void {
     const exclude = []
     if(recipeOwner.info) exclude.push(recipeOwner.info.socketID)
     const otherConnectedUser = getSocketIDs(exclude)
-    if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('like:recipe', {like})
+    if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('like:recipe', {notification: {otherInfo}, like})
 }
 
 export function comment(socket: any, comment: any, like: any): void {
@@ -59,7 +59,7 @@ export function comment(socket: any, comment: any, like: any): void {
             user: like.user._id,
             type: Notification.Type.LIKE,
             content: 'Ti piace il commento di ' + commentName + ' alla ricetta ' + comment.recipe.name,
-            otherInfo: otherInfo
+            otherInfo
         })
         .then(notification => socket.emit('like:comment', { notification }), err => console.error(err))
     }
@@ -69,7 +69,7 @@ export function comment(socket: any, comment: any, like: any): void {
             user: comment.user._id,
             type: Notification.Type.LIKE,
             content: 'A ' + likerName + ' piace il tuo commento.',
-            otherInfo: otherInfo
+            otherInfo
         })
         .then(notification => {
             if(commentOwner.info) socket.to(commentOwner.info.socketID).emit('like:comment', {notification, like})

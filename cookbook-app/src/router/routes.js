@@ -51,8 +51,13 @@ export default [
         component: OneUser
     },
     {
-        path: '/users/:id/recipe/:recipe_id',
+        path: '/users/:id/recipes/:recipe_id',
         name: 'single-recipe',
+        component: OneRecipe
+    },
+    {
+        path: '/recipes/:recipe_id',
+        name: 'recipe',
         component: OneRecipe
     },
     {

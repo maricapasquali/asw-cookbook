@@ -1,14 +1,15 @@
 <template>
   <div>
     <!-- Public User Information  -->
-    <user-information ref="user-info" :id="user" />
+    <not-found v-if="userNotFound" asset="user" />
+    <user-information v-else ref="user-info" :id="user" @not-found="userNotFound = true"/>
     <!-- Shared Recipe of one specific user -->
     <container-collapsable v-if="recipes.length" id="recipes" title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="areRecipesOthers" @load-others="othersRecipes">
       <template #collapse-content>
         <b-list-group class="my-3">
           <b-list-group-item v-for="(recipe, ind) in recipes" :key="ind">
             <b-row>
-              <b-col align="start">
+              <b-col class="text-left">
                 <b-row cols="1">
                   <b-col>
                     <router-link :to="{name: 'single-recipe', params: {id: user, recipe_id: recipe._id}}">
@@ -18,7 +19,7 @@
                   <b-col>  <small>{{recipe.createdAt | dataFormatter}}</small> </b-col>
                 </b-row>
               </b-col>
-              <b-col align="end">
+              <b-col class="text-right">
                 <span> {{ recipe.category.text }} </span>
                 <country-image v-model="recipe.country" :id="'recipe-'+ind" />
               </b-col>
@@ -28,14 +29,13 @@
       </template>
       <template #load-others>carica altre ...</template>
     </container-collapsable>
-
     <!-- Accepted friend of one specific user -->
     <container-collapsable v-if="friends.length" id="friends" title="Amici" @collapsed="onCollapsedFriends" :with-loading-others="areFriendsOthers" @load-others="othersFriends">
       <template #collapse-content>
         <b-list-group class="my-3">
           <b-list-group-item v-for="(friend, ind) in friends" :key="ind">
             <b-row>
-              <b-col align="start">
+              <b-col class="text-left">
                 <b-row align-v="center" cols="1" cols-sm="2">
                   <b-col class="pr-3" sm="5"> <avatar v-model="friend.user.img" :user="friend.user._id"/> </b-col>
                   <b-col class="mt-2">
@@ -44,7 +44,7 @@
                   </b-col>
                 </b-row>
               </b-col>
-              <b-col align="end">
+              <b-col class="text-right">
                 <country-image v-model="friend.user.country" :id="'friend-'+ind" class="mb-2" width="50" height="40" />
                 <b-friendship :other-user="friend.user"/>
               </b-col>
@@ -65,10 +65,11 @@ import {RecipeCategories} from "@services/app";
 import api from '@api'
 import {mapGetters} from "vuex";
 import {mapping} from "@services/api/users/friends/utils";
-import socket from "../services/socket";
+import NotFound from "./404";
 
 export default {
   name: "OneUser",
+  components: {NotFound},
   computed: {
     user(){
       return this.$route.params.id
@@ -87,9 +88,9 @@ export default {
   },
   data(){
     return {
-      /* User Recipes Section */
-      showRecipeSection: false,
+      userNotFound: false,
 
+      /* User Recipes Section */
       recipesTotal: 0,
       recipes: [],
       recipePaginationOptions: {
@@ -97,6 +98,7 @@ export default {
         limit: 1 //todo: change pagination limit from 1 to 10
       },
 
+      /* User Friends Section */
       friendsTotal: 0,
       friends: [],
       friendsPaginationOptions: {
@@ -209,8 +211,18 @@ export default {
       if(friendship && (this.user === friendship.from._id || this.user === friendship.to._id)) {
         this.getFriends(0, this.friendsPaginationOptions.page * this.friendsPaginationOptions.limit)
       }
-    }
+    },
 
+    /* Listeners update */
+    onDeleteUser(id){
+      if(id === this.user) {
+        this.userNotFound = true
+        this.recipes = []
+        this.recipesTotal = 0
+        this.friends = []
+        this.friendsTotal = 0
+      }
+    }
   },
   created() {
     bus.$on('recipe:create', this.fetchRecipe.bind(this))
@@ -219,6 +231,8 @@ export default {
 
     bus.$on('friend:add', this.fetchFriend.bind(this))
     bus.$on('friend:remove', this.fetchFriend.bind(this))
+
+    bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
     bus.$off('recipe:create', this.fetchRecipe.bind(this))
@@ -227,6 +241,8 @@ export default {
 
     bus.$off('friend:add', this.fetchFriend.bind(this))
     bus.$off('friend:remove', this.fetchFriend.bind(this))
+
+    bus.$off('user:delete', this.onDeleteUser.bind(this))
   },
   mounted() {
     this.getRecipes()

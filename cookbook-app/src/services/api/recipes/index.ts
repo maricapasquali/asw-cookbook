@@ -73,7 +73,8 @@ export function getRecipes(user: string, token?: string, type?: string, paginati
 }
 
 export function getRecipe(user: string, id: string, type: string, token?: string): Promise<AxiosResponse>  {
-    return methods.get('/users/:userID/recipes/:recipeID', {
+    const pathName = user ? '/users/:userID/recipes/:recipeID' : '/recipes/:recipeID'
+    return methods.get(pathName, {
         headers: getHeaderBearerAuthorization(token),
         params:{
           type: type

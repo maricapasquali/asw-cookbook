@@ -20,7 +20,7 @@
           <template #footer>
             <b-row align-h="between">
               <b-col><b-skeleton-icon  icon="heart" :icon-props="{ variant: 'light' }"></b-skeleton-icon></b-col>
-              <b-col align="end"><b-skeleton-icon icon="chat" :icon-props="{ variant: 'light' }"></b-skeleton-icon></b-col>
+              <b-col class="text-right"><b-skeleton-icon icon="chat" :icon-props="{ variant: 'light' }"></b-skeleton-icon></b-col>
             </b-row>
           </template>
         </b-card>
@@ -33,7 +33,7 @@
             <!-- Author and date -->
             <template #header>
               <b-row align-h="between" align-v="center">
-                <b-col>
+                <b-col v-if="doc.owner" >
                   <b-row cols="1" cols-sm="1" cols-md="2">
                     <b-col md="3"> <avatar v-model="doc.owner.img" :user="doc.owner._id"  variant="light" :size=30 /> </b-col>
                     <b-col md="9">
@@ -43,7 +43,7 @@
                     </b-col>
                   </b-row>
                 </b-col>
-                <b-col align="end">
+                <b-col class="text-right">
                   <elapsed-time v-model="doc.createdAt" :language="language" />
                 </b-col>
               </b-row>
@@ -75,7 +75,7 @@
                   <!-- Like of a RECIPE -->
                   <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike(ind)"/>
                 </b-col>
-                <b-col align="end">
+                <b-col class="text-right">
                   <b-icon-chat class="icon" v-b-toggle="commentsId(doc._id)"/>
                 </b-col>
               </b-row>
@@ -100,7 +100,7 @@
 <script>
 import {bus} from "@/main";
 import {RecipeCategories} from "@services/app";
-import api from '@api'
+import api, {Server} from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -132,7 +132,8 @@ export default {
   },
   methods: {
     redirectToRecipe(rec){
-      return { name: 'single-recipe', params: { id: rec.owner._id, recipe_id: rec._id } }
+      return rec.owner ?  { name: 'single-recipe', params: { id: rec.owner._id, recipe_id: rec._id } } :
+                          { name: 'recipe', params: { recipe_id: rec._id } }
     },
 
     commentsId(id){
@@ -140,7 +141,8 @@ export default {
     },
 
     youNotMakeLike(index){
-      return this.isAdmin || this.docs[index].owner._id === this.userIdentifier
+      const owner = this.docs[index].owner
+      return this.isAdmin || !owner || owner._id === this.userIdentifier
     },
     /* -- REQUEST --*/
 
@@ -169,7 +171,7 @@ export default {
           //TODO: HANDLER ERROR HOME-PAGE
          .catch(err => {
             console.error(err)
-            if(err.response && err.response === 401) this.$router.go()
+            if(err.response && err.response.status === 401) this.$router.go()
          })
     },
     others(){
@@ -197,18 +199,38 @@ export default {
         this.docs.unshift(recipe)
         this.total+=1
       }
-    }
+    },
 
+    /* Listener update */
+    onUpdateInfos(userInfo) {
+      if(userInfo && (userInfo.information || userInfo.userID)) {
+        this.docs.filter(recipe => recipe.owner && recipe.owner._id === userInfo._id)
+                 .forEach(recipe => {
+                    if(userInfo.information) recipe.owner.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
+                    if(userInfo.userID) recipe.owner.userID = userInfo.userID
+                 })
+      }
+    },
+    onDeletedUserListeners(id){
+      console.debug('on delete user => _id = ', id)
+      this.docs.filter(recipe => recipe.owner && recipe.owner._id === id).forEach(recipe => recipe.owner = null)
+    }
   },
   created() {
     bus.$on('recipe:create', this.onNewRecipeListeners.bind(this))
     bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
     bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
     bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   },
   mounted() {
     this.getPost()

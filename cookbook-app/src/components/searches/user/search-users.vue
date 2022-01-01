@@ -27,10 +27,10 @@
                 <b-col><b-skeleton width="30%" /></b-col>
               </b-row>
             </b-col>
-            <b-col align="end" align-self="center" cols="3">
+            <b-col class="text-right" align-self="center" cols="3">
               <b-row cols="1">
-                <b-col align="end"> <b-skeleton width="100%" /> </b-col>
-                <b-col align="end" class="mt-3"><b-skeleton width="100%" /> </b-col>
+                <b-col class="text-right"> <b-skeleton width="100%" /> </b-col>
+                <b-col class="text-right mt-3"><b-skeleton width="100%" /> </b-col>
               </b-row>
             </b-col>
           </b-row>
@@ -42,7 +42,7 @@
             <div class="mb-2" v-if="search.mode"><strong > Risultati: </strong></div>
             <b-card v-for="(user, index) in users" :key="user._id">
               <b-row>
-                <b-col align-self="center" align="center" cols="3" class="px-0"><avatar v-model="user.information.img" :user="user._id"/></b-col>
+                <b-col align-self="center" class="text-center px-0" cols="3"><avatar v-model="user.information.img" :user="user._id"/></b-col>
                 <b-col align-self="center" cols="5">
                   <b-row cols="1">
                     <b-col>
@@ -51,7 +51,7 @@
                     <b-col v-if="user.information.occupation">{{user.information.occupation}}</b-col>
                   </b-row>
                 </b-col>
-                <b-col align="end" align-self="center" cols="4">
+                <b-col class="text-right" align-self="center" cols="4">
                   <b-row cols="1">
 
                     <b-col v-if="user.information.country">
@@ -65,7 +65,7 @@
               </b-row>
             </b-card>
             <b-row class="mb-2" v-if="!search.mode && areOthers">
-              <b-col align="center">
+              <b-col class="text-center">
                 <b-button variant="link" @click="others"> Altri </b-button>
               </b-col>
             </b-row>
@@ -80,7 +80,9 @@
 </template>
 
 <script>
-import api from '@api'
+
+import {bus} from '@/main'
+import api, {Server} from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -133,10 +135,9 @@ export default {
       if( this.search.mode && val.length === 0 ) {
         console.error('close search mode')
         this.search.mode = false
-        this.users = []
         this.processing = true
         this.$router.push({query: {}})
-        this.getUsers(1, this.pagination.page * this.pagination.limit)
+        this.getUsers(0, this.pagination.page * this.pagination.limit)
       }
     },
     // USERS
@@ -183,6 +184,47 @@ export default {
     otherUser(index){
       return this.users[index]
     },
+
+    /* Listeners user */
+    fetchUsers(){
+      if(!this.search.mode) this.getUsers(0, this.pagination.page * this.pagination.limit)
+    },
+    /* Listeners update */
+    onUpdateInfos(userInfo) {
+
+      if(!this.search.mode && userInfo) {
+        const index = this.users.findIndex(user => user._id === userInfo._id)
+        if(index !== -1){
+          const user = this.users[index]
+          if(userInfo.userID) user.userID = userInfo.userID
+          if(userInfo.information) {
+            user.information.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
+            if(userInfo.information.occupation) user.information.occupation = userInfo.information.occupation
+            if(userInfo.information.country) user.information.country = userInfo.information.country
+          }
+          this.users.splice(index, 1, user)
+        }
+      }
+
+    },
+    onDeleteUser(id){
+      if(!this.search.mode) {
+        const index = this.users.findIndex(user => user._id === id)
+        if(index !== -1) this.users.splice(index, 1)
+      }
+    }
+  },
+  created() {
+    bus.$on('user:checked', this.fetchUsers.bind(this))
+
+    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$on('user:delete', this.onDeleteUser.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('user:checked', this.fetchUsers.bind(this))
+
+    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$off('user:delete', this.onDeleteUser.bind(this))
   },
   mounted() {
     this.getUsers()

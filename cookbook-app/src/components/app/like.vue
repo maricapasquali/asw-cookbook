@@ -61,6 +61,10 @@ export default {
                 console.debug('Unlike ', data)
                 this.$emit('input', this.value.filter(l => l._id !== like._id))
                 this.$emit('unlike')
+
+                if(commentID) this.socket.emit('unlike:comment', this.comment._id, like._id)
+                else this.socket.emit('unlike:recipe', this.recipe._id, like._id)
+
              })
               //TODO: HANDLER ERROR UN-LIKE
              .catch(err => console.error(err) )
@@ -92,15 +96,41 @@ export default {
     },
     onLikeCommentListener(notification, like){
       if(like && this.comment && notification.otherInfo.comment === this.comment._id) this.value.push(like)
+    },
+    /* Listeners update */
+    onUnLikeRecipeListener(recipeID, likeID) {
+      if(likeID && recipeID === this.recipe._id) {
+        let index = this.value.findIndex(l => l._id === likeID)
+        if(index !== -1) this.value.splice(index, 1)
+      }
+    },
+    onUnLikeCommentListener(commentID, likeID) {
+      if(this.comment && likeID && commentID === this.comment._id) {
+        let index = this.value.findIndex(l => l._id === likeID)
+        if(index !== -1) this.value.splice(index, 1)
+      }
+    },
+    onDeletedUserListeners(id){
+      this.value.filter(like => like.user && like.user._id === id).forEach(like => like.user = null)
     }
   },
   created() {
     bus.$on('like:recipe', this.onLikeRecipeListener.bind(this))
-    if(this.comment) bus.$on('like:comment', this.onLikeCommentListener.bind(this))
+    bus.$on('unlike:recipe', this.onUnLikeRecipeListener.bind(this))
+    if(this.comment) {
+      bus.$on('like:comment', this.onLikeCommentListener.bind(this))
+      bus.$on('unlike:comment', this.onUnLikeCommentListener.bind(this))
+    }
+    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
     bus.$off('like:recipe', this.onLikeRecipeListener.bind(this))
-    if(this.comment) bus.$off('like:comment', this.onLikeCommentListener.bind(this))
+    bus.$off('unlike:recipe', this.onUnLikeRecipeListener.bind(this))
+    if(this.comment) {
+      bus.$off('like:comment', this.onLikeCommentListener.bind(this))
+      bus.$off('unlike:comment', this.onUnLikeCommentListener.bind(this))
+    }
+    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   }
 }
 </script>
