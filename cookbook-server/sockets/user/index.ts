@@ -1,4 +1,11 @@
-import {Friend} from "../../models";
+import {Friend, User} from "../../models";
+import {accessManager, tokensManager} from "../../controllers";
+import {SignUp} from "../../models/schemas/user";
+import {RBAC} from "../../modules/rbac";
+import Role = RBAC.Role;
+import {Types} from "mongoose";
+import ObjectId = Types.ObjectId
+
 
 type UserSessionSocket = { auth?: string, user?: { userID: string, _id: string, isAdmin?: boolean }, socketID: string }
 const users: Array<UserSessionSocket> = []
@@ -83,4 +90,27 @@ export default function (io: any, socket: any) {
         }
     })
 
+    socket.on('check:access-token', ( {_id, resourceID} ) => {
+        if(!ObjectId.isValid(_id))  return socket.emit('access-token:errors', {description: 'User\'s Identifier is not valid.'})
+        if(!ObjectId.isValid(resourceID))  return socket.emit('access-token:errors', {description: 'Resource Identifier is not valid.'})
+        if(_id !== resourceID) return socket.emit('access-token:errors', {description: "You can't access to this resource"})
+
+        const user = findConnectedUserBy('_id', _id)
+        const accessToken = user.info && user.info.auth
+        if(!accessToken) return socket.emit('access-token:errors', {description: 'Missing authorization.'})
+        console.debug('accessToken ', accessToken)
+
+        const decoded_token = tokensManager.checkValidityOfToken(accessToken);
+        if(!decoded_token) return socket.emit('access-token:not-valid', {description: 'Token is expired. You request another.'})
+        console.debug('decoded_token ', decoded_token)
+
+        User.findOne()
+            .where('signup').equals(SignUp.State.CHECKED)
+            .where('_id').equals(_id)
+            .then(user => {
+                if (!user) return socket.emit('access-token:errors', {description: 'User is not found'});
+                return socket.emit('access-token:valid', { role: accessManager.isAdminUser(user.credential) ? Role.ADMIN: Role.SIGNED, description: 'You can access to this resource'})
+            }, err => socket.emit('access-token:errors', { description: err.message }))
+
+    })
 }

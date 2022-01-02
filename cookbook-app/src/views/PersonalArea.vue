@@ -75,31 +75,25 @@ export default {
   created(){
     console.log(`CHECK IF YOU IS AUTHORIZED ...`)
     if(this.accessToken){
-      api.users.isAuthorized(this.user, this.accessToken)
-          .then(response =>{
-            this.authorized = true
-            this.userRole = response.data.isSigned ? 'signed' : response.data.isAdmin ? 'admin' : ''
-            this.select()
-          })
-          .catch(error => {
-            this.authorized = false
-            this.error.message = api.users.HandlerErrors.isAuthorized(error);
-            console.log(this.error.message)
-            if(isString(this.error.message)){
-              this.error.show = true
-            }
-            else if(error.response.status === 401){
-              console.error("isAuthorized: Error 401")
-              this.endSession()
-              this.$router.replace({name: 'login'});
-            }
-          })
-    }else {
-      this.$router.replace({name: 'login'});
-    }
+
+      if(this.user === this.userIdentifier){
+        this.socket.on('access-token:valid', this.onAccessTokenOk.bind(this))
+        this.socket.on('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
+        this.socket.on('access-token:errors', this.onCheckAccessTokenError.bind(this))
+
+        this.socket.emit('check:access-token', {_id: this.userIdentifier, resourceID: this.user})
+
+      } else this.onCheckAccessTokenError({description: 'Non puoi accedere a questa pagina.'})
+
+    } else this.$router.replace({name: 'login'});
+  },
+  beforeDestroy() {
+    this.socket.off('access-token:valid', this.onAccessTokenOk.bind(this))
+    this.socket.off('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
+    this.socket.off('access-token:errors', this.onCheckAccessTokenError.bind(this))
   },
   computed: {
-    ...mapGetters(['accessToken']),
+    ...mapGetters(['accessToken', 'userIdentifier', 'socket']),
 
     user(){
       return this.$route.params.id
@@ -164,8 +158,31 @@ export default {
     },
     getUsers: function (){
       this.navigate('p-user-users')
+    },
+
+    /* Listeners check ACCESS TOKEN */
+
+    onAccessTokenOk({role}){
+      this.authorized = true
+      this.userRole = role
+      this.select()
+    },
+    onAccessTokenNotOk(){
+      this.authorized = false
+      console.error("UnAuthorized: Error 401")
+      this.endSession()
+      this.$router.replace({ name: 'login' });
+    },
+    onCheckAccessTokenError({description}){
+      this.authorized = false
+      console.error('UnAuthorized: ', description)
+      this.error = {
+        show: true,
+        message: description
+      }
     }
-  }
+
+  },
 }
 </script>
 

@@ -42,7 +42,7 @@ export function signup(user: object): Promise<AxiosResponse> {
 }
 
 export function checkAccount(data: object): Promise<AxiosResponse> {
-    return methods.put('/users/check-account', data)
+    return methods.put('/users', data)
 }
 
 export function getUser(id: string, token?: string){
@@ -54,18 +54,6 @@ export function getUser(id: string, token?: string){
     }).then(response =>{
         setImageUrl(response.data)
         return response
-    })
-}
-
-//use token (interceptors)
-export function isAuthorized(id: string, token: string) {
-    return methods.get('/users/:id/authorized', {
-        headers: {
-            authorization: 'Bearer ' + token
-        },
-        urlParams:{
-            id: id
-        }
     })
 }
 
