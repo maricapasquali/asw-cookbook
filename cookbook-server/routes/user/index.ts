@@ -5,7 +5,7 @@ export default function (app) {
     app.route('/api/users').all(userController.uploadProfileImage())
         .post(userController.create_user)
         .get(userController.all_users)
-        .patch(userController.onPatchUsers)
+        .put(userController.check_account)
 
     app.route('/api/users/login').post(userController.login)
 

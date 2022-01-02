@@ -62,7 +62,7 @@ const send_email_signup = function (user) {
             text: text
         })
 
-    })
+    }, err => console.error(err.message))
 
 }
 
@@ -173,7 +173,7 @@ export function all_users(req, res){
         }, err => console.error(err))
 }
 
-function check_account(req: any, res: any): void {
+export function check_account(req, res) {
     let {email, userID, key} = req.body
     if(!email || !userID || !key) return res.status(400).json({description: "Require 'email', 'userID', 'key'"})
     EmailLink.findOne()
@@ -196,33 +196,6 @@ function check_account(req: any, res: any): void {
                         }
                     }, err => res.status(500).json({description: err.message}))
             }, err => res.status(500).json({description: err.message}))
-}
-function reset_password(req: any, res: any): void {
-    const {nickname} = req.query
-    const {hash_password} = req.body
-    if(!nickname) return res.status(400).json({description: 'nickname is required'});
-    if(!hash_password) return res.status(400).json({description: 'hash_password is required'});
-    User.findOne()
-        .where('signup').equals(SignUp.State.CHECKED)
-        .where("credential.userID").equals(nickname)
-        .then(user => {
-                if(user==null) return res.status(404).json({description: 'User is not found'});
-                user.credential.hash_password = hash_password
-                user.save().then(u => res.status(200).json({reset_password: true}),
-                    err => res.status(500).json({description: err.message}))
-        }, err => res.status(500).json({description: err.message}))
-}
-enum ActionPatchUsers {
-    RESET_PASSWORD = 'reset-password',
-    CHECK_ACCOUNT = 'check-account'
-}
-export function onPatchUsers(req, res) {
-    const {action} = req.query
-    switch (action as ActionPatchUsers) {
-        case ActionPatchUsers.CHECK_ACCOUNT: return check_account(req, res)
-        case ActionPatchUsers.RESET_PASSWORD: return reset_password(req, res)
-        default: return res.status(400).json({ description: 'Required query field \'type\' in [' + ActionPatchUsers.CHECK_ACCOUNT + ',' + ActionPatchUsers.RESET_PASSWORD + ' ]' })
-    }
 }
 
 export function login(req, res){
