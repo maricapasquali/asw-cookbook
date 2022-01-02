@@ -22,6 +22,14 @@ type SignUpEmailData = {
     url: string
 }
 
+type EraseUserEmailData = {
+    app_name: string,
+    firstname: string
+    lastname: string
+    userID: string
+    email: string
+}
+
 abstract class ATemplateEmail implements TemplateEmail{
     private readonly template: any
     protected readonly data: any
@@ -87,6 +95,25 @@ export class SignUpEmail extends ATemplateEmail{
             
             Il Team ${this.data.app_name}
         `
+    }
+
+}
+
+export class EraseUserEmail extends ATemplateEmail {
+
+    constructor(data: EraseUserEmailData) {
+        super('erase-user.ejs', data)
+    }
+
+    toText(): string {
+        return  `
+            Chiusura definitiva dell'account ${this.data.userID}.
+            
+            Gentile ${this.data.firstname} ${this.data.lastname},
+            le comunichiamo che l'account associato a questa email (${this.data.email}) è stato definitivamente cancellato.
+                
+            Il Team ${this.data.app_name}       
+        `;
     }
 
 }
