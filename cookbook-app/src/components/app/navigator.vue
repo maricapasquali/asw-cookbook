@@ -132,7 +132,8 @@ export default {
       bus.$emit('onLogout', true)
       console.log(this.userIdentifier)
       console.log(this.accessToken)
-      api.users.logout(this.userIdentifier, this.accessToken)
+      api.users.session
+               .logout(this.userIdentifier, this.accessToken)
                .then(response => {
                  this.endSession()
                  console.debug("LOGOUT OK.")

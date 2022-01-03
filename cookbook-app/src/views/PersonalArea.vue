@@ -7,7 +7,7 @@
             <user-information :id="user" personal-area @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- SIGNED -->
-          <b-tab v-if="isSignedUser" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy>
+          <b-tab v-if="isSigned" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy>
             <recipe-sections @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- BOTH -->
@@ -15,15 +15,15 @@
             <food-section @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- ADMIN -->
-          <b-tab v-if="isAdminUser" title="Segnalazioni" @click="getReports" :active="isActive('reports')" lazy>
+          <b-tab v-if="isAdmin" title="Segnalazioni" @click="getReports" :active="isActive('reports')" lazy>
             <reports-section @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- ADMIN -->
-          <b-tab v-if="isAdminUser" title="Utenti" @click="getUsers" :active="isActive('users')" lazy>
+          <b-tab v-if="isAdmin" title="Utenti" @click="getUsers" :active="isActive('users')" lazy>
             <users-section @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- SIGNED -->
-          <b-tab v-if="isSignedUser" title="Amici" @click="getFriends" :active="isActive('friends')" lazy>
+          <b-tab v-if="isSigned" title="Amici" @click="getFriends" :active="isActive('friends')" lazy>
             <friends-section @onSessionExpired="sessionTimeout=true" />
           </b-tab>
           <!-- BOTH -->
@@ -48,7 +48,6 @@
 </template>
 
 <script>
-import {isString} from '@services/utils'
 import api from "@api"
 import {mapGetters, mapMutations} from "vuex";
 export default {
@@ -93,7 +92,7 @@ export default {
     this.socket.off('access-token:errors', this.onCheckAccessTokenError.bind(this))
   },
   computed: {
-    ...mapGetters(['accessToken', 'userIdentifier', 'socket']),
+    ...mapGetters(['accessToken', 'refreshToken', 'userIdentifier', 'socket', 'isSigned', 'isAdmin']),
 
     user(){
       return this.$route.params.id
@@ -101,17 +100,10 @@ export default {
 
     loading: function (){
       return !(this.authorized || this.error.show || this.sessionTimeout)
-    },
-    isAdminUser() {
-      return this.userRole === 'admin'
-    },
-    isSignedUser() {
-      return this.userRole === 'signed'
     }
-
   },
   methods: {
-    ...mapMutations(['endSession']),
+    ...mapMutations(['endSession', 'setAccessToken']),
 
     isActive: function (target){
       return target === this.active
@@ -162,16 +154,26 @@ export default {
 
     /* Listeners check ACCESS TOKEN */
 
-    onAccessTokenOk({role}){
+    onAccessTokenOk(){
       this.authorized = true
-      this.userRole = role
       this.select()
     },
     onAccessTokenNotOk(){
-      this.authorized = false
-      console.error("UnAuthorized: Error 401")
-      this.endSession()
-      this.$router.replace({ name: 'login' });
+      console.error("Expired access token. Required another.")
+      api.users
+         .session
+         .newAccessToken(this.userIdentifier, { refresh_token: this.refreshToken }, this.accessToken)
+         .then(({data}) => {
+           this.setAccessToken(data.access_token)
+           this.authorized = true
+           this.select()
+         })
+         .catch(error =>{
+            this.authorized = false
+            console.error("UnAuthorized: ", error)
+            this.endSession()
+            this.$router.replace({ name: 'login' });
+         })
     },
     onCheckAccessTokenError({description}){
       this.authorized = false
