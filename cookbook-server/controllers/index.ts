@@ -1,7 +1,6 @@
 import {IRbac, RBAC} from "../modules/rbac";
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
-import {extractAuthorization} from "../modules/utilities";
 import {DecodedTokenType, IJwtToken, JwtToken} from "../modules/jwt.token";
 import {FileUploader, IFileUploader, UploaderConfiguration} from "../modules/uploader";
 import FileType = FileUploader.FileType;
@@ -10,6 +9,23 @@ import {Document, Model, Query} from "mongoose";
 
 export const tokensManager: IJwtToken = new JwtToken()
 export const accessManager: IRbac = new RBAC()
+
+type AuthorizationValue = {userID: string, password: string} | {access_token: string}
+export function extractAuthorization(headers): AuthorizationValue | any {
+    if(!headers.authorization) return {access_token: undefined}
+    const [type, value] = headers.authorization.split(' ')
+    switch (type){
+        case 'Basic': {
+            let buff = Buffer.from(value, 'base64');
+            let [userID, password] = buff.toString('utf-8').split(':');
+            return {userID: userID, password: password}
+        }
+        case 'Bearer': {
+            return {access_token: value}
+        }
+        default: throw new Error(type + ' not implemented')
+    }
+}
 
 export function getRestrictedUser(req: any, res?: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
     const {access_token} = extractAuthorization(req.headers)
