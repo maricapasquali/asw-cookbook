@@ -54,15 +54,9 @@ components:
               enum:
                 - admin
                 - signed
-            tokens:
-              oneOf:
-                - type: object
-                  properties:
-                    access: 
-                      type: string
-                    refresh:
-                      type: string
-                - type: number
+            lastAccess:
+              type: number
+              description: Last access on platform. If it's 0 , user is online otherwise user is offline (> 0) or has not logged in yet (undefined) .
 
           required:
             - userID
@@ -620,7 +614,8 @@ paths:
           description: Username has been already used
         500:
           $ref: "#/components/responses/general_error" 
-        
+
+
     get:
       description: List of all users of the platform
       tags:
@@ -688,6 +683,7 @@ paths:
           $ref: "#/components/responses/unauthorized_error"
         500:
           $ref: "#/components/responses/general_error"
+
     put:
       description: Checks account of pending sign up user
       tags:
@@ -735,51 +731,6 @@ paths:
         500:    
           $ref: "#/components/responses/general_error"
 
-  /users/login:
-    post:
-      tags:
-        - Users  
-      security:
-       - BasicAuth: []
-      responses:
-        200:
-          description: User is logged in
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token: 
-                    type: object
-                    properties:
-                      access_token:
-                        type: string
-                      refresh_token:
-                        type: string
-                  userInfo:
-                    type: object
-                    properties:
-                      _id:
-                        type: string
-                      userID:
-                        type: string
-                      isSigned:
-                        type: boolean
-                      isAdmin:
-                        type: boolean
-                  firstLogin:
-                    type: boolean
-                    default: true
-                    description: only if it's admin's first login 
-        400:
-          $ref: "#/components/responses/bad_request"
-        403: 
-          description: User not authorized or User yet to be verified
-        404: 
-          description: User not found
-        500:
-          $ref: "#/components/responses/general_error" 
-  
   /users/{id}:
     parameters:
       - $ref: "#/components/parameters/userIdentifier" 
@@ -924,71 +875,6 @@ paths:
           description: "User not found"
         500:
           $ref: "#/components/responses/general_error"
-    
-  /users/{id}/logout:
-     delete:
-      tags:
-        - Users
-      security:
-        - BearerAuth: []  
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-      responses:
-        200:
-          description: User is logged out
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_delete_error"
-        404:
-          description: User not found
-        409:
-          description: User is already logged out
-        500:
-          $ref: "#/components/responses/general_error"
-  
-  /users/{id}/refreshToken:
-     post:
-      description: Retrieve a new token when the older is expired
-      tags:
-        - Users        
-      security:
-        - BearerAuth: []  
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"  
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                refresh_token:
-                  type: string
-      responses:
-        200:
-          description: New access token has been created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  access_token:
-                        type: string                      
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          description: Refresh token was expired. Please make a new signin request
-        403:
-          $ref: "#/components/responses/forbidden_post_error"
-        404:
-          description: User not found
-        409:
-          description: Access token is still valid
-        500:
-          $ref: "#/components/responses/general_error"
 
   /reset-password/email:
     get:
@@ -1019,6 +905,7 @@ paths:
           description: Email is not associated with any account
         500:
           $ref: "#/components/responses/general_error"
+
   /reset-password/check-link:
     get:
       description: ''
@@ -1069,6 +956,119 @@ paths:
           $ref: "#/components/responses/general_error"
 
 
+#SESSION
+  /users/login:
+    post:
+      description: Login to platform
+      tags:
+        - Session
+        - Users
+      security:
+        - BasicAuth: [ ]
+      responses:
+        200:
+          description: User is logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      refresh_token:
+                        type: string
+                  userInfo:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      userID:
+                        type: string
+                      isSigned:
+                        type: boolean
+                      isAdmin:
+                        type: boolean
+                  firstLogin:
+                    type: boolean
+                    default: true
+                    description: only if it's admin's first login
+        400:
+          $ref: "#/components/responses/bad_request"
+        403:
+          description: User not authorized or User yet to be verified
+        404:
+          description: User not found
+        500:
+          $ref: "#/components/responses/general_error"
+  /users/{id}/logout:
+    delete:
+      description: Logout from platform
+      tags:
+        - Session
+        - Users
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+      responses:
+        200:
+          description: User is logged out
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_delete_error"
+        404:
+          description: User not found
+        409:
+          description: User is already logged out
+        500:
+          $ref: "#/components/responses/general_error"
+  /users/{id}/refresh-token:
+    put:
+      description: Retrieve a new token when the older is expired
+      tags:
+        - Session
+        - Users
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - $ref: "#/components/parameters/userIdentifier"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        200:
+          description: New access token has been created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          description: Refresh token was expired. Please make a new signin request
+        403:
+          $ref: "#/components/responses/forbidden_post_error"
+        404:
+          description: User not found
+        409:
+          description: Access token is still valid
+        500:
+          $ref: "#/components/responses/general_error"
 
 #RECIPES
   /recipes:
