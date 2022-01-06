@@ -321,6 +321,7 @@ components:
           type: object
           properties:
             type:
+              description: type of chat
               type: string
               enum:
                 - one
@@ -328,18 +329,18 @@ components:
               default: one
             name:
               type: string
-              description: name of group chat. Required if info.type is 'group'
+              description: name of group chat. Required if type is 'group'
             img:
               type: string
               description: image of group chat
           required:
             - type
         users:
+          description: users to add in chat
           type: array
           items:
             $ref: "#/components/schemas/user_in_chat"
-          maxLength: 2
-          minLength: 2
+          minLength: 1
         messages:
           type: array
           default: []
@@ -2149,6 +2150,34 @@ paths:
         - BearerAuth: []
       requestBody:
         content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                type:
+                  $ref: "#/components/schemas/chat/properties/info/properties/type"
+                name:
+                  $ref: "#/components/schemas/chat/properties/info/properties/name"
+                image:
+                  $ref: "#/components/schemas/chat/properties/info/properties/img"
+                users:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      user:
+                        $ref: "#/components/schemas/user_in_chat/properties/user"
+                      role:
+                        $ref: "#/components/schemas/user_in_chat/properties/role"
+                    required:
+                      - user
+                message:
+                  $ref: "#/components/schemas/message"
+
+              required:
+                - users
+
+
           application/json:
             schema:
               $ref: "#/components/schemas/chat"
@@ -2285,12 +2314,15 @@ paths:
               * _update-chat-name_  : used to update the name of chat
 
               * _add-users_ : used to add new users on chat
+
+              * _update-chat-image_  : used to update the image of chat
           schema:
             type: string
             enum:
               - update-user-role
               - update-chat-name
               - add-users
+              - update-chat-image
 
       requestBody:
         required: true
@@ -2352,6 +2384,16 @@ paths:
                             default: writer
                         required:
                           - user
+
+          multipart/form-data:
+            schema:
+              type: object
+              description: Body for _chat group_ & action = _update-chat-image_
+              properties:
+                image:
+                  type: string
+                  description: new image of chat
+
 
       responses:
         200:
