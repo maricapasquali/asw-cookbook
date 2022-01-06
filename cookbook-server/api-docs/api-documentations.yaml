@@ -360,8 +360,19 @@ components:
           type: string
           description: Encrypted message
         read:
-          type: boolean
-          default: false
+          type: array
+          items:
+            type: object
+            properties:
+              user:
+                type: string
+                description: user's identifier who read the messages
+              timestamp:
+                type: number
+            required:
+              - user
+              - timestamp
+          default: []
       required:
         - sender
         - content
