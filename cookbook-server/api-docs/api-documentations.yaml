@@ -294,13 +294,50 @@ components:
       required:
         - timestamp
 
+    user_in_chat:
+      type: object
+      properties:
+        user:
+          type: string
+        role:
+          type: string
+          default: writer
+          enum:
+            - admin
+            - writer
+            - reader
+        enteredAt:
+          type: number
+        exitedAt:
+          type: number
+      required:
+        - user
+        - role
+        - enteredAt
     chat:
       type: object
       properties:
+        info:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - one
+                - group
+              default: one
+            name:
+              type: string
+              description: name of group chat. Required if info.type is 'group'
+            img:
+              type: string
+              description: image of group chat
+          required:
+            - type
         users:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/user_in_chat"
           maxLength: 2
           minLength: 2
         messages:
@@ -310,14 +347,11 @@ components:
             $ref: "#/components/schemas/message"
       required:
         - users
-        - messages
     
     message:
       type: object
       properties:
         sender:
-          type: string
-        receiver:
           type: string
         timestamp: 
           type: number
@@ -329,7 +363,6 @@ components:
           default: false
       required:
         - sender
-        - receiver
         - content
         - timestamp
 
@@ -2109,7 +2142,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/userIdentifier"
     post:
-      description: Creation of conversation between two friends
+      description: Creation of conversation between two or more friends
       tags:
         - Chats
       security:
@@ -2125,10 +2158,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  chatID:
-                    type: string
+                $ref: "#/components/schemas/chat"
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -2136,34 +2166,68 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_post_error"
         404:
-          description: User not found
+          description: Users are not found
+        409:
+          description: Chat has just created
         500:
-          $ref: "#/components/responses/general_error"  
+          $ref: "#/components/responses/general_error"
+
     get:
       description: ""
-  
       tags:
         - Chats
       security:
         - BearerAuth: []
-   
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/limit"
+        - name: name
+          in: query
+          description: Search chat by userID or chat group name
+          required: false
+          schema:
+            type: object
+            properties:
+              search:
+                type: string
+                enum:
+                  - full
+                  - partial
+              value:
+               type: string
       responses:
         200:
           description: ""
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/chat"
+                type: object
+                properties:
+                  items:
+                    type: array
+                    required: true
+                    items:
+                      $ref: "#/components/schemas/chat"
+                  total:
+                    type: number
+                    description: Number of chats
+                    required: true
+                  paginationInfo:
+                    type: object
+                    required: false
+                    properties:
+                      page:
+                        type: number
+                        description: Selected page
+                      limit:
+                        type: number
+                        description: the maximum number of chats to take
         400:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
         403:
-          $ref: "#/components/responses/forbidden_get_error" 
-        404:
-          description: Chats are not found
+          $ref: "#/components/responses/forbidden_get_error"
         500:
           $ref: "#/components/responses/general_error"
 
@@ -2173,7 +2237,6 @@ paths:
       - $ref: "#/components/parameters/chatIdentifier"
     get:
       description: ""
-      operationId: showChat
       tags:
         - Chats
       security:
@@ -2195,6 +2258,117 @@ paths:
           description: Chat not found
         500:
           $ref: "#/components/responses/general_error"
+
+    patch:
+      description: ""
+      tags:
+        - Chats
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: action
+          in: query
+          required: true
+          description: |
+            - Chat one:
+
+              * _update-user-role_ : used to
+
+                - recreate chat when one user has deleted it or
+
+                - delete the chat only for the user who requests it
+
+
+            - Chat group: ( Available only for chat administrators )
+              * _update-user-role_  : used to change user permissions in the chat
+
+              * _update-chat-name_  : used to update the name of chat
+
+              * _add-users_ : used to add new users on chat
+          schema:
+            type: string
+            enum:
+              - update-user-role
+              - update-chat-name
+              - add-users
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  description: Body for _chat one_ & action = _update-user-role_
+                  properties:
+                    role:
+                      description: new role for user
+                      type: string
+                      enum:
+                        - writer
+                        - reader
+                - type: object
+                  description: Body for _chat group_ & action = _update-chat-name_
+                  properties:
+                    name:
+                      description: new name of chat
+                      type: string
+                - type: object
+                  description: Body for _chat group_ & action = _update-user-role_
+                  properties:
+                    users:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          user:
+                            type: string
+                          role:
+                            type: string
+                            enum:
+                              - writer
+                              - reader
+                              - admin
+                        required:
+                          - user
+                          - role
+
+                - type: object
+                  description: Body for _chat group_ & action = _add-users_
+                  properties:
+                    users:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          user:
+                            type: string
+                          role:
+                            type: string
+                            enum:
+                                - writer
+                                - reader
+                                - admin
+                            default: writer
+                        required:
+                          - user
+
+      responses:
+        200:
+          description: Update chat fields.
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_patch_put_error"
+        404:
+          description: Chat not found / Users are not in chat
+        409:
+          description: Users are already in chat
+        500:
+          $ref: "#/components/responses/general_error"
+
     delete:
       description: Deleting the chat only for the user who requests it
       tags:
@@ -2215,41 +2389,6 @@ paths:
         500:
           $ref: "#/components/responses/general_error"
 
-  /users/{id}/chats/unread_messages:
-    parameters:
-      - $ref: "#/components/parameters/userIdentifier"
-    get:
-      description: Number of unread messages for each chats
-      tags:
-        - Chats
-      security:
-        - BearerAuth: []
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    chatID:
-                      type: string
-                    "#_unread_message":
-                      type: integer
-                      minimum: 1
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_get_error"
-        404:
-          description: "Unread Messages are not found"
-        500:
-          $ref: "#/components/responses/general_error"
-
 #MESSAGES
   /users/{id}/chats/{chatID}/messages:
     parameters:
@@ -2257,9 +2396,9 @@ paths:
       - $ref: "#/components/parameters/chatIdentifier"
     post:
       description: "Send message"
-      operationId: sendMessage
       tags:
         - Messages
+        - Chats
       security:
         - BearerAuth: []
       requestBody:
@@ -2267,17 +2406,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/message"
+              type: object
+              properties:
+                content:
+                  type: string
       responses:
-        201:
+        200:
           description: Message has been sent
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  messageID: 
-                    type: string  
+                $ref: "#/components/schemas/message"
         400:
           $ref: "#/components/responses/bad_request"               
         401:
@@ -2289,17 +2428,13 @@ paths:
         500:
           $ref: "#/components/responses/general_error"
 
-  /users/{id}/chats/{chatID}/messages/{messageID}:
-    parameters:
-      - $ref: "#/components/parameters/userIdentifier"
-      - $ref: "#/components/parameters/chatIdentifier"
-      - $ref: "#/components/parameters/messageIdentifier"
-    patch:
-      description: Read message
+    put:
+      description: "Read messages."
       tags:
         - Messages
+        - Chats
       security:
-        - BearerAuth: []   
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -2307,12 +2442,16 @@ paths:
             schema:
               type: object
               properties:
-                read:
-                  type: boolean
-                  default: true
+                messages:
+                  type: array
+                  description: identifiers of messages
+                  items:
+                    type: string
       responses:
         200:
-          description: Message has been readed
+          description: Messages has been read
+        204:
+          description: Messages has been just read
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -2320,7 +2459,7 @@ paths:
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
-          description: Message not found
+          description: Chat not found / Messages are not found
         500:
           $ref: "#/components/responses/general_error"
 
@@ -2433,46 +2572,5 @@ paths:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
           description: Notification not found
-        500:
-          $ref: "#/components/responses/general_error"
-
-
-#SEARCHES
-  /search/users/{id}/chats:
-    get:
-      description: Search between the user's opened chat
-      tags:
-        - Searches
-      security:
-        - BearerAuth: []
-
-      parameters:
-        - $ref: "#/components/parameters/userIdentifier"
-        - name : name
-          in: query
-          description: partial/full name of friends
-          required: true
-          schema:
-            type: string
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/limit"
-
-      responses:
-        200:
-          description: ""
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/chat"
-        400:
-          $ref: "#/components/responses/bad_request"
-        401:
-          $ref: "#/components/responses/unauthorized_error"
-        403:
-          $ref: "#/components/responses/forbidden_get_error"
-        404:
-          description: Chats are not found
         500:
           $ref: "#/components/responses/general_error"
