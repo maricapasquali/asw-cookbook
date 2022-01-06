@@ -12,6 +12,8 @@ import {CommentSchema, IComment} from "./schemas/recipe/comment";
 import {ReportSchema, IReport} from "./schemas/recipe/comment/report";
 
 import {NotificationSchema, INotification} from "./schemas/notification";
+import {ChatSchema, IChat} from "./schemas/chat";
+import {MessageSchema, IMessage} from "./schemas/chat/message";
 
 export const User: Model<IUser> = model<IUser>('User', UserSchema)
 export const Friend: Model<IFriend> = model<IFriend>('Friend', FriendSchema)
@@ -26,3 +28,5 @@ export const Report: Model<IReport> = model<IReport>('Report', ReportSchema)
 
 export const Notification: Model<INotification> = model<INotification>('Notification', NotificationSchema)
 //TODO: ADD OTHER SCHEMAS
+export const Chat: Model<IChat> = model<IChat>('Chat', ChatSchema)
+export const Message: Model<IMessage> = model<IMessage>('Message', MessageSchema)

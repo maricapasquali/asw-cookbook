@@ -115,12 +115,22 @@ export function pagination(query: Query<Document[], Document, {}, Document>, opt
                     return _query.then(docs => Promise.resolve({ items: docs, total: nDocs, paginationInfo: _paginationInfo }), err => Promise.reject(err))
                 }, err => Promise.reject(err))
 }
+export function paginationOf(array: Array<any>, options?: PaginationOptions): PaginationResult {
+    let start: number = 0
+    let end: number = array.length
+    if(options){
+        start = (options.page - 1) * options.limit
+        end = start + options.limit
+        console.debug('start = ', start, ', end = ', end)
+    }
+    return { items: array.slice(start, end), total: array.length, paginationInfo: options }
+}
 
 export async function existById(model: Model<any>, values: Array<string>): Promise<true>{
     if(values.length === 0) return Promise.reject('empty')
     let notValid: Array<string> = []
     for (const value of values){
-        const doesExit = await model.exists({_id: value})
+        const doesExit = await model.exists({_id: value}).catch(err => console.error(err))
         if (!doesExit) notValid.push(value)
     }
     return notValid.length > 0 ? Promise.reject(notValid) : Promise.resolve(true)

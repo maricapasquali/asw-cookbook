@@ -1,4 +1,4 @@
-import {existById, getRestrictedUser, getUser} from "../../index";
+import {existById, getRestrictedUser, getUser, paginationOf} from "../../index";
 import {Friend, User} from "../../../models";
 import {Types} from "mongoose";
 import {DecodedTokenType} from "../../../modules/jwt.token";
@@ -122,17 +122,8 @@ export function list_friends(req, res){
                       }
                       mapperItems = mapperItems.map(friend => friend.toObject())
                                                .sort((f1, f2) => fieldToSort(f1).localeCompare(fieldToSort(f2))) as Array<IFriend>
-
-                      let start: number = 0
-                      let end: number = mapperItems.length
-                      let paginationOptions = page && limit ? { page: +page, limit: +limit } : undefined
-                      if(paginationOptions){
-                          start = (paginationOptions.page - 1) * paginationOptions.limit
-                          end = start + paginationOptions.limit
-                          console.debug('start = ', start, ', end = ', end)
-                      }
-
-                      return res.status(200).json({ items: mapperItems.slice(start, end), total: mapperItems.length, paginationInfo: paginationOptions })
+                      
+                      return res.status(200).json(paginationOf(mapperItems, page && limit ? { page: +page, limit: +limit } : undefined))
 
                   }, err => res.status(500).json({code: err.code || 0, description: err.message}))
 
