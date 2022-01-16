@@ -359,6 +359,9 @@ components:
         content:
           type: string
           description: Encrypted message
+        attachment:
+          type: string
+          description: pathname of shared in chat recipe
         read:
           type: array
           items:
@@ -2461,6 +2464,13 @@ paths:
               properties:
                 content:
                   type: string
+                  description: it is required if 'attachment' is no set
+                attachment:
+                  type: string
+                  description: it is required if 'content' is no set
+                timestamp:
+                  type: string
+
       responses:
         200:
           description: Message has been sent
@@ -2501,6 +2511,16 @@ paths:
       responses:
         200:
           description: Messages has been read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  readers:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/message/properties/read"
+
         204:
           description: Messages has been just read
         400:
