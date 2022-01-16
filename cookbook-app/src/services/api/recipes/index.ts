@@ -118,3 +118,18 @@ export function deleteRecipe(user: string, id: string, token: string){
         }
     })
 }
+
+export function updatePermission(user: string, recipeID: string, permission: Array<{ user: string, granted?: string }>, token: string): Promise<AxiosResponse>{
+    return methods.patch('/users/:userID/recipes/:recipeID', {permission}, {
+        headers: {
+            authorization: 'Bearer ' + token
+        },
+        params: {
+            field: 'permission'
+        },
+        urlParams:{
+            userID: user,
+            recipeID
+        }
+    })
+}

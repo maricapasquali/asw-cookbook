@@ -130,7 +130,7 @@
         <nutrients-table :ingredients="doc.ingredients"/>
       </b-col>
 
-      <b-col class="mt-5">
+      <b-col class="mt-5" v-if="doc.shared">
         <strong>Commenti</strong>
         <comments v-model="doc.comments" :recipe="doc" />
       </b-col>
@@ -153,6 +153,9 @@ import NotFound from "./404";
 
 export default {
   name: "OneRecipe",
+  props: {
+    value: Object | Boolean
+  },
   components: {NotFound},
   data(){
     return {
@@ -168,6 +171,12 @@ export default {
 
     youNotMakeLike(){
       return this.isAdmin || !this.doc.owner || this.doc.owner._id === this.userIdentifier
+    }
+  },
+  watch: {
+    value(val, old){
+      if(val) this.setRecipe(val)
+      this.processing = false
     }
   },
   filters: {
@@ -187,21 +196,22 @@ export default {
     isOwner(owner_recipe) {
       return owner_recipe._id === this.userIdentifier && owner_recipe.userID === this.username
     },
+    setRecipe(data){
+      this.doc = data
+      console.debug(this.doc)
+      if(this.doc && this.doc.owner) {
+        this.itemsBreadcrumb = [
+          {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.doc.owner._id} } },
+          {text: this.doc.name, active: true}
+        ]
+      }
+    },
     getRecipe() {
       let {id, recipe_id} = this.$route.params;
       this.processing = true
       api.recipes
          .getRecipe(id, recipe_id, 'shared', this.accessToken)
-         .then(({data})=>{
-            this.doc = data
-            console.debug(this.doc)
-            if(this.doc && this.doc.owner) {
-              this.itemsBreadcrumb = [
-                {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.$route.params.id} } },
-                {text: this.doc.name, active: true}
-              ]
-            }
-         })
+         .then(({data})=> this.setRecipe(data))
           //TODO: HANDLER ERROR ONE RECIPE
          .catch(err => console.error(err.response))
          .finally(() => this.processing = false)
@@ -235,7 +245,11 @@ export default {
     bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   },
   mounted() {
-    this.getRecipe()
+    if(typeof this.value === "undefined") this.getRecipe()
+    else if(this.value !== false) {
+      this.setRecipe(this.value)
+      this.processing = false
+    }
   },
   updated() {
     console.log('Update one recipe page....')

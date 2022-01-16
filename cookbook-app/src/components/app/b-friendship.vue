@@ -15,8 +15,9 @@
         <b-button variant="success" v-else @click="sendRequestFriendShip">Segui</b-button>
       </b-button-group>
 
-<!--      <b-button variant="secondary" @click=""> Chat </b-button>-->
-      <b-button :id="chatId" v-if="withChat && isMyFriend" variant="secondary"> <b-icon-chat-fill/> </b-button>
+      <b-button :id="chatId" v-if="withChat && isMyFriend" variant="secondary" @click="_goToChat(otherUser._id)">
+        <b-icon-chat-fill/>
+      </b-button>
       <b-tooltip v-if="withChat && isMyFriend" :target="chatId"> Chat con <strong>{{otherUser.userID}}</strong></b-tooltip>
     </b-button-group>
   </div>
@@ -26,6 +27,7 @@
 import api from '@api'
 import {mapGetters} from "vuex";
 import {bus} from "@/main";
+import {_goToChat} from '@components/chats/utils'
 
 export default {
   name: "b-friendship",
@@ -133,6 +135,9 @@ export default {
          this.socket.on('friendship:state:'+ vl._id, this.setFriendShip.bind(this, vl))
        }
     },
+
+    /* chat */
+    _goToChat,
 
     /* Listeners notification */
     onListenFriendshipRequest(notification){

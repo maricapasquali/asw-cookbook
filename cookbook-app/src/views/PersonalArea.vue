@@ -27,7 +27,9 @@
             <friends-section @onSessionExpired="sessionTimeout=true" />
           </b-tab>
           <!-- BOTH -->
-          <b-tab title="Chats" @click="getChats" :active="isActive('chats')" lazy><p>Chats</p></b-tab>
+          <b-tab title="Chats" @click="getChats" :active="isActive('chats')" lazy>
+            <chats-section @onSessionExpired="sessionTimeout=true"/>
+          </b-tab>
           <!-- BOTH -->
           <b-tab title="Notifiche" @click="getNotifications" :active="isActive('notifications')" lazy>
             <notifications-section @onSessionExpired="sessionTimeout=true" />
@@ -71,7 +73,7 @@ export default {
     }
   },
 
-  created(){
+  mounted(){
     console.log(`CHECK IF YOU IS AUTHORIZED ...`)
     if(this.accessToken){
 
@@ -158,8 +160,9 @@ export default {
       this.authorized = true
       this.select()
     },
-    onAccessTokenNotOk(){
+    onAccessTokenNotOk({description}){
       console.error("Expired access token. Required another.")
+      console.error(description)
       api.users
          .session
          .newAccessToken(this.userIdentifier, { refresh_token: this.refreshToken }, this.accessToken)
@@ -169,6 +172,11 @@ export default {
            this.select()
          })
          .catch(error =>{
+            if(error.response && error.response.status === 409) {
+              this.authorized = true
+              this.select()
+              return ;
+            }
             this.authorized = false
             console.error("UnAuthorized: ", error)
             this.endSession()

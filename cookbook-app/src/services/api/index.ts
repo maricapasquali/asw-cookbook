@@ -4,6 +4,7 @@ import * as foods from './foods'
 import * as recipes from './recipes'
 import * as shoppingList from './shopping-list'
 import * as notifications from './notifications'
+import * as chats from './chats'
 import {images_origin, server_origin, videos_origin} from "../../../../modules/hosting/variables";
 
 function _path(origin: string, endPoint: string): string {
@@ -35,5 +36,6 @@ export default {
     foods,
     recipes,
     shoppingList,
-    notifications
+    notifications,
+    chats
 }

@@ -331,7 +331,7 @@ export default {
       if(!equals(this.changeableUser.information, this.user.information)) {
         let formData = new FormData();
         Object.entries(this.changeableUser.information).filter(([k, v]) => this.user.information[k] !== v).forEach(([k, v]) => formData.append(k, v))
-        for(let [k, v] of formData.entries()) console.warn(k, " = ", v)
+        for(let [k, v] of formData.entries()) console.debug(k, " = ", v)
 
         api.users
            .updateUserInfo(this.id, formData, this.accessToken).then(response => {
@@ -356,10 +356,6 @@ export default {
               this.changeableUser.information = clone(this.user.information)
            })
       }
-    },
-
-    goChat: function (){
-      //TODO: GO IN CHAT
     },
 
     /* Listeners update */

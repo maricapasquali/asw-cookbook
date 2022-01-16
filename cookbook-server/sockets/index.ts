@@ -21,7 +21,7 @@ export = function (server: http.Server | https.Server): void {
         const username = (socket.handshake.auth.userinfo ? socket.handshake.auth.userinfo.userID: 'Anonymous')
         console.log(username + ' is connected');
         pushIfIsAbsentConnectedUser(io, socket)
-        if(socket.handshake.auth.key) console.debug(username + ' has token = ', socket.handshake.auth.key);
+        // if(socket.handshake.auth.key) console.debug(username + ' has token = ', socket.handshake.auth.key);
 
         // CHECK SOMETHING ABOUT USERS
         registerUserHandlers(io, socket)

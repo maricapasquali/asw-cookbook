@@ -13,18 +13,19 @@ import {mapGetters} from "vuex";
 
 import notifications from "@/notifications";
 import updates from "@/updates";
+import {pushMessages} from '@components/chats/utils'
 
 export default {
   name: 'App',
   data: function (){
     return {
-      notNav: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password'],
+      notNav: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat'],
       notFooter: this.notNav,
       processing: false
     }
   },
   computed:{
-    ...mapGetters(['socket', 'userIdentifier']),
+    ...mapGetters(['socket', 'userIdentifier', 'accessToken', 'isAdmin']),
     navigatorVisibility: function (){
       return !this.notNav.includes(this.$route.name)
     },
@@ -52,7 +53,10 @@ export default {
     // NOTIFICATIONS
     ...notifications,
     //UPDATES
-    ...updates
+    ...updates,
+
+    //MESSAGES
+    pushMessages,
   },
   created() {
     this.$store.commit('setSession')
@@ -70,6 +74,9 @@ export default {
 
     //UPDATES
     this.updateListeners()
+
+    //MESSAGES
+    this.socket.on('push-messages', this.pushMessages.bind(this))
   }
 }
 </script>

@@ -191,12 +191,10 @@
 import api from '@api'
 import configuration from "@app/app.config.json";
 import {EmailValidator} from '@app/modules/validator'
-import InputPassword from "../input-password";
 import {Countries, Genders} from '@services/app'
 import {mapGetters} from "vuex";
 export default {
   name: "sign-up",
-  components: {InputPassword},
   data: function() {
     return {
       optionsGender: Genders.get(),

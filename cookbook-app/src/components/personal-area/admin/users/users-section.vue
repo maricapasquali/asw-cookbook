@@ -60,7 +60,7 @@
         <template #cell(actions)="row">
           <b-button-group>
             <b-button v-if="row.item.actions.includes('chat')"
-                      variant="primary"
+                      variant="primary" @click="_goToChat(row.item.details._id)"
                       :id="chatWith(row.item)">
               <b-icon-chat-fill  />
             </b-button>
@@ -105,7 +105,7 @@ import {bus} from '@/main'
 import api from '@api'
 import {dateFormat} from "@services/utils";
 import {mapGetters} from "vuex";
-
+import {_goToChat} from '@components/chats/utils'
 export default {
   name: "users-section",
   data(){
@@ -167,7 +167,7 @@ export default {
   },
   computed: {
 
-    ...mapGetters(['accessToken']),
+    ...mapGetters(['accessToken', 'userIdentifier']),
 
     showPagination(){
       return this.pagination.totals > 0
@@ -258,6 +258,9 @@ export default {
       console.log('Delete account of ' + this.deleteAccount.user.userID)
       this.$refs.userTable.refresh()
     },
+
+    /* chat */
+    _goToChat,
 
     /* Listeners update */
     fetchUsers(user) {

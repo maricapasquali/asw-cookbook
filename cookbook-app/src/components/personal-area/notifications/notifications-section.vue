@@ -25,13 +25,11 @@
             </b-col>
           </b-row>
           <b-row>
-            <b-col class="mt-3" class="text-right">
+            <b-col class="text-right mt-3">
               <small>{{doc.timestamp | dateFormat}}</small>
             </b-col>
           </b-row>
         </b-alert>
-
-
     </b-row>
   </b-container>
 </template>

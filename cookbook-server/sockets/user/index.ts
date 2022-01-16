@@ -6,6 +6,26 @@ import Role = RBAC.Role;
 import {Types} from "mongoose";
 import ObjectId = Types.ObjectId
 
+enum UserState {
+    ONLINE = 'online',
+    OFFLINE = 'offline'
+}
+
+function setUserState(userState: UserState, _id: string, io: any): void {
+    const _date = Date.now()
+    User.updateOne({ _id }, { $set: { 'credential.lastAccess': (userState as UserState) === UserState.ONLINE ? 0: _date }})
+        .then(result => {
+            console.log('setUserState = ', result, ', userState ', userState)
+            const _data =  {
+                _id,
+                online: (userState as UserState) === UserState.ONLINE,
+                offline: (userState as UserState) === UserState.OFFLINE && _date
+            }
+            if(_data.online) io.emit('user:online:' + _id, _data)
+            else io.emit('user:offline:' + _id, _data)
+            console.log('Change user state = ', result)
+        }, err => console.error(err))
+}
 
 type UserSessionSocket = { auth?: string, user?: { userID: string, _id: string, isAdmin?: boolean }, socketID: string }
 const users: Array<UserSessionSocket> = []
@@ -46,7 +66,7 @@ export function pushIfIsAbsentConnectedUser(io: any, socket: any): void {
         if(!userBy.info){
             users.push( { auth: auth.key, user: auth.userinfo, socketID: socket.id })
             let _id = auth.userinfo._id
-            io.emit('user:online:' + _id, { online: true, _id: _id })
+            setUserState(UserState.ONLINE, _id, io)
         }
     }
     else users.push({ socketID: socket.id })
@@ -63,7 +83,7 @@ export function popConnectedUser(io: any, field: 'auth' | '_id' | 'userID' | 'in
         if(_user.index !== -1) users.splice(_user.index, 1)
     }
     let _id = _user.info && _user.info.user && _user.info.user._id
-    if(_id) io.emit('user:offline:' + _user.info.user._id, { online: false, _id: _id })
+    if(_id) setUserState(UserState.OFFLINE, _id, io)
 }
 
 export default function (io: any, socket: any) {
@@ -71,9 +91,21 @@ export default function (io: any, socket: any) {
     //CHECK USER ONLINE/OFFLINE
     socket.on('check:user:state', (id) => {
         let userBy = findConnectedUserBy('_id', id)
-        let _data = { _id: id, online: userBy.index != -1 }
+        const _data: {_id: string, online: boolean, offline: boolean | number} =
+            { _id: id, online: userBy.index !== -1, offline: userBy.index === -1 }
         if(_data.online) socket.emit('user:online:' + id, _data)
-        else socket.emit('user:offline:' + id, _data)
+        else {
+            User.findOne()
+                .where('_id').equals(id)
+                .select('credential.lastAccess')
+                .then(user => {
+                    if (user) {
+                        console.debug('Check last access = ', user)
+                        _data.offline = user.credential.lastAccess
+                        socket.emit('user:offline:' + id, _data)
+                    }
+                }, err => console.error(err))
+        }
 
         console.debug('User ', id, ' is ', (_data.online ? 'online': 'offline'))
     })

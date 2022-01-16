@@ -30,6 +30,8 @@ export default {
           return 'Recipe Not Found'
         case 'user':
           return 'User Not Found'
+        case 'chat':
+          return 'Chat Not Found'
         default:
           return 'Page Not Found'
       }
@@ -40,6 +42,8 @@ export default {
           return require('@assets/images/404-recipe.png')
         case 'user':
           return require('@assets/images/404-user.png')
+        case 'chat':
+          return require('@assets/images/404-chat.png')
         default:
           return require('@assets/images/404-page.png')
       }
