@@ -229,7 +229,6 @@ export function one_recipe(req, res){
 
     if(!Types.ObjectId.isValid(id))  return res.status(400).json({ description: 'Required a valid \'id\''})
     if(!Types.ObjectId.isValid(recipeID))  return res.status(400).json({ description: 'Required a valid \'recipeID\''})
-    if(!RecipeType.includes(type)) return res.status(400).json({description: 'Required \'type\' include in [' + RecipeType + ']'})
 
     console.debug({...req.params, ...req.query})
     switch (type){
@@ -237,42 +236,43 @@ export function one_recipe(req, res){
             req.locals = { filters: { owner: id } }
             one_shared_recipe(req, res)
             break
-        case 'saved':
+        default: {
             if(authorized(req, res, {operation: Operation.RETRIEVE, others: noAuthorizationForOther(id) })){
-                Recipe.findOne()
-                    .where('_id').equals(recipeID)
-                    .where('owner').equals(id)
-                    .where('shared').equals(false)
-                    .then(recipe => {
-                        if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-                        return  res.status(200).json(recipe)
-                    }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+                let query: Query<IRecipe, IRecipe, {}, IRecipe> = null
+                switch (type){
+                    case 'saved':
+                        query = Recipe.findOne()
+                                      .where('_id').equals(recipeID)
+                                      .where('owner').equals(id)
+                                      .where('shared').equals(false)
+                        break
+                    case 'loved':
+                        query = Recipe.findOne()
+                                       .where('_id').equals(recipeID)
+                                       .where('shared').equals(true)
+                                       .where('likes.user').equals(Types.ObjectId(id))
+                        break
+                    case 'shared-in-chat':
+                        query = Recipe.findOne()
+                                       .where('_id').equals(recipeID)
+                                       .where('permission.user').equals(id)
+                                       .where('owner').ne(id)
+                        break
+                    default: {
+                        query = Recipe.findOne()
+                                      .where('_id').equals(recipeID)
+                                      .where('permission.user').equals(id)
+                    }
+
+                    query
+                        .then(recipe => {
+                            if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
+                            return  res.status(200).json(recipe)
+                        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+                }
             }
-            break
-        case 'loved':
-            if(authorized(req, res, {operation: Operation.RETRIEVE, others: noAuthorizationForOther(id) })){
-                Recipe.findOne()
-                    .where('_id').equals(recipeID)
-                    .where('shared').equals(true)
-                    .where('likes.user').equals(Types.ObjectId(id))
-                    .then(recipe => {
-                        if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-                        return res.status(200).json(recipe)
-                    }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-            }
-            break
-        case 'shared-in-chat':
-            if(authorized(req, res, {operation: Operation.RETRIEVE, others:  noAuthorizationForOther(id) })){
-                Recipe.findOne()
-                    .where('_id').equals(recipeID)
-                    .where('permission.user').equals(id)
-                    .where('owner').ne(id)
-                    .then(recipe => {
-                        if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-                        return  res.status(200).json(recipe)
-                    }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-            }
-            break
+        }
+            break;
     }
 }
 
@@ -326,7 +326,9 @@ function update_permission_recipe(req, res){
         const permission = req.body.permission
 
         if(!permission) return res.status(400).json({ description:  err_ms_empty })
-        if(!permission.every(p => p.user)) return res.status(400).json({ description: 'Elements of \'Permission\' must be of the form : { user: string, granted?: string }'})
+        const _availableGranted = IPermission.GrantedType.values().map(g => g.toString())
+        _availableGranted.push('revoke')
+        if(!permission.every(p => p.user)) return res.status(400).json({ description: 'Elements of \'Permission\' must be of the form : { user: string, granted?: string } with granted in ' + _availableGranted })
 
         console.debug(permission)
 
@@ -342,11 +344,37 @@ function update_permission_recipe(req, res){
                             if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
                                 return res.status(403).json({ description: 'User is not allowed to update permissions.' })
 
-                            //UPDATE PERMISSION
-                            permission.forEach(per => recipe.permission.push(per))
+                            const _revoke = permission.filter(p => p.granted === 'revoke')
+                            const _update = permission.filter(p => p.granted !== 'revoke')
+                            const _unChanged: number[] = []
+                            const _unRevoked: number[] = []
+                            console.debug('permission to remove ', JSON.stringify(_revoke))
+                            console.debug('permission to update ', JSON.stringify(_update))
+
+                            _revoke.forEach(p => {
+                                let index = recipe.permission.findIndex(pp => pp.user._id == p.user)
+                                if(index !== -1) recipe.permission.splice(index, 1)
+                                else _unRevoked.push(index)
+                            })
+
+                            _update.map(p => ({ user: p.user, granted: p.granted || IPermission.GrantedType.READ }))
+                                   .forEach(p => {
+                                        console.log('permission ', JSON.stringify(permission))
+                                        let index = recipe.permission.findIndex(pp => pp.user._id == p.user)
+                                        if(index === -1) recipe.permission.push(p)
+                                        else if(p.granted != recipe.permission[index].granted) recipe.permission.splice(index, 1, p)
+                                        else _unChanged.push(index)
+                                   })
+                            console.debug('_unChanged', _unChanged, ', _unRevoked', _unRevoked)
+
+                            if(_unChanged.length === _update.length && _unRevoked.length === _revoke.length) return res.status(204).send()
+
                             recipe.save()
-                                .then(_doc => res.status(200).json({ description: 'Permission has been updated', updatedPermission: _doc.permission}),
-                                    err => res.status(500).json({ code: err.code || 0, description: err.message }))
+                                  .then(_doc => res.status(200).json({ description: 'Permission has been updated', updatedPermission: _doc.permission}),
+                                        err => {
+                                            if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
+                                            return res.status(500).json({ code: err.code || 0, description: err.message })
+                                        })
 
                         }, err => res.status(500).json({code: err.code || 0, description: err.message}))
                 }

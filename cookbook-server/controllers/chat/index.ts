@@ -41,7 +41,7 @@ async function getBodyFromFormData(req: any, res: any): Promise<any> {
             res.status(400).json({ description: message })
             return Promise.reject(message)
         }
-        await existById(User, _body.users.map(c => c.user))
+        if(!_body.users.every(i => i.user == RBAC.Role.ADMIN)) await existById(User, _body.users.map(c => c.user))
     } catch (e){
         if(Array.isArray(e)){
             let message: string = 'Users [' + e + '] are not founds.'
@@ -112,14 +112,38 @@ export function create_chat(req, res) {
                             console.debug('Chats ', chats)
                             if(chats.length) return res.status(409).json({ description: 'Chat has just created.', chatID: chats[0]._id })
 
-                            new Chat(body)
-                                .save()
-                                .then(chat => {
-                                    chat.populate(ChatPopulationPipeline, function (err, populateChat){
-                                        if(err) return res.status(500).json({ description: err.message })
-                                        return res.status(201).json(populateChat)
-                                    })
-                                }, err => res.status(MongooseValidationError.is(err)? 400: 500).json({ description: err.message }))
+                            const _createChat = () =>{
+                                Chat.find({ 'users.user': { $all: body.users.map(u => u.user) }, 'info.name': body.info.name })
+                                    .then(chats => {
+                                        console.debug('Chats ', chats)
+                                        if(chats.length) return res.status(409).json({ description: 'Chat has just created.', chatID: chats[0]._id })
+
+                                        new Chat(body)
+                                            .save()
+                                            .then(chat => {
+                                                chat.populate(ChatPopulationPipeline, function (err, populateChat){
+                                                    if(err) return res.status(500).json({ description: err.message })
+                                                    return res.status(201).json(populateChat)
+                                                })
+                                            }, err => res.status(MongooseValidationError.is(err)? 400: 500).json({ description: err.message }))
+
+                                    }, err =>  res.status(500).json({ description: err.message }))
+                            }
+
+                            if(body.users.some(i => i.user == RBAC.Role.ADMIN)) {
+                                console.debug('Add admins')
+                                User.find()
+                                    .where('credential.role').equals(RBAC.Role.ADMIN)
+                                    .then(admins => {
+                                        if(admins.length === 0) return res.status(404).json({ description: 'Admins are not found' })
+                                        let index = body.users.findIndex(i => (i.user == RBAC.Role.ADMIN))
+                                        let adminRole = body.users[index].role
+                                        body.users.splice(index, 1)
+                                        admins.forEach(admin => body.users.push({user: admin._id, role: adminRole}))
+                                        _createChat()
+                                    }, err =>  res.status(500).json({ description: err.message }) )
+                            } else _createChat()
+
 
                         }, err =>  res.status(500).json({ description: err.message }))
 
@@ -147,8 +171,8 @@ export function list_chat(req, res) {
         }
 
         const pipelinePopulatedChat = _.cloneDeep(ChatPopulationPipeline)
-        const filtersGroup = { 'info.type': IChat.Type.GROUP }
-        const filtersOne = { 'info.type': IChat.Type.ONE }
+        const filtersGroup = { 'info.type': IChat.Type.GROUP, 'users.user': user._id }
+        const filtersOne = { 'info.type': IChat.Type.ONE , 'users.user': user._id }
         if(name) {
             let regexObject = { $regex: `^${name.value}`, $options: "i" }
             if(name.search === 'full') regexObject['$regex']+='$'
@@ -162,8 +186,10 @@ export function list_chat(req, res) {
                    const _chatOne = chatOne.filter(c => c.users.some(u => u.user && u.user._id != id))
                    chatGroup.push(..._chatOne)
                    chatGroup.sort((c1, c2) => {
-                       const c1LastMessageIndex = c1.messages.length - 1, c2LastMessageIndex = c2.messages.length - 1
-                       return c2.messages[c2LastMessageIndex].timestamp - c1.messages[c1LastMessageIndex].timestamp
+                       const c1LastMessageIndex = c1.messages.length - 1, c2LastMessageIndex = c2.messages.length - 1,
+                             c1Message = c1.messages[c1LastMessageIndex], c2Message = c2.messages[c2LastMessageIndex],
+                             c1Timestamp = c1Message ? c1Message.timestamp : 0, c2TimeStamp = c2Message ? c2Message.timestamp : 0
+                       return c2TimeStamp - c1Timestamp
                    })
                    return res.status(200).json(paginationOf(chatGroup, page && limit ? { page: +page, limit: +limit } : undefined))
                }, err => res.status(500).json({ description: err.message}))
