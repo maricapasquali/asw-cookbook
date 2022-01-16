@@ -13,7 +13,7 @@ export function send_message(req, res) {
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
     const {content, attachment, timestamp} = req.body
-    if(!(content && (!content && attachment))) return res.status(400).json({ description: 'Body must be of the form: { content: string, attachment?: string, timestamp?: number  } or { content?: string, attachment: string, timestamp?: number  } '})
+    if(!(content || (!content && attachment))) return res.status(400).json({ description: 'Body must be of the form: { content: string, attachment?: string, timestamp?: number  } or { content?: string, attachment: string, timestamp?: number  } '})
 
     const user = getRestrictedUser(req, res, { operation: Operation.CREATE, subject: Subject.MESSAGE, others: decodedToken => decodedToken._id !== id })
     if(user) {
