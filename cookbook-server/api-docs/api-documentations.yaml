@@ -1428,6 +1428,7 @@ paths:
                           - read
                           - write-read
                           - root
+                          - revoke
                     required:
                       - user
       responses:
@@ -1442,6 +1443,8 @@ paths:
                     properties:
                       updatedPermission:
                         $ref: "#/components/schemas/recipe/properties/permission"
+        204:
+          description: Permission of recipe hasn't been updated
         400:
           $ref: "#/components/responses/bad_request"
         401:
