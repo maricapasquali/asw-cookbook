@@ -78,7 +78,7 @@ ChatSchema.pre(['findOne'], function() {
     this.populate(ChatPopulationPipeline)
 })
 
-const ChatPopulationPipelineSelect = { userID : '$credential.userID', img: '$information.img', lastAccess: '$credential.lastAccess' }
+export const ChatPopulationPipelineSelect = { userID : '$credential.userID', img: '$information.img', lastAccess: '$credential.lastAccess', role: '$credential.role' }
 export const ChatPopulationPipeline = [{
         path: 'users.user',
         select: ChatPopulationPipelineSelect,

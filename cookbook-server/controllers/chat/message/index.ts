@@ -6,17 +6,18 @@ import * as _ from "lodash"
 import ObjectId = Types.ObjectId;
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
+import {ChatPopulationPipeline, ChatPopulationPipelineSelect} from "../../../models/schemas/chat";
 
 export function send_message(req, res) {
     const {id, chatID} = req.params
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
-    const {content} = req.body
-    if(!content) return res.status(400).json({ description: 'Body must be of the form: { content: string  } '})
+    const {content, attachment, timestamp} = req.body
+    if(!(content && (!content && attachment))) return res.status(400).json({ description: 'Body must be of the form: { content: string, attachment?: string, timestamp?: number  } or { content?: string, attachment: string, timestamp?: number  } '})
 
     const user = getRestrictedUser(req, res, { operation: Operation.CREATE, subject: Subject.MESSAGE, others: decodedToken => decodedToken._id !== id })
     if(user) {
-        const message = new Message({ sender: user._id, content: content })
+        const message = new Message({ sender: user._id, content, timestamp, attachment })
 
         message.validate()
                .then(() => {
@@ -25,7 +26,7 @@ export function send_message(req, res) {
                        .then(result =>{
                            if(result.n === 0)  return res.status(404).json({ description: 'Chat is not found.' })
                            if(result.nModified === 0) return res.status(500).json({ description: 'Message is not send.' })
-                           message.populate('sender', function (err, populateMessage){
+                           message.populate({path: 'sender' , select: ChatPopulationPipelineSelect}, function (err, populateMessage){
                                if(err) return res.status(500).json({ description: err.message })
                                return res.status(200).json(populateMessage)
                            })
@@ -67,12 +68,17 @@ export function read_messages(req, res) {
                 if(_.isEqual(_oldMessages,_newMessages)) return res.status(204).send()
 
                 chat.save()
-                    .then(_chat => res.status(200).json({ description: 'Messages [' + messages + '] have been read' }),
-                          err => res.status(500).json({ description: err.message }))
+                    .then(_chat => {
+                        _chat.populate(ChatPopulationPipeline[1], function (err, populateChatMessages){
+                            if(err) return res.status(500).json({ description: err.message })
+                            const readers: any = {}
+                            populateChatMessages.messages.filter(m => messages.find(messageID => messageID == m._id)).forEach(m => readers[m._id] = m.read.pop())
+                            return res.status(200).json({ description: 'Messages [' + messages + '] have been read', readers })
+                        })
+                    }, err => res.status(500).json({ description: err.message }))
 
             }, err => res.status(500).json({ description: err.message }))
     }
-
 }
 
 export function list_messages(req, res) { res.status(501).json('List of Messages') }

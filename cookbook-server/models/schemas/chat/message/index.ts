@@ -5,13 +5,25 @@ import Types = Schema.Types
 export interface IMessage extends Document  {
     sender: IUser['_id']
     content: string
+    attachment?: string
     timestamp: number
     read?: Array<{ user: IUser['_id'], timestamp?: number }>
 }
 
 export const MessageSchema: Schema<IMessage> = new Schema<IMessage>({
     sender: { type: Types.ObjectId, required: true, ref: 'User'},
-    content: { type: String, required: true },
+    content: {
+        type: String,
+        required: function (){
+            return !this.attachment
+        }
+    },
+    attachment: {
+        type: String,
+        required: function (){
+            return !this.content
+        }
+    },
     timestamp: { type: Number, required: false, default: Date.now() },
     read: {
         type: [{
