@@ -107,45 +107,37 @@ export function create_chat(req, res) {
             getBodyFromFormData(req, res)
                 .then(body => {
 
-                    Chat.find({ 'users.user': { $all: body.users.map(u => u.user) }, 'info.name': body.info.name })
-                        .then(chats => {
-                            console.debug('Chats ', chats)
-                            if(chats.length) return res.status(409).json({ description: 'Chat has just created.', chatID: chats[0]._id })
+                    const _createChat = () =>{
+                        Chat.find({ 'users.user': { $all: body.users.map(u => u.user) }, 'info.name': body.info.name })
+                            .then(chats => {
+                                console.debug('Chats ', chats)
+                                if(chats.length) return res.status(409).json({ description: 'Chat has just created.', chatID: chats[0]._id })
 
-                            const _createChat = () =>{
-                                Chat.find({ 'users.user': { $all: body.users.map(u => u.user) }, 'info.name': body.info.name })
-                                    .then(chats => {
-                                        console.debug('Chats ', chats)
-                                        if(chats.length) return res.status(409).json({ description: 'Chat has just created.', chatID: chats[0]._id })
+                                new Chat(body)
+                                    .save()
+                                    .then(chat => {
+                                        chat.populate(ChatPopulationPipeline, function (err, populateChat){
+                                            if(err) return res.status(500).json({ description: err.message })
+                                            return res.status(201).json(populateChat)
+                                        })
+                                    }, err => res.status(MongooseValidationError.is(err)? 400: 500).json({ description: err.message }))
 
-                                        new Chat(body)
-                                            .save()
-                                            .then(chat => {
-                                                chat.populate(ChatPopulationPipeline, function (err, populateChat){
-                                                    if(err) return res.status(500).json({ description: err.message })
-                                                    return res.status(201).json(populateChat)
-                                                })
-                                            }, err => res.status(MongooseValidationError.is(err)? 400: 500).json({ description: err.message }))
+                            }, err =>  res.status(500).json({ description: err.message }))
+                    }
 
-                                    }, err =>  res.status(500).json({ description: err.message }))
-                            }
-
-                            if(body.users.some(i => i.user == RBAC.Role.ADMIN)) {
-                                console.debug('Add admins')
-                                User.find()
-                                    .where('credential.role').equals(RBAC.Role.ADMIN)
-                                    .then(admins => {
-                                        if(admins.length === 0) return res.status(404).json({ description: 'Admins are not found' })
-                                        let index = body.users.findIndex(i => (i.user == RBAC.Role.ADMIN))
-                                        let adminRole = body.users[index].role
-                                        body.users.splice(index, 1)
-                                        admins.forEach(admin => body.users.push({user: admin._id, role: adminRole}))
-                                        _createChat()
-                                    }, err =>  res.status(500).json({ description: err.message }) )
-                            } else _createChat()
-
-
-                        }, err =>  res.status(500).json({ description: err.message }))
+                    if(body.users.some(i => i.user == RBAC.Role.ADMIN)) {
+                        console.debug('Add admins')
+                        User.find()
+                            .where('credential.role').equals(RBAC.Role.ADMIN)
+                            .then(admins => {
+                                if(admins.length === 0) return res.status(404).json({ description: 'Admins are not found' })
+                                let index = body.users.findIndex(i => (i.user == RBAC.Role.ADMIN))
+                                let adminRole = body.users[index].role
+                                body.users.splice(index, 1)
+                                admins.forEach(admin => body.users.push({user: admin._id, role: adminRole}))
+                                _createChat()
+                            }, err =>  res.status(500).json({ description: err.message }) )
+                    } else _createChat()
 
                 }, err => console.error(err))
         }
