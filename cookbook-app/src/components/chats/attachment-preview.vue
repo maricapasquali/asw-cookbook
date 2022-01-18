@@ -46,8 +46,15 @@
 export default {
   name: "attachment-preview",
   props: {
-    attachmentApi: {type: Function, required: true},
-    attachment: {type: String, required: true},
+    attachmentApi: { type: Function },
+    attachment: {type: String },
+
+    value: {
+      img: String,
+      title: {type: String, required: true},
+      description: {type: String, required: true},
+      link: String
+    }
   },
   data(){
     return {
@@ -65,6 +72,9 @@ export default {
   watch: {
     attachment(val){
       this.getMeta(val)
+    },
+    value(val){
+      if(val) this.setItem(val)
     }
   },
   filters: {
@@ -103,8 +113,13 @@ export default {
     }
   },
   created() {
-    console.log('this.attachmentApi ' , typeof this.attachmentApi, ', this.attachment ' , this.attachment)
-    this.getMeta(this.attachment)
+    console.debug('this.value ', this.value, ', this.attachmentApi ', typeof this.attachmentApi, ', this.attachment ' , this.attachment)
+    if(this.value) {
+      this.setItem(this.value)
+      this.processing = false
+    }
+    else if(this.attachment && this.attachmentApi) this.getMeta(this.attachment)
+    else new Error('Required props : attachment && attachmentApi or only value (v-model)')
   }
 }
 </script>

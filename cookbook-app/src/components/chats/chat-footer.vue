@@ -1,32 +1,39 @@
 <template>
-  <b-row align-v="center" class="py-4">
-    <b-col cols="2" class="text-center pr-0">
+  <b-container class="py-4">
+    <b-row v-if="isPresentAttachmentPreview" class="mb-2" align-h="center">
+      <b-col cols="8" class="px-0">
+        <attachment-preview v-model="attachmentPreview"/>
+      </b-col>
+    </b-row>
+    <b-row align-v="center">
+      <b-col cols="2" class="text-center pr-0">
 
-      <chat-attachments :items="attachmentsItems" :disabled="disabled" @attachment-click="onAttachmentClick">
-        <template v-slot:item="{ item }">
-          <slot name="attachment-item" v-bind:item="item"></slot>
-        </template>
-        <template #title>
-          <slot name="attachment-title"></slot>
-        </template>
-      </chat-attachments>
+        <chat-attachments :items="attachmentsItems" :disabled="disabled" :searchField="attachmentSearchField" @attachment-click="onAttachmentClick">
+          <template v-slot:item="{ item }">
+            <slot name="attachment-item" v-bind:item="item"></slot>
+          </template>
+          <template #title>
+            <slot name="attachment-title"></slot>
+          </template>
+        </chat-attachments>
 
-    </b-col>
-    <b-col class="px-0" cols="8">
-      <b-form-group label-for="text-area-sender-mex" label="Mio Messaggio da inviare" label-sr-only class="m-0">
-        <b-form-textarea id="text-area-sender-mex" placeholder="Inserisci testo" rows="3"
-                         v-model="text" @input="typing"
-                         @keydown.13.prevent
-                         @keydown.enter="sendText" no-resize :disabled="disabled"/>
-      </b-form-group>
-    </b-col>
-    <b-col cols="2" class="text-center pl-0" >
-      <b-button v-if="showSendBtn" @click="sendText" variant="primary" :disabled="disabled" :aria-label="ariaLabelSend" >
-        <paper-plan-icon />
-        <b-icon-paperclip v-if="includeAttachment" />
-      </b-button>
-    </b-col>
-  </b-row>
+      </b-col>
+      <b-col class="px-0" cols="8">
+              <b-form-group label-for="text-area-sender-mex" label="Mio Messaggio da inviare" label-sr-only class="m-0">
+                <b-form-textarea id="text-area-sender-mex" placeholder="Inserisci testo" rows="3"
+                                 v-model="text" @input="typing"
+                                 @keydown.13.prevent
+                                 @keydown.enter="sendText" no-resize :disabled="disabled"/>
+              </b-form-group>
+      </b-col>
+      <b-col cols="2" class="text-center pl-0" >
+        <b-button v-if="showSendBtn" @click="sendText" variant="primary" :disabled="disabled" :aria-label="ariaLabelSend" >
+          <paper-plan-icon />
+          <b-icon-paperclip v-if="includeAttachment" />
+        </b-button>
+      </b-col>
+    </b-row>
+  </b-container>
 
 </template>
 
@@ -42,7 +49,9 @@ export default {
     disabled: Boolean,
 
     attachmentsItems: Array,
-    attachment: String
+    attachment: String,
+    attachmentSearchField: String,
+    attachmentPreview: Object
   },
   data(){
     return {
@@ -65,6 +74,10 @@ export default {
   computed: {
     ariaLabelSend(){
       return 'invia messaggio' + (this.includeAttachment? ' con un allegato':'')
+    },
+
+    isPresentAttachmentPreview(){
+      return this.attachmentPreview && Object.keys(this.attachmentPreview).length
     },
 
 

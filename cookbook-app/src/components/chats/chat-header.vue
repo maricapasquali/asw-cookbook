@@ -1,7 +1,7 @@
 <template>
   <b-skeleton-wrapper :loading="!value">
     <template #loading>
-      <b-container class="chat-header" >
+      <b-container class="chat-header py-4" >
         <b-row align-h="center">
           <b-col cols="4" class="pr-0">
             <b-row align-h="center" align-v="center" cols="2">

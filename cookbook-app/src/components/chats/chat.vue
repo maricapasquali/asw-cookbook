@@ -1,9 +1,9 @@
 <template>
   <b-container v-if="isLoggedIn" fluid class="chat" >
     <b-row cols="1" class="px-0">
-      <b-col ref="chat-header" class="messages-header text-center px-0" :style="cssChatHeader">
+      <b-col ref="chat-header" class="messages-header text-center px-0">
         <b-col>
-          <chat-header v-model="value" @on-user-leave="leaveChat({leaveUser: $event})"/>
+          <chat-header v-model="value" @on-user-enter="enterChat" @on-user-leave="leaveChat({leaveUser: $event})"/>
         </b-col>
         <b-col v-if="writeUsers.length" ref="col-typing" class="messages-typing">
           <chat-typing :users="writeUsers" :group="isChatGroup"/>
@@ -11,7 +11,7 @@
       </b-col>
 
       <b-col class="messages-container pt-3 pb-4" ref="messages" :style="cssMessages">
-        <b-row id="messages" ref="messages" class="px-3" cols="1" >
+        <b-row  id="messages"  class="px-3" cols="1" >
           <b-col  v-for="mex in messages" :key="mex._id" >
             <chat-message :value="mex" :group="isChatGroup" @resend="resendMessage" :attachment-api="getAttachmentsInfo" />
           </b-col>
@@ -21,12 +21,25 @@
 
       <b-col ref="chat-footer" v-if="!value || amINotReaderUser" class="messages-footer" >
         <chat-footer :disabled="!value" encrypted @send-text="sendMessage" @typing="sendTyping"
-                     :attachments-items="recipes" :attachment="attachment.link" @attachment-click="createLinkToSend"
+                     :attachments-items="recipes" :attachment="attachment.link" :attachmentPreview="attachment.preview" attachment-search-field="name" @attachment-click="createLinkToSend"
                      @write="onWriteMessage" >
+
           <template v-slot:attachment-item="{ item }">
-            <p class="attachment-item">{{item.name}}</p>
-            <!-- //TODO: change view ATTACHMENT VIEW on modal -->
+            <b-card no-body img-left class="attachment-item" body-class="py-0" style="cursor: pointer">
+              <b-row align-v="center" align-h="center">
+                <b-col><preview-recipe-image v-model="item.img" /></b-col>
+                <b-col>
+                  <b-card-body :title="item.name">
+                    <b-row align-v="center">
+                      <b-col class="pr-1"> <country-image v-model="item.country" heigth="0" :id="item.name"/> </b-col>
+                      <b-col class="pl-1"> <span>{{ item.category | recipeCategoryName }}</span> </b-col>
+                    </b-row>
+                  </b-card-body>
+                </b-col>
+              </b-row>
+            </b-card>
           </template>
+
           <template #attachment-title>
             <strong>Ricette</strong>
           </template>
@@ -41,6 +54,7 @@ import api from '@api'
 import {mapGetters} from "vuex";
 import {dateFormat} from "@services/utils";
 import ChatUtils from '@components/chats/utils'
+import {RecipeCategories} from "../../services/app";
 
 export default {
   name: "chat",
@@ -49,41 +63,63 @@ export default {
   },
   data(){
     return {
-      height: 120,
+      heightHeader: 100,
+      heightFooter: 120,
+
+      heightHeaderWithOffline: 100,
+      heightHeaderWithOnline: 75,
+      heightFooterWithAttachment: 343,
+      heightFooterWithoutAttachment: 120,
+
 
       messages: null,
 
       writeUsers: [],
 
       recipes: [],
-      attachment: { id: '', link:'' },
+      attachment: { id: '', link:'' , preview: {} },
     }
   },
   filters: {
-    dateFormat
+    dateFormat,
+    recipeCategoryName(val){
+      let category = RecipeCategories.find(val)
+      return category ? category.text : '';
+    }
   },
   watch: {
     messages:{
       deep:true,
       handler(val, old){
-        this._goToTheBottom('smooth')
+        if(old) this.$nextTick(() => this._goToTheBottom('smooth'))
       }
     },
     value(val, old) {
       if (!old) this._initialization(val)
-    }
+    },
+    'attachment.link'(val){
+      if(val) {
+        this.heightFooter = this.heightFooterWithAttachment
 
-  },
-  computed: {
-    cssChatHeader(){
-      return {
-        '--chat-header-height': `${this.height}px`,
+        let recipe = this.recipes.find(r => r._id === this.attachment.id)
+        if(recipe) this.attachment.preview = this.createObjectPreview(recipe, val)
+      }
+      else {
+        this.heightFooter = this.heightFooterWithoutAttachment
+
+        this.attachment.preview = {}
       }
     },
+    writeUsers(val){
+      if(val.length) this.heightHeader = this.heightHeaderWithOffline
+      else  this.heightHeader = this.heightHeaderWithOnline
+    }
+  },
+  computed: {
     cssMessages(){
       return {
-        '--position-top': `${this.height}px`,
-        '--position-bottom':`${this.height}px`,
+        '--position-top': `${this.heightHeader}px`,
+        '--position-bottom':`${this.heightFooter}px`,
       }
     },
 
@@ -141,10 +177,11 @@ export default {
   methods: {
 
     _goToTheBottom(behavior = 'auto'){
-      console.debug('_goToTheBottom ............')
-      //FIXME: _goToTheBottom NOT WORK
-      const messagesContainer = this.$refs.messages
-      if(messagesContainer) messagesContainer.scrollTo({ top: messagesContainer.scrollHeight , behavior: behavior});
+      console.debug('Go To The Bottom of the messages : behavior = ', behavior)
+      const messagesContainer = document.getElementById('messages');
+      if(messagesContainer)
+        messagesContainer.scrollTo({ top: messagesContainer.scrollHeight - messagesContainer.clientHeight, behavior: behavior});
+
     },
 
     ...ChatUtils,
@@ -200,7 +237,7 @@ export default {
     },
 
     resetAttachment(){
-      this.attachment = { id:'', link:''}
+      this.attachment = { id:'', link:'', preview: {} }
     },
     sendMessage(message, attachment){
       let _message = message;
@@ -254,10 +291,16 @@ export default {
     },
 
     enterChat({chatName, enteredUser}){
-      this.temporaryNameChat = chatName
-      console.log('User ', enteredUser, ' enter in chat : ', this.temporaryNameChat)
+      this.heightHeader = this.heightHeaderWithOnline
+
+      if(chatName && enteredUser){
+        this.temporaryNameChat = chatName
+        console.log('User ', enteredUser, ' enter in chat : ', this.temporaryNameChat)
+      }
     },
     leaveChat({chatName, leaveUser}){
+      this.heightHeader = this.heightHeaderWithOffline
+
       if(chatName) console.log('User ', leaveUser, ' leave chat : ', chatName)
       const index = this.writeUsers.findIndex(w => w._id === leaveUser)
       if(index !==-1) this.writeUsers.splice(index, 1)
@@ -272,8 +315,7 @@ export default {
         const unReadMessage = this.messages.filter(m => m.sender._id !== this.userIdentifier && !m.read.find(r => r.user._id === this.userIdentifier))
         this.readMessages(unReadMessage.reverse())
 
-        this.$nextTick(() => this._goToTheBottom)
-
+        this.$nextTick(() => this._goToTheBottom())
 
         console.debug('Initialization chat info = ', JSON.stringify(chat.info, null,1))
         console.debug('Initialization chat users = ', JSON.stringify(chat.users, null,1))
@@ -312,9 +354,18 @@ export default {
       }
     },
     createLinkToSend(recipe){
-      this.attachment.link = this._linkAttachment(recipe._id)
       this.attachment.id = recipe._id
+      this.attachment.link = this._linkAttachment(recipe._id)
       console.debug("attachment = ", this.attachment)
+    },
+
+    createObjectPreview(data, link){
+      return {
+        title: data.name,
+        img: data.img,
+        description: data.preparation,
+        link
+      }
     },
 
     whenAttachmentPresetUpdatePermission(){
@@ -349,12 +400,7 @@ export default {
                   .getRecipe(this.userIdentifier, id, null,this.accessToken)
                   .then(({data}) =>{
                     console.debug('Attachments = > ', data)
-                    return {
-                      title: data.name,
-                      img: 'https://localhost:3000/images/recipe-49fe5b0fef864c698cc75383374276.jpg', //data.img,
-                      description:  data.preparation,
-                      link
-                    }
+                    return this.createObjectPreview(data, link)
                   })
                   .catch(err => {
                     console.error(err)
@@ -405,10 +451,6 @@ export default {
     top: 0;
     z-index: 10;
 
-    min-height: var(--chat-header-height);
-    max-height: var(--chat-header-height);
-    height: var(--chat-header-height);
-
     & .messages-typing{
       background-color: $background-color;
     }
@@ -417,6 +459,7 @@ export default {
 
   & .messages-container {
     background-color: $background-color-chat;
+    box-sizing: border-box;
 
     & > div#messages {
       overflow: auto;
