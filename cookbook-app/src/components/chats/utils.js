@@ -2,6 +2,7 @@ import * as _ from 'lodash'
 import  api from "@api";
 import  {isCallable} from "@services/utils";
 import {bus} from "@/main";
+import {Server} from "@services/api";
 
 export function _lastAccess(chatType, users){
     let _lastAccess = '';
@@ -114,6 +115,34 @@ export function pushMessages(chats){ //[{info, messages}]
 
 }
 
+/* Listeners updates */
+export function _onUpdateUserInfos(user, newInfos){
+    if(user && newInfos){
+        if(newInfos.information) user.img = newInfos.information.img ? Server.images.path(newInfos.information.img) : ''
+        if(newInfos.userID) user.userID = newInfos.userID
+    }
+}
+export function _onUpdateUserInOneChat(chat, userInfo){
+    const foundUserInChat = chat.users.find(r => r.user && r.user._id === userInfo._id)
+    this._onUpdateUserInfos(foundUserInChat && foundUserInChat.user, userInfo)
+    chat.messages.filter(m => m.sender && m.sender._id === userInfo._id)
+        .forEach(m => this._onUpdateUserInfos(m.sender, userInfo))
+}
+
+export function onUpdateUserInOneChat(userInfo){
+    if(this.chat && userInfo) this._onUpdateUserInOneChat(this.chat, userInfo)
+}
+
+export function onUpdateUserInChatSection(userInfo){
+    if(userInfo){
+        if(this.chats.length) this.chats.forEach(chat => this._onUpdateUserInOneChat(chat, userInfo))
+        if(this.friends.length) {
+            const foundUserFriend = this.friends.find(f => f.user && f.user._id === userInfo._id)
+            this._onUpdateUserInfos(foundUserFriend && foundUserFriend.user, userInfo)
+        }
+    }
+}
+
 export default {
     _lastAccess,
     _baseInfoUser,
@@ -121,5 +150,10 @@ export default {
     _isChatGroup,
     _withAdmin,
     _goToChat,
-    pushMessages
+    pushMessages,
+
+    _onUpdateUserInfos,
+    _onUpdateUserInOneChat,
+    onUpdateUserInChatSection,
+    onUpdateUserInOneChat
 }

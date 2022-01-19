@@ -77,6 +77,9 @@ import {mapping} from "@services/api/users/friends/utils";
 import {mapGetters} from "vuex";
 import {_goToChat, _baseInfoUser} from '@components/chats/utils'
 
+import { onUpdateUserInChatSection,  _onUpdateUserInOneChat, _onUpdateUserInfos } from '@components/chats/utils'
+
+
 export default {
   name: "chats-section",
   data(){
@@ -223,7 +226,12 @@ export default {
           console.debug('Change role ', userRole)
         }
       }
-    }
+    },
+
+    /* LISTENERS UPDATES */
+    _onUpdateUserInOneChat,
+    _onUpdateUserInfos,
+    onUpdateUserInChatSection
   },
   created() {
     this.getFriends()
@@ -231,10 +239,14 @@ export default {
 
     bus.$on('push-message', this.onListenersPushMessage.bind(this))
     bus.$on('chat:change:role', this.onListenerChangeRole.bind(this))
+
+    bus.$on('user:update:info', this.onUpdateUserInChatSection.bind(this))
   },
   beforeDestroy() {
     bus.$off('push-message', this.onListenersPushMessage.bind(this))
     bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))
+
+    bus.$off('user:update:info', this.onUpdateUserInChatSection.bind(this))
   }
 }
 </script>

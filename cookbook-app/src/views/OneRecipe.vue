@@ -94,7 +94,7 @@
                 </b-col>
               </b-row>
             </b-col>
-            <b-col cols="2" class="text-right">
+            <b-col v-if="doc.shared" cols="2" class="text-right">
               <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike"/>
             </b-col>
           </b-row>
@@ -150,7 +150,7 @@ import api from '@api'
 import {mapGetters} from "vuex";
 import {scrollToRouterHash} from "@router";
 import NotFound from "./404";
-
+import {Server} from "@services/api";
 export default {
   name: "OneRecipe",
   props: {
@@ -224,11 +224,35 @@ export default {
     onDeletedRecipeListeners(_, recipe){
       if(recipe && this.doc._id === recipe) this.doc = ''
     },
+    /* Listeners updates */
     onDeletedUserListeners(id){
       if(this.doc && this.doc.owner && this.doc.owner._id === id) {
         this.doc.owner = null
         this.itemsBreadcrumb = []
         if(this.$route.name !== 'recipe') this.$router.replace({ name: 'recipe', params: { recipe_id: this.doc._id }})
+      }
+    },
+    _onUpdateUserInfos(user, newInfos){
+      if(newInfos.information) user.img = newInfos.information.img ? Server.images.path(newInfos.information.img) : ''
+      if(newInfos.userID) user.userID = newInfos.userID
+    },
+    onUpdateUserInfoListeners(userInfo){
+      if(userInfo){
+        if(this.doc.owner && this.doc.owner._id === userInfo._id) {
+          this._onUpdateUserInfos(this.doc.owner, userInfo)
+          this.itemsBreadcrumb[0].text = userInfo.userID
+        }
+        /* NOTE: the update of this.doc.permission, this.doc.ingredients has no effect on GUI:  */
+        if(this.doc.permission.length) {
+          const foundUserPermission = this.doc.permission.find(p => p.user && p.user._id === userInfo._id)
+          this._onUpdateUserInfos(foundUserPermission && foundUserPermission.user, userInfo)
+        }
+        if(this.doc.ingredients.length) {
+          this.doc
+              .ingredients
+              .filter(i => i.food.owner && i.food.owner._id === userInfo._id)
+              .forEach(i => this._onUpdateUserInfos(i.food.owner, userInfo))
+        }
       }
     }
   },
@@ -237,12 +261,14 @@ export default {
     bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
     bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))
   },
   beforeDestroy() {
     bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
     bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    bus.$off('user:update:info', this.onUpdateUserInfoListeners.bind(this))
   },
   mounted() {
     if(typeof this.value === "undefined") this.getRecipe()

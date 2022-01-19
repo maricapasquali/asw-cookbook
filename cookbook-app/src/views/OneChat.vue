@@ -11,6 +11,10 @@ import api from '@api'
 import {mapGetters, mapMutations} from "vuex";
 import NotFound from "./404";
 
+import {bus} from '@/main'
+
+import { onUpdateUserInOneChat,  _onUpdateUserInOneChat, _onUpdateUserInfos } from '@components/chats/utils'
+
 export default {
   name: "OneChat",
   components: {NotFound},
@@ -59,10 +63,19 @@ export default {
       }
       else this.$router.replace({ name: 'login' });
     },
+
+    /* LISTENERS UPDATES */
+    _onUpdateUserInOneChat,
+    _onUpdateUserInfos,
+    onUpdateUserInOneChat
   },
 
   created() {
     this.getChat()
+    bus.$on('user:update:info', this.onUpdateUserInOneChat.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('user:update:info', this.onUpdateUserInOneChat.bind(this))
   }
 }
 </script>
