@@ -8,7 +8,6 @@ import Searches from "@views/Searches";
 import ChangePassword from "@views/ChangePassword";
 import OneRecipe from "@views/OneRecipe";
 import ChatRecipe from "@views/ChatRecipe";
-import Chats from "@views/Chats";
 import OneChat from "@views/OneChat";
 
 export default [
@@ -31,11 +30,6 @@ export default [
       path: '/reset-password',
       name: 'reset-password',
       component: ChangePassword
-    },
-    {
-        path: '/chats',
-        name: 'global-chats',
-        component: Chats
     },
     {
         path: '/chats/:chat_id',

@@ -1,5 +1,5 @@
 import registerUserHandlers, {findConnectedUserBy, popConnectedUser, pushIfIsAbsentConnectedUser} from './user'
-import registerChatHandlers, {popIfInChatRoom} from './chat'
+import registerChatHandlers from './chat'
 import registerNotificationHandlers from './notification'
 import registerUpdateHandlers from './update'
 
@@ -46,7 +46,6 @@ export = function (server: http.Server | https.Server): void {
             }
             else popConnectedUser(io, 'socketID', socket.id)
             console.log(username +' is disconnected');
-            popIfInChatRoom(io, _id)
         });
 
     })

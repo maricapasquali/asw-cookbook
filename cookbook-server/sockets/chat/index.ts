@@ -3,28 +3,11 @@ import * as _ from 'lodash'
 import {findConnectedUserBy} from "../user";
 
 type ChatRoomUser = { _id: string | null,  userID: string | 'Anonymous', isAdmin?: boolean }
-
-const chatRoomsUsers: ChatRoomUser[] = []
-
-export function pushInChatRoom(io: any, user: ChatRoomUser){
-    let _index = chatRoomsUsers.findIndex(u => u._id === user._id)
-
-    if(_index === -1) chatRoomsUsers.push(user)
-    io.in(Rooms.CHAT_ROOM).emit('enter', chatRoomsUsers)
-    console.log('Chat Room: join . => ', chatRoomsUsers)
-}
-
-export function popIfInChatRoom(io: any, _id?: string){
-    let _index = chatRoomsUsers.findIndex(u => u._id == _id)
-
-    if(_index !== -1) chatRoomsUsers.splice(_index, 1)
-    io.in(Rooms.CHAT_ROOM).emit('leave',  chatRoomsUsers)
-    console.log('Chat Room: leave . => ', chatRoomsUsers)
-}
-
 type ChatExtraInfo = { _id: string, name?: string, type: string, usersRole: any[] }
 type Chat = { name: string, availableUsers: ChatRoomUser[], extra: ChatExtraInfo }
+
 const openedChats: Chat[] = []
+
 function pushInOpenedChat(chatName: string, availableUsers: ChatRoomUser[], extrasInfo: ChatExtraInfo){
     const _chat = { name: chatName, availableUsers , extra: extrasInfo }
     const noOpened: boolean = _.findIndex(openedChats, _chat) === -1
@@ -57,30 +40,6 @@ function popFromOpenedChat(io: any, chatName: string){
 
 export default function (io: any, socket: any): void {
     const user: ChatRoomUser = socket.handshake.auth.userinfo || { _id: null, userID: 'Anonymous' }
-
-    //TODO: REVIEW ON REAL TIME ALL USER ALSO ANONYMOUS AND ADMIN
-    socket.on('chat-room:enter', (data) => {
-        socket.join(Rooms.CHAT_ROOM)
-        console.log('Enter ', user)
-        pushInChatRoom(io, user)
-    })
-
-    socket.on('chat-room:leave', (data) => {
-        socket.leave(Rooms.CHAT_ROOM)
-        console.log('Leave ', user)
-        popIfInChatRoom(io, user._id)
-    })
-
-    socket.on('chat-room:message', (data) => {
-        console.log('/chats: message = ', data)
-        socket.to(Rooms.CHAT_ROOM).emit('message', data)
-    })
-
-    socket.on('chat-room:typing', (data) => {
-        console.log('/chats: typing = ', data)
-        socket.to(Rooms.CHAT_ROOM).emit('typing', data)
-    })
-
 
     // REAL TIME SIGNED/ADMIN USER
     const enterOrLeaveChat = ( mode: 'enter' | 'leave', chat: { _id: string, info: { name?: string, type: string , usersRole: any[] }, users: any[] }) => {
