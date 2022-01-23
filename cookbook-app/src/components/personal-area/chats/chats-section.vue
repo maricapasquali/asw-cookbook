@@ -75,10 +75,9 @@ import api from '@api'
 import {bus} from '@/main'
 import {mapping} from "@services/api/users/friends/utils";
 import {mapGetters} from "vuex";
-import {_goToChat, _baseInfoUser} from '@components/chats/utils'
+import {_goToChat, _baseInfoUser, _isChatOne, _isChatGroup} from '@components/chats/utils'
 
 import { onUpdateUserInChatSection,  _onUpdateUserInOneChat, _onUpdateUserInfos } from '@components/chats/utils'
-
 
 export default {
   name: "chats-section",
@@ -108,6 +107,7 @@ export default {
     },
     writeableChats(){
       const _writeableChats = this.chats.filter(chat => chat.users.find(r => r.user._id === this.userIdentifier && r.role !== 'reader'))
+      console.debug('writeableChats ', _writeableChats)
       return this.searchChat.trim().length ?
           _writeableChats.map(chat => ({name: this._baseInfoUser(chat.info, chat.users).name, chat}))
                          .filter(o => o.name && o.name.toLowerCase().startsWith(this.searchChat.toLowerCase()))
@@ -119,7 +119,8 @@ export default {
     chatItemRef(chatID){
       return 'chat-' + chatID
     },
-
+    _isChatOne,
+    _isChatGroup,
     _baseInfoUser,
 
     getFriends(){
@@ -231,7 +232,54 @@ export default {
     /* LISTENERS UPDATES */
     _onUpdateUserInOneChat,
     _onUpdateUserInfos,
-    onUpdateUserInChatSection
+    onUpdateUserInChatSection,
+    onAddFriendShip(friendship){
+      let _friendship = mapping(friendship, this.userIdentifier)
+      console.debug('onAddFriend : _friendship ', _friendship)
+      if(_friendship.user) {
+        this.friends.push(_friendship)
+        this.friends.sort((f1, f2) => f1.user.userID.localeCompare(f2.user.userID))
+      }
+    },
+    onRemoveFriendShip(friendship){
+      let _friendship = mapping(friendship, this.userIdentifier)
+      console.debug('onRemoveFriendShip: _friendship ', _friendship)
+      if(_friendship.user){
+        let id = _friendship.user._id
+
+        let index = this.friends.findIndex(f => f.user._id === id)
+        if(index !== -1) this.friends.splice(index, 1) //ok
+
+        this.chats.filter(chat => this._isChatOne(chat.info))
+                  .filter(chat => chat.users.find(r => r.user._id  === id))
+                  .forEach(chat => chat.users.forEach(r => {
+                    r.role = 'reader'
+                    r.exitedAt = Date.now()
+                  }))
+      }
+    },
+    onDeleteUser(id){
+      console.debug('onDeleteUser ', id)
+
+      let index = this.friends.findIndex(f => f.user._id === id)
+      if(index !== -1) this.friends.splice(index, 1) //ok
+
+      let chatInd = this.chats.find(chat => {
+        let users = chat.users.map(u => u.user._id);
+        return this._isChatOne(chat.info) && users.length === 2 && users.includes(id) && users.includes(this.userIdentifier)
+      })
+      this.chats.splice(chatInd, 1)
+
+      this.chats.filter(chat => this._isChatGroup(chat.info) && chat.users.map(u => u.user._id).includes(id))
+                .forEach((chat, ind, array) => {
+                  let index = chat.users.findIndex(r => r.user._id === id)
+                  if(index !== -1) {
+                    let chatWithAdmin = chat.users.filter(u => 'admin' === u.user.role)
+                    if(chatWithAdmin.length === chat.users.length - 1) array.splice(ind, 1)
+                    else chat.users.splice(index, 1)
+                  }
+                })
+    }
   },
   created() {
     this.getFriends()
@@ -241,12 +289,18 @@ export default {
     bus.$on('chat:change:role', this.onListenerChangeRole.bind(this))
 
     bus.$on('user:update:info', this.onUpdateUserInChatSection.bind(this))
+    bus.$on('friend:add', this.onAddFriendShip.bind(this))
+    bus.$on('friend:remove', this.onRemoveFriendShip.bind(this))
+    bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
     bus.$off('push-message', this.onListenersPushMessage.bind(this))
     bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))
 
     bus.$off('user:update:info', this.onUpdateUserInChatSection.bind(this))
+    bus.$off('friend:add', this.onAddFriendShip.bind(this))
+    bus.$off('friend:remove', this.onRemoveFriendShip.bind(this))
+    bus.$off('user:delete', this.onDeleteUser.bind(this))
   }
 }
 </script>

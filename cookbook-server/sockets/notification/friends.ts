@@ -59,10 +59,8 @@ export function update(socket: any, request: IFriend): void {
         if(user.info) socket.to(user.info.socketID).emit('friendship:update', {notification})
     }, err => console.error(err))
 
-    if(request.state === FriendShip.State.ACCEPTED) {
-        const exclude = []
-        if(user.info) exclude.push(user.info.socketID)
-        const otherFriends = getSocketIDs(exclude)
+    if(request.state == FriendShip.State.ACCEPTED) {
+        const otherFriends = getSocketIDs()
         if(otherFriends.length) socket.to(otherFriends).emit('friendship:update', {friendship: request})
     }
 }
@@ -94,9 +92,7 @@ export function remove(socket: any, otherUser: { _id: string, userID: string }):
         if(toUser.info) socket.to(toUser.info.socketID).emit('friendship:remove', {notification})
     }, err => console.error(err))
 
-    const exclude = []
-    if(toUser.info) exclude.push(toUser.info.socketID)
-    const otherFriends = getSocketIDs(exclude)
+    const otherFriends = getSocketIDs()
     if(otherFriends.length) {
         let friendship = { from: { _id: fromUser.info.user._id }, to: { _id: otherUser._id } }
         socket.to(otherFriends).emit('friendship:remove', {friendship})
