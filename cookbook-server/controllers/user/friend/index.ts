@@ -1,5 +1,5 @@
 import {existById, getRestrictedUser, getUser, paginationOf} from "../../index";
-import {Friend, User} from "../../../models";
+import {Chat, Friend, User} from "../../../models";
 import {Types} from "mongoose";
 import {DecodedTokenType} from "../../../modules/jwt.token";
 import {RBAC} from "../../../modules/rbac";
@@ -8,6 +8,7 @@ import {MongooseDuplicateError, MongooseValidationError} from "../../../modules/
 import * as _ from "lodash";
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
+import {IChat} from "../../../models/schemas/chat";
 
 const FriendShipPopulateOptions = {
     path: 'from to',
@@ -188,8 +189,23 @@ export function remove_friend(req, res){
                   console.debug(result)
                   if(result.n === 0) return res.status(404).json({ description: 'FriendShip is not found.' })
                   if(result.deletedCount === 0) return res.status(500).json({description: 'FriendShip is found but not delete.'})
+                  remove_chat_between(friendID, decodedToken._id)
                   return res.status(200).json({ description: 'Friendship is over.' })
               }, err => res.status(500).json({ code: err.code || 0, description: err.message }))
 
     }
+}
+
+function remove_chat_between(friend: string, me: string){
+    Chat.findOne({ 'users.user': { $all: [ Types.ObjectId(friend), Types.ObjectId(me) ] } })
+        .where('info.type').equals(IChat.Type.ONE)
+        .then(chat => {
+            if(!chat) return console.log('FriendShip - Remove chat : chat not found')
+            const exitedAt  = Date.now();
+            chat.users.forEach(r => {
+                r.role = IChat.Role.READER
+                r.exitedAt = exitedAt
+            })
+            chat.save().then(data => console.log('remove chat ',data._id), err => console.error('FriendShip: remove chat : err = ', err))
+        }, err => console.error('FriendShip: remove chat', err))
 }
