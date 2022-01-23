@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt'
 import {futureDateFromNow, randomString} from '../../modules/utilities'
-import {EmailLink, Friend, Notification, ShoppingList, User} from '../../models'
+import {Chat, EmailLink, Friend, Notification, ShoppingList, User} from '../../models'
 
 import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
@@ -26,6 +26,7 @@ import Subject = RBAC.Subject;
 import {Types} from "mongoose";
 import ObjectId = Types.ObjectId
 import {EmailValidator} from "../../../modules/validator";
+import {IChat} from "../../models/schemas/chat";
 
 const app_name = require('../../../app.config.json').app_name
 
@@ -280,6 +281,37 @@ function deleteUserRef(user: IUser): void {
           .where('user').in([user._id, user._id.toString()])
           .then(result => console.log('Delete friendships of user ', userID, ' : ', result),
                 err => console.error('Delete friendships of user ', userID, ' : ', err))
+
+    Chat.deleteMany()
+        .where('chat.info').equals(IChat.Type.ONE)
+        .where('users.user').equals(user._id)
+        .then(result => console.log('Delete chats one of user ', userID, ' : ', result),
+            err => console.error('Delete chats one  of user ', userID, ' : ', err))
+
+    Chat.find()
+        .where('chat.info').equals(IChat.Type.GROUP)
+        .where('users.user').equals(user._id)
+        .then(chats => {
+                if(chats.length === 0) return console.error('Delete chats one  of user ', userID, ' : Chat not found.')
+                for (const chat of chats){
+                    let index = chat.users.findIndex(r => r.user._id == user._id)
+                    if(index !== -1) {
+                        let chatWithAdmin = chat.users.filter(u => Role.ADMIN == u.user.role)
+                        if(chatWithAdmin.length == chat.users.length - 1) {
+                            chat.remove()
+                                .then(result => console.log('Delete chat group with admins of ', userID, ' : ', result),
+                                      err => console.error('Delete chat group with admins of ', userID, ' : ', err))
+                        }
+                        else {
+                            chat.users.splice(index, 1)
+                            chat.save()
+                                .then(result => console.log('Delete user '+userID+' on chat group ('+chat._id+') : ', result),
+                                      err => console.error('Delete user '+userID+' on chat group ('+chat._id+') : ', err))
+                        }
+                    } else console.error('User not found in chat = ', chat._id)
+                }
+            },
+            err => console.error('Delete chats one  of user ', userID, ' : ', err))
 }
 function send_email_erase_user(user: IUser): void {
     const eraseUserEmail: TemplateEmail = new EraseUserEmail({
