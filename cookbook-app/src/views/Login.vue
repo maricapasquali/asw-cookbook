@@ -118,7 +118,7 @@
 import api from '@api'
 import configuration from '@app/app.config.json'
 import {EmailValidator} from "@app/modules/validator";
-import {mapMutations} from "vuex";
+import {mapActions, mapMutations} from "vuex";
 
 
 export default {
@@ -208,7 +208,7 @@ export default {
     },
 
     ...mapMutations(['startSession']),
-
+    ...mapActions(['getNumberOfUnReadNotifications']),
     login: function (){
       api.users.session.login(this.credential)
          .then(({data}) => {
@@ -216,6 +216,7 @@ export default {
            let {token, userInfo} = data
 
            this.startSession({...token, user: userInfo})
+           this.getNumberOfUnReadNotifications()
 
            let location = {
              name: data.firstLogin ? 'change-password' : 'p-user-account',

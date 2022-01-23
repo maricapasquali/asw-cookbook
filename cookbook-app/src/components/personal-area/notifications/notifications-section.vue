@@ -36,7 +36,7 @@
 
 <script>
 import {bus} from '@/main'
-import {mapGetters} from "vuex";
+import {mapGetters, mapMutations} from "vuex";
 import api from '@api'
 import {dateFormat} from "@services/utils";
 
@@ -189,12 +189,15 @@ export default {
       }
     },
 
+    ...mapMutations(['removeUnReadNotification']),
+
     updateNotification(doc){
       console.log(doc._id + ' mark as read .')
       api.notifications
          .updateNotification(this.userIdentifier, doc._id, {read: true}, this.accessToken)
          .then(({data}) => {
               doc.read = true
+              this.removeUnReadNotification()
               console.log(data)
          })
          //TODO: HANDLER ERROR UPDATE NOTIFICATION
@@ -211,7 +214,10 @@ export default {
       // this.docs.splice(index, 1)
       api.notifications
          .deleteNotification(this.userIdentifier, notificationID, this.accessToken)
-         .then(({data}) => this.docs.splice(index, 1))
+         .then(({data}) => {
+           if(!this.docs[index].read) this.removeUnReadNotification()
+           this.docs.splice(index, 1)
+         })
           //TODO: HANDLER ERROR DELETE NOTIFICATION
          .catch(err => console.error(err))
     },

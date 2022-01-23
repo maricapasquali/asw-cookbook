@@ -9,7 +9,7 @@
 
 <script>
 import  {bus} from "@/main";
-import {mapGetters} from "vuex";
+import {mapGetters, mapActions} from "vuex";
 
 import notifications from "@/notifications";
 import updates from "@/updates";
@@ -25,7 +25,7 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['socket', 'userIdentifier', 'accessToken', 'isAdmin']),
+    ...mapGetters(['socket', 'userIdentifier', 'accessToken', 'isAdmin', 'isLoggedIn']),
     navigatorVisibility: function (){
       return !this.notNav.includes(this.$route.name)
     },
@@ -51,6 +51,7 @@ export default {
     },
 
     // NOTIFICATIONS
+    ...mapActions(['getNumberOfUnReadNotifications']),
     ...notifications,
     //UPDATES
     ...updates,
@@ -65,6 +66,7 @@ export default {
     bus.$on('hideNavigationBar', this.hideNavigationBar.bind(this))
 
     // NOTIFICATIONS
+    if(this.isLoggedIn) this.getNumberOfUnReadNotifications()
     this.friendShipListeners()
     this.foodListeners()
     this.commentListeners()

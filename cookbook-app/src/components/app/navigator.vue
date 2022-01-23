@@ -35,7 +35,16 @@
             <b-dropdown-item v-if="isAdmin" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userIdentifier}}">Alimenti</b-dropdown-item>
             <b-dropdown-item v-if="isAdmin" :active="isUsersActive" :to="{name: 'p-user-users', params: {id: userIdentifier}}">Utenti</b-dropdown-item>
 
-            <b-dropdown-item :active="isNotificationsActive" :to="{name: 'p-user-notifications', params: {id: userIdentifier}}">Notifiche</b-dropdown-item>
+            <b-dropdown-item :active="isNotificationsActive" :to="{name: 'p-user-notifications', params: {id: userIdentifier}}">
+             <b-row>
+               <b-col cols="6">
+                 <span>Notifiche</span>
+               </b-col>
+               <b-col class="text-right px-1"  cols="6">
+                 <h5><b-badge :variant="isNotificationsActive ? 'light': 'primary'"  v-if="unreadNotifications>0">{{unreadNotifications}}<span class="sr-only">notifiche non lette</span></b-badge></h5>
+               </b-col>
+             </b-row>
+            </b-dropdown-item>
             <b-dropdown-item :active="isChatsActive" :to="{name: 'p-user-chats', params: {id: userIdentifier}}">Chats</b-dropdown-item>
             <b-dropdown-item @click="logout">Sign Out</b-dropdown-item>
 
@@ -85,6 +94,9 @@ export default {
       'isGuestOrSigned',
       'accessToken'
     ]),
+    unreadNotifications(){
+      return this.$store.state.unreadNotifications
+    },
     isHomePageActive: function (){
       return this.$route.name === 'homepage'
     },

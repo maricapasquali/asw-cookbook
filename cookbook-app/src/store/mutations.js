@@ -40,6 +40,8 @@ export default {
         localStorage.removeItem('user.info')
         localStorage.removeItem('token.access')
         localStorage.removeItem('token.refresh')
+
+        Vue.set(state, 'unreadNotifications', 0)
     },
     changeUserId(state, newUserID){
         if(state.user){
@@ -53,5 +55,13 @@ export default {
         localStorage.setItem('token.access', newAccessToken)
         console.log('Refresh access token .')
         _setSocket(state)
+    },
+    addUnReadNotification(state, num){
+        if(num) Vue.set(state, 'unreadNotifications', num)
+        else Vue.set(state, 'unreadNotifications', state.unreadNotifications + 1)
+    },
+    removeUnReadNotification(state){
+        if(state.unreadNotifications > 0)
+            Vue.set(state, 'unreadNotifications', state.unreadNotifications - 1)
     }
 }

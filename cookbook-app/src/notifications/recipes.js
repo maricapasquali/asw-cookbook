@@ -8,7 +8,10 @@ const options = {
 
 function _operationOnRecipe(op, notification, data){
     console.debug('recipe ', op , ' => ', { notification, data })
-    if(notification) this.$bvToast.toast(notification.content, options)
+    if(notification) {
+        this.$bvToast.toast(notification.content, options)
+        this.$store.commit('addUnReadNotification')
+    }
     bus.$emit('recipe:' + op, notification, data)
 }
 
