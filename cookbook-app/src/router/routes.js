@@ -7,6 +7,8 @@ import OneUser from "@views/OneUser";
 import Searches from "@views/Searches";
 import ChangePassword from "@views/ChangePassword";
 import OneRecipe from "@views/OneRecipe";
+import ChatRecipe from "@views/ChatRecipe";
+import OneChat from "@views/OneChat";
 
 export default [
     {
@@ -30,6 +32,16 @@ export default [
       component: ChangePassword
     },
     {
+        path: '/chats/:chat_id',
+        name: 'chat',
+        component: OneChat
+    },
+    {
+        path: '/chats/:chat_id/recipes/:recipe_id', //PRIVATE: ONLY FOR CHAT USERS
+        name: 'recipe-shared-chat',
+        component: ChatRecipe
+    },
+    {
         path: '/users/:id/change-default-password', //PRIVATE: ONLY FIRST LOGIN ADMIN
         name: 'change-password',
         component: ChangePassword
@@ -45,8 +57,13 @@ export default [
         component: OneUser
     },
     {
-        path: '/users/:id/recipe/:recipe_id',
+        path: '/users/:id/recipes/:recipe_id',
         name: 'single-recipe',
+        component: OneRecipe
+    },
+    {
+        path: '/recipes/:recipe_id',
+        name: 'recipe',
         component: OneRecipe
     },
     {

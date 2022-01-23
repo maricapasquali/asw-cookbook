@@ -16,6 +16,7 @@
 
 <script>
 import api from '@api'
+import {mapGetters} from "vuex";
 export default {
   name: "CheckAccound",
   data: function (){
@@ -30,13 +31,19 @@ export default {
       },
     }
   },
+  computed: {
+    ...mapGetters(['socket'])
+  },
   created() {
-    api.users.checkAccount(this.$route.query).then((response) =>{
-        this.success.show = true
-    }, err => {
-      this.error.show = true
-      this.error.msg = api.users.HandlerErrors.checkAccount(err)
-    })
+    api.users
+       .checkAccount(this.$route.query)
+       .then(({data}) => {
+          this.success.show = true
+          this.socket.emit('user:signup', data._id)
+       }, err => {
+          this.error.show = true
+          this.error.msg = api.users.HandlerErrors.checkAccount(err)
+       })
   }
 }
 </script>

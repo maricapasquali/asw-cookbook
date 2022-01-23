@@ -1,5 +1,5 @@
 <template>
-  <li>
+  <li :id="commentId">
     <div>
       <!-- Modal for reporting-->
       <b-modal v-model="showReportComment" title="Segnala commento"  @ok="report" centered ok-only>
@@ -12,27 +12,27 @@
       </b-modal>
 
       <b-row v-if="isDeletedComment" class="deleted-comment">
-        <b-col align="center"><b-icon-exclamation-triangle-fill/> <span>Commento cancellato.</span> </b-col>
+        <b-col class="text-center"><b-icon-exclamation-triangle-fill/> <span>Commento cancellato.</span> </b-col>
       </b-row>
       <b-row v-else-if="isReportedComment" class="reported-comment" cols="1" cols-sm="1">
-        <b-col align="center"><b-icon-exclamation-triangle-fill/> <span>Commento segnalato.</span> </b-col>
-        <b-col align="center"><b-button variant="link" @click="showReportedComment">Visualizza comunque</b-button></b-col>
+        <b-col class="text-center"><b-icon-exclamation-triangle-fill/> <span>Commento segnalato.</span> </b-col>
+        <b-col class="text-center"><b-button variant="link" @click="showReportedComment">Visualizza comunque</b-button></b-col>
       </b-row>
       <b-row v-else class="comment-container" cols="1">
         <b-col class="comment-header pl-0">
           <b-row>
             <b-col>
               <b-row cols="1" align-v="center" class="avatar-userID-container ml-1">
-                <b-col align="center" class="avatar mt-4 px-0">
-                  <avatar :value="isThereProfileImg(comment.user)" />
+                <b-col class="text-center avatar mt-4 px-0">
+                  <avatar :value="isThereProfileImg(comment.user)" :user="comment.user && comment.user._id"/>
                 </b-col>
-                <b-col align="center" class="userID px-0">
+                <b-col class="text-center userID px-0">
                   <router-link v-if="comment.user" :to="{name: 'single-user', params: {id: comment.user._id }}">{{ comment.user | name }}</router-link>
                   <span v-else>{{ comment.user | name }}</span>
                 </b-col>
               </b-row>
              </b-col>
-            <b-col cols="3" align="end" class="mt-3 mr-2">
+            <b-col cols="3" class="text-right mt-3 mr-2">
               <div class="right">
                 <b-button-group>
                   <b-button :id="changeCommentId" v-if="isOwnerComment" @click="toggleChangeMode(comment.content)" variant="primary">
@@ -56,7 +56,7 @@
                     <b-form-textarea :id="changeFormCommentId" v-model="changeMode.content" rows="5" />
                   </b-form-group>
                 </b-col>
-                <b-col cols="12" align="end" class="mt-1">
+                <b-col cols="12" class="text-right mt-1">
                   <b-button-group v-if="changeMode.content.length">
                     <b-button variant="primary" @click="changeComment">Salva</b-button>
                   </b-button-group>
@@ -72,7 +72,7 @@
             <b-container fluid class="px-0 py-3">
               <b-row cols="2" align-h="between">
                 <b-col cols="8"><span class="timestamp">{{ comment.timestamp, language | dateFormat }}</span> </b-col>
-                <b-col cols="3" align="end"><like v-model="comment.likes" :recipe="recipe" :commentID="comment._id" :no-like="youNotMakeLike"/> </b-col>
+                <b-col cols="3" class="text-right"><like v-model="comment.likes" :recipe="recipe" :comment="comment" :no-like="youNotMakeLike"/> </b-col>
               </b-row>
             </b-container>
             <b-button-group class="actions">
@@ -97,9 +97,10 @@
   </li>
 </template>
 <script>
-import {dateFormat} from "@services/utils";
+import {bus} from "@/main";
+import {dateFormat, clone} from "@services/utils";
 
-import api from '@api'
+import api, {Server} from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -127,6 +128,9 @@ export default {
     dateFormat: dateFormat
   },
   computed:{
+    commentId(){
+      return 'comment-'+ this.comment._id
+    },
     editorCommentId(){
       return 'editor-' + this.comment._id
     },
@@ -145,11 +149,11 @@ export default {
     },
 
     youNotMakeLike(){
-      return this.isAdmin || this.isOwnerComment
+      return this.isAdmin || this.isOwnerComment || !this.recipe.owner
     },
 
     youCanCommentOrReport(){
-      return !this.isAdmin && !this.isOwnerComment
+      return !this.isAdmin && !this.isOwnerComment && this.recipe.owner
     },
 
     isDeletedComment(){
@@ -159,7 +163,7 @@ export default {
       return this.comment.reported !== false
     },
 
-    ...mapGetters(['accessToken', 'userIdentifier', 'isAdmin'])
+    ...mapGetters(['accessToken', 'userIdentifier', 'username', 'isAdmin', 'isLoggedIn', 'socket'])
   },
   methods:{
     isThereProfileImg(user){
@@ -176,10 +180,16 @@ export default {
     report(){
       api.recipes
          .comments
-         .updateComment(this.recipe.ownerID, this.recipe.id, this.comment._id, this.accessToken, {action: 'report'})
+         .updateComment(this.recipe.owner._id, this.recipe._id, this.comment._id, this.accessToken, {action: 'report'})
          .then(({data})=> {
            this.comment.reported = true
            this.$emit('reporting', this.comment)
+
+           const _comment = clone(this.comment)
+           this.socket.emit('comment:report',
+               Object.assign(_comment, { recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner} }),
+               this.isLoggedIn ? {_id: this.userIdentifier, userID: this.username}: undefined)
+
          })
           //TODO: HANDLER ERROR REPORT COMMENT
          .catch(err => {
@@ -199,11 +209,16 @@ export default {
     addResponse(text){
       api.recipes
          .comments
-         .createResponse(this.recipe.ownerID, this.recipe.id, this.comment._id, {content: text}, this.accessToken)
+         .createResponse(this.recipe.owner._id, this.recipe._id, this.comment._id, {content: text}, this.accessToken)
          .then(({data}) => {
            this.comment.responses.push(data)
            console.debug('You answered.')
            this.$emit('add-response', data)
+
+           const _comment = clone(this.comment)
+           this.socket.emit('comment:response', Object.assign(_comment,
+               { recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner} }), data)
+
          })
           //TODO: HANDLER ERROR ADD RESPONSE TO COMMENT
          .catch(err => console.error(err))
@@ -222,8 +237,8 @@ export default {
       if(this.comment.content !== this.changeMode.content) {
         api.recipes
            .comments
-           .updateComment(this.recipe.ownerID,
-               this.recipe.id,
+           .updateComment(this.recipe.owner._id,
+               this.recipe._id,
                this.comment._id,
                this.accessToken,
             { data: { content: this.changeMode.content } })
@@ -231,6 +246,7 @@ export default {
              console.debug('Update comment = ', data)
              this.comment.content = this.changeMode.content
 
+             this.socket.emit('comment:update', this.comment)
              this.toggleChangeMode('')
            })
             //TODO: HANDLER ERROR CHANGE CONTENT OF COMMENT
@@ -243,15 +259,70 @@ export default {
     removeComment(){
       api.recipes
          .comments
-         .deleteComment(this.recipe.ownerID, this.recipe.id, this.comment._id, this.accessToken)
+         .deleteComment(this.recipe.owner._id, this.recipe._id, this.comment._id, this.accessToken)
          .then(({data}) => {
            this.comment.content = ""
            this.$emit('remove', this.comment)
+           this.socket.emit('comment:delete', this.comment._id)
          })
           //TODO: HANDLER ERROR REMOVE COMMENT
          .catch(err => console.error(err))
+    },
+
+    /* Listeners notification */
+    renderReportedComment(notification){
+      if(this.comment._id === notification.otherInfo.comment) this.comment.reported = true
+    },
+    renderResponseComment(notification, response){
+      if(response && this.comment._id === response.comment) this.comment.responses.push(response.data)
+    },
+
+    /* Listeners update */
+    renderUpdateComment(_comment){
+      if(_comment && _comment._id === this.comment._id) this.comment = _comment
+    },
+    renderDeleteComment(commentID){
+      if(commentID === this.comment._id) this.comment.content = ''
+    },
+    renderUnreportedComment(commentID){
+      if(this.comment._id === commentID) this.comment.reported = false
+    },
+
+    onUpdateInfos(userInfo){
+
+      if(this.comment.user && userInfo && this.comment.user._id === userInfo._id) {
+        if(userInfo.information)
+          this.comment.user.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
+
+        if(userInfo.userID) this.comment.user.userID = userInfo.userID
+      }
+    },
+    onDeletedUserListeners(id){
+      if(this.comment.user && this.comment.user._id === id) this.comment.user = null
     }
   },
+  created() {
+    bus.$on('comment:report', this.renderReportedComment.bind(this))
+    bus.$on('comment:response',  this.renderResponseComment.bind(this))
+
+    bus.$on('comment:update',  this.renderUpdateComment.bind(this))
+    bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
+    bus.$on('comment:unreport',  this.renderUnreportedComment.bind(this))
+
+    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('comment:report', this.renderReportedComment.bind(this))
+    bus.$off('comment:response', this.renderResponseComment.bind(this))
+
+    bus.$off('comment:update', this.renderUpdateComment.bind(this))
+    bus.$off('comment:delete', this.renderDeleteComment.bind(this))
+    bus.$off('comment:unreport', this.renderUnreportedComment.bind(this))
+
+    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+  }
 }
 </script>
 

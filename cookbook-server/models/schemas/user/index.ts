@@ -20,10 +20,15 @@ export interface IUser extends Document{
     credential:{
         userID:string
         hash_password: string
-        role: string
-        tokens: {access: string, refresh: string} | number | any
+        role: string,
+        lastAccess: number
     }
     strike?:number
+}
+export namespace IUser {
+    export function isAlreadyLoggedOut(user: IUser): boolean {
+        return user.credential.lastAccess && user.credential.lastAccess !== 0
+    }
 }
 
 export namespace SignUp {
@@ -122,10 +127,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
             default: Role.SIGNED,
             enum: Role.value(),
         },
-        tokens: {
-            type: Schema.Types.Mixed, //number | {access: string, refresh: string}
-            required: false
-        }
+        lastAccess: { type: Number, required: false, default: undefined },
     },
     strike: {
         type: Number,

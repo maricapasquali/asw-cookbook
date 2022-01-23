@@ -1,6 +1,7 @@
 import axios, {AxiosRequestConfig, AxiosResponse} from 'axios'
 import * as variables from "../../../../modules/hosting/variables"
 import store from '../../store'
+import {newAccessToken} from "./users/session";
 
 declare module 'axios' {
     interface AxiosRequestConfig {
@@ -14,18 +15,6 @@ const instance = axios.create({
         "Content-Type": "application/json",
     },
 })
-
-//use token
-function newAccessToken(id: string, data:object, token: string){
-    return instance.post('/users/:id/refreshToken', data,{
-        headers: {
-            authorization: 'Bearer ' + token,
-        },
-        urlParams:{
-            id: id
-        }
-    })
-}
 
 instance.interceptors.request.use(function (config){
     if (!config.url) return config;
@@ -48,7 +37,8 @@ instance.interceptors.response.use(function(res) {
 
         let userIdentifier = store.getters.userIdentifier
         console.debug('User is logged = ', userIdentifier)
-        if (err.response && err.response.status === 401 && userIdentifier && !originalConfig._retry && !originalConfig.url.includes('refreshToken')) {
+
+        if (err.response && err.response.status === 401 && userIdentifier && !originalConfig._retry && !originalConfig.url.includes('refresh-token')) {
             originalConfig._retry = true;
             try {
                 const oldAccessToken = store.getters.accessToken

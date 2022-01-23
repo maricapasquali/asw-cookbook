@@ -191,11 +191,10 @@
 import api from '@api'
 import configuration from "@app/app.config.json";
 import {EmailValidator} from '@app/modules/validator'
-import InputPassword from "../input-password";
 import {Countries, Genders} from '@services/app'
+import {mapGetters} from "vuex";
 export default {
   name: "sign-up",
-  components: {InputPassword},
   data: function() {
     return {
       optionsGender: Genders.get(),
@@ -232,6 +231,7 @@ export default {
     }
   },
   computed:{
+    ...mapGetters(['socket']),
     validationInformation: function (){
       return this.validation.firstName && this.validation.lastName && this.validation.email
     },
@@ -263,17 +263,21 @@ export default {
       //for(const [k, v] of formData.entries()) console.log(k, ' -> ', v);
 
       this.processing = true
-      api.users.signup(formData).then(r =>{
-        this.success = true
-        this.error = {
-          show: false,
-          msg: ''
-        }
-        this.showCredentials = false
-      }).catch(err => {
-        this.error.show = true
-        this.error.msg = api.users.HandlerErrors.signUp(err)
-      }).then(() => this.processing=false)
+      api.users
+         .signup(formData)
+         .then(({data}) =>{
+            this.success = true
+            this.error = { show: false, msg: '' }
+            this.showCredentials = false
+
+            this.socket.emit('user:signup', data.userID)
+
+         })
+         .catch(err => {
+            this.error.show = true
+            this.error.msg = api.users.HandlerErrors.signUp(err)
+         })
+         .then(() => this.processing=false)
     },
 
     onSubmit: function (event){

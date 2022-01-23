@@ -15,8 +15,9 @@
         <b-button variant="success" v-else @click="sendRequestFriendShip">Segui</b-button>
       </b-button-group>
 
-<!--      <b-button variant="secondary" @click=""> Chat </b-button>-->
-      <b-button :id="chatId" v-if="withChat && isMyFriend" variant="secondary"> <b-icon-chat-fill/> </b-button>
+      <b-button :id="chatId" v-if="withChat && isMyFriend" variant="secondary" @click="_goToChat(otherUser._id)">
+        <b-icon-chat-fill/>
+      </b-button>
       <b-tooltip v-if="withChat && isMyFriend" :target="chatId"> Chat con <strong>{{otherUser.userID}}</strong></b-tooltip>
     </b-button-group>
   </div>
@@ -25,6 +26,8 @@
 <script>
 import api from '@api'
 import {mapGetters} from "vuex";
+import {bus} from "@/main";
+import {_goToChat} from '@components/chats/utils'
 
 export default {
   name: "b-friendship",
@@ -38,44 +41,33 @@ export default {
   data(){
     return {
       deleteFriend: false,
+
+      requestToUpdate: false,
+      requestJustSend: false,
+      justFollow: false,
+      requestRejected: false,
+      isMyFriend: false,
+    }
+  },
+  watch: {
+    otherUser(vl){
+      console.debug('friendship: set other user => ', vl._id)
+      this.onCheckFriendshipState(vl)
     }
   },
   computed: {
-    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned', 'userFriends']),
+    ...mapGetters(['socket', 'accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned', 'userFriends']),
 
     chatId(){
       return 'btn-chat-' + this.otherUser._id
-    },
-
-    requestToUpdate(){
-      return this.userFriends && this.userFriends.find(f => (f.from._id === this.otherUser._id && f.to._id === this.userIdentifier) && f.state === 'pending')
-    },
-    requestJustSend(){
-      return this.userFriends && this.userFriends.find(f => (f.from._id === this.userIdentifier && f.to._id === this.otherUser._id) && f.state === 'pending')
-    },
-
-    justFollow(){
-      return this._justUpdated('accepted')
-    },
-    requestRejected(){
-      return this._justUpdated( 'rejected')
     },
 
     isNotMe(){
       return this.otherUser._id !== this.userIdentifier
     },
 
-    isMyFriend(){
-      return this.userFriends && this.userFriends.find(f => (f.from._id === this.otherUser._id || f.to._id === this.otherUser._id) && f.state === 'accepted')
-    }
-
   },
   methods: {
-    _justUpdated(state){
-      let filter = (f) => (f.from._id === this.userIdentifier && f.to._id === this.otherUser._id)  ||
-                          (f.from._id === this.otherUser._id && f.to._id === this.userIdentifier)
-      return this.userFriends && this.userFriends.find(f => filter(f) && f.state === state)
-    },
 
     // POST
     sendRequestFriendShip(){
@@ -83,7 +75,8 @@ export default {
           .requestFriendShip(this.otherUser._id, this.accessToken)
           .then(({ data }) => {
             console.log('Request friendship pending. ')
-            this.$store.commit('pushFriend', data)
+            this.requestJustSend = true
+            this.socket.emit('friendship:request', data)
           })
           //TODO: HANDLER ERROR ADD FRIENDSHIP
           .catch(err => console.error(err))
@@ -95,7 +88,9 @@ export default {
           .breakFriendShip(this.userIdentifier, this.otherUser._id, this.accessToken)
           .then(({data}) => {
             console.log('Friendship is over. ')
-            this.$store.commit('popFriend', this.otherUser._id)
+            this.justFollow = false
+            this.isMyFriend = false
+            this.socket.emit('friendship:remove', this.otherUser)
           })
           //TODO: HANDLER ERROR DELETE FRIENDSHIP
           .catch(err => console.error(err))
@@ -107,7 +102,11 @@ export default {
           .updateFriendShip(this.userIdentifier, this.otherUser._id, { state: state }, this.accessToken)
           .then(({data}) => {
             console.log('State friendship is '+state+'. ')
-            this.$store.commit('updateFriend', data)
+            this.requestToUpdate = false
+            this.requestRejected = state === 'rejected'
+            this.justFollow = state === 'accepted'
+            this.isMyFriend = this.justFollow
+            this.socket.emit('friendship:update', data)
           })
           //TODO: HANDLER ERROR UPDATE FRIENDSHIP
           .catch(err => console.error(err))
@@ -117,19 +116,82 @@ export default {
     },
     acceptRequest(){
       return this._updateFriendShip('accepted')
+    },
+
+    setFriendShip(vl, data){
+      if(data){
+        console.debug('other user = ', vl , ', friendship = ', data)
+        this.requestToUpdate = (data.from === vl._id && data.to === this.userIdentifier) && data.state === 'pending'
+        this.requestJustSend = (data.from === this.userIdentifier && data.to === vl._id) && data.state === 'pending'
+        let filter = (data.from === this.userIdentifier && data.to === vl._id) || (data.from === vl._id && data.to === this.userIdentifier)
+        this.justFollow = filter && data.state === 'accepted'
+        this.requestRejected = filter && data.state === 'rejected'
+        this.isMyFriend = (data.from === vl._id || data.to === vl._id) && data.state === 'accepted'
+      }
+    },
+    onCheckFriendshipState(vl){
+       if(vl){
+         this.socket.emit('check:user:friendship', vl._id)
+         this.socket.on('friendship:state:'+ vl._id, this.setFriendShip.bind(this, vl))
+       }
+    },
+
+    /* chat */
+    _goToChat,
+
+    /* Listeners notification */
+    onListenFriendshipRequest(notification){
+      let _id = notification.otherInfo.from
+
+      if(this.otherUser._id === _id) {
+        this.requestToUpdate = true
+
+        this.requestJustSend = false
+        this.justFollow = false
+        this.requestRejected = false
+        this.isMyFriend = false
+      }
+      this.$emit('add-friend')
+    },
+    onListenFriendshipUpdate(notification){
+      let {state, to: user } = notification.otherInfo
+
+      if(this.otherUser._id === user) {
+
+        this.requestRejected = state === 'rejected'
+        this.justFollow = state === 'accepted'
+        this.isMyFriend = this.justFollow
+
+        this.requestToUpdate = false
+        this.requestJustSend = false
+      }
+    },
+    onListenFriendshipRemove(notification){
+      let _id = notification.otherInfo.exFriend
+      if(this.otherUser._id === _id) {
+        this.requestToUpdate = false
+        this.requestJustSend = false
+        this.justFollow = false
+        this.requestRejected = false
+        this.isMyFriend = false
+      }
+      this.$emit('remove-friend')
     }
+  },
+  mounted() {
+    console.debug('mounted b-friendship')
+    this.onCheckFriendshipState(this.otherUser)
+    bus.$on('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
+    bus.$on('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
+    bus.$on('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
+    bus.$off('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
+    bus.$off('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.friends-buttons{
-
-  & > .request-send {
-      //color: #80bdff;
-  }
-  & > .request-reject {
-      //color: red;
-  }
-}
 </style>

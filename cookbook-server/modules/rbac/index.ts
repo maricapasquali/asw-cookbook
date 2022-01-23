@@ -49,6 +49,17 @@ export class RBAC implements IRbac {
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.FRIEND },
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.FRIEND },
 
+            { roles: [RBAC.Role.SIGNED, RBAC.Role.ADMIN], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.NOTIFICATION },
+            { roles: [RBAC.Role.SIGNED, RBAC.Role.ADMIN], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.NOTIFICATION },
+            { roles: [RBAC.Role.SIGNED, RBAC.Role.ADMIN], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.NOTIFICATION },
+
+            { roles: [RBAC.Role.SIGNED, RBAC.Role.ADMIN], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.CHAT },
+            { roles: [RBAC.Role.SIGNED, RBAC.Role.ADMIN], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.CHAT },
+            { roles: [RBAC.Role.SIGNED, RBAC.Role.ADMIN], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.CHAT },
+            { roles: [RBAC.Role.SIGNED, RBAC.Role.ADMIN], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.CHAT },
+
+            { roles: [RBAC.Role.SIGNED, RBAC.Role.ADMIN], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.MESSAGE },
+            { roles: [RBAC.Role.SIGNED, RBAC.Role.ADMIN], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.MESSAGE },
         ]
     }
 
@@ -78,6 +89,8 @@ export namespace RBAC{
         FOOD, SHOPPING_LIST, SHOPPING_LIST_POINT,
         RECIPE, LIKE,
         COMMENT, COMMENT_REPORT,
+        NOTIFICATION,
+        CHAT, MESSAGE
     }
 
     export interface Authorization {

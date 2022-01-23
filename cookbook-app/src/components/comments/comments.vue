@@ -2,7 +2,7 @@
   <b-card class="card-comments">
 
     <!-- Commenting -->
-    <div class="add-comment" v-if="!isAdmin">
+    <div class="add-comment" v-if="couldComment">
       <b-row>
         <b-col>
           <div class="d-flex justify-content-end">
@@ -27,7 +27,7 @@
 </template>
 
 <script>
-
+import {bus} from "@/main";
 import api from '@api'
 import {mapGetters} from "vuex";
 
@@ -47,7 +47,10 @@ export default {
       return 'editor-comment-'+ this.recipe.id
     },
 
-    ...mapGetters(['accessToken', 'isAdmin'])
+    ...mapGetters(['accessToken', 'isAdmin', 'socket']),
+    couldComment(){
+      return !this.isAdmin && this.recipe.owner
+    }
   },
 
   methods: {
@@ -59,15 +62,29 @@ export default {
     addComments(text){
       api.recipes
          .comments
-         .createComment(this.recipe.ownerID, this.recipe.id, {content: text}, this.accessToken)
+         .createComment(this.recipe.owner._id, this.recipe._id, {content: text}, this.accessToken)
          .then(({data})=> {
            this.value.push(data)
            //this.$emit('input', [...this.value, ...[data]])
+
+           this.socket.emit('recipe:comment', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
+
            console.log('You commented.')
          })
           //TODO: HANDLER ERROR ADD COMMENT TO RECIPE
          .catch(err => console.error(err))
     },
+
+    /* Listeners notification */
+    onAddCommentListener(notification, comment){
+      if(comment) this.value.push(comment)
+    }
+  },
+  created() {
+    bus.$on('recipe:comment', this.onAddCommentListener.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('recipe:comment', this.onAddCommentListener.bind(this))
   }
 }
 </script>

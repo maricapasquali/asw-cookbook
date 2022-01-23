@@ -7,7 +7,7 @@
             <user-information :id="user" personal-area @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- SIGNED -->
-          <b-tab v-if="isSignedUser" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy>
+          <b-tab v-if="isSigned" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy>
             <recipe-sections @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- BOTH -->
@@ -15,21 +15,25 @@
             <food-section @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- ADMIN -->
-          <b-tab v-if="isAdminUser" title="Segnalazioni" @click="getReports" :active="isActive('reports')" lazy>
+          <b-tab v-if="isAdmin" title="Segnalazioni" @click="getReports" :active="isActive('reports')" lazy>
             <reports-section @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- ADMIN -->
-          <b-tab v-if="isAdminUser" title="Utenti" @click="getUsers" :active="isActive('users')" lazy>
+          <b-tab v-if="isAdmin" title="Utenti" @click="getUsers" :active="isActive('users')" lazy>
             <users-section @onSessionExpired="sessionTimeout=true"/>
           </b-tab>
           <!-- SIGNED -->
-          <b-tab v-if="isSignedUser" title="Amici" @click="getFriends" :active="isActive('friends')" lazy>
+          <b-tab v-if="isSigned" title="Amici" @click="getFriends" :active="isActive('friends')" lazy>
             <friends-section @onSessionExpired="sessionTimeout=true" />
           </b-tab>
           <!-- BOTH -->
-          <b-tab title="Chats" @click="getChats" :active="isActive('chats')" lazy><p>Chats</p></b-tab>
+          <b-tab title="Chats" @click="getChats" :active="isActive('chats')" lazy>
+            <chats-section @onSessionExpired="sessionTimeout=true"/>
+          </b-tab>
           <!-- BOTH -->
-          <b-tab title="Notifiche" @click="getNotifications" :active="isActive('notifications')" lazy><p>Notifiche</p></b-tab>
+          <b-tab title="Notifiche" @click="getNotifications" :active="isActive('notifications')" lazy>
+            <notifications-section @onSessionExpired="sessionTimeout=true" />
+          </b-tab>
 
         </b-tabs>
       </b-card>
@@ -46,7 +50,6 @@
 </template>
 
 <script>
-import {isString} from '@services/utils'
 import api from "@api"
 import {mapGetters, mapMutations} from "vuex";
 export default {
@@ -70,34 +73,28 @@ export default {
     }
   },
 
-  created(){
+  mounted(){
     console.log(`CHECK IF YOU IS AUTHORIZED ...`)
     if(this.accessToken){
-      api.users.isAuthorized(this.user, this.accessToken)
-          .then(response =>{
-            this.authorized = true
-            this.userRole = response.data.isSigned ? 'signed' : response.data.isAdmin ? 'admin' : ''
-            this.select()
-          })
-          .catch(error => {
-            this.authorized = false
-            this.error.message = api.users.HandlerErrors.isAuthorized(error);
-            console.log(this.error.message)
-            if(isString(this.error.message)){
-              this.error.show = true
-            }
-            else if(error.response.status === 401){
-              console.error("isAuthorized: Error 401")
-              this.endSession()
-              this.$router.replace({name: 'login'});
-            }
-          })
-    }else {
-      this.$router.replace({name: 'login'});
-    }
+
+      if(this.user === this.userIdentifier){
+        this.socket.on('access-token:valid', this.onAccessTokenOk.bind(this))
+        this.socket.on('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
+        this.socket.on('access-token:errors', this.onCheckAccessTokenError.bind(this))
+
+        this.socket.emit('check:access-token', {_id: this.userIdentifier, resourceID: this.user})
+
+      } else this.onCheckAccessTokenError({description: 'Non puoi accedere a questa pagina.'})
+
+    } else this.$router.replace({name: 'login'});
+  },
+  beforeDestroy() {
+    this.socket.off('access-token:valid', this.onAccessTokenOk.bind(this))
+    this.socket.off('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
+    this.socket.off('access-token:errors', this.onCheckAccessTokenError.bind(this))
   },
   computed: {
-    ...mapGetters(['accessToken']),
+    ...mapGetters(['accessToken', 'refreshToken', 'userIdentifier', 'socket', 'isSigned', 'isAdmin']),
 
     user(){
       return this.$route.params.id
@@ -105,17 +102,10 @@ export default {
 
     loading: function (){
       return !(this.authorized || this.error.show || this.sessionTimeout)
-    },
-    isAdminUser() {
-      return this.userRole === 'admin'
-    },
-    isSignedUser() {
-      return this.userRole === 'signed'
     }
-
   },
   methods: {
-    ...mapMutations(['endSession']),
+    ...mapMutations(['endSession', 'setAccessToken']),
 
     isActive: function (target){
       return target === this.active
@@ -162,8 +152,47 @@ export default {
     },
     getUsers: function (){
       this.navigate('p-user-users')
+    },
+
+    /* Listeners check ACCESS TOKEN */
+
+    onAccessTokenOk(){
+      this.authorized = true
+      this.select()
+    },
+    onAccessTokenNotOk({description}){
+      console.error("Expired access token. Required another.")
+      console.error(description)
+      api.users
+         .session
+         .newAccessToken(this.userIdentifier, { refresh_token: this.refreshToken }, this.accessToken)
+         .then(({data}) => {
+           this.setAccessToken(data.access_token)
+           this.authorized = true
+           this.select()
+         })
+         .catch(error =>{
+            if(error.response && error.response.status === 409) {
+              this.authorized = true
+              this.select()
+              return ;
+            }
+            this.authorized = false
+            console.error("UnAuthorized: ", error)
+            this.endSession()
+            this.$router.replace({ name: 'login' });
+         })
+    },
+    onCheckAccessTokenError({description}){
+      this.authorized = false
+      console.error('UnAuthorized: ', description)
+      this.error = {
+        show: true,
+        message: description
+      }
     }
-  }
+
+  },
 }
 </script>
 

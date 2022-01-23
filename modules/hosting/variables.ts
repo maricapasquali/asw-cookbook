@@ -5,9 +5,9 @@ export const hostname: string = process.env.COOKBOOK_HOSTNAME ||"localhost"
 export const port_server: number = parseInt(process.env.COOKBOOK_SERVER_PORT) || 3000
 export const port_client: number = parseInt(process.env.COOKBOOK_CLIENT_PORT)  || 5000
 
-const domainServer: string = `${protocol}://${hostname}:${port_server}`
-export const server_origin: string = `${domainServer}/api`
-export const images_origin: string = `${domainServer}/images`
-export const videos_origin: string = `${domainServer}/videos`
+export const domain_server: string = `${protocol}://${hostname}:${port_server}`
+export const server_origin: string = `${domain_server}/api`
+export const images_origin: string = `${domain_server}/images`
+export const videos_origin: string = `${domain_server}/videos`
 
 export const client_origin: string = `${protocol}://${hostname}:${port_client}`

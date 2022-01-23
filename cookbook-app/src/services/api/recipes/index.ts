@@ -73,7 +73,8 @@ export function getRecipes(user: string, token?: string, type?: string, paginati
 }
 
 export function getRecipe(user: string, id: string, type: string, token?: string): Promise<AxiosResponse>  {
-    return methods.get('/users/:userID/recipes/:recipeID', {
+    const pathName = user ? '/users/:userID/recipes/:recipeID' : '/recipes/:recipeID'
+    return methods.get(pathName, {
         headers: getHeaderBearerAuthorization(token),
         params:{
           type: type
@@ -114,6 +115,21 @@ export function deleteRecipe(user: string, id: string, token: string){
         urlParams:{
             userID: user,
             recipeID: id,
+        }
+    })
+}
+
+export function updatePermission(user: string, recipeID: string, permission: Array<{ user: string, granted?: string }>, token: string): Promise<AxiosResponse>{
+    return methods.patch('/users/:userID/recipes/:recipeID', {permission}, {
+        headers: {
+            authorization: 'Bearer ' + token
+        },
+        params: {
+            field: 'permission'
+        },
+        urlParams:{
+            userID: user,
+            recipeID
         }
     })
 }

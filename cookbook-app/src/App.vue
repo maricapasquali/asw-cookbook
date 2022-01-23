@@ -9,17 +9,23 @@
 
 <script>
 import  {bus} from "@/main";
+import {mapGetters} from "vuex";
+
+import notifications from "@/notifications";
+import updates from "@/updates";
+import {pushMessages} from '@components/chats/utils'
 
 export default {
   name: 'App',
   data: function (){
     return {
-      notNav: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password'],
+      notNav: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat'],
       notFooter: this.notNav,
       processing: false
     }
   },
   computed:{
+    ...mapGetters(['socket', 'userIdentifier', 'accessToken', 'isAdmin']),
     navigatorVisibility: function (){
       return !this.notNav.includes(this.$route.name)
     },
@@ -42,14 +48,35 @@ export default {
     hideNavigationBar(route){
       console.debug('Hide navigation bar on route ', route)
       this.notNav.push(route)
-    }
+    },
+
+    // NOTIFICATIONS
+    ...notifications,
+    //UPDATES
+    ...updates,
+
+    //MESSAGES
+    pushMessages,
   },
   created() {
     this.$store.commit('setSession')
-    this.$store.dispatch('getFriends')
     // console.debug('App created ', this.$store.state)
     bus.$on('onLogout', this.onLogout.bind(this))
     bus.$on('hideNavigationBar', this.hideNavigationBar.bind(this))
+
+    // NOTIFICATIONS
+    this.friendShipListeners()
+    this.foodListeners()
+    this.commentListeners()
+    this.recipeListeners()
+    this.userInfoListeners()
+    this.likeListeners()
+
+    //UPDATES
+    this.updateListeners()
+
+    //MESSAGES
+    this.socket.on('push-messages', this.pushMessages.bind(this))
   }
 }
 </script>

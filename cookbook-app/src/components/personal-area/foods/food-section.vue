@@ -6,7 +6,7 @@
       <b-col class="my-5">
         <b-row class="align" align-h="between" align-v="center">
           <b-col class="px-0"><h2 id="foods">Alimenti</h2></b-col>
-          <b-col align="end" class="mb-2">
+          <b-col class="text-right mb-2">
             <b-button-group>
               <b-button id="food-form-btn" @click="toggleFoodForm" :variant="showFormFood? 'danger': 'primary'" pill>
                 <font-awesome-icon :icon="showFormFood ? 'times-circle': 'plus-circle'" class="icon"/>
@@ -63,7 +63,7 @@
                     </b-input-group>
                   </b-form-group>
                 </b-col>
-                <b-col align="start">
+                <b-col class="text-left">
                   <b-button id="reset-search-food" variant="secondary" @click="onResetSearch" v-if="thereIsFilters">
                     <font-awesome-icon icon="undo" />
                   </b-button>
@@ -103,7 +103,8 @@
               </template>
 
               <template #cell(owner)="row">
-                <span v-if="isItMine(row.item.details.owner)">{{ row.value }}</span>
+                <span v-if="!row.item.details.owner"> Utente cancellato </span>
+                <span v-else-if="isItMine(row.item.details.owner)">{{ row.value }}</span>
                 <router-link v-else :to="{name: 'single-user', params:{id: row.item.details.owner._id}}">{{ row.value  }}</router-link>
               </template>
 
@@ -116,11 +117,11 @@
                 <b-row class="mb-3 mx-1" align-v="center">
                   <b-col class="px-0" v-if="row.item.details.barcode">
                     <b-row cols="1" align-h="start">
-                      <b-col align="start"> <strong>Codice a barre</strong> </b-col>
-                      <b-col align="start"> {{row.item.details.barcode}}  </b-col>
+                      <b-col class="text-left"> <strong>Codice a barre</strong> </b-col>
+                      <b-col class="text-left"> {{row.item.details.barcode}}  </b-col>
                     </b-row>
                   </b-col>
-                  <b-col v-if="isItMine(row.item.details.owner) || isAdmin" align="end" class="px-0">
+                  <b-col v-if="isItMine(row.item.details.owner) || isAdmin" class="text-right px-0">
                     <b-button-group >
                       <b-button :id="'change-food-'+row.index" v-if="row.item.actions.includes('change')" variant="primary" @click="openChangeModeFood(row)"> <b-icon-pencil-square /></b-button>
                       <b-tooltip :target="'change-food-'+row.index" v-if="row.item.actions.includes('change')"> Modifica <i>{{row.item.aliment}}</i></b-tooltip>
@@ -171,7 +172,7 @@
                   <div :class="{'food-checked': point.checked}"></div>
                   <span>{{point.food.name}}</span>
                 </b-col>
-                <b-col cols="3" cols-sm="1" align="end">
+                <b-col cols="3" cols-sm="1" class="text-right">
                   <b-button :id="'remove-food-' + index" variant="danger" @click="removeFromShoppingList(index)"><b-icon-trash-fill/></b-button>
                   <b-tooltip :target="'remove-food-' + index">Rimuovi alimento <br/> dalla lista della spesa</b-tooltip>
                 </b-col>
@@ -187,6 +188,7 @@
 </template>
 
 <script>
+import {bus} from '@/main'
 import {clone, dateFormat} from '@services/utils'
 
 import api from '@api'
@@ -269,7 +271,7 @@ export default {
     },
 
     isItMine(owner){
-      return this.userIdentifier === owner._id && this.username === owner.userID
+      return owner && this.userIdentifier === owner._id && this.username === owner.userID
     },
 
     // Shopping List
@@ -351,7 +353,7 @@ export default {
       return {
         aliment: food.name,
         creationDate: food.createdAt,
-        owner: food.owner.userID,
+        owner:  food.owner && food.owner.userID,
         actions: operation,
         details: food,
       }
@@ -426,12 +428,66 @@ export default {
     onResetSearch(){
       this.filters.name = ''
       this.filters.barcode = ''
+    },
+
+    /* Listeners notification */
+    onCreateFood(){
+      let table = this.$refs.foodTable
+      table && table.refresh()
+    },
+
+    /* Listeners update */
+    onUpdateFood(food){
+      let _food = this.$refs.foodTable.localItems.find(f => f.details._id === food._id)
+      let index = this.$refs.foodTable.localItems.indexOf(_food)
+      if(index !== -1) {
+        this.$refs.foodTable.localItems.splice(index, 1, this.remapping(food))
+        this.$set(this.$refs.foodTable.localItems[index], '_showDetails', _food._showDetails)
+      }
+    },
+
+    onUpdateInfos(userInfo) {
+      if(userInfo && userInfo.userID) {
+        const table = this.$refs.foodTable
+        table && table.localItems
+                      .filter(item => item.details.owner._id === userInfo._id && userInfo.userID !== item.owner)
+                      .forEach(food => {
+                        food.owner = userInfo.userID
+                        food.details.owner.userID = userInfo.userID
+                      })
+      }
+    },
+    onDeletedUserListeners(id){
+      const table = this.$refs.foodTable
+      table && table.localItems
+                    .filter(item => item.details.owner._id === id)
+                    .forEach(food => {
+                      food.owner = null
+                      food.details.owner = null
+                    })
     }
+
   },
 
   created() {
     if(this.isSigned) this.getShoppingList()
+
+    bus.$on('food:create', this.onCreateFood.bind(this))
+    bus.$on('food:update', this.onUpdateFood.bind(this))
+
+
+    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
+  beforeDestroy() {
+    bus.$off('food:create', this.onCreateFood.bind(this))
+    bus.$off('food:update', this.onUpdateFood.bind(this))
+
+    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+
+    console.debug('Destroy food section...')
+  }
 }
 </script>
 

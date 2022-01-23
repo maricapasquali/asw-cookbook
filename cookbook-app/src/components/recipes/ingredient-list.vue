@@ -14,7 +14,7 @@
       <b-list-group-item v-for="(ingredient, ind) in value" :key="ingredient._id" v-b-toggle="ingredientId(ind)" role="tab">
         <b-row align-h="between">
           <b-col><p>{{ingredient.food.name}}</p></b-col>
-          <b-col align="end"><p>{{ingredient.quantity}} g</p></b-col>
+          <b-col class="text-right"><p>{{ingredient.quantity}} g</p></b-col>
         </b-row>
         <b-collapse :id="ingredientId(ind)" :ref="collapsedIngredientId(ind)" role="tabpanel" accordion="my-accordion" @show="getIngredientNutritionalValues(ind)">
           <nutrients-table v-model="nutritional_values"/>

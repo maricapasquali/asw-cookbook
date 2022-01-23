@@ -1,14 +1,14 @@
 import CenterContainer from './center-container'
 import PreviewUploader from "./preview-uploader";
-import InputPassword from "./input-password";
 import Loading from "./loading"
-import ModalAlert from "./modal-alert"
-import NotAuthorizedArea from "./not-authorized-area"
 import SelectWithImage from "./select-with-image";
 import WrapLoading from "./wrap-loading";
 import ElapsedTime from "./elapsedTime";
 import MiniTextEditor from "./mini-text-editor"
 
+import InputPassword from "./app/input-password";
+import ModalAlert from "./app/modal-alert"
+import NotAuthorizedArea from "./app/not-authorized-area"
 import Navigator from "./app/navigator"
 import Footer from "./app/footer"
 import NutrientsTable from "./app/nutrients-table"
@@ -24,11 +24,24 @@ import DeleteAccount from "./personal-area/delete-account"
 import ChangeUserID from "./personal-area/change-userid"
 import ChangePassword from "./personal-area/change-password"
 import RecipesSections from "./personal-area/recipes/recipe-sections"
+import LikerList from "./personal-area/recipes/liker-list"
 import RecipeForm from "./personal-area/recipes/recipe-form"
 import FoodSection from "./personal-area/foods/food-section"
 import ReportsSection from "./personal-area/admin/reports/reports-section"
 import UsersSection from "./personal-area/admin/users/users-section"
 import FriendsSection from "./personal-area/friends/friends-section"
+import NotificationsSection from "./personal-area/notifications/notifications-section"
+
+import Chat from './chats/chat'
+import ChatHeader from './chats/chat-header'
+import ChatFooter from './chats/chat-footer'
+import ChatMessage from './chats/chat-message'
+import ChatAttachments from './chats/chat-attachments'
+import AttachmentPreview from './chats/attachment-preview'
+import ChatTyping from './chats/chat-typing'
+
+import ChatItem from './personal-area/chats/chat-item'
+import ChatsSection from './personal-area/chats/chats-section'
 
 import FoodForm from "./foods/food-form"
 import FoodFinder from "./foods/food-finder"
@@ -54,15 +67,15 @@ import ContainerCollapsable from './one-user/container-collapsable'
 export default {
     CenterContainer,
     PreviewUploader,
-    InputPassword,
     Loading,
-    ModalAlert,
-    NotAuthorizedArea,
     SelectWithImage,
     WrapLoading,
     ElapsedTime,
     MiniTextEditor,
 
+    InputPassword,
+    ModalAlert,
+    NotAuthorizedArea,
     Navigator,
     Footer,
     NutrientsTable,
@@ -78,6 +91,7 @@ export default {
     ChangeUserID,
     ChangePassword,
     RecipesSections,
+    LikerList,
     RecipeForm,
     FoodForm,
     FoodFinder,
@@ -86,6 +100,18 @@ export default {
     ReportsSection,
     UsersSection,
     FriendsSection,
+    NotificationsSection,
+
+    Chat,
+    ChatHeader,
+    ChatFooter,
+    ChatMessage,
+    ChatAttachments,
+    AttachmentPreview,
+    ChatTyping,
+
+    ChatItem,
+    ChatsSection,
 
     PreviewRecipeTutorial,
     PreviewRecipeImage,

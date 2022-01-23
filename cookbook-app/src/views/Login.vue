@@ -210,13 +210,12 @@ export default {
     ...mapMutations(['startSession']),
 
     login: function (){
-      api.users.login(this.credential)
+      api.users.session.login(this.credential)
          .then(({data}) => {
            this.error.show = false
            let {token, userInfo} = data
 
            this.startSession({...token, user: userInfo})
-           this.$store.dispatch('getFriends')
 
            let location = {
              name: data.firstLogin ? 'change-password' : 'p-user-account',

@@ -47,7 +47,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['accessToken']),
+    ...mapGetters(['accessToken', 'socket']),
     validation: function (){
       return this.validationOld && this.newPassword.length > 0 && this.checkNewPassword
     }
@@ -65,8 +65,9 @@ export default {
       this.processing = true
       api.users.changeOldPassword(this.id,{old_password: this.oldPassword, new_hash_password: this.newPassword}, this.accessToken)
                .then(response => {
-                 this.success = true
+                 this.show = false
                  console.log(response.data)
+                 this.socket.emit('user:update:password')
                })
                .catch(err => {
                  console.error(err)

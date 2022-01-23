@@ -2,6 +2,7 @@ import * as methods from "../methods";
 import  {AxiosResponse} from "axios";
 
 import * as handlerErrors from "./handlerErrors"
+import * as _session from "./session"
 import {Server} from "../index";
 import {getHeaderBearerAuthorization} from "../utils";
 
@@ -15,15 +16,7 @@ function setImageUrl(user: any){
 
 export const HandlerErrors = handlerErrors
 
-export function login(credential: {userID: string, password: string}): Promise<AxiosResponse> {
-    return methods.post('/users/login',{},{
-        headers: {
-            authorization: 'Basic ' +
-                Buffer.from(credential.userID+':'+credential.password, 'utf-8')
-                    .toString('base64')
-        }
-    })
-}
+export const session = _session
 
 export function sendEmailResetPassword(email: string): Promise<AxiosResponse> {
     return methods.get('/reset-password/email', {
@@ -42,7 +35,7 @@ export function signup(user: object): Promise<AxiosResponse> {
 }
 
 export function checkAccount(data: object): Promise<AxiosResponse> {
-    return methods.put('/users/check-account', data)
+    return methods.put('/users', data)
 }
 
 export function getUser(id: string, token?: string){
@@ -54,18 +47,6 @@ export function getUser(id: string, token?: string){
     }).then(response =>{
         setImageUrl(response.data)
         return response
-    })
-}
-
-//use token (interceptors)
-export function isAuthorized(id: string, token: string) {
-    return methods.get('/users/:id/authorized', {
-        headers: {
-            authorization: 'Bearer ' + token
-        },
-        urlParams:{
-            id: id
-        }
     })
 }
 
@@ -124,18 +105,6 @@ export function changeOldPassword(id: string, data: object, token: string, reset
     return changeCredential({name: "password"}, id, data, token, reset)
 }
 
-
-//use token  (interceptors)
-export function logout(id: string, token: string){
-    return methods.erase('/users/:id/logout', {
-        headers: {
-            authorization: 'Bearer ' + token,
-        },
-        urlParams:{
-            id: id
-        }
-    })
-}
 
 export function checkLinkResetPassword(key: string){
     return methods.get('/reset-password/check-link', {

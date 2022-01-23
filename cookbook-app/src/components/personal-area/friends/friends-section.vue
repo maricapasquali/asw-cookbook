@@ -43,11 +43,14 @@
              :busy.sync="pagination.isBusy"
              :stacked="isMobile"
              :style="cssTable"
+             ref="friendTable"
              show-empty>
 
       <template #cell(user)="row">
         <b-row class="pl-4">
-          <b-col class="pr-0 mt-2"> <avatar v-model="row.item.user.img" :size="40"/> </b-col>
+          <b-col class="pr-0 mt-2">
+            <avatar v-model="row.item.user.img" :user="row.item.user._id" :size="40"/>
+          </b-col>
           <b-col cols="9" class="pl-0">
             <b-row cols="1">
               <b-col> {{ row.item.user.userID }} </b-col>
@@ -61,7 +64,7 @@
 
       <template #cell(state)="row" >
         <b-button-group class="pl-4" vertical>
-          <b-friendship :other-user="row.item.user" with-chat/>
+          <b-friendship :other-user="row.item.user" with-chat @add-friend="fetchData" @remove-friend="fetchData"/>
         </b-button-group>
       </template>
 
@@ -85,7 +88,8 @@
 </template>
 
 <script>
-import api from '@api'
+import {bus} from '@/main'
+import api, {Server} from '@api'
 import {mapGetters} from "vuex";
 import {mapping} from "@services/api/users/friends/utils";
 
@@ -138,6 +142,9 @@ export default {
     }
   },
   methods: {
+    friendsId(_id){
+      return 'avatar-'+_id
+    },
 
     onResize({screenWidth}){
       this.isMobile = screenWidth <= 576
@@ -169,6 +176,7 @@ export default {
                 .then(({data}) => {
                   console.debug('Friends = ',data.items, ', total = ', data.total)
                   let items = data.items.map(f => mapping(f, this.userIdentifier))
+                  console.debug('Friends = ',items)
                   this.pagination.totals = data.total
                   return items
                 })
@@ -180,6 +188,43 @@ export default {
                 .finally(() => this.pagination.isBusy = false)
     },
 
+    /* Listeners notification */
+    fetchData(){
+      let table = this.$refs.friendTable
+      table && table.refresh()
+      console.debug('fetch table friends :', table)
+    },
+
+    /* Listeners update */
+    onUpdateInfos(userInfo) {
+      if(userInfo) {
+        const index = this.$refs.friendTable.localItems.findIndex(f => f.user._id === userInfo._id)
+        if(index !== -1){
+          const friend = this.$refs.friendTable.localItems[index]
+          if(userInfo.information){
+            friend.user.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
+            if(userInfo.information.country) friend.user.country = userInfo.information.country
+            if(userInfo.information.occupation) friend.user.occupation = userInfo.information.occupation
+          }
+          if(userInfo.userID) friend.user.userID = userInfo.userID
+          this.$refs.friendTable.localItems.splice(index, 1, friend)
+        }
+      }
+    }
+  },
+  created() {
+    bus.$on('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
+    bus.$on('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
+
+    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$on('user:delete', this.fetchData.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
+    bus.$off('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
+
+    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$off('user:delete', this.fetchData.bind(this))
   }
 }
 </script>

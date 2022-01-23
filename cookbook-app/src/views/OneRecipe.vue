@@ -1,5 +1,5 @@
 <template>
-  <b-skeleton-wrapper :loading="isNotLoaded">
+  <b-skeleton-wrapper :loading="processing">
     <template #loading>
       <b-row cols="1" class="mx-0">
         <b-col class="mb-3">
@@ -20,7 +20,7 @@
                   <b-col class="px-0">  <b-skeleton width="55%" /> </b-col>
                 </b-row>
               </b-col>
-              <b-col cols="2" align="end">
+              <b-col cols="2" class="text-right">
                 <b-skeleton-icon icon="heart"></b-skeleton-icon>
               </b-col>
             </b-row>
@@ -35,7 +35,7 @@
                   </b-col>
                 </b-row>
               </b-col>
-              <b-col align="end" cols="2" >  <b-skeleton width="100%" /></b-col>
+              <b-col class="text-right" cols="2" >  <b-skeleton width="100%" /></b-col>
             </b-row>
           </b-container>
         </b-col>
@@ -75,9 +75,9 @@
       </b-row>
     </template>
 
-    <b-row cols="1" class="mx-0" v-if="!isNotLoaded">
+    <b-row cols="1" class="mx-0" v-if="doc">
 
-      <b-col class="mb-3">
+      <b-col class="mb-3" v-if="itemsBreadcrumb.length">
         <b-breadcrumb :items="itemsBreadcrumb" />
       </b-col>
 
@@ -86,7 +86,7 @@
           <b-row align-h="between" align-v="center">
             <b-col>
               <b-row align-h="center" align-v="center">
-                <b-col align="start" cols="2" class="px-0" v-if="doc.country">
+                <b-col cols="2" class="text-left px-0" v-if="doc.country">
                   <country-image v-model="doc.country"/>
                 </b-col>
                 <b-col class="px-0">
@@ -94,14 +94,14 @@
                 </b-col>
               </b-row>
             </b-col>
-            <b-col cols="2" align="end">
-              <like v-model="doc.likes" :recipe="{id: doc._id, ownerID: doc.owner._id}" :no-like="youNotMakeLike"/>
+            <b-col v-if="doc.shared" cols="2" class="text-right">
+              <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike"/>
             </b-col>
           </b-row>
           <b-row class="mt-2" align-h="between">
             <b-col class="px-0" v-if="doc.category"> {{ doc.category | nameCategory }} </b-col>
             <b-col v-if="doc.diet"> {{ doc.diet | nameDiet }} </b-col>
-            <b-col align="end"> {{ doc.createdAt | dateFormat }}</b-col>
+            <b-col class="text-right"> {{ doc.createdAt | dateFormat }}</b-col>
           </b-row>
         </b-container>
       </b-col>
@@ -130,42 +130,53 @@
         <nutrients-table :ingredients="doc.ingredients"/>
       </b-col>
 
-      <b-col class="mt-5">
+      <b-col class="mt-5" v-if="doc.shared">
         <strong>Commenti</strong>
-        <comments v-model="doc.comments" :recipe="{id: doc._id, ownerID: doc.owner._id}" />
+        <comments v-model="doc.comments" :recipe="doc" />
       </b-col>
     </b-row>
+    <not-found v-else asset="recipe"/>
 
   </b-skeleton-wrapper>
 </template>
 
 <script>
-import {isEmpty, dateFormat} from "@services/utils"
+import {bus} from "@/main";
+import {dateFormat} from "@services/utils"
 import {Diets, RecipeCategories} from "@services/app"
 
 import api from '@api'
 
 import {mapGetters} from "vuex";
-
+import {scrollToRouterHash} from "@router";
+import NotFound from "./404";
+import {Server} from "@services/api";
 export default {
   name: "OneRecipe",
+  props: {
+    value: Object | Boolean
+  },
+  components: {NotFound},
   data(){
     return {
       loading: true,
       itemsBreadcrumb: [],
-      doc: {}
+      processing: true,
+      doc: ''
     }
   },
   computed: {
 
     ...mapGetters(['userIdentifier', 'username', 'accessToken', 'isAdmin']),
 
-    isNotLoaded(){
-      return !this.doc || (isEmpty(this.doc.owner) && isEmpty(this.doc.recipe))
-    },
-
     youNotMakeLike(){
-      return this.isAdmin || this.doc.owner._id === this.userIdentifier
+      return this.isAdmin || !this.doc.owner || this.doc.owner._id === this.userIdentifier
+    }
+  },
+  watch: {
+    value(val, old){
+      if(val) this.setRecipe(val)
+      this.processing = false
     }
   },
   filters: {
@@ -180,31 +191,95 @@ export default {
     },
   },
   methods: {
+    scrollToRouterHash,
+
     isOwner(owner_recipe) {
       return owner_recipe._id === this.userIdentifier && owner_recipe.userID === this.username
     },
+    setRecipe(data){
+      this.doc = data
+      console.debug(this.doc)
+      if(this.doc && this.doc.owner) {
+        this.itemsBreadcrumb = [
+          {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.doc.owner._id} } },
+          {text: this.doc.name, active: true}
+        ]
+      }
+    },
     getRecipe() {
       let {id, recipe_id} = this.$route.params;
+      this.processing = true
+      api.recipes
+         .getRecipe(id, recipe_id, 'shared', this.accessToken)
+         .then(({data})=> this.setRecipe(data))
+          //TODO: HANDLER ERROR ONE RECIPE
+         .catch(err => console.error(err.response))
+         .finally(() => this.processing = false)
+    },
 
-      api.recipes.getRecipe(id, recipe_id, 'shared', this.accessToken)
-      .then(({data})=>{
-        this.doc = data
-        console.debug(this.doc)
-        if(this.doc) {
-          this.itemsBreadcrumb = [
-            {text: this.doc.owner.userID, to: { name: 'single-user', params: {id: this.$route.params.id} } },
-            {text: this.doc.name, active: true}
-          ]
+    /* Listeners notification */
+    onUpdatedRecipeListeners(_, recipe){
+      if(recipe && this.doc._id === recipe._id) this.doc = recipe
+    },
+    onDeletedRecipeListeners(_, recipe){
+      if(recipe && this.doc._id === recipe) this.doc = ''
+    },
+    /* Listeners updates */
+    onDeletedUserListeners(id){
+      if(this.doc && this.doc.owner && this.doc.owner._id === id) {
+        this.doc.owner = null
+        this.itemsBreadcrumb = []
+        if(this.$route.name !== 'recipe') this.$router.replace({ name: 'recipe', params: { recipe_id: this.doc._id }})
+      }
+    },
+    _onUpdateUserInfos(user, newInfos){
+      if(newInfos.information) user.img = newInfos.information.img ? Server.images.path(newInfos.information.img) : ''
+      if(newInfos.userID) user.userID = newInfos.userID
+    },
+    onUpdateUserInfoListeners(userInfo){
+      if(userInfo){
+        if(this.doc.owner && this.doc.owner._id === userInfo._id) {
+          this._onUpdateUserInfos(this.doc.owner, userInfo)
+          this.itemsBreadcrumb[0].text = userInfo.userID
         }
-      }).catch(err => {
-        //TODO: HANDLER ERROR ONE RECIPE
-        console.error(err.response)
-      })
+        /* NOTE: the update of this.doc.permission, this.doc.ingredients has no effect on GUI:  */
+        if(this.doc.permission.length) {
+          const foundUserPermission = this.doc.permission.find(p => p.user && p.user._id === userInfo._id)
+          this._onUpdateUserInfos(foundUserPermission && foundUserPermission.user, userInfo)
+        }
+        if(this.doc.ingredients.length) {
+          this.doc
+              .ingredients
+              .filter(i => i.food.owner && i.food.owner._id === userInfo._id)
+              .forEach(i => this._onUpdateUserInfos(i.food.owner, userInfo))
+        }
+      }
     }
   },
+  created() {
+    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    bus.$off('user:update:info', this.onUpdateUserInfoListeners.bind(this))
+  },
   mounted() {
-    // setTimeout(this.getRecipe.bind(this), 1000)
-    this.getRecipe()
+    if(typeof this.value === "undefined") this.getRecipe()
+    else if(this.value !== false) {
+      this.setRecipe(this.value)
+      this.processing = false
+    }
+  },
+  updated() {
+    console.log('Update one recipe page....')
+    this.scrollToRouterHash()
   }
 }
 </script>

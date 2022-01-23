@@ -44,7 +44,7 @@
                               <b-list-group-item v-for="(ingredient, index) in filters.ingredients" :key="ingredient._id">
                                 <b-row align-v="center">
                                   <b-col>{{ingredient.name}} </b-col>
-                                  <b-col align="end">
+                                  <b-col class="text-right">
                                     <b-button :id="ingredient._id" variant="danger" @click="onRemoveIngredient(index)"><b-icon-trash-fill/></b-button>
                                     <b-tooltip :target="ingredient._id">Rimuovi</b-tooltip>
                                   </b-col>
@@ -58,12 +58,12 @@
                   </b-col>
                   <b-col>
                     <b-row class="mt-3">
-                      <b-col align-self="end" align="end">
+                      <b-col align-self="end" class="text-right">
                         <b-row>
-                          <b-col align-self="start" align="start">
+                          <b-col align-self="start" class="text-left">
                             <b-button variant="secondary" @click="_resetFormSearch">Reset</b-button>
                           </b-col>
-                          <b-col align-self="end" align="end">
+                          <b-col align-self="end" class="text-right">
                             <b-button variant="primary" @click="search">Cerca</b-button>
                           </b-col>
                         </b-row>
@@ -124,7 +124,7 @@
                       <b-col class="base-info py-2">
                         <b-row align-v="center" align-h="between">
                           <b-col cols="7"> {{doc.name}} </b-col>
-                          <b-col cols="5" align="end" v-if="doc.category || doc.country">
+                          <b-col cols="5" class="text-right" v-if="doc.category || doc.country">
                             <b-row>
                               <b-col> <span>{{ doc.category | fullName }}</span> </b-col>
                               <b-col v-if="doc.country" class="pl-0"> <country-image v-model="doc.country" heigth="0" :id="index"/> </b-col>

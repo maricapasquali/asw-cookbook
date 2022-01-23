@@ -113,7 +113,7 @@
 
           <b-row align-h="between" class="text-center">
             <b-col class="d-flex justify-content-start">
-              <avatar v-model="user.information.img" variant="light" />
+              <avatar v-model="user.information.img" variant="light" :user="user._id"/>
             </b-col>
             <b-col align-self="center" class="d-flex justify-content-end">
               <country-image id="owner" v-model="user.information.country" width="100" height="70" />
@@ -191,6 +191,7 @@
 </template>
 
 <script>
+import {bus} from "@/main";
 import api from '@api'
 import {EmailValidator} from '@app/modules/validator'
 import {clone, equals, isString} from "@services/utils"
@@ -232,6 +233,11 @@ export default {
   created() {
     console.log(`CREATE GUI INFO USER (${this.id})...`)
     this.getUser()
+
+    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
   },
   filters: {
     localDate: function (text, country){
@@ -245,7 +251,7 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['userIdentifier', 'isAdmin', 'isSigned', 'accessToken', 'isLoggedIn', 'userFriends']),
+    ...mapGetters(['userIdentifier', 'isAdmin', 'isSigned', 'accessToken', 'isLoggedIn', 'userFriends', 'socket']),
 
     oldProfileImage(){
       return this.user.information.img
@@ -277,8 +283,11 @@ export default {
             console.log(this.changeableUser)
          })
          .catch(err => {
-            this.error.show = true
-            this.error.message = api.users.HandlerErrors.getUser(err)
+            if(err.response && err.response.status === 404) this.$emit('not-found')
+            else {
+              this.error.show = true
+              this.error.message = api.users.HandlerErrors.getUser(err)
+            }
             console.error(err)
          })
     },
@@ -322,29 +331,47 @@ export default {
       if(!equals(this.changeableUser.information, this.user.information)) {
         let formData = new FormData();
         Object.entries(this.changeableUser.information).filter(([k, v]) => this.user.information[k] !== v).forEach(([k, v]) => formData.append(k, v))
-        for(let [k, v] of formData.entries()) console.warn(k, " = ", v)
+        for(let [k, v] of formData.entries()) console.debug(k, " = ", v)
 
-        api.users.updateUserInfo(this.id, formData, this.accessToken).then(response => {
-          console.log(response.data)
-          this.changeMode = false;
-          this.user.information = response.data.info
-        }).catch(err => {
-          this.error.message = api.users.HandlerErrors.updateUser(err)
-          if(isString(this.error.message)){
-            this.error.show = true
-          }else if(err.response.status === 401){
-            //this.$router.replace({ name: 'login' })
-            this.onSessionExpired()
-          }
-        }).then(() => {
-          this.processing = false
-          this.changeableUser.information = clone(this.user.information)
-        })
+        api.users
+           .updateUserInfo(this.id, formData, this.accessToken).then(response => {
+              console.log(response.data)
+              this.changeMode = false;
+              this.user.information = response.data.info
+
+              this.socket.emit('user:update:info', { _id: this.id, information: response.data.info } )
+
+           })
+           .catch(err => {
+              this.error.message = api.users.HandlerErrors.updateUser(err)
+              if(isString(this.error.message)){
+                this.error.show = true
+              }else if(err.response.status === 401){
+                //this.$router.replace({ name: 'login' })
+                this.onSessionExpired()
+              }
+           })
+           .finally(() => {
+              this.processing = false
+              this.changeableUser.information = clone(this.user.information)
+           })
       }
     },
 
-    goChat: function (){
-      //TODO: GO IN CHAT
+    /* Listeners update */
+    onUpdateInfos(userInfo){
+
+      if(!this.personalArea && userInfo && this.id === userInfo._id) {
+        if(userInfo.information) {
+          this.user.information = userInfo.information
+          this.changeableUser.information = clone(this.user.information)
+        }
+        if(userInfo.userID) {
+          this.user.userID = userInfo.userID
+          this.changeableUser.userID = userInfo.userID
+        }
+      }
+
     }
   }
 }

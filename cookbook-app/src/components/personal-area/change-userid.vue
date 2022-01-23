@@ -44,7 +44,7 @@ export default {
     this.userID = this.old_userID
   },
   computed: {
-    ...mapGetters(['accessToken'])
+    ...mapGetters(['accessToken', 'socket'])
   },
   methods: {
     check: function (){
@@ -58,22 +58,25 @@ export default {
       this.error = { show: false, message: '' }
       this.processing = true
 
-      api.users.changeUserID(this.id, {old_userID: this.old_userID, new_userID: this.userID}, this.accessToken)
-      .then(response => {
-        console.log("CHANGE USER ID...")
-        this.$emit("changeUserID", this.userID)
-      })
-      .catch(err => {
-        console.error(err)
+      api.users
+         .changeUserID(this.id, {old_userID: this.old_userID, new_userID: this.userID}, this.accessToken)
+         .then(response => {
+            console.log("CHANGE USER ID...")
+            this.$emit("changeUserID", this.userID)
 
-        this.error.message = api.users.HandlerErrors.changeUserID(err)
-        if(isString(this.error.message)){
-          this.error.show = true
-        }else if(err.response.status === 401){
-          this.$emit('onSessionExpired')
-        }
-      })
-      .then(() => this.processing = false)
+            this.socket.emit('user:update:info', { _id: this.id, userID: this.userID })
+
+         })
+         .catch(err => {
+            console.error(err)
+            this.error.message = api.users.HandlerErrors.changeUserID(err)
+            if(isString(this.error.message)){
+              this.error.show = true
+            }else if(err.response.status === 401){
+              this.$emit('onSessionExpired')
+            }
+         })
+         .finally(() => this.processing = false)
     }
   }
 }

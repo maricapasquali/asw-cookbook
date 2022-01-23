@@ -60,7 +60,7 @@
         <template #cell(actions)="row">
           <b-button-group>
             <b-button v-if="row.item.actions.includes('chat')"
-                      variant="primary"
+                      variant="primary" @click="_goToChat(row.item.details._id)"
                       :id="chatWith(row.item)">
               <b-icon-chat-fill  />
             </b-button>
@@ -101,10 +101,11 @@
 </template>
 
 <script>
+import {bus} from '@/main'
 import api from '@api'
-import {dateFormat, clone} from "@services/utils";
+import {dateFormat} from "@services/utils";
 import {mapGetters} from "vuex";
-
+import {_goToChat} from '@components/chats/utils'
 export default {
   name: "users-section",
   data(){
@@ -166,7 +167,7 @@ export default {
   },
   computed: {
 
-    ...mapGetters(['accessToken']),
+    ...mapGetters(['accessToken', 'userIdentifier']),
 
     showPagination(){
       return this.pagination.totals > 0
@@ -258,6 +259,53 @@ export default {
       this.$refs.userTable.refresh()
     },
 
+    /* chat */
+    _goToChat,
+
+    /* Listeners update */
+    fetchUsers(user) {
+      console.log('user : ', user)
+      if(user){
+        if (typeof user === 'string' || this.isPending(user.signup)) {
+          let table = this.$refs.userTable
+          table && table.refresh()
+        }
+        else if (this.isChecked(user.signup)) {
+          const _user = this.$refs.userTable.localItems.find(f => f.details._id === user._id)
+          const index = this.$refs.userTable.localItems.indexOf(_user)
+          console.log('checked user : ', _user, ', index ', index)
+          if (index !== -1) {
+            this.$refs.userTable.localItems.splice(index, 1, this.remapping(user))
+            this.$set(this.$refs.userTable.localItems[index], '_showDetails', _user._showDetails)
+          }
+        }
+      }
+    },
+
+    onUpdateInfos(userInfo) {
+      if (userInfo) {
+        const index = this.$refs.userTable.localItems.findIndex(u => u.details._id === userInfo._id)
+        if (index !== -1) {
+          const user = this.$refs.userTable.localItems[index]
+          if(userInfo.userID) {
+            user.userID = userInfo.userID
+            user.details.userID = userInfo.userID
+          }
+          if(userInfo.information) user.details.information = Object.assign(user.details.information, userInfo.information)
+          this.$refs.userTable.localItems.splice(index, 1, user)
+        }
+      }
+    }
+  },
+  created() {
+    bus.$on('user:signup', this.fetchUsers.bind(this))
+    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$on('user:delete', this.fetchUsers.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('user:signup', this.fetchUsers.bind(this))
+    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    bus.$off('user:delete', this.fetchUsers.bind(this))
   }
 }
 </script>

@@ -1,7 +1,6 @@
 import {IRbac, RBAC} from "../modules/rbac";
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
-import {extractAuthorization} from "../modules/utilities";
 import {DecodedTokenType, IJwtToken, JwtToken} from "../modules/jwt.token";
 import {FileUploader, IFileUploader, UploaderConfiguration} from "../modules/uploader";
 import FileType = FileUploader.FileType;
@@ -11,41 +10,58 @@ import {Document, Model, Query} from "mongoose";
 export const tokensManager: IJwtToken = new JwtToken()
 export const accessManager: IRbac = new RBAC()
 
-export function getRestrictedUser(req: any, res: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
+type AuthorizationValue = {userID: string, password: string} | {access_token: string}
+export function extractAuthorization(headers): AuthorizationValue | any {
+    if(!headers.authorization) return {access_token: undefined}
+    const [type, value] = headers.authorization.split(' ')
+    switch (type){
+        case 'Basic': {
+            let buff = Buffer.from(value, 'base64');
+            let [userID, password] = buff.toString('utf-8').split(':');
+            return {userID: userID, password: password}
+        }
+        case 'Bearer': {
+            return {access_token: value}
+        }
+        default: throw new Error(type + ' not implemented')
+    }
+}
+
+export function getRestrictedUser(req: any, res?: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
     const {access_token} = extractAuthorization(req.headers)
     if(!access_token) {
-        res.status(400).json({description: 'Missing authorization.'})
+        if(res) res.status(400).json({description: 'Missing authorization.'})
         return false
     }
     let decoded_token = tokensManager.checkValidityOfToken(access_token);
     if(!decoded_token) {
-        res.status(401).json({description: 'User is not authenticated'})
+        if(res) res.status(401).json({description: 'User is not authenticated'})
         return false
     }
     if(options){
         options.others = options.others || (() => false)
         if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.subject, options.others(decoded_token))) {
-            res.status(403).json({description: 'User is unauthorized'})
+            if(res) res.status(403).json({description: 'User is unauthorized'})
             return false
         }
     }
     return decoded_token
 }
 
-export function getUser(req: any, res: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): Promise<DecodedTokenType | undefined>{
+export function getUser(req: any, res?: any, options?: {operation: Operation, subject: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): Promise<DecodedTokenType | undefined>{
     const {access_token} = extractAuthorization(req.headers)
     let user: DecodedTokenType = undefined;
     if(access_token){
         let decoded_token = tokensManager.checkValidityOfToken(access_token);
         if(!decoded_token) {
-            res.status(401).json({description: 'User is not authenticated'})
+            if(res) res.status(401).json({description: 'User is not authenticated'})
             return Promise.reject(401)
         }
 
         if(options) {
             options.others = options.others || (() => false)
             if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.subject, options.others(decoded_token))){
-                res.status(403).json({description: 'User is unauthorized to execute this function.'})
+                if(res) res.status(403).json({description: 'User is unauthorized to execute this function.'})
                 return Promise.reject(403)
             }
         }
@@ -99,12 +115,22 @@ export function pagination(query: Query<Document[], Document, {}, Document>, opt
                     return _query.then(docs => Promise.resolve({ items: docs, total: nDocs, paginationInfo: _paginationInfo }), err => Promise.reject(err))
                 }, err => Promise.reject(err))
 }
+export function paginationOf(array: Array<any>, options?: PaginationOptions): PaginationResult {
+    let start: number = 0
+    let end: number = array.length
+    if(options){
+        start = (options.page - 1) * options.limit
+        end = start + options.limit
+        console.debug('start = ', start, ', end = ', end)
+    }
+    return { items: array.slice(start, end), total: array.length, paginationInfo: options }
+}
 
 export async function existById(model: Model<any>, values: Array<string>): Promise<true>{
     if(values.length === 0) return Promise.reject('empty')
     let notValid: Array<string> = []
     for (const value of values){
-        const doesExit = await model.exists({_id: value})
+        const doesExit = await model.exists({_id: value}).catch(err => console.error(err))
         if (!doesExit) notValid.push(value)
     }
     return notValid.length > 0 ? Promise.reject(notValid) : Promise.resolve(true)

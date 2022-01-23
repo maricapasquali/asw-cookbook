@@ -39,7 +39,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['accessToken'])
+    ...mapGetters(['accessToken', 'socket'])
   },
   watch: {
     value(vl){
@@ -67,13 +67,14 @@ export default {
       this.processing = true
       api.users
          .deleteAccount(this.id, this.accessToken)
-         .then(response => {
-            console.debug(response)
-            if(this.adminVersion) this.$emit("onDeleteAccount", response)
+         .then(({data}) => {
+            console.debug(data)
+            if(this.adminVersion) this.$emit("onDeleteAccount", data)
             else {
               this.$store.commit('endSession')
               this.$router.replace({ name: "homepage"})
             }
+            this.socket.emit('user:delete', this.id)
          })
          .catch(err => {
             this.error.message = api.users.HandlerErrors.deleteAccount(err)

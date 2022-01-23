@@ -1,7 +1,7 @@
 <template>
   <b-card  v-if="show">
     <template #header v-if="closable">
-      <b-col align="end" >
+      <b-col class="text-right">
         <b-icon-x-square-fill font-scale="1.5" class="icon" @click="closeEditor"/>
       </b-col>
     </template>
@@ -15,7 +15,7 @@
     </b-row>
 
     <template #footer v-if="isContentNotEmpty">
-      <b-col  align="end">
+      <b-col  class="text-right">
         <b-button variant="primary" @click="endEdit">
           <slot name="edit">Edit</slot>
         </b-button>

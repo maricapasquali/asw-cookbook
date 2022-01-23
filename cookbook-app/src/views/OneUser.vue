@@ -1,14 +1,15 @@
 <template>
   <div>
     <!-- Public User Information  -->
-    <user-information ref="user-info" :id="user" />
+    <not-found v-if="userNotFound" asset="user" />
+    <user-information v-else ref="user-info" :id="user" @not-found="userNotFound = true"/>
     <!-- Shared Recipe of one specific user -->
     <container-collapsable v-if="recipes.length" id="recipes" title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="areRecipesOthers" @load-others="othersRecipes">
       <template #collapse-content>
         <b-list-group class="my-3">
           <b-list-group-item v-for="(recipe, ind) in recipes" :key="ind">
             <b-row>
-              <b-col align="start">
+              <b-col class="text-left">
                 <b-row cols="1">
                   <b-col>
                     <router-link :to="{name: 'single-recipe', params: {id: user, recipe_id: recipe._id}}">
@@ -18,7 +19,7 @@
                   <b-col>  <small>{{recipe.createdAt | dataFormatter}}</small> </b-col>
                 </b-row>
               </b-col>
-              <b-col align="end">
+              <b-col class="text-right">
                 <span> {{ recipe.category.text }} </span>
                 <country-image v-model="recipe.country" :id="'recipe-'+ind" />
               </b-col>
@@ -28,23 +29,22 @@
       </template>
       <template #load-others>carica altre ...</template>
     </container-collapsable>
-
     <!-- Accepted friend of one specific user -->
     <container-collapsable v-if="friends.length" id="friends" title="Amici" @collapsed="onCollapsedFriends" :with-loading-others="areFriendsOthers" @load-others="othersFriends">
       <template #collapse-content>
         <b-list-group class="my-3">
           <b-list-group-item v-for="(friend, ind) in friends" :key="ind">
             <b-row>
-              <b-col align="start">
+              <b-col class="text-left">
                 <b-row align-v="center" cols="1" cols-sm="2">
-                  <b-col class="pr-3" sm="5"> <avatar v-model="friend.user.img" /> </b-col>
+                  <b-col class="pr-3" sm="5"> <avatar v-model="friend.user.img" :user="friend.user._id"/> </b-col>
                   <b-col class="mt-2">
                     <router-link @click.native="fetchData(friend)" :to="{name: 'single-user', params: {id: friend.user._id}}">{{friend.user.userID}}</router-link>
                     <p class="mb-0">{{friend.user.occupation}}</p>
                   </b-col>
                 </b-row>
               </b-col>
-              <b-col align="end">
+              <b-col class="text-right">
                 <country-image v-model="friend.user.country" :id="'friend-'+ind" class="mb-2" width="50" height="40" />
                 <b-friendship :other-user="friend.user"/>
               </b-col>
@@ -58,15 +58,18 @@
 </template>
 
 <script>
+import {bus} from "@/main";
 import {dateFormat} from "@services/utils";
 import {RecipeCategories} from "@services/app";
 
 import api from '@api'
 import {mapGetters} from "vuex";
 import {mapping} from "@services/api/users/friends/utils";
+import NotFound from "./404";
 
 export default {
   name: "OneUser",
+  components: {NotFound},
   computed: {
     user(){
       return this.$route.params.id
@@ -78,16 +81,16 @@ export default {
       return this.friends.length >0 && this.friends.length < this.friendsTotal
     },
 
-    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned'])
+    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned', 'socket'])
   },
   filters: {
     dataFormatter: dateFormat
   },
   data(){
     return {
-      /* User Recipes Section */
-      showRecipeSection: false,
+      userNotFound: false,
 
+      /* User Recipes Section */
       recipesTotal: 0,
       recipes: [],
       recipePaginationOptions: {
@@ -95,6 +98,7 @@ export default {
         limit: 1 //todo: change pagination limit from 1 to 10
       },
 
+      /* User Friends Section */
       friendsTotal: 0,
       friends: [],
       friendsPaginationOptions: {
@@ -121,12 +125,13 @@ export default {
       return recipe
     },
 
-    getRecipes(currentPage){
-      this.recipePaginationOptions.page = currentPage || 1
-      console.debug('Recipe Pagination = ', JSON.stringify(this.recipePaginationOptions, null, 1))
+    getRecipes(currentPage, _limit){
+      const page = currentPage || 1
+      const limit = _limit || this.recipePaginationOptions.limit
 
+      console.debug('Recipe Pagination = ', {page, limit})
       api.recipes
-         .getRecipes(this.user, this.accessToken, 'shared', this.recipePaginationOptions)
+         .getRecipes(this.user, this.accessToken, 'shared', {page, limit})
          .then(({data}) =>{
            let _remapData = data.items.map(recipe => this.remappingRecipe(recipe))
 
@@ -134,6 +139,7 @@ export default {
            else this.recipes = _remapData
 
            this.recipesTotal = data.total
+           if(!_limit) this.recipePaginationOptions.page = page
            console.debug('Recipes : ',  this.recipes)
          })
           //TODO: HANDLER ERROR N RECIPE (shared) OF USER WITH 'id'
@@ -153,20 +159,22 @@ export default {
     /* User Friends Section */
     remappingFriend: mapping,
 
-    getFriends(currentPage) {
-      this.friendsPaginationOptions.page = currentPage || 1
-      console.debug('Friend Pagination = ', JSON.stringify(this.friendsPaginationOptions, null, 1))
+    getFriends(currentPage, _limit) {
+      const page = currentPage || 1
+      const limit = _limit || this.friendsPaginationOptions.limit
+      console.debug('Friend Pagination = ', {page, limit})
 
       let state = this.userIdentifier === this.user ? 'accepted': undefined
       api.friends
-         .getFriendOf(this.user, this.accessToken, { state: state }, this.friendsPaginationOptions)
+         .getFriendOf(this.user, this.accessToken, { state: state }, {page, limit})
          .then(({data}) => {
-           let _remapData = data.items.map(recipe => this.remappingFriend(recipe, this.user))
+           let _remapData = data.items.map(friend => this.remappingFriend(friend, this.user))
 
            if(currentPage) this.friends.push(..._remapData)
            else this.friends = _remapData
 
            this.friendsTotal = data.total
+           if(!_limit) this.friendsPaginationOptions.page = page
            console.debug('Friends : ',  this.friends)
 
          })
@@ -183,6 +191,58 @@ export default {
       console.debug('Friend: collapsed show = ', show)
       // if(show && this.recipes.length === 0) this.getRecipes()
     },
+
+    /*Listener notification*/
+    onUpdatedRecipeListeners(_, recipe){
+      if(recipe) {
+        let index = this.recipes.findIndex(r => r._id === recipe._id)
+        if(index !== -1){
+          this.remappingRecipe(recipe)
+          this.recipes.splice(index, 1, recipe)
+        }
+      }
+    },
+
+    fetchRecipe(_, recipe){
+      if(recipe) this.getRecipes(0, this.recipePaginationOptions.page * this.recipePaginationOptions.limit)
+    },
+    fetchFriend(friendship){
+      console.debug('Friend ship ', friendship)
+      if(friendship && (this.user === friendship.from._id || this.user === friendship.to._id)) {
+        this.getFriends(0, this.friendsPaginationOptions.page * this.friendsPaginationOptions.limit)
+      }
+    },
+
+    /* Listeners update */
+    onDeleteUser(id){
+      if(id === this.user) {
+        this.userNotFound = true
+        this.recipes = []
+        this.recipesTotal = 0
+        this.friends = []
+        this.friendsTotal = 0
+      }
+    }
+  },
+  created() {
+    bus.$on('recipe:create', this.fetchRecipe.bind(this))
+    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$on('recipe:delete', this.fetchRecipe.bind(this))
+
+    bus.$on('friend:add', this.fetchFriend.bind(this))
+    bus.$on('friend:remove', this.fetchFriend.bind(this))
+
+    bus.$on('user:delete', this.onDeleteUser.bind(this))
+  },
+  beforeDestroy() {
+    bus.$off('recipe:create', this.fetchRecipe.bind(this))
+    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    bus.$off('recipe:delete', this.fetchRecipe.bind(this))
+
+    bus.$off('friend:add', this.fetchFriend.bind(this))
+    bus.$off('friend:remove', this.fetchFriend.bind(this))
+
+    bus.$off('user:delete', this.onDeleteUser.bind(this))
   },
   mounted() {
     this.getRecipes()
