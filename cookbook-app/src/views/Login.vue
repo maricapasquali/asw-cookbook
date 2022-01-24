@@ -208,7 +208,7 @@ export default {
     },
 
     ...mapMutations(['startSession']),
-    ...mapActions(['getNumberOfUnReadNotifications']),
+    ...mapActions(['getNumberOfUnReadNotifications', 'getNumberOfUnReadChatsMessages']),
     login: function (){
       api.users.session.login(this.credential)
          .then(({data}) => {
@@ -217,6 +217,7 @@ export default {
 
            this.startSession({...token, user: userInfo})
            this.getNumberOfUnReadNotifications()
+           this.getNumberOfUnReadChatsMessages()
 
            let location = {
              name: data.firstLogin ? 'change-password' : 'p-user-account',

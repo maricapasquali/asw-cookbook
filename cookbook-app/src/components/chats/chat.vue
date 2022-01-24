@@ -51,7 +51,7 @@
 
 <script>
 import api from '@api'
-import {mapGetters} from "vuex";
+import {mapGetters, mapMutations} from "vuex";
 import {dateFormat} from "@services/utils";
 import ChatUtils from '@components/chats/utils'
 import {RecipeCategories} from "../../services/app";
@@ -207,8 +207,8 @@ export default {
       }
       console.debug('TYPING container height = ',  data)
     },
-
-    readMessages(messages){
+    ...mapMutations(['removeUnReadMessage']),
+    readMessages(messages, init = false){
       if(messages.length) {
         let messagesIds = messages.map(m => m._id)
         console.log('Read messages = ', messagesIds)
@@ -220,7 +220,10 @@ export default {
               if(response.status === 204) return console.debug('Message ('+message._id+') has already read.');
               const {description, readers} = response.data
               const reader = Object.values(readers)[0].user
-              messages.forEach(message => message.read.push(readers[message._id]))
+              messages.forEach(message => {
+                message.read.push(readers[message._id])
+                if(init) this.removeUnReadMessage()
+              })
               console.debug(description, ' from ', reader.userID)
               this.socket.emit('chat:read', this.temporaryNameChat, messages)
             })
@@ -313,7 +316,7 @@ export default {
         this.messages = chat.messages.map(message => Object.assign(message, {delivered: true}))
 
         const unReadMessage = this.messages.filter(m => m.sender._id !== this.userIdentifier && !m.read.find(r => r.user._id === this.userIdentifier))
-        this.readMessages(unReadMessage.reverse())
+        this.readMessages(unReadMessage.reverse(), true)
 
         this.$nextTick(() => this._goToTheBottom())
 

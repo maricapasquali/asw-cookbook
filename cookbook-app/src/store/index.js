@@ -9,7 +9,8 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
     state: {
-        unreadNotifications: 0
+        unreadNotifications: 0,
+        unreadMessages: 0
     },
     getters,
     mutations,

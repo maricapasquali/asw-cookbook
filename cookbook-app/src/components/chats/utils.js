@@ -106,8 +106,10 @@ export function pushMessages(chats){ //[{info, messages}]
                 const dest = chat.info.type === 'one' || this.isAdmin ? 'da ' + message.sender.userID :
                              chat.info.type === 'group' ? 'in ' + chat.info.name : ''
 
-                if(! ['chat', 'p-user-chats'].includes(this.$route.name) )
+                if(! ['chat', 'p-user-chats'].includes(this.$route.name) ) {
                     this.$bvToast.toast('Hai ricevuto un nuovo messaggio ' + dest, { title: 'Messaggio', solid: true, variant: 'info', })
+                    this.$store.commit('addUnReadMessage')
+                }
 
                 bus.$emit('push-message', chat.info, message)
             })

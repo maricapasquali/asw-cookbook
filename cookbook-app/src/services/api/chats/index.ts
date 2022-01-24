@@ -23,10 +23,13 @@ export function createChat(user: string, data: object, token: string): Promise<A
     })
 }
 
-export function getChats(user: string, token: string): Promise<AxiosResponse> {
+export function getChats(user: string, token: string, query?: { 'unread-messages': boolean}): Promise<AxiosResponse> {
     return methods.get('/users/:id/chats', {
         headers: {
             authorization: 'Bearer ' + token
+        },
+        params: {
+          ...query
         },
         urlParams:{
             id: user

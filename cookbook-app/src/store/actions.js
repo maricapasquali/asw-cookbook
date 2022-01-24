@@ -10,4 +10,16 @@ export default {
             })
             .catch(err => console.error(err))
     },
+    getNumberOfUnReadChatsMessages({commit, state}){
+        if(state.user && state.accessToken)
+            api.chats
+               .getChats(state.user._id, state.accessToken, { 'unread-messages' : true })
+               .then(({data}) => {
+                   console.debug('unread-messages : ', data)
+                   let unReadMessages = data.items.reduce((acc, current)=> acc += current.messages.length, 0)
+                   console.debug('unread-chat : ', data, ', # unread-messages : ', unReadMessages)
+                   if(unReadMessages > 0) commit('addUnReadMessage', unReadMessages)
+               })
+               .catch(err => console.error(err))
+    },
 }

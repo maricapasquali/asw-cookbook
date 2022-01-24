@@ -45,7 +45,16 @@
                </b-col>
              </b-row>
             </b-dropdown-item>
-            <b-dropdown-item :active="isChatsActive" :to="{name: 'p-user-chats', params: {id: userIdentifier}}">Chats</b-dropdown-item>
+            <b-dropdown-item :active="isChatsActive" :to="{name: 'p-user-chats', params: {id: userIdentifier}}">
+              <b-row>
+                <b-col cols="6">
+                  <span>Chats</span>
+                </b-col>
+                <b-col class="text-right px-1"  cols="6">
+                  <h5><b-badge :variant="isChatsActive ? 'light': 'primary'"  v-if="unreadChatsMessages>0">{{unreadChatsMessages}}<span class="sr-only">messaggi non letti</span></b-badge></h5>
+                </b-col>
+              </b-row>
+            </b-dropdown-item>
             <b-dropdown-item @click="logout">Sign Out</b-dropdown-item>
 
           </b-nav-item-dropdown>
@@ -96,6 +105,9 @@ export default {
     ]),
     unreadNotifications(){
       return this.$store.state.unreadNotifications
+    },
+    unreadChatsMessages(){
+      return this.$store.state.unreadMessages
     },
     isHomePageActive: function (){
       return this.$route.name === 'homepage'

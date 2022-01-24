@@ -51,7 +51,7 @@ export default {
     },
 
     // NOTIFICATIONS
-    ...mapActions(['getNumberOfUnReadNotifications']),
+    ...mapActions(['getNumberOfUnReadNotifications', 'getNumberOfUnReadChatsMessages']),
     ...notifications,
     //UPDATES
     ...updates,
@@ -66,7 +66,10 @@ export default {
     bus.$on('hideNavigationBar', this.hideNavigationBar.bind(this))
 
     // NOTIFICATIONS
-    if(this.isLoggedIn) this.getNumberOfUnReadNotifications()
+    if(this.isLoggedIn) {
+      this.getNumberOfUnReadNotifications()
+      this.getNumberOfUnReadChatsMessages()
+    }
     this.friendShipListeners()
     this.foodListeners()
     this.commentListeners()

@@ -42,6 +42,7 @@ export default {
         localStorage.removeItem('token.refresh')
 
         Vue.set(state, 'unreadNotifications', 0)
+        Vue.set(state, 'unreadMessages', 0)
     },
     changeUserId(state, newUserID){
         if(state.user){
@@ -63,5 +64,13 @@ export default {
     removeUnReadNotification(state){
         if(state.unreadNotifications > 0)
             Vue.set(state, 'unreadNotifications', state.unreadNotifications - 1)
+    },
+    addUnReadMessage(state, num){
+        if(num) Vue.set(state, 'unreadMessages', num)
+        else Vue.set(state, 'unreadMessages', state.unreadMessages + 1)
+    },
+    removeUnReadMessage(state){
+        if(state.unreadMessages > 0)
+            Vue.set(state, 'unreadMessages', state.unreadMessages - 1)
     }
 }
