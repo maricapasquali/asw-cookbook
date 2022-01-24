@@ -147,6 +147,7 @@ export function create_chat(req, res) {
 export function list_chat(req, res) {
     const {id} = req.params
     let  {page, limit, name} = req.query
+    let unreadMessages = req.query['unread-messages']
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     const user = getRestrictedUser(req, res, { operation: Operation.RETRIEVE, subject: Subject.CHAT, others: decodedToken => decodedToken._id !== id })
     if(user) {
@@ -174,7 +175,7 @@ export function list_chat(req, res) {
         console.debug('filtersGroup ', filtersGroup, ' pipelinePopulatedChat ', pipelinePopulatedChat)
         Promise.all([Chat.find(filtersGroup).populate(ChatPopulationPipeline), Chat.find(filtersOne).populate(pipelinePopulatedChat)])
                .then(results => {
-                   const [chatGroup, chatOne] = results
+                   let [chatGroup, chatOne] = results
                    const _chatOne = chatOne.filter(c => c.users.some(u => u.user && u.user._id != id))
                    chatGroup.push(..._chatOne)
                    chatGroup.sort((c1, c2) => {
@@ -183,6 +184,17 @@ export function list_chat(req, res) {
                              c1Timestamp = c1Message ? c1Message.timestamp : 0, c2TimeStamp = c2Message ? c2Message.timestamp : 0
                        return c2TimeStamp - c1Timestamp
                    })
+
+                   if(typeof unreadMessages === 'boolean' && unreadMessages == true) {
+                       chatGroup = chatGroup.filter(chat => chat.messages.length > 0)
+                                            .map(chat => {
+                                                chat.messages = chat.messages
+                                                                    .filter(m => m.sender._id != user._id)
+                                                                    .filter(m => !m.read.find(r => r.user._id == user._id))
+                                               // console.debug('messages uread = ',chat.messages )
+                                               return chat
+                                            })
+                   }
                    return res.status(200).json(paginationOf(chatGroup, page && limit ? { page: +page, limit: +limit } : undefined))
                }, err => res.status(500).json({ description: err.message}))
     }
