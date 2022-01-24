@@ -2236,6 +2236,13 @@ paths:
                   - partial
               value:
                type: string
+        - name: unread-messages
+          in: query
+          description: filter chats with unread messages
+          required: false
+          schema:
+            type: boolean
+
       responses:
         200:
           description: ""
