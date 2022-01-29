@@ -1,4 +1,4 @@
-import {Chat, Food, Message, User} from "../../models";
+import {Chat, Message, User} from "../../models";
 import {Types} from "mongoose";
 import {ChatPopulationPipeline, IChat} from "../../models/schemas/chat";
 import {
@@ -185,7 +185,7 @@ export function list_chat(req, res) {
                        return c2TimeStamp - c1Timestamp
                    })
 
-                   if(typeof unreadMessages === 'boolean' && unreadMessages == true) {
+                   if(Boolean(unreadMessages) && JSON.parse(unreadMessages)) {
                        chatGroup = chatGroup.filter(chat => chat.messages.length > 0)
                                             .map(chat => {
                                                 chat.messages = chat.messages
