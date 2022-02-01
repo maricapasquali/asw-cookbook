@@ -17,6 +17,10 @@
           </b-col>
         </b-row>
       </div>
+      <!-- DIRECT SHARE A SAVED RECIPE -->
+      <b-modal centered v-model="directShared.show" title="Condividi ricetta salvata" ok-only @ok="shareRecipe">
+        <p> Vuoi davvero condividere la ricetta <b><em>{{directShared.name}}</em></b> senza modificarla ?</p>
+      </b-modal>
       <!-- ERASE RECIPE -->
       <b-modal centered v-model="deleteRecipe.show" ok-only @ok="eraseRecipe">
         <template #modal-title>
@@ -88,11 +92,13 @@
                   <b-button-group>
                     <b-button :id="item.recipe._id+'-details'" v-if="item.actions.includes('details')" variant="info" @click="item.showDetails = !item.showDetails"> <b-icon-info-circle/> </b-button>
                     <b-button :id="item.recipe._id+'-edit'"  v-if="item.actions.includes('change')" variant="primary" @click="onModify(index)"> <b-icon-pencil-square /> </b-button>
+                    <b-button :id="item.recipe._id+'-directly-shared'"  v-if="item.actions.includes('directly-shared')" variant="light" @click="onDirectlyShared(index)"> <b-icon-share /> </b-button>
                     <b-button :id="item.recipe._id+'-delete'" v-if="item.actions.includes('delete')" variant="danger" @click="onErase(index)"> <b-icon-trash-fill /> </b-button>
                     <b-button :id="item.recipe._id+'-remove'" v-if="item.actions.includes('remove')" variant="danger" @click="onErase(index, true)"> <b-icon-trash-fill/> </b-button>
                   </b-button-group>
                   <b-tooltip :target="item.recipe._id+'-details'" v-if="item.actions.includes('details')" >{{ item.showDetails ? 'Nascondi' : 'Mostra' }} Dettagli</b-tooltip>
                   <b-tooltip :target="item.recipe._id+'-edit'" v-if="item.actions.includes('change')" >Modifica</b-tooltip>
+                  <b-tooltip :target="item.recipe._id+'-directly-shared'" v-if="item.actions.includes('directly-shared')" >Condividi senza modificare</b-tooltip>
                   <b-tooltip :target="item.recipe._id+'-delete'" v-if="item.actions.includes('delete')" >Cancella</b-tooltip>
                   <b-tooltip :target="item.recipe._id+'-remove'" v-if="item.actions.includes('remove')" >Rimuovi</b-tooltip>
                 </b-col>
@@ -185,6 +191,9 @@ import {Diets, RecipeCategories} from '@services/app'
 import api from '@api'
 import {mapGetters} from "vuex";
 
+import Vue from "vue";
+import RecipeForm from './recipe-form';
+
 export default {
   name: "recipe-sections",
   data(){
@@ -201,7 +210,11 @@ export default {
         show: false,
         index: -1
       },
-
+      directShared: {
+        show: false,
+        index: -1,
+        name: ''
+      },
 
       searching: {
         on: false,
@@ -296,12 +309,13 @@ export default {
     },
 
     /* documentations */
-    remapping(recipe, _showDetails = false){
+    remapping(recipe, _showDetails = false, tab){
       let operation = []
-      switch (this.active){
+      switch (tab || this.active){
         case 'saved':
           operation.push('details')
           operation.push('change')
+          operation.push('directly-shared')
           operation.push('delete')
           break
         case 'shared':
@@ -432,6 +446,35 @@ export default {
       }
 
       this.closeChangeMode()
+    },
+
+    /* - SAVED RECIPE: SHARE ONLY */
+    onDirectlyShared(index){
+      this.directShared = {
+        show: true,
+        index: index,
+        name: this.itemsRecipes[index].recipe.name
+      }
+    },
+    shareRecipe(){
+      const recipe = this.itemsRecipes[this.directShared.index].recipe
+      const CRecipeForm = Vue.extend(RecipeForm)
+      const instance = new CRecipeForm({store: this.$store, propsData: { value: recipe }})
+      instance.$on('onChanged', this._afterOnlyShared.bind(this))
+      instance.shared()
+    },
+    _afterOnlyShared(cRecipe){
+      this.itemsRecipes.splice(this.directShared.index, 1)
+      let items = this.tabs.find(e => e.type === 'shared')
+      if(items) items.itemsRecipes.unshift(this.remapping(cRecipe, false, 'shared'))
+      this.closeDirectSharedMode()
+    },
+    closeDirectSharedMode(){
+      this.directShared = {
+        index: -1,
+        name: '',
+        show: false
+      }
     },
 
     /* -DELETE OR REMOVE */

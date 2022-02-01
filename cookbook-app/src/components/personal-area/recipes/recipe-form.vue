@@ -432,7 +432,10 @@ export default {
               this.$emit('onChanged', data)
 
               this.socket.emit('recipe:update', data)
-
+              if(this.value.shared === false && data.shared === true) {
+                console.log('Share a saved recipe.')
+                this.socket.emit('recipe:create', data)
+              }
             } else {
               this.$emit(eventType, data)
               this.resetFormRecipe()
