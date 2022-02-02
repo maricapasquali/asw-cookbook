@@ -443,8 +443,8 @@ export default {
             }
           })
           .catch(err => {
-            // TODO: HANDLER ERROR add new RECIPE / modify RECIPE
-            console.error(err)
+            if(options.new === false) api.recipes.HandlerErrors.updateRecipe(err)
+            else api.recipes.HandlerErrors.createRecipe(err)
           })
           .finally(() => this.processing = false)
     },

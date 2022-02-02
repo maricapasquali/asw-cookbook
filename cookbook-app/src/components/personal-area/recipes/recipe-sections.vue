@@ -351,12 +351,10 @@ export default {
 
             this.total = data.total
             if(!_limit) this.paginationOptions.page = page
+            return true
          })
-         .catch(err => {
-           //TODO: HANDLER ERROR N RECIPES OF USER id
-           console.error(err)
-         })
-         .finally(() => this.processing = false)
+         .catch(err => api.recipes.HandlerErrors.getRecipe(err, {_forbiddenPage: true}))
+         .then(processEnd => this.processing = !processEnd)
 
     },
     others(){
@@ -486,9 +484,7 @@ export default {
         removeFromLoved: removeFromLoved
       }
     },
-    _afterDelete(data){
-      console.log(data)
-      this.itemsRecipes.splice(this.deleteRecipe.index, 1)
+    _closeDeleteMode(){
       this.deleteRecipe = {
         index: -1,
         name: '',
@@ -507,11 +503,13 @@ export default {
         api.recipes
            .likes
            .unLike(recipe.owner._id, recipe._id, like._id , this.accessToken)
-           .then(({data}) => this._afterDelete(data))
-           .catch(err => {
-              // TODO: HANDLER ERROR REMOVE LIKE ON RECIPE
-              console.log(err)
+           .then(({data}) => {
+             console.log(data)
+             this.itemsRecipes.splice(this.deleteRecipe.index, 1)
            })
+            // TODO: HANDLER ERROR REMOVE LIKE ON RECIPE
+           .catch(err => console.log(err))
+           .then(this._closeDeleteMode)
       }
       else
       {
@@ -519,13 +517,12 @@ export default {
         api.recipes
            .deleteRecipe(this.userIdentifier, recipe._id, this.accessToken)
            .then(({data}) => {
-             this._afterDelete(data)
+             console.log(data)
+             this.itemsRecipes.splice(this.deleteRecipe.index, 1)
              this.socket.emit('recipe:delete', recipe)
            })
-           .catch(err => {
-             // TODO: HANDLER ERROR DELETE RECIPE
-             console.log(err)
-           })
+           .catch(api.recipes.HandlerErrors.deleteRecipe)
+           .then(this._closeDeleteMode)
       }
     },
     /* END ACTIONS: MODIFY, DELETE, REMOVE ...*/

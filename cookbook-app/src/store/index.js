@@ -10,7 +10,30 @@ Vue.use(Vuex)
 export default new Vuex.Store({
     state: {
         unreadNotifications: 0,
-        unreadMessages: 0
+        unreadMessages: 0,
+
+        requestError: {
+            serverError: {
+                show: false,
+                message: ''
+            },
+            badRequestError: {
+                show: false,
+                message: ''
+            },
+            unAuthenticatedError: {
+                show: false,
+                _forbiddenPage: false
+            },
+            forbiddenError: {
+                show: false,
+                message: ''
+            },
+            notFoundResource: {
+                show: false,
+                resource: {}
+            }
+        }
     },
     getters,
     mutations,

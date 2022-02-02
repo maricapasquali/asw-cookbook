@@ -5,6 +5,7 @@ import * as _likes from './likes'
 import * as _comments from './comments'
 import {Server} from "../index";
 import {getHeaderBearerAuthorization} from "../utils";
+import * as handlerErrors from "./handlerError";
 
 function setUrlPath(recipe: any){
     if(recipe.img) {
@@ -19,6 +20,7 @@ function setUrlPath(recipe: any){
 
 export const likes = _likes
 export const comments = _comments
+export const HandlerErrors = handlerErrors
 
 type RecipeFilters = {name?: string, countries?: string[], diets?: string[], categories?: string[], ingredients?: string[]}
 export function allSharedRecipes(token?: string, optionsPagination?: {page: number, limit: number}, filters?: RecipeFilters): Promise<AxiosResponse>  {

@@ -118,6 +118,10 @@ export default {
         limit: 2
       },
 
+      error: {
+        show: false,
+        message: ''
+      }
     }
   },
   computed: {
@@ -168,11 +172,7 @@ export default {
             this.total = data.total
             if(!_limit) this.optionsPagination.page = page
          })
-          //TODO: HANDLER ERROR HOME-PAGE
-         .catch(err => {
-            console.error(err)
-            if(err.response && err.response.status === 401) this.$router.go()
-         })
+         .catch(err => api.recipes.HandlerErrors.allSharedRecipes(err))
     },
     others(){
       console.debug("Altri "+this.optionsPagination.limit+" post ..")

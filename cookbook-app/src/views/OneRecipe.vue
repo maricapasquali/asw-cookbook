@@ -205,16 +205,16 @@ export default {
           {text: this.doc.name, active: true}
         ]
       }
+      return true
     },
     getRecipe() {
       let {id, recipe_id} = this.$route.params;
       this.processing = true
       api.recipes
          .getRecipe(id, recipe_id, 'shared', this.accessToken)
-         .then(({data})=> this.setRecipe(data))
-          //TODO: HANDLER ERROR ONE RECIPE
-         .catch(err => console.error(err.response))
-         .finally(() => this.processing = false)
+         .then(({data}) => this.setRecipe(data))
+         .catch(err => api.recipes.HandlerErrors.getRecipe(err))
+         .then(processingEnd => this.processing = !processingEnd)
     },
 
     /* Listeners notification */

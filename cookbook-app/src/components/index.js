@@ -6,6 +6,12 @@ import WrapLoading from "./wrap-loading";
 import ElapsedTime from "./elapsedTime";
 import MiniTextEditor from "./mini-text-editor"
 
+import ServerErrorHandler from './app/handler-errors/server-error-handler'
+import BadRequestErrorHandler from './app/handler-errors/bad-request-error-handler'
+import UnAuthenticatedErrorHandler from './app/handler-errors/unauthenticated-error-handler'
+import ForbiddenErrorHandler from './app/handler-errors/forbidden-error-handler'
+import NotFoundErrorHandler from './app/handler-errors/not-found-error-handler'
+
 import InputPassword from "./app/input-password";
 import ModalAlert from "./app/modal-alert"
 import NotAuthorizedArea from "./app/not-authorized-area"
@@ -72,6 +78,12 @@ export default {
     WrapLoading,
     ElapsedTime,
     MiniTextEditor,
+
+    ServerErrorHandler,
+    BadRequestErrorHandler,
+    UnAuthenticatedErrorHandler,
+    ForbiddenErrorHandler,
+    NotFoundErrorHandler,
 
     InputPassword,
     ModalAlert,

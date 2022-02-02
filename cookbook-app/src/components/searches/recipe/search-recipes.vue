@@ -32,7 +32,7 @@
                           <b-col class="mb-2"> <strong>Categorie</strong> </b-col>
                           <b-col> <checkbox-pill-button v-model="filters.categories" :options="categories" class="w-100"/> </b-col>
                         </b-row>
-                        <b-row cols="1" class="mt-3">
+                        <b-row cols="1" class="mt-3" v-if="filters.countries.length">
                           <b-col class="mb-2"> <strong>Paesi</strong> </b-col>
                           <b-col> <checkbox-pill-button v-model="filters.countries" :options="countries" class="w-100"/> </b-col>
                         </b-row>
@@ -228,7 +228,7 @@ export default {
     ...mapGetters(['accessToken']),
 
     showMap(){
-      return this.withMap && this.$data._showMap
+      return this.withMap && this.$data._showMap && this.countries.length >0
     },
     isDesktop(){
       return screen.width >= 540;
@@ -284,10 +284,11 @@ export default {
                .map(cn => ({...Countries.find(cn.country), ...{recipes: cn.number}}))
 
            if(this.withHistory) this._setFiltersFromRoute()
+
+           return true
          })
-         //TODO: HANDLER ERROR  Number Recipes For Country
-         .catch(err => console.error(err))
-         .finally(() => this.loading = false)
+         .catch(err => api.recipes.HandlerErrors.getNumberRecipesForCountry(err))
+         .then((processEnd) => this.loading = !processEnd)
     },
 
     onAddIngredient(food){
@@ -382,10 +383,10 @@ export default {
             this._hideFilters()
 
             this.$emit('searching', data)
+            return true
          })
-         //TODO: HANDLER ERROR  SEARCH BETWEEN SHARED RECIPES
-         .catch(err => console.error(err))
-         .finally(() => this.processingSearch = false)
+         .catch(err => api.recipes.HandlerErrors.getRecipe(err, { _forbiddenPage: typeof this.triggerSearch !== 'undefined' }))
+         .then(processEnd => this.processingSearch = !processEnd)
     },
 
     removeFilter(type, index = -1){

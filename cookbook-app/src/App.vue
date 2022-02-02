@@ -4,6 +4,12 @@
     <router-view :class="classObject" />
     <app-footer v-if="footerVisibility" />
     <loading v-model="processing" />
+
+    <server-error-handler />
+    <bad-request-error-handler />
+    <unauthenticated-error-handler />
+    <forbidden-error-handler />
+    <not-found-error-handler />
   </div>
 </template>
 

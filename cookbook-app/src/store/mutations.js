@@ -72,5 +72,24 @@ export default {
     removeUnReadMessage(state){
         if(state.unreadMessages > 0)
             Vue.set(state, 'unreadMessages', state.unreadMessages - 1)
+    },
+    // ERROR REQUEST API
+    showServerError(state, err){
+        Vue.set(state.requestError, 'serverError', {show: true, ...err})
+        Vue.set(state.requestError, 'unAuthenticatedError', {show:false})
+        Vue.set(state.requestError, 'forbiddenError', {show: false})
+        Vue.set(state.requestError, 'badRequestError', {show:false})
+    },
+    showBadRequestError(state, err){
+        Vue.set(state.requestError, 'badRequestError', {show: true, ...err})
+    },
+    showUnAuthenticatedError(state, val){
+        Vue.set(state.requestError, 'unAuthenticatedError', val)
+    },
+    showForbiddenError(state, val){
+        Vue.set(state.requestError, 'forbiddenError', val)
+    },
+    showNotFoundError(state, val){
+        Vue.set(state.requestError, 'notFoundResource', val)
     }
 }
