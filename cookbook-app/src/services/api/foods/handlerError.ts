@@ -47,7 +47,7 @@ export function updateFood(err: any): boolean {
             forbidden(err)
             break
         case 404:
-            notFound(err, {name: 'Cibo', id: err.response.config?.urlParams?.id})
+            notFound(err, {name: 'Cibo', id: err.response?.config?.urlParams?.id})
             break
         default:
             serverError(err)

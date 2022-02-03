@@ -1,6 +1,10 @@
 import {AxiosResponse} from "axios";
 import methods from "../methods";
 
+import * as handlerError from './handlerError'
+
+export const HandlerError = handlerError
+
 export function createShoppingListPoint(user: string, data: object, token: string): Promise<AxiosResponse>  {
     return methods.post('/users/:userID/shopping-list', data,{
         headers: {

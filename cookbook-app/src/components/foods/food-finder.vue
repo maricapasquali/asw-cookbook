@@ -10,7 +10,7 @@
         <b-form-group label="Trova" label-for="find-ingredient" id="ingredient-group" :class="{'with-barcode': barcodeSearch}">
           <div v-outside="_hideDropdownOutSide" >
             <b-input-group>
-              <b-form-input @focus="_showDropdown" id="find-ingredient" placeholder="Ingrediente" v-model="startWith" @input="findFoods" ref="find-ingredient" type="search" autocomplete="off"/>
+              <b-form-input :disabled="disabled" @focus="_showDropdown" id="find-ingredient" placeholder="Ingrediente" v-model="startWith" @input="findFoods" ref="find-ingredient" type="search" autocomplete="off"/>
               <template #append> <barcode-scanner @onFound="onDecode" @onError="onError" :show="barcodeSearch"/> </template>
             </b-input-group>
             <div v-show="!hideDropdown && startWith.length>0">
@@ -49,7 +49,8 @@ export default {
     foodAdder:{
       type: Boolean,
       default: false
-    }
+    },
+    disabled: Boolean
   },
   data(){
     return {

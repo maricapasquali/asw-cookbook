@@ -147,7 +147,7 @@
       <!-- Shopping List -->
       <b-col id="shopping-list" class="my-5" v-if="isSigned">
         <h2 class="align">Lista della spesa</h2>
-        <food-finder @found="addInShoppingList" id="finder-food" ref="foodFinder" />
+        <food-finder @found="addInShoppingList" id="finder-food" ref="foodFinder"/>
         <b-skeleton-wrapper :loading="loadingSL">
           <template #loading>
             <b-list-group class="shopping-list align">
@@ -278,7 +278,7 @@ export default {
     addInShoppingList(food){
       console.debug(food)
       this.foodSelected = food._id
-      let index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
+      const index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
       if(index === -1) {
 
         let _food = {food: this.foodSelected, checked: false}
@@ -290,14 +290,10 @@ export default {
               this.shopping_list.unshift(data)
 
               console.debug('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
-           }).catch(err => {
-            //TODO: HANDLER ERROR add element of SHOPPING LIST
-              //no dovrebbe avvenire mai
-              if(err.response && err.response.status === 409){
-                let index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
-                this.patchShoppingList(index, false)
-              }
-              console.error(err.response)
+           })
+           .catch(api.shoppingList.HandlerError.createShoppingListPoint)
+           .then(duplicate => {
+                if(duplicate && index !== -1) this.patchShoppingList(index, false)
            })
       }
       else if(this.shopping_list[index].checked) {
@@ -311,23 +307,18 @@ export default {
          .then(({data}) => {
            point.checked = checked
            console.debug(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(point))
-         }).catch(err => {
-          //TODO: HANDLER ERROR patch element of SHOPPING LIST
-            console.error(err)
          })
+         .catch(api.shoppingList.HandlerError.updateShoppingListPoint)
     },
     removeFromShoppingList(index){
-
       let point = this.shopping_list[index]
       api.shoppingList
          .deleteShoppingListPoint(this.userIdentifier, point._id, this.accessToken)
          .then(({data}) => {
             console.debug('Remove from shopping list: ', JSON.stringify(point))
             this.shopping_list.splice(index, 1)
-         }).catch(err => {
-            //todo: HANDLER ERROR remove element of SHOPPING LIST
-            console.error(err)
          })
+         .catch(api.shoppingList.HandlerError.deleteShoppingListPoint)
     },
     getShoppingList(){
       api.shoppingList
@@ -335,10 +326,8 @@ export default {
          .then(({data}) => {
             this.shopping_list = data
             this.loadingSL = false
-         }).catch(err => {
-            //todo: HANDLER ERROR GET SHOPPING LIST
-            console.error(err)
          })
+         .catch(api.shoppingList.HandlerError.getShoppingList)
     },
 
     // Foods
