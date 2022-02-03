@@ -1,5 +1,11 @@
 import {badRequest, forbidden, notFound, serverError, unAuthenticated} from "../handler-common-error";
 
+import * as handlerErrorLike from './likes/handlerError'
+import * as handlerErrorComment from './comments/handlerError'
+
+export const likes = handlerErrorLike
+export const comments = handlerErrorComment
+
 export function allSharedRecipes(err: any): void {
     switch (err.response?.status) {
         case 401: return unAuthenticated(err)

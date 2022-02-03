@@ -66,8 +66,7 @@ export default {
                 else this.socket.emit('unlike:recipe', this.recipe._id, like._id)
 
              })
-              //TODO: HANDLER ERROR UN-LIKE
-             .catch(err => console.error(err) )
+             .catch(api.recipes.HandlerErrors.likes.makeOrUnmakeLike)
 
         }
         else {
@@ -84,8 +83,7 @@ export default {
                   else this.socket.emit('like:recipe', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
 
              })
-              //TODO: HANDLER ERROR LIKE
-             .catch(err => console.error(err) )
+             .catch(api.recipes.HandlerErrors.likes.makeOrUnmakeLike)
         }
       }
     },

@@ -507,8 +507,7 @@ export default {
              console.log(data)
              this.itemsRecipes.splice(this.deleteRecipe.index, 1)
            })
-            // TODO: HANDLER ERROR REMOVE LIKE ON RECIPE
-           .catch(err => console.log(err))
+           .catch(api.recipes.HandlerErrors.likes.makeOrUnmakeLike)
            .then(this._closeDeleteMode)
       }
       else

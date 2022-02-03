@@ -2,11 +2,13 @@
   <b-container fluid>
     <b-row cols="1">
       <b-col class="my-4"> <strong>Commenti segnalati</strong> </b-col>
-      <b-col>
-        <span v-if="!docsReported.length"> Nessun commento segnalato.</span>
-        <b-row v-else cols="1" cols-sm="1" cols-md="2" cols-lg="3" cols-xl="4">
-          <b-col v-for="(doc, index) in docsReported" :key="doc._id" class="mb-2" :id="reportId(doc._id)">
-            <b-card>
+      <b-col :class="classCols">
+        <b-spinner v-if="processing" variant="primary"></b-spinner>
+        <div v-else>
+          <span v-if="!docsReported.length"> Nessun commento segnalato.</span>
+          <b-row v-else cols="1" cols-sm="1" cols-md="2" cols-lg="3" cols-xl="4">
+            <b-col v-for="(doc, index) in docsReported" :key="doc._id" class="mb-2" :id="reportId(doc._id)">
+              <b-card>
                 <div>
                   <span> Utenti segnalanti: </span>
                   <ul>
@@ -32,30 +34,34 @@
                   <b-button :id="deleteCommentId(index)" variant="danger" @click="deleteComment(index)"><b-icon-trash-fill /></b-button>
                   <b-tooltip :target="deleteCommentId(index)">Cancella</b-tooltip>
                 </div>
-            </b-card>
-          </b-col>
-        </b-row>
+              </b-card>
+            </b-col>
+          </b-row>
+        </div>
       </b-col>
     </b-row>
-    <b-row cols="1">
+    <b-row cols="1" class="my-2 pb-3">
       <b-col class="my-4"><strong>Commenti cancellati</strong> </b-col>
-      <b-col>
-        <span v-if="!docsDeleted.length"> Nessun commento cancellato.</span>
-        <b-row v-else cols="1" cols-sm="1" cols-md="2" cols-lg="3" cols-xl="4">
-          <b-col v-for="doc in docsDeleted"  :key="doc._id"  class="mb-2">
-            <b-card>
-              <div> Utenti segnalanti:
-                <ul>
-                  <li v-for="report in doc.reported"  :key="report._id" >
-                    <span> {{ report.user | name }} </span>
-                    <span> ({{ report.timestamp | dateFormat }}) </span>
-                  </li>
-                </ul>
-              </div>
-              <p> Utente segnalanto: <strong>{{doc.user | name}}</strong></p>
-            </b-card>
-          </b-col>
-        </b-row>
+      <b-col :class="classCols">
+        <b-spinner  v-if="processing" variant="primary"></b-spinner>
+        <div v-else>
+          <span v-if="!docsDeleted.length" class="my-4"> Nessun commento cancellato.</span>
+          <b-row v-else cols="1" cols-sm="1" cols-md="2" cols-lg="3" cols-xl="4">
+            <b-col v-for="doc in docsDeleted"  :key="doc._id"  class="mb-2">
+              <b-card>
+                <div> Utenti segnalanti:
+                  <ul>
+                    <li v-for="report in doc.reported"  :key="report._id" >
+                      <span> {{ report.user | name }} </span>
+                      <span> ({{ report.timestamp | dateFormat }}) </span>
+                    </li>
+                  </ul>
+                </div>
+                <p> Utente segnalanto: <strong>{{doc.user | name}}</strong></p>
+              </b-card>
+            </b-col>
+          </b-row>
+        </div>
       </b-col>
     </b-row>
   </b-container>
@@ -67,11 +73,14 @@ import api from '@api'
 import {scrollToRouterHash} from "@router";
 import {dateFormat} from "@services/utils";
 import {mapGetters} from "vuex";
+import WrapLoading from "../../../wrap-loading";
 
 export default {
   name: "reports-section",
+  components: {WrapLoading},
   data(){
     return {
+      processing: false,
       docsReported: [],
       docsDeleted: []
     }
@@ -83,7 +92,13 @@ export default {
     dateFormat: dateFormat
   },
   computed:{
-    ...mapGetters(['accessToken', 'socket'])
+    ...mapGetters(['accessToken', 'socket']),
+
+    classCols(){
+      return {
+        'text-center' : this.processing
+      }
+    }
   },
   methods: {
     scrollToRouterHash,
@@ -99,6 +114,7 @@ export default {
     },
 
     getReports: function (){
+      this.processing = true
       api.recipes
          .comments
          .getReportedComment(this.accessToken)
@@ -111,8 +127,8 @@ export default {
              else this.docsDeleted.push(comment)
            })
          })
-          //TODO: HANDLER ERROR GET REPORTED COMMENTS WITH admin
-         .catch(err => console.error(err))
+         .catch(api.recipes.HandlerErrors.comments.getReportedComment)
+         .finally(() => this.processing = false)
     },
 
     deleteComment(index){
@@ -129,8 +145,7 @@ export default {
             this.socket.emit('comment:delete', comment._id)
             if(comment.user) this.socket.emit('user:strike', comment.user._id)
          })
-         //TODO: HANDLER ERROR DELETE COMMENT WITH admin
-         .catch(err => console.error(err))
+         .catch(api.recipes.HandlerErrors.comments.deleteComment)
     },
     unreported(index){
       let comment = this.docsReported[index]
@@ -144,8 +159,7 @@ export default {
 
            this.socket.emit('comment:unreport', comment._id)
          })
-          //TODO: HANDLER ERROR UNREPORTED COMMENT WITH admin
-         .catch(err => console.error(err))
+         .catch(api.recipes.HandlerErrors.comments.updateComment)
     },
 
     /*Listeners update*/

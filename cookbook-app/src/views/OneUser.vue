@@ -142,8 +142,7 @@ export default {
            if(!_limit) this.recipePaginationOptions.page = page
            console.debug('Recipes : ',  this.recipes)
          })
-          //TODO: HANDLER ERROR N RECIPE (shared) OF USER WITH 'id'
-         .catch(err => console.error(err))
+         .catch(err => api.recipes.HandlerErrors.getRecipe(err))
     },
 
     othersRecipes(){

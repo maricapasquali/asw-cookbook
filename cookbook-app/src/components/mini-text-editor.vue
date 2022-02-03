@@ -35,7 +35,8 @@ export default {
     noclosable:{
       type: Boolean,
       default: false
-    }
+    },
+    resetContent: Boolean
   },
   data(){
     return {
@@ -47,6 +48,12 @@ export default {
     value(val, old){
       this.show = val
     },
+    resetContent(val){
+      if(val) {
+        this.content = ''
+        this.closeEditor()
+      }
+    }
   },
   computed:{
     closable(){
@@ -65,8 +72,6 @@ export default {
     },
     endEdit() {
       this.$emit('end-edit',this.content)
-      this.content = ''
-      this.closeEditor()
     }
   },
   mounted() {
