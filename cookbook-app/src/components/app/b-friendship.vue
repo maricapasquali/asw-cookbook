@@ -12,7 +12,7 @@
           <b-button variant="primary" class="accept-request" @click="acceptRequest">Accetta</b-button>
         </b-button-group>
         <b-button class="request-reject" v-else-if="requestRejected" variant="danger" disabled>Richiesta rifiutata</b-button>
-        <b-button variant="success" v-else @click="sendRequestFriendShip">Segui</b-button>
+        <b-button variant="success" v-else-if="!noFollowButton" @click="sendRequestFriendShip">Segui</b-button>
       </b-button-group>
 
       <b-button :id="chatId" v-if="withChat && isMyFriend" variant="secondary" @click="_goToChat(otherUser._id)">
@@ -28,6 +28,7 @@ import api from '@api'
 import {mapGetters} from "vuex";
 import {bus} from "@/main";
 import {_goToChat} from '@components/chats/utils'
+import {isString} from "../../services/utils";
 
 export default {
   name: "b-friendship",
@@ -36,7 +37,8 @@ export default {
       type: Object,
       required: true
     },
-    withChat: Boolean
+    withChat: Boolean,
+    noFollowButton: Boolean
   },
   data(){
     return {
@@ -66,6 +68,9 @@ export default {
       return this.otherUser._id !== this.userIdentifier
     },
 
+    isAccessibleArea(){
+      return ['single-user', 'search'].includes(this.$route.name)
+    }
   },
   methods: {
 
@@ -75,11 +80,11 @@ export default {
           .requestFriendShip(this.otherUser._id, this.accessToken)
           .then(({ data }) => {
             console.log('Request friendship pending. ')
-            this.requestJustSend = true
             this.socket.emit('friendship:request', data)
+            return true
           })
-          //TODO: HANDLER ERROR ADD FRIENDSHIP
-          .catch(err => console.error(err))
+          .catch(err => api.friends.HandlerError.requestFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .then(duplicate => this.requestJustSend = duplicate)
     },
 
     // DELETE
@@ -92,8 +97,7 @@ export default {
             this.isMyFriend = false
             this.socket.emit('friendship:remove', this.otherUser)
           })
-          //TODO: HANDLER ERROR DELETE FRIENDSHIP
-          .catch(err => console.error(err))
+          .catch(err => api.friends.HandlerError.breakFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
     },
 
     //UPDATE
@@ -102,14 +106,18 @@ export default {
           .updateFriendShip(this.userIdentifier, this.otherUser._id, { state: state }, this.accessToken)
           .then(({data}) => {
             console.log('State friendship is '+state+'. ')
-            this.requestToUpdate = false
-            this.requestRejected = state === 'rejected'
-            this.justFollow = state === 'accepted'
-            this.isMyFriend = this.justFollow
             this.socket.emit('friendship:update', data)
+            return state
           })
-          //TODO: HANDLER ERROR UPDATE FRIENDSHIP
-          .catch(err => console.error(err))
+          .catch(err => api.friends.HandlerError.updateFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .then(actualState => {
+            if(actualState){
+              this.requestToUpdate = false
+              this.requestRejected = actualState === 'rejected'
+              this.justFollow = actualState === 'accepted'
+              this.isMyFriend = this.justFollow
+            }
+          })
     },
     rejectRequest(){
       return this._updateFriendShip('rejected')

@@ -64,8 +64,15 @@
 
       <template #cell(state)="row" >
         <b-button-group class="pl-4" vertical>
-          <b-friendship :other-user="row.item.user" with-chat @add-friend="fetchData" @remove-friend="fetchData"/>
+          <b-friendship :other-user="row.item.user" with-chat @add-friend="fetchData" @remove-friend="fetchData" no-follow-button/>
         </b-button-group>
+      </template>
+
+      <template #table-busy>
+        <div  class="text-center text-primary my-2">
+          <b-spinner class="align-middle"></b-spinner>
+          <strong class="ml-2">Caricamento...</strong>
+        </div>
       </template>
 
       <template #empty>
@@ -180,9 +187,8 @@ export default {
                   this.pagination.totals = data.total
                   return items
                 })
-                // TODO: HANDLER ERROR GET FRIEND OF SECTION
                 .catch(err => {
-                  console.error(err)
+                  api.friends.HandlerError.getFriendOf(err, {_forbiddenPage: true})
                   return []
                 })
                 .finally(() => this.pagination.isBusy = false)

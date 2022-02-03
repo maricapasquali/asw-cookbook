@@ -1,8 +1,9 @@
 import {AxiosResponse} from "axios";
 import * as methods from "../../methods";
 import {getHeaderBearerAuthorization} from "../../utils";
+import * as handlerError from './handlerError'
 
-
+export const HandlerError = handlerError
 
 export function getFriendOf(user: string, token?: string, queryOptions?: {}, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse> {
     return methods.get('/users/:id/friends', {

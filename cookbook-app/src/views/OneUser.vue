@@ -177,8 +177,7 @@ export default {
            console.debug('Friends : ',  this.friends)
 
          })
-          //TODO: HANDLER ERROR N FRIEND (accepted) OF USER WITH 'id'
-         .catch(err => console.error(err))
+         .catch(api.friends.HandlerError.getFriendOf)
     },
 
     othersFriends(){
