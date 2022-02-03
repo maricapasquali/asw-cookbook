@@ -1,5 +1,8 @@
 import * as methods from "../methods";
 import  {AxiosResponse} from "axios";
+import * as handlerError from './handlerError'
+
+export const HandlerError = handlerError
 
 export function getNotifications(user: string, token: string, query?: {readed?: boolean}, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse> {
     return methods.get('/users/:id/notifications', {

@@ -1,7 +1,32 @@
 <template>
-  <b-container>
-    <b-row cols="1" class="my-3">
-
+  <b-skeleton-wrapper :loading="loading">
+    <template #loading>
+      <b-container>
+        <b-row cols="1" class="my-3">
+          <b-alert  v-for="i in skeleton" :key="i" class="skeleton-notification my-0" variant="light" show>
+            <b-row>
+              <b-col>
+                <b-row>
+                  <b-col>
+                    <b-skeleton width="100%" />
+                  </b-col>
+                </b-row>
+              </b-col>
+              <b-col cols="2" class="text-right">
+                <font-awesome-icon icon="times" size="s"/>
+              </b-col>
+            </b-row>
+            <b-row>
+              <b-col class="text-right mt-3">
+                <small><b-skeleton width="40%" /></small>
+              </b-col>
+            </b-row>
+          </b-alert>
+        </b-row>
+      </b-container>
+    </template>
+    <b-container>
+      <b-row cols="1" class="my-3">
         <b-alert
             v-for="(doc, index) in docs" :key="index"
             :class="classAlert(doc)" show
@@ -30,8 +55,10 @@
             </b-col>
           </b-row>
         </b-alert>
-    </b-row>
-  </b-container>
+        <span v-if="docs.length===0">Non ci sono notifiche.</span>
+      </b-row>
+    </b-container>
+  </b-skeleton-wrapper>
 </template>
 
 <script>
@@ -44,6 +71,8 @@ export default {
   name: "notifications-section",
   data(){
     return {
+      skeleton: 5,
+      loading: false,
       docs: [],
       totals: 0,
       pagination: {
@@ -159,16 +188,19 @@ export default {
     },
 
     getNotifications(){
-
+      this.loading = true
       api.notifications
          .getNotifications(this.userIdentifier, this.accessToken)
          .then(({data}) => {
             this.docs = data.items
             this.totals = data.totals
+            return true
          })
-          //TODO: HANDLER ERROR GET NOTIFICATIONS
-         .catch(err => console.error(err))
-
+         .catch(err => {
+           api.notifications.HandlerError.getNotifications(err)
+           return false
+         })
+         .then(processEnd => this.loading = !processEnd)
     },
 
     clickNotification(event, index){
@@ -200,11 +232,9 @@ export default {
               this.removeUnReadNotification()
               console.log(data)
          })
-         //TODO: HANDLER ERROR UPDATE NOTIFICATION
          .catch(err => {
-           doc.read = false
-           // doc.read = !doc.read
-           console.error(err)
+           doc.read = false // doc.read = !doc.read
+           api.notifications.HandlerError.updateNotification(err)
          })
     },
 
@@ -218,8 +248,7 @@ export default {
            if(!this.docs[index].read) this.removeUnReadNotification()
            this.docs.splice(index, 1)
          })
-          //TODO: HANDLER ERROR DELETE NOTIFICATION
-         .catch(err => console.error(err))
+         .catch(api.notifications.HandlerError.deleteNotification)
     },
 
     addNotification(notification){
@@ -252,6 +281,10 @@ export default {
 
 .notification{
   cursor: pointer;
+}
+
+.skeleton-notification {
+  border: 1px  solid lightgray;
 }
 
 </style>

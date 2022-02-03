@@ -8,7 +8,7 @@ export default {
                 console.debug('unread-notification : ', data)
                 commit('addUnReadNotification', data.total)
             })
-            .catch(err => console.error(err))
+            .catch(api.notifications.HandlerError.getNotifications)
     },
     getNumberOfUnReadChatsMessages({commit, state}){
         if(state.user && state.accessToken)
