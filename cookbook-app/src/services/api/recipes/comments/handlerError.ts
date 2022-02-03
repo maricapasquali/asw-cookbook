@@ -36,7 +36,7 @@ export function getReportedComment(err: any): void {
             badRequest(err)
             break
         case 401:
-            unAuthenticated(err)
+            unAuthenticated(err, {_forbiddenPage: true})
             break
         case 403:
             forbidden(err)

@@ -68,7 +68,11 @@ export default {
     atLeastResult(){
       return this.foods.length > 0
     },
-    ...mapGetters(['accessToken'])
+    ...mapGetters(['accessToken']),
+
+    isAccessibleArea(){
+      return ['search'].includes(this.$route.name)
+    }
   },
   methods: {
     _boldStartWith(text){
@@ -91,14 +95,10 @@ export default {
           .getFoods(this.accessToken, {barcode: barcodeNumber})
           .then(({data}) => {
             console.debug(data)
-            if (data.total === 0) throw new Error(`Barcode (${barcodeNumber}) is not found`)
+            if (data.total === 0) this.onError({ barcode: barcodeNumber, error: 'not found' })
             else this.$emit('found', data.items[0])
           })
-          .catch(err => {
-            //TODO: HANDLER ERROR FOUND FOOD WITH BARCODE == 'barcodeNumber'
-            console.error(err);
-            this.onError({ barcode: barcodeNumber, error: 'not found' })
-          })
+          .catch(err => api.foods.HandlerError.searchFood(err, {_forbiddenPage: !this.isAccessibleArea }))
 
      } else throw new Error('BarcodeSearch: Funzionalità non attivata.')
 
@@ -126,8 +126,10 @@ export default {
              this.foods = data.items
              this.hideDropdown = false
            })
-           //TODO: HANDLER ERROR LIST INGREDIENT that start with 'ingredientStart'
-           .catch(err => this.foods = [])
+           .catch(err => {
+             this.foods = []
+             api.foods.HandlerError.searchFood(err, {_forbiddenPage: !this.isAccessibleArea })
+           })
       }
     },
 
@@ -148,8 +150,7 @@ export default {
                       .getFood(foodID, this.accessToken)
                       .then(({data}) => data)
                       .catch(err => {
-                        //TODO: HANDLER ERROR GET ONE FOOD
-                        console.error(err);
+                        api.foods.HandlerError.getFood(err, {_forbiddenPage: !this.isAccessibleArea })
                         return { nutritional_values: {} }
                       })
     },

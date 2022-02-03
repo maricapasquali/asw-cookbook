@@ -98,7 +98,7 @@
               </template>
               <template #emptyfiltered>
                 <div class="text-center text-primary my-2">
-                  <strong class="ml-2">Non ci sono alimenti filtrati ...</strong>
+                  <strong class="ml-2">Non ci sono alimenti {{ (filters.barcode || filters.name) ?  'filtrati' : '' }}</strong>
                 </div>
               </template>
 
@@ -384,7 +384,7 @@ export default {
                     return items
                  })
                 .catch(err => {
-                    console.error(err)
+                    api.foods.HandlerError.getFoods(err)
                     return []
                 })
                 .finally(() =>{

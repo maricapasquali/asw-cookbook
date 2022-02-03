@@ -1,5 +1,5 @@
 <template>
-  <error-handler v-model="_error" title="Forbidden" variant="danger">
+  <error-handler v-model="_error" title="Forbidden" variant="danger" no-closable>
     <template #more-details>
       <div class="d-flex justify-content-end">
         <b-button variant="primary" @click="goHomePage">Torna alla HomePage</b-button>

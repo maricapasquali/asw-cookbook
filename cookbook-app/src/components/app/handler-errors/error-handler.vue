@@ -3,7 +3,7 @@
            centered body-class="p-0"
            hide-footer hide-header hide-header-close
            no-close-on-backdrop no-close-on-esc >
-    <b-alert show :variant="variant" dismissible @dismissed="value.show=false" class="my-0">
+    <b-alert show :variant="variant" :dismissible="!noClosable" @dismissed="value.show = false" class="my-0">
       <div v-if="value.status">
         <p class="h4 pt-2 pb-3"> <strong> {{ title }} </strong> </p>
         <p class="h6 pt-2 pb-3"> {{value.status}} - {{value.message}} </p>
@@ -22,7 +22,8 @@ export default {
   props: {
     title: {type: String, required: true},
     value: {type: Object, required: true},
-    variant: { type: String, default: 'light'}
+    variant: { type: String, default: 'light'},
+    noClosable: Boolean
   }
 }
 </script>

@@ -20,7 +20,6 @@ export function unAuthenticated(errOfRequest: any, errInfo?: any): void {
         printError(errOfRequest.response)
         store.commit('showUnAuthenticatedError', {...errInfo, show: true})
     }
-    store.commit('showUnAuthenticatedError', {...errInfo, show: true})
 }
 
 export function forbidden(errOfRequest: any): void {

@@ -106,11 +106,9 @@ import {dateFormat, clone} from "@services/utils";
 
 import api, {Server} from '@api'
 import {mapGetters} from "vuex";
-import WrapLoading from "../wrap-loading";
 
 export default {
   name: "comment",
-  components: {WrapLoading},
   props: {
     comment: Object,
     recipe: Object,

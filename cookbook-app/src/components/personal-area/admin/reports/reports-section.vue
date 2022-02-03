@@ -73,11 +73,9 @@ import api from '@api'
 import {scrollToRouterHash} from "@router";
 import {dateFormat} from "@services/utils";
 import {mapGetters} from "vuex";
-import WrapLoading from "../../../wrap-loading";
 
 export default {
   name: "reports-section",
-  components: {WrapLoading},
   data(){
     return {
       processing: false,

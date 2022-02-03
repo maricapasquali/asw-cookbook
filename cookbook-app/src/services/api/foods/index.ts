@@ -1,6 +1,9 @@
 import * as methods from "../methods";
 import {AxiosResponse} from "axios";
 import {getHeaderBearerAuthorization} from "../utils";
+import * as handlerError from './handlerError'
+
+export const HandlerError = handlerError
 
 export function createFood(food: object, token: string): Promise<AxiosResponse>  {
     return methods.post('/foods', food, {
