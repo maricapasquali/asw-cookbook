@@ -12,6 +12,8 @@ export default new Vuex.Store({
         unreadNotifications: 0,
         unreadMessages: 0,
 
+        logoutOn: false,
+
         requestError: {
             serverError: {
                 show: false,

@@ -54,7 +54,7 @@ import api from '@api'
 import {mapGetters, mapMutations} from "vuex";
 import {dateFormat} from "@services/utils";
 import ChatUtils from '@components/chats/utils'
-import {RecipeCategories} from "../../services/app";
+import {RecipeCategories} from "@services/app";
 
 export default {
   name: "chat",

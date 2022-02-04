@@ -163,6 +163,12 @@
                 <b-button variant="secondary"  @click="changePassword=true"> Cambia password </b-button>
                 <b-button v-if="user.isSigned && !user.isAdmin" variant="secondary" @click="deleteAccount=true"> Cancella Account </b-button>
               </b-button-group>
+              <!-- DELETE ACCOUNT -->
+              <delete-account v-model="deleteAccount" :id="user._id" @onDeleteAccount="onDeleteAccount"/>
+              <!-- CHANGE PASSWORD -->
+              <change-password v-model="changePassword" :id="user._id"/>
+              <!-- CHANGE USERID-->
+              <change-userid v-model="changeUserID" :id="user._id" :old_userID="user.userID" @onChangeUserID="onChangeUserID"/>
             </b-col>
             <b-col  v-else-if="isLoggedIn && isOtherUser" align-self="end" class="d-flex justify-content-end px-0">
               <b-button-group vertical>
@@ -175,18 +181,6 @@
       </b-container>
 
     </b-container>
-    <!-- DISPLAY ERRORS -->
-    <modal-alert v-model="error.show" variant="danger" >
-      <template v-slot:msg> {{error.message}} </template>
-    </modal-alert>
-    <!-- DELETE ACCOUNT -->
-    <delete-account v-model="deleteAccount" :id="user._id" @sessionExpired="onSessionExpired"/>
-    <!-- CHANGE PASSWORD -->
-    <change-password v-if="changePassword" @close="changePassword=false" :id="user._id" @sessionExpired="onSessionExpired"/>
-    <!-- CHANGE USERID-->
-    <change-userid v-if="changeUserID" @close="changeUserID=false" @sessionExpired="onSessionExpired"
-                   :id="user._id" :old_userID="user.userID" @changeUserID="onChangeUserID"/>
-
   </div>
 </template>
 
@@ -194,10 +188,10 @@
 import {bus} from "@/main";
 import api from '@api'
 import {EmailValidator} from '@app/modules/validator'
-import {clone, equals, isString} from "@services/utils"
+import {clone, equals} from "@services/utils"
 
 import {Countries, Genders} from '@services/app'
-import {mapGetters} from "vuex";
+import {mapGetters, mapMutations} from "vuex";
 
 export default {
   name: "user-information",
@@ -272,7 +266,7 @@ export default {
     }
   },
   methods:{
-
+    ...mapMutations(['changeUserId', 'endSession']),
     getUser(_id){
       api.users
          .getUser(_id || this.id, this.accessToken)
@@ -282,23 +276,20 @@ export default {
             console.log(this.user)
             console.log(this.changeableUser)
          })
-         .catch(err => {
-            if(err.response && err.response.status === 404) this.$emit('not-found')
-            else {
-              this.error.show = true
-              this.error.message = api.users.HandlerErrors.getUser(err)
-            }
-            console.error(err)
+         .catch(err => api.users.HandlerErrors.getUser(err, {_forbiddenPage: this.personalArea }))
+         .then(notFound => {
+           if(notFound) this.$emit('not-found')
          })
     },
 
-    onSessionExpired: function (){
-      this.$emit('onSessionExpired')
-    },
     onChangeUserID: function(val){
       this.user.userID = val
-      this.changeUserID = false
-      this.$store.commit('changeUserId', val)
+      this.changeUserId(val)
+    },
+
+    onDeleteAccount(){
+        this.endSession()
+        this.$router.replace({ name: "homepage" })
     },
 
     checkRequiredField: function (val, field){
@@ -341,20 +332,10 @@ export default {
 
               this.socket.emit('user:update:info', { _id: this.id, information: response.data.info } )
 
-           })
-           .catch(err => {
-              this.error.message = api.users.HandlerErrors.updateUser(err)
-              if(isString(this.error.message)){
-                this.error.show = true
-              }else if(err.response.status === 401){
-                //this.$router.replace({ name: 'login' })
-                this.onSessionExpired()
-              }
-           })
-           .finally(() => {
-              this.processing = false
               this.changeableUser.information = clone(this.user.information)
            })
+           .catch(api.users.HandlerErrors.updateUser)
+           .finally(() => this.processing = false)
       }
     },
 

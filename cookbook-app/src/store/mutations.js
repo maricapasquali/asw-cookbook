@@ -47,6 +47,7 @@ export default {
     changeUserId(state, newUserID){
         if(state.user){
             Vue.set(state.user, 'userID', newUserID)
+            localStorage.setItem('user.info', JSON.stringify(state.user))
             console.log('Change userID .')
             _setSocket(state)
         }

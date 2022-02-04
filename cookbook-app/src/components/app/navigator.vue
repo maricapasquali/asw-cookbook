@@ -1,7 +1,7 @@
 <template>
   <div id="navigator-app">
     <!-- NAV BAR -->
-    <b-navbar ref="navigator" toggleable="sm" type="dark" class="navigator-bar" fixed="top">
+    <b-navbar ref="navigator" toggleable="sm" type="dark" :class="classNavigator" fixed="top">
       <b-navbar-brand :to="{name: 'homepage'}" :active="isHomePageActive">{{ app_name }}</b-navbar-brand>
 
       <b-navbar-toggle target="nav-collapse">
@@ -13,7 +13,6 @@
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-<!--          <b-nav-item :active="isHomePageActive" :to="{name: 'homepage'}" > HomePage </b-nav-item>-->
           <b-nav-item-dropdown text="Ricerca" v-if="isGuestOrSigned" right>
             <b-dropdown-item :active="isSearchRecipesActive" :to="{name:'search', params: {what: 'recipes'}}">ricette</b-dropdown-item>
             <b-dropdown-item :active="isSearchUsersActive" :to="{name:'search', params: {what: 'users'}}">utenti</b-dropdown-item>
@@ -55,7 +54,7 @@
                 </b-col>
               </b-row>
             </b-dropdown-item>
-            <b-dropdown-item @click="logout">Sign Out</b-dropdown-item>
+            <b-dropdown-item @click="logout($route.name)">Sign Out</b-dropdown-item>
 
           </b-nav-item-dropdown>
           <b-nav-item v-else :to="{name: 'login'}"> Login </b-nav-item>
@@ -63,33 +62,18 @@
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
-    <!-- ERRORS MODAL -->
-    <modal-alert v-model="error.show" variant="danger">
-      <template v-slot:msg>
-        {{error.message}}
-      </template>
-    </modal-alert>
   </div>
 </template>
 
 <script>
 
-import api from '@api'
-import {bus} from "@/main";
-
-import {isString} from '@services/utils'
-
-import {mapGetters, mapMutations} from 'vuex'
+import {mapActions, mapGetters} from 'vuex'
 
 export default {
   name: "app-navigator",
   data: function (){
     return {
-      app_name : require("@app/app.config.json").app_name,
-      error: {
-        show: false,
-        message: ''
-      }
+      app_name : require("@app/app.config.json").app_name
     }
   },
 
@@ -100,8 +84,7 @@ export default {
       'username',
       'isAdmin',
       'isSigned',
-      'isGuestOrSigned',
-      'accessToken'
+      'isGuestOrSigned'
     ]),
     unreadNotifications(){
       return this.$store.state.unreadNotifications
@@ -142,37 +125,13 @@ export default {
     isChatsActive: function (){
       return this.$route.name === 'p-user-chats'
     },
+
+    classNavigator(){
+      return { 'navigator-bar': true, 'navigator-bar-in-logout': this.$store.state.logoutOn }
+    }
   },
   methods:{
-    ...mapMutations([
-      'endSession'
-    ]),
-
-    logout: function (){
-      bus.$emit('onLogout', true)
-      console.log(this.userIdentifier)
-      console.log(this.accessToken)
-      api.users.session
-               .logout(this.userIdentifier, this.accessToken)
-               .then(response => {
-                 this.endSession()
-                 console.debug("LOGOUT OK.")
-                 if(this.$route.name === 'homepage') this.$router.go()
-                 else this.$router.replace({name: 'homepage'})
-               })
-               .catch(err => {
-                 this.error.message = api.users.HandlerErrors.logout(err)
-                 if(isString(this.error.message)){
-                   this.error.show = true
-                 } else if(err.response.status === 409){
-                   this.endSession()
-                   console.debug("LOGOUT 409.")
-                 } else{
-                   this.error.show = true
-                 }
-               })
-               .then(() => bus.$emit('onLogout', false))
-    }
+    ...mapActions(['logout']),
   }
 }
 </script>
@@ -180,5 +139,8 @@ export default {
 <style scoped lang="scss">
 .navigator-bar{
   background-color: $nav-color;
+}
+.navigator-bar.navigator-bar-in-logout {
+  z-index: 2!important;
 }
 </style>

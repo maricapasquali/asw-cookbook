@@ -128,7 +128,7 @@ export default {
        api.users
           .getUsers({ userID: { search: 'partial', value: this.search.value } }, this.accessToken)
           .then(({data}) => this.users = data.items)
-          .catch(err => console.error(err))
+          .catch(api.users.HandlerErrors.getUsersWithAndWithoutFilters)
           .finally(() => this.search.processing = false)
     },
     resetSearch(val = ''){
@@ -174,7 +174,7 @@ export default {
            console.debug('Total = ', this.total)
 
          })
-         .catch(err => console.error(err))
+         .catch(api.users.HandlerErrors.getUsersWithAndWithoutFilters)
          .finally(() => this.processing = false)
     },
     others(){

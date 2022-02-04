@@ -68,30 +68,34 @@
           v-model="resetPassword.show"
           centered
           @hidden="resetModalResetPassword"
-          title="Richiesta Reset Password">
+          title="Richiesta Reset Password"
+          :hide-footer="(!resetPassword.showSend && !resetPassword.success ) || resetPassword.processing">
+
         <template #modal-header-close/>
 
-        <b-alert variant="danger" v-model="resetPassword.error.show">{{resetPassword.error.msg}}</b-alert>
-        <b-alert variant="success" v-model="resetPassword.success">E' stata inviata un email con un link per il reset della password.</b-alert>
-        <b-container fluid>
-          <b-form-group
-              id="input-group-3"
-              label="E-mail"
-              label-for="input-3">
-            <b-form-input
-                id="input-3"
-                v-model.trim="resetPassword.email"
-                :state="validationEmail"
-                @input="checkEmail"
-                type="email"
-                placeholder="Enter email"
-                required
-            ></b-form-input>
-            <b-form-invalid-feedback :state="validationEmail">
-              Email non è valida.
-            </b-form-invalid-feedback>
-          </b-form-group>
-        </b-container>
+        <wrap-loading v-model="resetPassword.processing">
+          <b-alert variant="danger" v-model="resetPassword.error.show">{{resetPassword.error.msg}}</b-alert>
+          <b-alert variant="success" v-model="resetPassword.success">E' stata inviata un email con un link per il reset della password.</b-alert>
+          <b-container fluid class="py-2">
+            <b-form-group
+                id="input-group-3"
+                label="E-mail"
+                label-for="input-3">
+              <b-form-input
+                  id="input-3"
+                  v-model.trim="resetPassword.email"
+                  :state="validationEmail"
+                  @input="checkEmail"
+                  type="email"
+                  placeholder="Enter email"
+                  required
+              ></b-form-input>
+              <b-form-invalid-feedback :state="validationEmail">
+                Email non è valida.
+              </b-form-invalid-feedback>
+            </b-form-group>
+          </b-container>
+        </wrap-loading>
         <template #modal-footer="{ok}">
           <div slot="modal-ok" v-show="resetPassword.showSend">
             <b-button type="submit" @click="sendLinkResetPassword" variant="primary"> Invia </b-button>
@@ -101,7 +105,6 @@
             <b-button type="submit" variant="primary" @click="closeModalResetPassword(ok)"> Ok </b-button>
           </div>
         </template>
-
       </b-modal>
 
       <!-- SIGNUP -->
@@ -141,6 +144,7 @@ export default {
         msg: ''
       },
       resetPassword:{
+        processing: false,
         show: false,
         showSend: false,
         email: '',
@@ -153,7 +157,14 @@ export default {
       showSignUp: false
     }
   },
-
+  watch: {
+    'resetPassword.processing'(val){
+      if(val) this.resetPassword.error = { show: false, msg: ''}
+    },
+    processing(val){
+      if(val) this.error = {show: false, msg: ''}
+    }
+  },
   methods: {
     // VALIDATION
     checkUserID: function (){
@@ -197,14 +208,18 @@ export default {
     //REQUEST
     sendLinkResetPassword: async function (event){
       event.preventDefault()
-      api.users.sendEmailResetPassword(this.resetPassword.email)
-      .then(() =>{
-        this.resetPassword.success = true
-        this.resetPassword.showSend = false
-      }).catch(err =>{
-        this.resetPassword.error.show = true
-        this.resetPassword.error.msg = api.users.HandlerErrors.emailResetPassword(err)
-      })
+      this.resetPassword.processing = true
+      api.users
+         .sendEmailResetPassword(this.resetPassword.email)
+         .then(() =>{
+           this.resetPassword.success = true
+           this.resetPassword.showSend = false
+         })
+         .catch(err =>{
+           this.resetPassword.error.show = true
+           this.resetPassword.error.msg = api.users.HandlerErrors.emailResetPassword(err)
+         })
+         .finally(() => this.resetPassword.processing = false)
     },
 
     ...mapMutations(['startSession']),
@@ -228,7 +243,7 @@ export default {
          })
          .catch(err=>{
             this.error.show = true
-            this.error.msg = api.users.HandlerErrors.login(err)
+            this.error.msg = api.users.HandlerErrors.session.login(err)
          })
          .then(() => this.processing = false)
     },

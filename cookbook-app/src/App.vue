@@ -3,7 +3,8 @@
     <app-navigator v-if="navigatorVisibility"/>
     <router-view :class="classObject" />
     <app-footer v-if="footerVisibility" />
-    <loading v-model="processing" />
+
+    <loading v-model="logoutOn" fixed/>
 
     <server-error-handler />
     <bad-request-error-handler />
@@ -15,7 +16,7 @@
 
 <script>
 import  {bus} from "@/main";
-import {mapGetters, mapActions} from "vuex";
+import {mapGetters, mapActions, mapMutations} from "vuex";
 
 import notifications from "@/notifications";
 import updates from "@/updates";
@@ -26,12 +27,14 @@ export default {
   data: function (){
     return {
       notNav: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat'],
-      notFooter: this.notNav,
-      processing: false
+      notFooter: this.notNav
     }
   },
   computed:{
     ...mapGetters(['socket', 'userIdentifier', 'accessToken', 'isAdmin', 'isLoggedIn']),
+    logoutOn(){
+      return this.$store.state.logoutOn
+    },
     navigatorVisibility: function (){
       return !this.notNav.includes(this.$route.name)
     },
@@ -47,15 +50,11 @@ export default {
     }
   },
   methods: {
-    onLogout(isLogout){
-      console.debug('Logout = ', isLogout)
-      this.processing = isLogout
-    },
     hideNavigationBar(route){
       console.debug('Hide navigation bar on route ', route)
       this.notNav.push(route)
     },
-
+    ...mapMutations(['setSession']),
     // NOTIFICATIONS
     ...mapActions(['getNumberOfUnReadNotifications', 'getNumberOfUnReadChatsMessages']),
     ...notifications,
@@ -66,9 +65,8 @@ export default {
     pushMessages,
   },
   created() {
-    this.$store.commit('setSession')
+    this.setSession()
     // console.debug('App created ', this.$store.state)
-    bus.$on('onLogout', this.onLogout.bind(this))
     bus.$on('hideNavigationBar', this.hideNavigationBar.bind(this))
 
     // NOTIFICATIONS

@@ -90,7 +90,7 @@
                     align="fill" aria-controls="user-table" />
     </b-row>
     <!-- DELETE ACCOUNT -->
-    <delete-account v-model="deleteAccount.show" :id="deleteAccount.user._id" @onDeleteAccount="afterDeleteAccount" admin-version>
+    <delete-account v-model="deleteAccount.show" :id="deleteAccount.user._id" @onDeleteAccount="afterDeleteAccount">
       <template v-slot:message>
         <p> Sei sicuro di voler eliminare l'account di <strong><i>{{ deleteAccount.user.userID }}</i></strong>? </p>
       </template >
@@ -242,9 +242,8 @@ export default {
                    this.pagination.totals = data.total
                    return data.items.map(u => this.remapping(u))
                 })
-                //TODO: HANDLER ERROR GET USERS (admin)
                .catch(err => {
-                 console.error(err)
+                 api.users.HandlerErrors.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
                  return []
                })
                .finally(() => this.pagination.isBusy = false)

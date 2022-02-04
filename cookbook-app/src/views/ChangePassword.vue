@@ -1,61 +1,65 @@
 <template>
  <center-container>
    <template v-slot:content>
-     <wrap-loading v-model="processing" >
-       <template>
-         <b-card v-if="link.valid">
-           <div class="text-center"> <h1 class="text-primary"><em>{{ app_name }}</em></h1><h3 v-if="changeDefaultPassword"><em>Cambia DEFAULT password</em></h3></div>
-           <b-card-body>
-             <b-alert variant="danger" v-model="error.show">{{error.msg}}</b-alert>
-             <b-form @submit="change" >
-               <b-form-group
-                   v-if="!success.userID && !changeDefaultPassword"
-                   id="input-group-1"
-                   label="UserID"
-                   label-for="input-1"
-               >
-                 <b-form-input
-                     id="input-1"
-                     v-model.trim="userID"
-                     :state="validation.userID"
-                     @input="checkUserID"
-                     type="text"
-                     placeholder="Enter userID"
-                     required
-                 ></b-form-input>
-               </b-form-group>
-               <input-password v-if="success.userID" @inputPassword="hash_password=$event" @checkPassword="validation.password=$event"/>
-               <b-container>
-                 <b-row v-if="changeDefaultPassword" cols="2" class="d-flex justify-content-between">
-                   <b-col class="pl-0" >
-                     <b-button  variant="secondary" @click="$router.replace({name: 'homepage'})">Salta</b-button>
-                   </b-col>
-                   <b-col class="pr-0 text-right" >
-                     <b-button v-if="success.userID && validation.password" type="button" variant="primary" @click="change">Cambia</b-button>
-                   </b-col>
-                 </b-row>
-                 <b-row v-else cols="1" class="d-flex justify-content-between">
-                   <b-col class="pr-0 text-right" >
-                     <b-button v-if="success.userID && validation.password" type="button" variant="primary" @click="change">Cambia</b-button>
-                   </b-col>
-                   <b-col class="pr-0 text-right">
-                     <b-button v-if="validation.userID && !success.userID && !changeDefaultPassword" type="button" variant="primary" @click="checkUser">Continua</b-button>
-                   </b-col>
-                 </b-row>
-               </b-container>
+     <loading v-model="processing"/>
+     <div v-if="!processing">
+       <b-card v-if="link.valid">
+         <div class="text-center"> <h1 class="text-primary"><em>{{ app_name }}</em></h1><h3 v-if="changeDefaultPassword"><em>Cambia DEFAULT password</em></h3></div>
+         <b-card-body>
+           <b-alert variant="danger" v-model="error.show">{{error.msg}}</b-alert>
+           <b-form @submit="change" >
+             <b-form-group
+                 v-if="!success.userID && !changeDefaultPassword"
+                 id="input-group-1"
+                 label="UserID"
+                 label-for="input-1"
+             >
+               <b-form-input
+                   id="input-1"
+                   v-model.trim="userID"
+                   :state="validation.userID"
+                   @input="checkUserID"
+                   type="text"
+                   placeholder="Enter userID"
+                   required
+               ></b-form-input>
+             </b-form-group>
+             <input-password v-if="success.userID" @inputPassword="hash_password=$event" @checkPassword="validation.password=$event"/>
+             <b-container>
+               <b-row v-if="changeDefaultPassword" cols="2" class="d-flex justify-content-between">
+                 <b-col class="pl-0" >
+                   <b-button  variant="secondary" @click="$router.replace({name: 'homepage'})">Salta</b-button>
+                 </b-col>
+                 <b-col class="pr-0 text-right" >
+                   <b-button v-if="success.userID && validation.password" type="button" variant="primary" @click="change">Cambia</b-button>
+                 </b-col>
+               </b-row>
+               <b-row v-else cols="1" class="d-flex justify-content-between">
+                 <b-col class="pr-0 text-right" >
+                   <b-button v-if="success.userID && validation.password" type="button" variant="primary" @click="change">Cambia</b-button>
+                 </b-col>
+                 <b-col class="pr-0 text-right">
+                   <b-button v-if="validation.userID && !success.userID && !changeDefaultPassword" type="button" variant="primary" @click="checkUser">Continua</b-button>
+                 </b-col>
+               </b-row>
+             </b-container>
 
-             </b-form>
-           </b-card-body>
-         </b-card>
-         <modal-alert v-else variant="danger" v-model="!link.valid">
-           <template v-slot:msg>
-             <p>{{link.msg}}</p>
-             <router-link :to="{name: 'login'}" replace><b-button>Vai al Login</b-button></router-link>
-           </template>
-         </modal-alert>
-       </template>
-     </wrap-loading>
-
+           </b-form>
+         </b-card-body>
+       </b-card>
+       <b-alert variant="danger" :show="link.valid===false">
+         <b-container>
+           <b-row cols="1">
+             <b-col class="py-2">
+               <strong>{{link.msg}}</strong>
+             </b-col>
+             <b-col class="text-right">
+               <router-link :to="{name: 'login'}" replace><b-button>Vai al Login</b-button></router-link>
+             </b-col>
+           </b-row>
+         </b-container>
+       </b-alert>
+     </div>
    </template>
  </center-container>
 
@@ -71,10 +75,10 @@ export default {
       app_name: require('@app/app.config.json').app_name,
 
       link: {
-        valid: true,
+        valid: null,
         msg: 'Link non valido.'
       },
-      processing: false,
+      processing: true,
 
       changeDefaultPassword: false,
 
@@ -101,6 +105,14 @@ export default {
   },
   computed: {
     ...mapGetters(['isLoggedIn', 'accessToken'])
+  },
+  watch: {
+    processing(val) {
+      if(val) this.error = {show: false, msg: ''}
+    },
+    'link.valid'(val){
+      this.processing = false
+    }
   },
   created() {
     this.token = this.accessToken;
@@ -131,6 +143,7 @@ export default {
                 this.link.msg = api.users.HandlerErrors.checkLinkResetPassword(err)
                 this.link.valid = false
             })
+            .finally(() => this.processing = false)
       }
     },
 
@@ -140,7 +153,6 @@ export default {
 
     checkUser: function (){
       this.processing = true
-      this.error = {show: false, msg: ''}
 
       api.users.getUserFromNickname(this.userID)
               .then(response => {
@@ -158,15 +170,14 @@ export default {
 
     change: function (){
       this.processing = true
-      this.error = {show: false, msg: ''}
 
       api.users.changeOldPassword(this._id, {new_hash_password: this.hash_password},  this.token, true)
               .then(response => {
                 this.$router.replace(this.changeDefaultPassword ? {name:'p-user-account', params: {id: this._id}} : {name: 'login'})
               })
               .catch(err => {
-                this.error.show = true
-                this.error.msg = api.users.HandlerErrors.changePassword(err)
+                let msg = api.users.HandlerErrors.resetPassword(err)
+                if(msg) this.error = { show: true, msg }
               })
               .then(() => this.processing = false)
     }

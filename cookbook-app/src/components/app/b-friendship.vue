@@ -28,7 +28,6 @@ import api from '@api'
 import {mapGetters} from "vuex";
 import {bus} from "@/main";
 import {_goToChat} from '@components/chats/utils'
-import {isString} from "../../services/utils";
 
 export default {
   name: "b-friendship",

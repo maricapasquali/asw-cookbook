@@ -10,7 +10,7 @@ export function allSharedRecipes(err: any): void {
     switch (err.response?.status) {
         case 401: return unAuthenticated(err)
     }
-    return serverError(err)
+    serverError(err)
 }
 
 export function getNumberRecipesForCountry(err: any): boolean {

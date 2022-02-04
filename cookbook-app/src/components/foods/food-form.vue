@@ -111,11 +111,9 @@ import {isEmpty, clone, equals} from '@services/utils'
 
 import api from '@api'
 import {mapGetters} from "vuex";
-import WrapLoading from "../wrap-loading";
 
 export default {
   name: "food-form",
-  components: {WrapLoading},
   props: {
     value: {
       type: Object,

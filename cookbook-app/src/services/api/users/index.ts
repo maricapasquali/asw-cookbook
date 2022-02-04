@@ -18,18 +18,18 @@ export const HandlerErrors = handlerErrors
 
 export const session = _session
 
-export function sendEmailResetPassword(email: string): Promise<AxiosResponse> {
-    return methods.get('/reset-password/email', {
-        params: { // QUERY
-            email: email
-        }
-    })
-}
-
 export function signup(user: object): Promise<AxiosResponse> {
     return methods.post('/users', user, {
         headers: {
             'Content-Type': 'multipart/form-data'
+        }
+    })
+}
+
+export function sendEmailResetPassword(email: string): Promise<AxiosResponse> {
+    return methods.get('/reset-password/email', {
+        params: { // QUERY
+            email: email
         }
     })
 }

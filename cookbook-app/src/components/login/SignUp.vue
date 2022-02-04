@@ -230,6 +230,11 @@ export default {
       showInformation: true
     }
   },
+  watch: {
+    processing(val){
+      if(val) this.error = { show: false, msg:'' }
+    }
+  },
   computed:{
     ...mapGetters(['socket']),
     validationInformation: function (){

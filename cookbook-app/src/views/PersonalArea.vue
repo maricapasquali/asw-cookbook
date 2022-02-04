@@ -1,57 +1,50 @@
 <template>
-    <div v-if="authorized === true">
+  <b-skeleton-wrapper :loading="loading">
+    <template #loading>
       <b-card no-body>
         <b-tabs content-class="mt-1" ref="tabs">
-          <!-- BOTH -->
-          <b-tab ref="account-tab" title="Account" class="p-3" @click="getInformation" lazy>
-            <user-information :id="user" personal-area @onSessionExpired="sessionTimeout=true"/>
+          <b-tab v-for="i in skeleton" :key="i">
+            <template #title>
+              <div style="width: 100px"><b-skeleton width="100%"/></div>
+            </template>
+            <b-container>
+              <b-row cols="1" class="text-center py-5" style="height: 500px">
+                <b-col class="text-center" align-self="center"><b-spinner variant="primary" /></b-col>
+              </b-row>
+            </b-container>
           </b-tab>
-          <!-- SIGNED -->
-          <b-tab v-if="isSigned" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy>
-            <recipe-sections @onSessionExpired="sessionTimeout=true"/>
-          </b-tab>
-          <!-- BOTH -->
-          <b-tab title="Alimenti" @click="getFoods" :active="isActive('foods')" lazy>
-            <food-section @onSessionExpired="sessionTimeout=true"/>
-          </b-tab>
-          <!-- ADMIN -->
-          <b-tab v-if="isAdmin" title="Segnalazioni" @click="getReports" :active="isActive('reports')" lazy>
-            <reports-section @onSessionExpired="sessionTimeout=true"/>
-          </b-tab>
-          <!-- ADMIN -->
-          <b-tab v-if="isAdmin" title="Utenti" @click="getUsers" :active="isActive('users')" lazy>
-            <users-section @onSessionExpired="sessionTimeout=true"/>
-          </b-tab>
-          <!-- SIGNED -->
-          <b-tab v-if="isSigned" title="Amici" @click="getFriends" :active="isActive('friends')" lazy>
-            <friends-section @onSessionExpired="sessionTimeout=true" />
-          </b-tab>
-          <!-- BOTH -->
-          <b-tab title="Chats" @click="getChats" :active="isActive('chats')" lazy>
-            <chats-section @onSessionExpired="sessionTimeout=true"/>
-          </b-tab>
-          <!-- BOTH -->
-          <b-tab title="Notifiche" @click="getNotifications" :active="isActive('notifications')" lazy>
-            <notifications-section @onSessionExpired="sessionTimeout=true" />
-          </b-tab>
-
         </b-tabs>
       </b-card>
-    </div>
-    <div v-else-if="error.show">
-      <modal-alert v-model="error.show" variant="danger">
-        <template v-slot:msg>
-          <p>{{error.message}}</p>
-          <router-link :to="{name: 'homepage'}" replace><b-button variant="primary">Vai alla HomePage</b-button></router-link>
-        </template>
-      </modal-alert>
-    </div>
-    <div v-else-if="authorized === false"><not-authorized-area/></div>
+    </template>
+    <b-card no-body>
+      <b-tabs v-model="currentTab" content-class="mt-1" ref="tabs" lazy>
+        <b-tab v-for="tab in tabs" :key="tab.id" :title="tab.title" @click="tab.click" :active="tab.selected">
+          <!-- BOTH -->
+          <user-information v-if="isAccountTab" :id="user" personal-area />
+          <!-- SIGNED -->
+          <recipe-sections v-if="isRecipesTab"  />
+          <!-- BOTH -->
+          <food-section v-if="isFoodsTab"/>
+          <!-- ADMIN -->
+          <reports-section v-if="isReportsTab" />
+          <!-- ADMIN -->
+          <users-section v-if="isUsersTab" />
+          <!-- SIGNED -->
+          <friends-section v-if="isFriendsTab" />
+          <!-- BOTH -->
+          <chats-section v-if="isChatsTab" />
+          <!-- BOTH -->
+          <notifications-section v-if="isNotificationsTab" />
+        </b-tab>
+      </b-tabs>
+    </b-card>
+  </b-skeleton-wrapper>
 </template>
 
 <script>
 import api from "@api"
-import {mapGetters, mapMutations} from "vuex";
+import {mapActions, mapGetters} from "vuex";
+
 export default {
   name: "PersonalArea",
   props:{
@@ -63,35 +56,41 @@ export default {
   },
   data: function (){
     return {
-      authorized: null,
-      sessionTimeout: false,
-      error:{
-        show: false,
-        message: ''
-      },
-      userRole: ''
+      loading: false,
+      skeleton: 4,
+
+      currentTab: 0,
+      reloadCurrentTab: false,
+
+      tabs: [],
+      tabsSigned: ['account', 'recipes', 'foods', 'friends', 'chats', 'notifications'],
+      tabsAdmin: ['account', 'foods',  'reports', 'users','chats', 'notifications' ]
     }
   },
-
+  created() {
+    (this.isAdmin ? this.tabsAdmin : this.isSigned ? this.tabsSigned: [])
+        .forEach(tab => this.tabs.push(this._mapping(tab)))
+  },
   mounted(){
     console.log(`CHECK IF YOU IS AUTHORIZED ...`)
     if(this.accessToken){
 
       if(this.user === this.userIdentifier){
-        this.socket.on('access-token:valid', this.onAccessTokenOk.bind(this))
+
+        this.currentTab = this.tabs.findIndex(t => t.id === this.active)
+
         this.socket.on('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
-        this.socket.on('access-token:errors', this.onCheckAccessTokenError.bind(this))
+        this.socket.on('access-token:errors', api.users.HandlerErrors.session.checkAccessToken.bind(this))
 
         this.socket.emit('check:access-token', {_id: this.userIdentifier, resourceID: this.user})
 
-      } else this.onCheckAccessTokenError({description: 'Non puoi accedere a questa pagina.'})
+      } else api.users.HandlerErrors.session.wrongUserSession()
 
     } else this.$router.replace({name: 'login'});
   },
   beforeDestroy() {
-    this.socket.off('access-token:valid', this.onAccessTokenOk.bind(this))
     this.socket.off('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
-    this.socket.off('access-token:errors', this.onCheckAccessTokenError.bind(this))
+    this.socket.off('access-token:errors', api.users.HandlerErrors.session.checkAccessToken.bind(this))
   },
   computed: {
     ...mapGetters(['accessToken', 'refreshToken', 'userIdentifier', 'socket', 'isSigned', 'isAdmin']),
@@ -100,98 +99,80 @@ export default {
       return this.$route.params.id
     },
 
-    loading: function (){
-      return !(this.authorized || this.error.show || this.sessionTimeout)
-    }
+    isAccountTab(){
+      return this._isActive('account')
+    },
+    isRecipesTab(){
+      return this._isActive('recipes')
+    },
+    isFoodsTab(){
+      return this._isActive('foods')
+    },
+    isReportsTab(){
+      return this._isActive('reports')
+    },
+    isUsersTab(){
+      return this._isActive('users')
+    },
+    isFriendsTab(){
+      return this._isActive('friends')
+    },
+    isChatsTab(){
+      return this._isActive('chats')
+    },
+    isNotificationsTab(){
+      return this._isActive('notifications')
+    },
   },
   methods: {
-    ...mapMutations(['endSession', 'setAccessToken']),
+    ...mapActions(['requestNewAccessToken']),
 
-    isActive: function (target){
+    _mapping(id){
+      return {
+        id,
+        title: this._title(id),
+        selected: this._isActive(id),
+        click: () => {
+          this.$router.push({ name:  this._route(id) })
+          this.loading = false
+        }
+      }
+    },
+
+    _title(target){
+      switch (target){
+        case 'account' : return 'Account'
+        case 'recipes' : return 'Ricette'
+        case 'foods' : return 'Cibo'
+        case 'friends' : return 'Amici'
+        case 'chats' : return 'Chats'
+        case 'notifications' : return 'Notifiche'
+        case 'reports' : return 'Segnalazioni'
+        case 'users' : return 'Utenti'
+      }
+    },
+    _route: function (target){
+      switch (target){
+        case 'account' : return 'p-user-account'
+        case 'recipes' : return 'p-user-recipes'
+        case 'foods' : return 'p-user-foods'
+        case 'friends' : return 'p-user-friends'
+        case 'chats' : return 'p-user-chats'
+        case 'notifications' : return 'p-user-notifications'
+        case 'reports' : return 'p-user-reports'
+        case 'users' : return 'p-user-users'
+      }
+    },
+    _isActive: function (target){
       return target === this.active
     },
 
-    select: function (){
-      switch (this.active){
-        case 'account' : this.getInformation();break
-        case 'recipes' : this.getRecipes();break
-        case 'foods' : this.getFoods();break
-        case 'friends' : this.getFriends();break
-        case 'chats' : this.getChats();break
-        case 'notification' : this.getNotifications();break
-        case 'reports' : this.getReports();break
-        case 'users' : this.getUsers();break
-      }
-    },
-
-    navigate: function (dest){
-      if(this.$route.name !== dest) this.$router.push({name:  dest})
-    },
-
-    getInformation: function (){
-      this.navigate('p-user-account')
-    },
-    getRecipes: function (){
-      this.navigate('p-user-recipes')
-    },
-    getFoods: function (){
-      this.navigate('p-user-foods')
-    },
-    getFriends: function (){
-      this.navigate('p-user-friends')
-    },
-    getChats: function (){
-      this.navigate('p-user-chats')
-    },
-    getNotifications: function (){
-      this.navigate('p-user-notifications')
-    },
-
-    getReports: function (){
-      this.navigate('p-user-reports')
-    },
-    getUsers: function (){
-      this.navigate('p-user-users')
-    },
-
     /* Listeners check ACCESS TOKEN */
-
-    onAccessTokenOk(){
-      this.authorized = true
-      this.select()
-    },
     onAccessTokenNotOk({description}){
       console.error("Expired access token. Required another.")
       console.error(description)
-      api.users
-         .session
-         .newAccessToken(this.userIdentifier, { refresh_token: this.refreshToken }, this.accessToken)
-         .then(({data}) => {
-           this.setAccessToken(data.access_token)
-           this.authorized = true
-           this.select()
-         })
-         .catch(error =>{
-            if(error.response && error.response.status === 409) {
-              this.authorized = true
-              this.select()
-              return ;
-            }
-            this.authorized = false
-            console.error("UnAuthorized: ", error)
-            this.endSession()
-            this.$router.replace({ name: 'login' });
-         })
-    },
-    onCheckAccessTokenError({description}){
-      this.authorized = false
-      console.error('UnAuthorized: ', description)
-      this.error = {
-        show: true,
-        message: description
-      }
+      this.requestNewAccessToken()
     }
-
   },
 }
 </script>

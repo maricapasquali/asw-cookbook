@@ -1,5 +1,6 @@
 <template>
   <b-container fluid>
+    <loading v-model="loading" />
     <modal-alert variant="danger" v-model="error.show">
       <template v-slot:msg>
         <p>{{error.msg}}</p>
@@ -18,9 +19,10 @@
 import api from '@api'
 import {mapGetters} from "vuex";
 export default {
-  name: "CheckAccound",
+  name: "CheckAccount",
   data: function (){
     return {
+      loading: true,
       error:{
         show: false,
         msg: '',
@@ -40,10 +42,12 @@ export default {
        .then(({data}) => {
           this.success.show = true
           this.socket.emit('user:signup', data._id)
-       }, err => {
-          this.error.show = true
-          this.error.msg = api.users.HandlerErrors.checkAccount(err)
        })
+       .catch( err => {
+         this.error.show = true
+         this.error.msg = api.users.HandlerErrors.checkAccount(err)
+       })
+       .finally(() => this.loading = false)
   }
 }
 </script>

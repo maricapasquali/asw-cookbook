@@ -42,16 +42,18 @@ export function notFound(errOfRequest: any, resource: any): void {
     }
 }
 
-export function serverError(errOfRequest: any): void {
+export function serverError(errOfRequest: any, propagation: boolean = true): string {
     let error: string = 'Internal Server Error'
     if (errOfRequest.response?.status >= 500) printError(errOfRequest.response)
     else {
         error = errOfRequest.response?.data.description || errOfRequest.message || 'Unknown error'
         printError({status: 'Error', data: { description: error } } )
     }
-    store.commit('showServerError', {
-        status: errOfRequest.response?.status,
-        message: error,
-        config: errOfRequest.config
-    })
+    if(propagation)
+        store.commit('showServerError', {
+            status: errOfRequest.response?.status,
+            message: error,
+            config: errOfRequest.config
+        })
+    return error
 }

@@ -1,183 +1,162 @@
-export function login(err: any): string {
-    let error: string = 500 + ' - ' + err.message
+import {badRequest, forbidden, notFound, serverError, unAuthenticated} from "../handler-common-error";
 
-    if(err.response){
-        error = err.response.status + ' - '
-        switch (err.response.status){
-            case 403:
-            {
-                if(err.response.data.signup){
-                    error += 'Utente ancora da verificare.'
-                }else if(err.response.data.blocked){
-                    error += 'Account Bloccato.'
-                }else {
-                    error += 'Credenziali non corrette.'
-                }
-            }
-                break
-            case 404:
-                error += 'Utente non esiste'
-                break
-            default:
-                error += err.response.data.description
-                break
-        }
-    }
-    return error
+import * as handlerErrorSession from './session/handlerError'
+
+export const session = handlerErrorSession
+
+function _badRequestString(err: any): string {
+    return 'Bad Request' + ( err.response?.data?.description ? ' : ' + err.response?.data?.description: '')
 }
 
 export function signUp(err: any): string {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        error = err.response.status + ' - ' + err.response.data.description
+    console.error(err)
+    switch(err.response?.status) {
+        case 400: return _badRequestString(err)
+        case 409: return 'UserID già utilizzato.'
+        default: return serverError(err, false)
     }
-    console.error(error)
-    return error
 }
 
 export function emailResetPassword(err: any): string {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        switch (err.response.status){
-            case 404:
-                error = 'Email non è associata a nessun account.'
-                break
-            default:
-                error = err.response.status + ' - ' + err.response.data.description
-                break
-        }
+    console.error(err)
+    switch(err.response?.status) {
+        case 400: return _badRequestString(err)
+        case 404: return 'Email non è associata a nessun account.'
+        default: return serverError(err, false)
     }
-    console.error(error)
-    return error
 }
 
 export function checkAccount(err: any): string {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        switch (err.response.status){
-            case 400:{
-                error = 'LINK NON VALIDO'
-            }
-                break;
-            case 404:{
-                error = 'UTENTE NON TROVATO/VALIDO'
-            }
-                break
-            case 500:{
-                error = 500 + ' - ' + err.response.data.description
-            }
-                break
-        }
-    }
-    console.error(error)
-    return error
-}
-
-export function isAuthorized(err: any): string | void {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        if(err.response.status === 401) return;
-        error = err.response.status + ' - '+ err.response.data.description
-    }
     console.error(err)
-    return error
+    switch (err.response?.status){
+        case 400: return 'LINK NON VALIDO'
+        case 404: return 'UTENTE NON TROVATO/VALIDO'
+        default: return serverError(err, false)
+    }
 }
 
-export function getUser(err: any): string {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        switch (err.response.status){
-            case 404:
-                error = 'Utente non trovato.'
-                break
-            default:
-                error = err.response.status + ' - ' + err.response.data.description
-                break
-        }
+export function getUser(err: any, info: any): boolean {
+    switch(err.response?.status) {
+        case 400:
+            badRequest(err)
+            break
+        case 401:
+            unAuthenticated(err, info)
+            break
+        case 404:
+            if(info._forbiddenPage) {
+                err.response.status = 403
+                forbidden(err)
+                return false
+            }
+            return true
+        default:
+            serverError(err)
     }
-    console.error(error)
-    return error
+    return false
 }
 
-export function updateUser(err: any): string | void {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        if(err.response.status === 401) return;
-        error = err.response.status + ' - '+ err.response.data.description
+export function updateUser(err: any): void {
+    switch(err.response?.status) {
+        case 400:
+            badRequest(err)
+            break
+        case 401:
+            unAuthenticated(err, { _forbiddenPage: true })
+            break
+        case 403:
+            forbidden(err)
+            break
+        case 404:
+            notFound(err, {name: 'Utente', id: err.response?.config?.urlParams?.id })
+            break
+        default:
+            serverError(err)
     }
-    console.error(error)
-    return error
 }
 
 export function deleteAccount(err: any): string {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        if(err.response.status === 401) return;
-        error = err.response.status + ' - ' + err.response.data.description
+    console.error(err)
+    switch (err.response?.status){
+        case 400:
+            badRequest(err)
+            break
+        case 401:
+            unAuthenticated(err, {_forbiddenPage: true})
+            break;
+        case 403: return 'Non sei autorizzato a cancellare quest\'account.'
+        case 404: return 'Utente non trovato.'
+        default: return serverError(err, false)
     }
-    console.error(error)
-    return error
 }
 
-export function changeUserID(err: any): string {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        if(err.response.status === 401) return;
-        error = err.response.status + ' - ' + err.response.data.description
+function changeCredential(err: any, credential: 'username' | 'password' ): string{
+    console.error(err)
+    switch (err.response?.status){
+        case 400: return _badRequestString(err)
+            break
+        case 401: unAuthenticated(err, {_forbiddenPage: true})
+            break;
+        case 403: return 'Non sei autorizzato a cambiare ' + credential + ' di quest\'account.'
+        case 404: return 'Utente non trovato.'
+        case 409: {
+            if(credential === 'username') return 'Username non corretto.'
+            if(credential === 'password') return 'Password non corretta.'
+        }
+        break
+        default: return serverError(err, false)
     }
-    console.error(error)
-    return error
 }
 
-export function changePassword(err: any): string {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        if(err.response.status === 401) return;
-        error = err.response.status + ' - ' + err.response.data.description
-    }
-    console.error(error)
-    return error
-}
+export const changeUserID = (err: any): string  => changeCredential(err, 'username')
 
-export function logout(err: any): string {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        if(err.response.status === 409) return;
-        error = err.response.status + ' - ' + err.response.data.description
+export const changePassword = (err: any): string => changeCredential(err, 'password')
+
+export function resetPassword(err: any): string {
+    console.error(err)
+    switch (err.response?.status){
+        case 400:
+            badRequest(err)
+            break
+        case 404: return 'Utente non trovato.'
+        default: {
+            let status = err.response?.status
+            if(status === 401 || status === 403)
+                return 'Non sei autorizzato a effettuare questa operazione.'
+            return serverError(err, false)
+        }
     }
-    console.error(error)
-    return error
 }
 
 export function checkLinkResetPassword(err: any): string{
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        error = err.response.status + ' - '
-        switch (err.response.status){
-            case 404:
-            {
-                error += "KEY non valida"
-            }
-                break
-            case 410:
-            {
-                error += "Link scaduto. Richiedine uno nuovo."
-            }
-                break
-            default:
-                error += err.response.data.description
-                break
-        }
+    console.error(err)
+    switch (err.response?.status){
+        case 400: return _badRequestString(err)
+        case 404: return "Link non valido."
+        case 410: return "Link scaduto. Richiedine uno nuovo."
+        default: return serverError(err, false)
     }
-    console.error(error)
-    return error
 }
 
 export function getUserFromNickname(err: any): string {
-    let error: string = 500 + ' - ' + err.message
-    if(err.response){
-        error = err.response.status + ' - ' + err.response.data.description
+    console.error(err)
+    switch (err.response?.status){
+        case 400: return _badRequestString(err)
+        case 404: return 'Utente non trovato.'
+        default: return serverError(err, false)
     }
-    console.error(error)
-    return error
+}
+
+export function getUsersWithAndWithoutFilters(err: any, info?: any): void {
+    switch (err.response?.status) {
+        case 400:
+            badRequest(err)
+            break
+        case 401:
+            unAuthenticated(err, info || { _forbiddenPage: false })
+            break
+        default:
+            serverError(err)
+            break
+    }
 }
