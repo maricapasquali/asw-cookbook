@@ -98,8 +98,7 @@
 </template>
 
 <script>
-import {bus} from "@/main";
-import {RecipeCategories} from "@services/app";
+
 import api, {Server} from '@api'
 import {mapGetters} from "vuex";
 
@@ -172,7 +171,7 @@ export default {
             this.total = data.total
             if(!_limit) this.optionsPagination.page = page
          })
-         .catch(err => api.recipes.HandlerErrors.allSharedRecipes(err))
+         .catch(this.handleRequestErrors.recipes.allSharedRecipes)
     },
     others(){
       console.debug("Altri "+this.optionsPagination.limit+" post ..")
@@ -217,20 +216,20 @@ export default {
     }
   },
   created() {
-    bus.$on('recipe:create', this.onNewRecipeListeners.bind(this))
-    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:create', this.onNewRecipeListeners.bind(this))
+    this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
-    bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
-    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+    this.$bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
+    this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   },
   mounted() {
     this.getPost()

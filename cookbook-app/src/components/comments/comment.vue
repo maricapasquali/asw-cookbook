@@ -101,8 +101,7 @@
   </li>
 </template>
 <script>
-import {bus} from "@/main";
-import {dateFormat, clone} from "@services/utils";
+import {dateFormat} from "~/utils";
 
 import api, {Server} from '@api'
 import {mapGetters} from "vuex";
@@ -199,12 +198,12 @@ export default {
            this.$emit('reporting', this.comment)
            if(status === 200){
              const _comment = clone(this.comment)
-             this.socket.emit('comment:report',
+             this.$socket.emit('comment:report',
                  Object.assign(_comment, { recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner} }),
                  this.isLoggedIn ? {_id: this.userIdentifier, userID: this.username}: undefined)
            }
          })
-         .catch(api.recipes.HandlerErrors.comments.updateComment)
+         .catch(this.handleRequestErrors.comments.updateComment)
     },
 
     /*RESPONSE*/
@@ -223,11 +222,11 @@ export default {
            this.$emit('add-response', data)
 
            const _comment = clone(this.comment)
-           this.socket.emit('comment:response', Object.assign(_comment,
+           this.$socket.emit('comment:response', Object.assign(_comment,
                { recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner} }), data)
            return true
          })
-         .catch(api.recipes.HandlerErrors.comments.createCommentOrResponse)
+         .catch(this.handleRequestErrors.comments.createCommentOrResponse)
          .then(success => this.responding = {process: false, success})
     },
 
@@ -254,11 +253,11 @@ export default {
              console.debug('Update comment = ', data)
              this.comment.content = this.changeMode.content
 
-             this.socket.emit('comment:update', this.comment)
+             this.$socket.emit('comment:update', this.comment)
              this.toggleChangeMode('')
              return true
            })
-           .catch(api.recipes.HandlerErrors.comments.updateComment)
+           .catch(this.handleRequestErrors.comments.updateComment)
            .then(success => this.updatingOrDeleting = {process: false, success})
       }
 
@@ -273,10 +272,10 @@ export default {
          .then(({data}) => {
            this.comment.content = ""
            this.$emit('remove', this.comment)
-           this.socket.emit('comment:delete', this.comment._id)
+           this.$socket.emit('comment:delete', this.comment._id)
            return true
          })
-         .catch(api.recipes.HandlerErrors.comments.deleteComment)
+         .catch(this.handleRequestErrors.comments.deleteComment)
          .then(success => this.updatingOrDeleting = {process: false, success})
     },
 
@@ -313,26 +312,26 @@ export default {
     }
   },
   created() {
-    bus.$on('comment:report', this.renderReportedComment.bind(this))
-    bus.$on('comment:response',  this.renderResponseComment.bind(this))
+    this.$bus.$on('comment:report', this.renderReportedComment.bind(this))
+    this.$bus.$on('comment:response',  this.renderResponseComment.bind(this))
 
-    bus.$on('comment:update',  this.renderUpdateComment.bind(this))
-    bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
-    bus.$on('comment:unreport',  this.renderUnreportedComment.bind(this))
+    this.$bus.$on('comment:update',  this.renderUpdateComment.bind(this))
+    this.$bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
+    this.$bus.$on('comment:unreport',  this.renderUnreportedComment.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
-    bus.$off('comment:report', this.renderReportedComment.bind(this))
-    bus.$off('comment:response', this.renderResponseComment.bind(this))
+    this.$bus.$off('comment:report', this.renderReportedComment.bind(this))
+    this.$bus.$off('comment:response', this.renderResponseComment.bind(this))
 
-    bus.$off('comment:update', this.renderUpdateComment.bind(this))
-    bus.$off('comment:delete', this.renderDeleteComment.bind(this))
-    bus.$off('comment:unreport', this.renderUnreportedComment.bind(this))
+    this.$bus.$off('comment:update', this.renderUpdateComment.bind(this))
+    this.$bus.$off('comment:delete', this.renderDeleteComment.bind(this))
+    this.$bus.$off('comment:unreport', this.renderUnreportedComment.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   }
 }
 </script>

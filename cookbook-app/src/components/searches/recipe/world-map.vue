@@ -44,7 +44,6 @@
 <script>
 
 import WorldSvg from '@assets/images/world.svg'
-import {clone, diff, pushIfAbsent, removeIfPresent} from "@services/utils";
 
 export default {
   name: "world-map",

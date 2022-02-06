@@ -185,12 +185,10 @@
 </template>
 
 <script>
-import {bus} from "@/main";
-import api from '@api'
-import {EmailValidator} from '@app/modules/validator'
-import {clone, equals} from "@services/utils"
 
-import {Countries, Genders} from '@services/app'
+import api from '@api'
+
+import {Countries, Genders} from '~/app'
 import {mapGetters, mapMutations} from "vuex";
 
 export default {
@@ -228,10 +226,10 @@ export default {
     console.log(`CREATE GUI INFO USER (${this.id})...`)
     this.getUser()
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
   },
   beforeDestroy() {
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
   },
   filters: {
     localDate: function (text, country){
@@ -245,7 +243,7 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['userIdentifier', 'isAdmin', 'isSigned', 'accessToken', 'isLoggedIn', 'userFriends', 'socket']),
+    ...mapGetters(['userIdentifier', 'isAdmin', 'isSigned', 'accessToken', 'isLoggedIn', 'socket']),
 
     oldProfileImage(){
       return this.user.information.img
@@ -276,7 +274,7 @@ export default {
             console.log(this.user)
             console.log(this.changeableUser)
          })
-         .catch(err => api.users.HandlerErrors.getUser(err, {_forbiddenPage: this.personalArea }))
+         .catch(err => this.handleRequestErrors.users.getUser(err, {_forbiddenPage: this.personalArea }))
          .then(notFound => {
            if(notFound) this.$emit('not-found')
          })
@@ -330,11 +328,11 @@ export default {
               this.changeMode = false;
               this.user.information = response.data.info
 
-              this.socket.emit('user:update:info', { _id: this.id, information: response.data.info } )
+              this.$socket.emit('user:update:info', { _id: this.id, information: response.data.info } )
 
               this.changeableUser.information = clone(this.user.information)
            })
-           .catch(api.users.HandlerErrors.updateUser)
+           .catch(this.handleRequestErrors.users.updateUser)
            .finally(() => this.processing = false)
       }
     },

@@ -52,9 +52,8 @@
 <script>
 import api from '@api'
 import {mapGetters, mapMutations} from "vuex";
-import {dateFormat} from "@services/utils";
+import {dateFormat} from "~/utils";
 import ChatUtils from '@components/chats/utils'
-import {RecipeCategories} from "@services/app";
 
 export default {
   name: "chat",
@@ -150,7 +149,7 @@ export default {
     },
 
     amINotReaderUser(){
-      return this.value && this.value.users.find(u => u.user._id === this.userIdentifier && u.role !== 'reader')
+      return this.value && this.value.users.find(u => u.user?._id === this.userIdentifier && u.role !== 'reader')
     },
 
     infoChat(){
@@ -195,7 +194,7 @@ export default {
     },
 
     sendTyping(typing = false){
-      this.socket.emit('chat:typing', this.temporaryNameChat, { _id: this.userIdentifier, userID: this.isChatGroup && this.username, typing: typing } )
+      this.$socket.emit('chat:typing', this.temporaryNameChat, { _id: this.userIdentifier, userID: this.isChatGroup && this.username, typing: typing } )
     },
     receiveTyping(data){
       const index = this.writeUsers.findIndex(w => w._id === data._id)
@@ -225,7 +224,7 @@ export default {
                 if(init) this.removeUnReadMessage()
               })
               console.debug(description, ' from ', reader.userID)
-              this.socket.emit('chat:read', this.temporaryNameChat, messages)
+              this.$socket.emit('chat:read', this.temporaryNameChat, messages)
             })
             //TODO: HANDLER ERRORS MARK LIKE READ MESSAGE
             .catch(err => console.error(err))
@@ -270,7 +269,7 @@ export default {
                 .then(({data}) => {
                   console.debug('Message has been delivered => ', JSON.stringify(data))
                   this._changeStateMyMessage({ ...data, delivered: true })
-                  this.socket.emit('chat:messages', this.temporaryNameChat, data)
+                  this.$socket.emit('chat:messages', this.temporaryNameChat, data)
 
                   this.resetAttachment()
                 })
@@ -311,7 +310,7 @@ export default {
 
     _initialization(chat){
       if(chat) {
-        this.socket.emit('chat:enter', this._infoForSocket)
+        this.$socket.emit('chat:enter', this._infoForSocket)
 
         this.messages = chat.messages.map(message => Object.assign(message, {delivered: true}))
 
@@ -413,24 +412,24 @@ export default {
     }
   },
   created() {
-    this.socket.on('enter', this.enterChat.bind(this))
-    this.socket.on('leave', this.leaveChat.bind(this))
-    this.socket.on('read-messages', this.receiveConfirmReadMessages.bind(this))
-    this.socket.on('typing', this.receiveTyping.bind(this))
-    this.socket.on('messages', this.receiveMessages.bind(this))
+    this.$socket.on('enter', this.enterChat.bind(this))
+    this.$socket.on('leave', this.leaveChat.bind(this))
+    this.$socket.on('read-messages', this.receiveConfirmReadMessages.bind(this))
+    this.$socket.on('typing', this.receiveTyping.bind(this))
+    this.$socket.on('messages', this.receiveMessages.bind(this))
   },
   mounted() {
     this._initialization(this.value)
   },
 
   beforeDestroy() {
-    this.socket.off('enter', this.enterChat.bind(this))
-    this.socket.off('leave', this.leaveChat.bind(this))
-    this.socket.off('read-messages', this.receiveConfirmReadMessages.bind(this))
-    this.socket.off('typing', this.receiveTyping.bind(this))
-    this.socket.off('messages', this.receiveMessages.bind(this))
+    this.$socket.off('enter', this.enterChat.bind(this))
+    this.$socket.off('leave', this.leaveChat.bind(this))
+    this.$socket.off('read-messages', this.receiveConfirmReadMessages.bind(this))
+    this.$socket.off('typing', this.receiveTyping.bind(this))
+    this.$socket.off('messages', this.receiveMessages.bind(this))
 
-    this.socket.emit('chat:leave', this._infoForSocket)
+    this.$socket.emit('chat:leave', this._infoForSocket)
   }
 }
 </script>

@@ -33,7 +33,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import {dateFormat} from "@services/utils";
+// import {dateFormat} from "~/utils";
 export default {
   name: "chat-message",
   props: {

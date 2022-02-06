@@ -61,7 +61,7 @@
 
 <script>
 
-import {dateFormat} from "@services/utils";
+import {dateFormat} from "~/utils";
 import {mapGetters} from "vuex";
 
 import ChatUtils from '@components/chats/utils'
@@ -103,8 +103,8 @@ export default {
     },
 
     numberUnReadMessages(){
-      return this.value.messages.filter(m => m.sender._id !== this.userIdentifier)
-                                .filter(m => !m.read.find(r => r.user._id === this.userIdentifier)).length
+      return this.value.messages.filter(m => m.sender?._id !== this.userIdentifier)
+                                .filter(m => !m.read.find(r => r.user?._id === this.userIdentifier)).length
     },
 
     receiverUserIdentifier(){

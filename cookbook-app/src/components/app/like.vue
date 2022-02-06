@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import {bus} from "@/main";
+
 import api from "@api";
 import {mapGetters} from "vuex";
 
@@ -62,11 +62,11 @@ export default {
                 this.$emit('input', this.value.filter(l => l._id !== like._id))
                 this.$emit('unlike')
 
-                if(commentID) this.socket.emit('unlike:comment', this.comment._id, like._id)
-                else this.socket.emit('unlike:recipe', this.recipe._id, like._id)
+                if(commentID) this.$socket.emit('unlike:comment', this.comment._id, like._id)
+                else this.$socket.emit('unlike:recipe', this.recipe._id, like._id)
 
              })
-             .catch(api.recipes.HandlerErrors.likes.makeOrUnmakeLike)
+             .catch(this.handleRequestErrors.likes.makeOrUnmakeLike)
 
         }
         else {
@@ -79,11 +79,11 @@ export default {
                   this.$emit('input', [...this.value, ...[data]])
                   this.$emit('like')
 
-                  if(commentID) this.socket.emit('like:comment', { _id: this.comment._id, user: this.comment.user, recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner } }, data)
-                  else this.socket.emit('like:recipe', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
+                  if(commentID) this.$socket.emit('like:comment', { _id: this.comment._id, user: this.comment.user, recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner } }, data)
+                  else this.$socket.emit('like:recipe', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
 
              })
-             .catch(api.recipes.HandlerErrors.likes.makeOrUnmakeLike)
+             .catch(this.handleRequestErrors.likes.makeOrUnmakeLike)
         }
       }
     },
@@ -113,22 +113,22 @@ export default {
     }
   },
   created() {
-    bus.$on('like:recipe', this.onLikeRecipeListener.bind(this))
-    bus.$on('unlike:recipe', this.onUnLikeRecipeListener.bind(this))
+    this.$bus.$on('like:recipe', this.onLikeRecipeListener.bind(this))
+    this.$bus.$on('unlike:recipe', this.onUnLikeRecipeListener.bind(this))
     if(this.comment) {
-      bus.$on('like:comment', this.onLikeCommentListener.bind(this))
-      bus.$on('unlike:comment', this.onUnLikeCommentListener.bind(this))
+      this.$bus.$on('like:comment', this.onLikeCommentListener.bind(this))
+      this.$bus.$on('unlike:comment', this.onUnLikeCommentListener.bind(this))
     }
-    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
-    bus.$off('like:recipe', this.onLikeRecipeListener.bind(this))
-    bus.$off('unlike:recipe', this.onUnLikeRecipeListener.bind(this))
+    this.$bus.$off('like:recipe', this.onLikeRecipeListener.bind(this))
+    this.$bus.$off('unlike:recipe', this.onUnLikeRecipeListener.bind(this))
     if(this.comment) {
-      bus.$off('like:comment', this.onLikeCommentListener.bind(this))
-      bus.$off('unlike:comment', this.onUnLikeCommentListener.bind(this))
+      this.$bus.$off('like:comment', this.onLikeCommentListener.bind(this))
+      this.$bus.$off('unlike:comment', this.onUnLikeCommentListener.bind(this))
     }
-    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   }
 }
 </script>

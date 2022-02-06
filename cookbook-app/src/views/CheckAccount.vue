@@ -41,11 +41,11 @@ export default {
        .checkAccount(this.$route.query)
        .then(({data}) => {
           this.success.show = true
-          this.socket.emit('user:signup', data._id)
+          this.$socket.emit('user:signup', data._id)
        })
        .catch( err => {
          this.error.show = true
-         this.error.msg = api.users.HandlerErrors.checkAccount(err)
+         this.error.msg = this.handleRequestErrors.users.checkAccount(err)
        })
        .finally(() => this.loading = false)
   }

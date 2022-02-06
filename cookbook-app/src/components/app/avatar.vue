@@ -10,9 +10,8 @@
 
 <script>
 
-import {Server} from "@services/api";
+import {Server} from "@api";
 import {mapGetters} from "vuex";
-import {pushIfAbsent, removeIfPresent} from "@services/utils";
 
 export default {
   name: "avatar",
@@ -77,9 +76,9 @@ export default {
     onCheckUserState(vl){
       if(Array.isArray(vl)) vl.forEach(u => this.onCheckUserState(u))
       else if(vl){
-        this.socket.emit('check:user:state', vl)
-        this.socket.on('user:online:' + vl, this.setOnline.bind(this))
-        this.socket.on('user:offline:' + vl, this.setOnline.bind(this))
+        this.$socket.emit('check:user:state', vl)
+        this.$socket.on('user:online:' + vl, this.setOnline.bind(this))
+        this.$socket.on('user:offline:' + vl, this.setOnline.bind(this))
       } else this.setOnline(false)
     }
   },

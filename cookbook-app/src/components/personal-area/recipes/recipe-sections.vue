@@ -184,9 +184,8 @@
 </template>
 
 <script>
-import {bus} from '@/main'
-import {dateFormat} from "@services/utils";
-import {Diets, RecipeCategories} from '@services/app'
+
+import {dateFormat} from "~/utils";
 
 import api from '@api'
 import {mapGetters} from "vuex";
@@ -353,7 +352,7 @@ export default {
             if(!_limit) this.paginationOptions.page = page
             return true
          })
-         .catch(err => api.recipes.HandlerErrors.getRecipe(err, {_forbiddenPage: true}))
+         .catch(err => this.handleRequestErrors.recipes.getRecipe(err, {_forbiddenPage: true}))
          .then(processEnd => this.processing = !processEnd)
 
     },
@@ -507,7 +506,7 @@ export default {
              console.log(data)
              this.itemsRecipes.splice(this.deleteRecipe.index, 1)
            })
-           .catch(api.recipes.HandlerErrors.likes.makeOrUnmakeLike)
+           .catch(this.handleRequestErrors.recipes.likes.makeOrUnmakeLike)
            .then(this._closeDeleteMode)
       }
       else
@@ -518,9 +517,9 @@ export default {
            .then(({data}) => {
              console.log(data)
              this.itemsRecipes.splice(this.deleteRecipe.index, 1)
-             this.socket.emit('recipe:delete', recipe)
+             this.$socket.emit('recipe:delete', recipe)
            })
-           .catch(api.recipes.HandlerErrors.deleteRecipe)
+           .catch(this.handleRequestErrors.recipes.deleteRecipe)
            .then(this._closeDeleteMode)
       }
     },
@@ -621,22 +620,22 @@ export default {
       if(this.formUpdate.show) this.closeChangeMode()
     }.bind(this)
 
-    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
 
   },
   mounted() {
     this.select()
   },
   beforeDestroy() {
-    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+    this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   }
 }
 </script>

@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import {bus} from "@/main";
+import {mapMutations} from "vuex";
 
 export default {
   name: "NotFound",
@@ -50,7 +50,8 @@ export default {
     }
   },
   created() {
-    bus.$emit('hideNavigationBar', this.$route.name)
+    this.$bus.$emit('hide:navigation-bar')
+    this.$bus.$emit('hide:footer')
   }
 }
 </script>

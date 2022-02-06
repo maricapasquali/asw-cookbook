@@ -76,11 +76,11 @@ export default {
          .then(response => {
             console.log("CHANGE USER ID...")
             this.$emit("onChangeUserID", this.userID)
-            this.socket.emit('user:update:info', { _id: this.id, userID: this.userID })
+            this.$socket.emit('user:update:info', { _id: this.id, userID: this.userID })
             this.show = false
          })
          .catch(err => {
-           let message = api.users.HandlerErrors.changeUserID(err)
+           let message = this.handleRequestErrors.users.changeUserID(err)
            if(message) this.error = {show: true, message}
          })
          .finally(() => this.processing = false)

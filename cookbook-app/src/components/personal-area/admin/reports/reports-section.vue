@@ -68,10 +68,10 @@
 </template>
 
 <script>
-import {bus} from '@/main'
+
 import api from '@api'
 import {scrollToRouterHash} from "@router";
-import {dateFormat} from "@services/utils";
+import {dateFormat} from "~/utils";
 import {mapGetters} from "vuex";
 
 export default {
@@ -125,7 +125,7 @@ export default {
              else this.docsDeleted.push(comment)
            })
          })
-         .catch(api.recipes.HandlerErrors.comments.getReportedComment)
+         .catch(this.handleRequestErrors.recipes.comments.getReportedComment)
          .finally(() => this.processing = false)
     },
 
@@ -140,10 +140,10 @@ export default {
             this.docsDeleted.push(this.docsReported[index])
             this.docsReported.splice(index, 1)
 
-            this.socket.emit('comment:delete', comment._id)
-            if(comment.user) this.socket.emit('user:strike', comment.user._id)
+            this.$socket.emit('comment:delete', comment._id)
+            if(comment.user) this.$socket.emit('user:strike', comment.user._id)
          })
-         .catch(api.recipes.HandlerErrors.comments.deleteComment)
+         .catch(this.handleRequestErrors.recipes.comments.deleteComment)
     },
     unreported(index){
       let comment = this.docsReported[index]
@@ -155,9 +155,9 @@ export default {
            console.log(data)
            this.docsReported.splice(index, 1)
 
-           this.socket.emit('comment:unreport', comment._id)
+           this.$socket.emit('comment:unreport', comment._id)
          })
-         .catch(api.recipes.HandlerErrors.comments.updateComment)
+         .catch(this.handleRequestErrors.recipes.comments.updateComment)
     },
 
     /*Listeners update*/
@@ -200,13 +200,13 @@ export default {
     }
   },
   created() {
-    bus.$on('comment:report', this.getReports.bind(this) )
+    this.$bus.$on('comment:report', this.getReports.bind(this) )
 
-    bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
-    bus.$on('comment:unreport',  this.renderUnreportedComment.bind(this))
+    this.$bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
+    this.$bus.$on('comment:unreport',  this.renderUnreportedComment.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   mounted() {
     this.getReports()
@@ -215,13 +215,13 @@ export default {
     this.scrollToRouterHash()
   },
   beforeDestroy() {
-    bus.$off('comment:report', this.getReports.bind(this) )
+    this.$bus.$off('comment:report', this.getReports.bind(this) )
 
-    bus.$off('comment:delete',  this.renderDeleteComment.bind(this))
-    bus.$off('comment:unreport',  this.renderUnreportedComment.bind(this))
+    this.$bus.$off('comment:delete',  this.renderDeleteComment.bind(this))
+    this.$bus.$off('comment:unreport',  this.renderUnreportedComment.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   }
 }
 </script>

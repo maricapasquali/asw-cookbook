@@ -4,88 +4,164 @@
     <router-view :class="classObject" />
     <app-footer v-if="footerVisibility" />
 
-    <loading v-model="logoutOn" fixed/>
-
-    <server-error-handler />
-    <bad-request-error-handler />
-    <unauthenticated-error-handler />
-    <forbidden-error-handler />
-    <not-found-error-handler />
+    <server-error-handler v-model="serverError"/>
+    <bad-request-error-handler v-model="badRequestError"/>
+    <unauthenticated-error-handler v-model="unAuthenticatedError"/>
+    <forbidden-error-handler v-model="forbiddenError"/>
+    <not-found-error-handler v-model="notFoundResource"/>
   </div>
 </template>
 
 <script>
-import  {bus} from "@/main";
-import {mapGetters, mapActions, mapMutations} from "vuex";
-
-import notifications from "@/notifications";
-import updates from "@/updates";
-import {pushMessages} from '@components/chats/utils'
+import {mapGetters, mapActions} from "vuex";
 
 export default {
   name: 'App',
-  data: function (){
+  data(){
     return {
-      notNav: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat'],
-      notFooter: this.notNav
+      routeWithoutNavigationBar: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat'],
+      routeWithoutFooter: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat'],
+
+      serverError: {
+        show: false,
+        message: ''
+      },
+      badRequestError: {
+        show: false,
+        message: ''
+      },
+      unAuthenticatedError: {
+        show: false,
+        _forbiddenPage: false
+      },
+      forbiddenError: {
+        show: false,
+        message: ''
+      },
+      notFoundResource: {
+        show: false,
+        resource: {}
+      }
     }
   },
   computed:{
-    ...mapGetters(['socket', 'userIdentifier', 'accessToken', 'isAdmin', 'isLoggedIn']),
-    logoutOn(){
-      return this.$store.state.logoutOn
-    },
+    ...mapGetters([
+        'accessToken',
+        'isLoggedIn',
+        'isAdmin',
+        'userIdentifier',
+        'username'
+    ]),
     navigatorVisibility: function (){
-      return !this.notNav.includes(this.$route.name)
+      return !this.routeWithoutNavigationBar.includes(this.$route.name)
     },
     footerVisibility: function (){
-      return this.navigatorVisibility //!this.notFooter.includes(this.$route.name)
+      return !this.routeWithoutFooter.includes(this.$route.name)
     },
     classObject(){
       return {
         'mt-6': this.navigatorVisibility,
         'mb-8': this.navigatorVisibility
       }
-
+    }
+  },
+  watch:{
+    accessToken(val){
+      console.warn('CHANGE ACCESS TOKEN ... ',  this.$socket)
+      this.$socket.connectStart({
+        key: val,
+        userinfo: this.isLoggedIn ? { _id: this.userIdentifier, userID: this.username, isAdmin: this.isAdmin} : undefined
+      })
+    },
+    username(val){
+      console.warn('CHANGE USER ID ... ',  this.$socket)
+      this.$socket.connectStart({
+        key: this.accessToken,
+        userinfo: this.isLoggedIn ? { _id: this.userIdentifier, userID: val, isAdmin: this.isAdmin} : undefined
+      })
     }
   },
   methods: {
-    hideNavigationBar(route){
-      console.debug('Hide navigation bar on route ', route)
-      this.notNav.push(route)
-    },
-    ...mapMutations(['setSession']),
-    // NOTIFICATIONS
-    ...mapActions(['getNumberOfUnReadNotifications', 'getNumberOfUnReadChatsMessages']),
-    ...notifications,
-    //UPDATES
-    ...updates,
+    ...mapActions(['init']),
+    updateGUIListener(){
+      this.$bus.$on('hide:navigation-bar', () => this.routeWithoutNavigationBar.push(this.$route.name))
+      this.$bus.$on('hide:footer', () => this.routeWithoutFooter.push(this.$route.name))
 
-    //MESSAGES
-    pushMessages,
+      this.$bus.$on('show:error:bad-request', err => this.badRequestError = {show: true, ...err})
+      this.$bus.$on('show:error:unauthenticated', err => this.unAuthenticatedError = {show: true, ...err})
+      this.$bus.$on('show:error:forbidden', err => this.forbiddenError = {show: true, ...err})
+      this.$bus.$on('show:error:not-found', err => this.notFoundResource = {show: true, ...err})
+      this.$bus.$on('show:error:server-internal', err => this.serverError = {show: true, ...err})
+
+    },
+    registerFriendShipListener(){
+      this.$socket.on('friendship:request', this.$bus.notification.friendShipRequest.bind(this))
+      this.$socket.on('friendship:update', this.$bus.notification.friendShipUpdate.bind(this))
+      this.$socket.on('friendship:remove', this.$bus.notification.friendShipRemove.bind(this))
+    },
+    registerFoodListener(){
+      this.$socket.on('food:create', this.$bus.notification.foodCreate.bind(this))
+      this.$socket.on('food:update', this.$bus.update.updateFood.bind(this))
+    },
+    registerCommentListener(){
+      this.$socket.on('comment:response', this.$bus.notification.commentResponse.bind(this))
+      this.$socket.on('comment:report', this.$bus.notification.commentReport.bind(this))
+      this.$socket.on('comment:update', this.$bus.update.updateComment.bind(this))
+      this.$socket.on('comment:delete', this.$bus.update.deleteComment.bind(this))
+      this.$socket.on('comment:unreport', this.$bus.update.unReportComment.bind(this))
+    },
+    registerLikeListener(){
+      this.$socket.on('like:recipe', this.$bus.notification.likeRecipe.bind(this))
+      this.$socket.on('like:comment', this.$bus.notification.likeComment.bind(this))
+      this.$socket.on('unlike:recipe', this.$bus.update.unlikeRecipe.bind(this))
+      this.$socket.on('unlike:comment', this.$bus.update.unlikeComment.bind(this))
+    },
+    registerRecipeListener(){
+      this.$socket.on('recipe:comment', this.$bus.notification.recipeComment.bind(this))
+      this.$socket.on('recipe:create', this.$bus.notification.createSharedRecipe.bind(this))
+      this.$socket.on('recipe:update', this.$bus.notification.updateSharedRecipe.bind(this))
+      this.$socket.on('recipe:delete', this.$bus.notification.deleteSharedRecipe.bind(this))
+    },
+    registerUserInfoListener(){
+      this.$socket.on('user:update:password', this.$bus.notification.afterUpdatePassword.bind(this))
+      this.$socket.on('user:strike', this.$bus.notification.onAddStrike.bind(this))
+
+      this.$socket.on('user:signup', this.$bus.update.signupUser.bind(this))
+      this.$socket.on('user:checked', this.$bus.update.checkUser.bind(this))
+      this.$socket.on('user:update:info', this.$bus.update.updateInfoUser.bind(this))
+      this.$socket.on('user:delete', this.$bus.update.deleteUser.bind(this))
+    },
+
+    registerChatMessage(){
+      this.$socket.on('push-messages', this.$bus.chat.pushMessages.bind(this))
+    }
   },
   created() {
-    this.setSession()
-    // console.debug('App created ', this.$store.state)
-    bus.$on('hideNavigationBar', this.hideNavigationBar.bind(this))
+    console.log('App created ')
 
-    // NOTIFICATIONS
-    if(this.isLoggedIn) {
-      this.getNumberOfUnReadNotifications()
-      this.getNumberOfUnReadChatsMessages()
-    }
-    this.friendShipListeners()
-    this.foodListeners()
-    this.commentListeners()
-    this.recipeListeners()
-    this.userInfoListeners()
-    this.likeListeners()
+    this.updateGUIListener()
 
-    //UPDATES
-    this.updateListeners()
+    this.init()
+        .then(vl => console.log('Ok get unread notification and chat messages'))
+        .catch(err => {
+          console.error('Something wrong to get unread notification and chat messages')
+          this.handleRequestErrors.notifications.getNotifications(err)
+        })
 
-    //MESSAGES
-    this.socket.on('push-messages', this.pushMessages.bind(this))
+    this.registerFriendShipListener()
+    this.registerFoodListener()
+    this.registerCommentListener()
+    this.registerLikeListener()
+    this.registerRecipeListener()
+    this.registerUserInfoListener()
+    this.registerChatMessage()
+
+    console.debug('Store ', this.$store)
+    console.debug('Socket ', this.$socket)
+    console.debug('Bus ', this.$bus)
+  },
+  beforeDestroy() {
+      this.$socket.disconnect()
   }
 }
 </script>

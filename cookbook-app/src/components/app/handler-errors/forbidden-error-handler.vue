@@ -13,12 +13,18 @@ import ErrorHandler from "./error-handler";
 export default {
   name: "forbidden-error-handler",
   components: {ErrorHandler},
+  props: {
+    value: {
+      show: Boolean,
+      message: String
+    }
+  },
   computed: {
     _error(){
-      return  { status: 403, show: this.forbiddenError.show, message: this.message }
+      return  { status: 403, show: this.value.show, message: this.message }
     },
     message(){
-      switch (this.method){
+      switch (this.value.method){
         case 'get': return 'Non sei autorizzata/o ad accedere a questa/e risorsa/e.'
         case 'post': return 'Non sei autorizzata/o a creare questa/e risorsa/e.'
         case 'delete':return 'Non sei autorizzata/o a cancellare questa/e risorsa/e.'
@@ -27,21 +33,13 @@ export default {
       return 'Non sei autorizzata/o ad accedere a questa/e area.'
     },
     method(){
-      return this.$store.state.requestError.forbiddenError.method
-    },
-    forbiddenError: {
-      get(){
-        return this.$store.state.requestError.forbiddenError
-      },
-      set(val){
-        this.$store.commit('showForbiddenError', {show: val})
-      }
+      return this.value.method
     }
   },
   methods: {
     goHomePage(){
       this.$router.replace({name: 'homepage'})
-      this.forbiddenError = false
+      this.$emit('input', {show: false})
     }
   }
 }

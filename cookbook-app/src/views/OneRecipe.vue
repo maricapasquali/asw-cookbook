@@ -141,16 +141,15 @@
 </template>
 
 <script>
-import {bus} from "@/main";
-import {dateFormat} from "@services/utils"
-import {Diets, RecipeCategories} from "@services/app"
+
+import {dateFormat} from "~/utils"
 
 import api from '@api'
 
 import {mapGetters} from "vuex";
 import {scrollToRouterHash} from "@router";
 import NotFound from "./404";
-import {Server} from "@services/api";
+import {Server} from "@api";
 export default {
   name: "OneRecipe",
   props: {
@@ -213,7 +212,7 @@ export default {
       api.recipes
          .getRecipe(id, recipe_id, 'shared', this.accessToken)
          .then(({data}) => this.setRecipe(data))
-         .catch(err => api.recipes.HandlerErrors.getRecipe(err))
+         .catch(err => this.handleRequestErrors.recipes.getRecipe(err))
          .then(processingEnd => this.processing = !processingEnd)
     },
 
@@ -257,18 +256,18 @@ export default {
     }
   },
   created() {
-    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
-    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
-    bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))
   },
   beforeDestroy() {
-    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+    this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
-    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
-    bus.$off('user:update:info', this.onUpdateUserInfoListeners.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateUserInfoListeners.bind(this))
   },
   mounted() {
     if(typeof this.value === "undefined") this.getRecipe()

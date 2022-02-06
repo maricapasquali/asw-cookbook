@@ -171,9 +171,7 @@
 </template>
 
 <script>
-
-import {clone, equals, isBoolean} from '@services/utils'
-import {Countries, Diets, RecipeCategories} from '@services/app'
+import {Countries, Diets, RecipeCategories} from '~/app'
 
 import api from '@api'
 import {mapGetters} from "vuex";
@@ -431,20 +429,20 @@ export default {
               this._setOptionSelection(data, false)
               this.$emit('onChanged', data)
 
-              this.socket.emit('recipe:update', data)
+              this.$socket.emit('recipe:update', data)
               if(this.value.shared === false && data.shared === true) {
                 console.log('Share a saved recipe.')
-                this.socket.emit('recipe:create', data)
+                this.$socket.emit('recipe:create', data)
               }
             } else {
               this.$emit(eventType, data)
               this.resetFormRecipe()
-              if(data.shared) this.socket.emit('recipe:create', data)
+              if(data.shared) this.$socket.emit('recipe:create', data)
             }
           })
           .catch(err => {
-            if(options.new === false) api.recipes.HandlerErrors.updateRecipe(err)
-            else api.recipes.HandlerErrors.createRecipe(err)
+            if(options.new === false) this.handleRequestErrors.recipes.updateRecipe(err)
+            else this.handleRequestErrors.recipes.createRecipe(err)
           })
           .finally(() => this.processing = false)
     },

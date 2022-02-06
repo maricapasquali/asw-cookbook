@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import {dateFormat} from "@services/utils";
+import {dateFormat} from "~/utils";
 import {mapGetters} from "vuex";
 
 import ChatUtils from '@components/chats/utils'

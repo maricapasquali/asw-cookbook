@@ -1,5 +1,6 @@
 <template>
   <div id="navigator-app">
+    <loading v-model="logoutProcessing" fixed/>
     <!-- NAV BAR -->
     <b-navbar ref="navigator" toggleable="sm" type="dark" :class="classNavigator" fixed="top">
       <b-navbar-brand :to="{name: 'homepage'}" :active="isHomePageActive">{{ app_name }}</b-navbar-brand>
@@ -54,7 +55,7 @@
                 </b-col>
               </b-row>
             </b-dropdown-item>
-            <b-dropdown-item @click="logout($route.name)">Sign Out</b-dropdown-item>
+            <b-dropdown-item @click="onLogoutSubmit">Sign Out</b-dropdown-item>
 
           </b-nav-item-dropdown>
           <b-nav-item v-else :to="{name: 'login'}"> Login </b-nav-item>
@@ -73,7 +74,7 @@ export default {
   name: "app-navigator",
   data: function (){
     return {
-      app_name : require("@app/app.config.json").app_name
+      logoutProcessing: false
     }
   },
 
@@ -84,14 +85,11 @@ export default {
       'username',
       'isAdmin',
       'isSigned',
-      'isGuestOrSigned'
+      'isGuestOrSigned',
+      'unreadNotifications',
+      'unreadChatsMessages'
     ]),
-    unreadNotifications(){
-      return this.$store.state.unreadNotifications
-    },
-    unreadChatsMessages(){
-      return this.$store.state.unreadMessages
-    },
+
     isHomePageActive: function (){
       return this.$route.name === 'homepage'
     },
@@ -127,11 +125,21 @@ export default {
     },
 
     classNavigator(){
-      return { 'navigator-bar': true, 'navigator-bar-in-logout': this.$store.state.logoutOn }
+      return { 'navigator-bar': true, 'navigator-bar-in-logout': this.logoutProcessing }
     }
   },
   methods:{
     ...mapActions(['logout']),
+    onLogoutSubmit(){
+      this.logoutProcessing = true
+      this.logout()
+          .then(() => {
+            if(this.$route.name === 'homepage') this.$router.go()
+            else this.$router.replace({name: 'homepage'})
+          })
+          .catch(this.handleRequestErrors.session.logout)
+          .finally(() => this.logoutProcessing = false)
+    }
   }
 }
 </script>

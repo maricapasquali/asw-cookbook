@@ -8,8 +8,6 @@
 </template>
 
 <script>
-import {Countries} from "@services/app";
-
 export default {
   name: "country-image",
   props: {

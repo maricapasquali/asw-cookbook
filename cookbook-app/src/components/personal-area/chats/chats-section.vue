@@ -72,8 +72,7 @@
 
 <script>
 import api from '@api'
-import {bus} from '@/main'
-import {mapping} from "@services/api/users/friends/utils";
+import {mapping} from "@api/users/friends/utils";
 import {mapGetters} from "vuex";
 import {_goToChat, _baseInfoUser, _isChatOne, _isChatGroup} from '@components/chats/utils'
 
@@ -106,7 +105,7 @@ export default {
                                              : this.friends
     },
     writeableChats(){
-      const _writeableChats = this.chats.filter(chat => chat.users.find(r => r.user._id === this.userIdentifier && r.role !== 'reader'))
+      const _writeableChats = this.chats.filter(chat => chat.users.find(r => r.user?._id === this.userIdentifier && r.role !== 'reader'))
       console.debug('writeableChats ', _writeableChats)
       return this.searchChat.trim().length ?
           _writeableChats.map(chat => ({name: this._baseInfoUser(chat.info, chat.users).name, chat}))
@@ -151,7 +150,7 @@ export default {
          .then(({data}) => {
             this.chats = data.items
             console.log('Chats = ', this.chats)
-            this.chats.forEach(chat => console.debug(chat.users.map(r => r.user.role)))
+            this.chats.forEach(chat => console.debug(chat.users.map(r => r.user?.role)))
          })
          //TODO: HANDLER ERROR GET CHATS
          .catch(err => console.error(err))
@@ -193,7 +192,7 @@ export default {
             console.log(data.description)
             let userRole = { user: this.userIdentifier, role: 'reader' }
             this.onListenerChangeRole(this.deleteChat.chat._id, userRole)
-            this.socket.emit('chat:change:role',this.deleteChat.chat._id, userRole)
+            this.$socket.emit('chat:change:role',this.deleteChat.chat._id, userRole)
             console.debug(this.chats)
           })
           //TODO: HANDLER ERROR DELETE CHAT
@@ -285,22 +284,22 @@ export default {
     this.getFriends()
     this.getChats()
 
-    bus.$on('push-message', this.onListenersPushMessage.bind(this))
-    bus.$on('chat:change:role', this.onListenerChangeRole.bind(this))
+    this.$bus.$on('push-message', this.onListenersPushMessage.bind(this))
+    this.$bus.$on('chat:change:role', this.onListenerChangeRole.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateUserInChatSection.bind(this))
-    bus.$on('friend:add', this.onAddFriendShip.bind(this))
-    bus.$on('friend:remove', this.onRemoveFriendShip.bind(this))
-    bus.$on('user:delete', this.onDeleteUser.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateUserInChatSection.bind(this))
+    this.$bus.$on('friend:add', this.onAddFriendShip.bind(this))
+    this.$bus.$on('friend:remove', this.onRemoveFriendShip.bind(this))
+    this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
-    bus.$off('push-message', this.onListenersPushMessage.bind(this))
-    bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))
+    this.$bus.$off('push-message', this.onListenersPushMessage.bind(this))
+    this.$bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateUserInChatSection.bind(this))
-    bus.$off('friend:add', this.onAddFriendShip.bind(this))
-    bus.$off('friend:remove', this.onRemoveFriendShip.bind(this))
-    bus.$off('user:delete', this.onDeleteUser.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateUserInChatSection.bind(this))
+    this.$bus.$off('friend:add', this.onAddFriendShip.bind(this))
+    this.$bus.$off('friend:remove', this.onRemoveFriendShip.bind(this))
+    this.$bus.$off('user:delete', this.onDeleteUser.bind(this))
   }
 }
 </script>

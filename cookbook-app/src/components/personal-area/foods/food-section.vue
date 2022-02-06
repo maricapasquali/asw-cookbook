@@ -188,8 +188,8 @@
 </template>
 
 <script>
-import {bus} from '@/main'
-import {clone, dateFormat} from '@services/utils'
+
+import {dateFormat} from '~/utils'
 
 import api from '@api'
 import {mapGetters} from "vuex";
@@ -291,7 +291,7 @@ export default {
 
               console.debug('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
            })
-           .catch(api.shoppingList.HandlerError.createShoppingListPoint)
+           .catch(this.handleRequestErrors.shoppingList.createShoppingListPoint)
            .then(duplicate => {
                 if(duplicate && index !== -1) this.patchShoppingList(index, false)
            })
@@ -308,7 +308,7 @@ export default {
            point.checked = checked
            console.debug(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(point))
          })
-         .catch(api.shoppingList.HandlerError.updateShoppingListPoint)
+         .catch(this.handleRequestErrors.shoppingList.updateShoppingListPoint)
     },
     removeFromShoppingList(index){
       let point = this.shopping_list[index]
@@ -318,7 +318,7 @@ export default {
             console.debug('Remove from shopping list: ', JSON.stringify(point))
             this.shopping_list.splice(index, 1)
          })
-         .catch(api.shoppingList.HandlerError.deleteShoppingListPoint)
+         .catch(this.handleRequestErrors.shoppingList.deleteShoppingListPoint)
     },
     getShoppingList(){
       api.shoppingList
@@ -327,7 +327,7 @@ export default {
             this.shopping_list = data
             this.loadingSL = false
          })
-         .catch(api.shoppingList.HandlerError.getShoppingList)
+         .catch(this.handleRequestErrors.shoppingList.getShoppingList)
     },
 
     // Foods
@@ -373,7 +373,7 @@ export default {
                     return items
                  })
                 .catch(err => {
-                    api.foods.HandlerError.getFoods(err)
+                  this.handleRequestErrors.foods.getFoods(err)
                     return []
                 })
                 .finally(() =>{
@@ -461,19 +461,19 @@ export default {
   created() {
     if(this.isSigned) this.getShoppingList()
 
-    bus.$on('food:create', this.onCreateFood.bind(this))
-    bus.$on('food:update', this.onUpdateFood.bind(this))
+    this.$bus.$on('food:create', this.onCreateFood.bind(this))
+    this.$bus.$on('food:update', this.onUpdateFood.bind(this))
 
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
-    bus.$off('food:create', this.onCreateFood.bind(this))
-    bus.$off('food:update', this.onUpdateFood.bind(this))
+    this.$bus.$off('food:create', this.onCreateFood.bind(this))
+    this.$bus.$off('food:update', this.onUpdateFood.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
 
     console.debug('Destroy food section...')
   }

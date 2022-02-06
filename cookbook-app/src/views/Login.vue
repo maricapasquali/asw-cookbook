@@ -2,65 +2,63 @@
   <center-container >
     <template v-slot:content>
       <!-- LOGIN -->
-      <wrap-loading v-model="processing" >
-        <template>
-          <b-card>
-            <div class="text-center"> <h1 class="text-primary"><em>{{ app_name }}</em></h1></div>
-            <b-card-body>
-              <b-alert variant="danger" v-model="error.show">{{error.msg}}</b-alert>
-              <b-form @submit="onSubmit">
-                <b-form-group
-                    id="input-group-1"
-                    label="UserID"
-                    label-for="input-1"
-                >
-                  <b-form-input
-                      id="input-1"
-                      v-model.trim="credential.userID"
-                      :state="validationUserID"
-                      @input="checkUserID"
-                      type="text"
-                      placeholder="Enter userID"
-                      required
-                  ></b-form-input>
-                </b-form-group>
-                <b-form-group
-                    id="input-group-password"
-                    label="Password"
-                    label-for="input-password"
-                >
-                  <b-form-input
-                      id="input-password"
-                      v-model.trim="credential.password"
-                      :state="validationPassword"
-                      @input="checkPassword"
-                      type="password"
-                      placeholder="Enter password"
-                      required
-                  ></b-form-input>
-                  <b-form-invalid-feedback :state="validationPassword">
-                    La password deve avere almeno 5 caratteri
-                  </b-form-invalid-feedback>
-                </b-form-group>
+      <wrap-loading v-model="onLogin.processing" >
+        <b-card>
+          <div class="text-center"> <h1 class="text-primary"><em>{{ app_name }}</em></h1></div>
+          <b-card-body>
+            <b-alert variant="danger" v-model="onLogin.error.show">{{onLogin.error.msg}}</b-alert>
+            <b-form @submit.prevent="onLoginSubmit">
+              <b-form-group
+                  id="input-group-1"
+                  label="UserID"
+                  label-for="input-1"
+              >
+                <b-form-input
+                    id="input-1"
+                    v-model.trim="credential.userID"
+                    :state="validationUserID"
+                    @input="checkUserID"
+                    type="text"
+                    placeholder="Enter userID"
+                    required
+                ></b-form-input>
+              </b-form-group>
+              <b-form-group
+                  id="input-group-password"
+                  label="Password"
+                  label-for="input-password"
+              >
+                <b-form-input
+                    id="input-password"
+                    v-model.trim="credential.password"
+                    :state="validationPassword"
+                    @input="checkPassword"
+                    type="password"
+                    placeholder="Enter password"
+                    required
+                ></b-form-input>
+                <b-form-invalid-feedback :state="validationPassword">
+                  La password deve avere almeno 5 caratteri
+                </b-form-invalid-feedback>
+              </b-form-group>
 
-                <b-container>
-                  <b-row cols="1" cols-md="2" class="d-flex justify-content-between">
-                    <b-col class="pl-0">
-                      <b-button id="forgot-password" class="pl-0" variant="link" @click="showModalResetPassword">Password dimenticata?</b-button>
-                    </b-col>
-                    <b-col class="pr-0 text-right" v-if="validationUserID && validationPassword">
-                      <b-button variant="primary" type="submit" class="mb-2">Accedi</b-button>
-                    </b-col>
-                  </b-row>
-                  <div class="text-center">
-                    <b-button id="signup" @click="showSignUp=true" class="pl-0" variant="link">Non hai ancora un'account?</b-button>
-                  </div>
-                </b-container>
+              <b-container>
+                <b-row cols="1" cols-md="2" class="d-flex justify-content-between">
+                  <b-col class="pl-0">
+                    <b-button id="forgot-password" class="pl-0" variant="link" @click="showModalResetPassword">Password dimenticata?</b-button>
+                  </b-col>
+                  <b-col class="pr-0 text-right" v-if="validationUserID && validationPassword">
+                    <b-button variant="primary" type="submit" class="mb-2">Accedi</b-button>
+                  </b-col>
+                </b-row>
+                <div class="text-center">
+                  <b-button id="signup" @click="showSignUp=true" class="pl-0" variant="link">Non hai ancora un'account?</b-button>
+                </div>
+              </b-container>
 
-              </b-form>
-            </b-card-body>
-          </b-card>
-        </template>
+            </b-form>
+          </b-card-body>
+        </b-card>
       </wrap-loading>
 
       <!-- RESET PASSWORD -->
@@ -117,18 +115,13 @@
 </template>
 
 <script>
-
 import api from '@api'
-import configuration from '@app/app.config.json'
-import {EmailValidator} from "@app/modules/validator";
-import {mapActions, mapMutations} from "vuex";
-
+import {mapActions} from "vuex";
 
 export default {
   name: "Login",
   data: function (){
     return {
-      app_name: configuration.app_name,
       credential: {
         userID: '',
         password: ''
@@ -137,11 +130,9 @@ export default {
       validationUserID: null,
       validationPassword: null,
       validationEmail: null,
-
-      processing: false,
-      error: {
-        show: false,
-        msg: ''
+      onLogin: {
+        processing: false,
+        error: {show: false, msg:''}
       },
       resetPassword:{
         processing: false,
@@ -161,11 +152,13 @@ export default {
     'resetPassword.processing'(val){
       if(val) this.resetPassword.error = { show: false, msg: ''}
     },
-    processing(val){
-      if(val) this.error = {show: false, msg: ''}
+    'onLogin.processing'(val){
+      if(val) this.onLogin.error = { show: false, msg: ''}
     }
   },
   methods: {
+    ...mapActions(['login', 'getAllBackgroundInformation']),
+
     // VALIDATION
     checkUserID: function (){
       this.validationUserID = this.credential.userID.length > 0
@@ -206,7 +199,7 @@ export default {
     },
 
     //REQUEST
-    sendLinkResetPassword: async function (event){
+    sendLinkResetPassword: function (event){
       event.preventDefault()
       this.resetPassword.processing = true
       api.users
@@ -217,41 +210,29 @@ export default {
          })
          .catch(err =>{
            this.resetPassword.error.show = true
-           this.resetPassword.error.msg = api.users.HandlerErrors.emailResetPassword(err)
+           this.resetPassword.error.msg = this.handleRequestErrors.users.emailResetPassword(err)
          })
          .finally(() => this.resetPassword.processing = false)
     },
 
-    ...mapMutations(['startSession']),
-    ...mapActions(['getNumberOfUnReadNotifications', 'getNumberOfUnReadChatsMessages']),
-    login: function (){
-      api.users.session.login(this.credential)
-         .then(({data}) => {
-           this.error.show = false
-           let {token, userInfo} = data
-
-           this.startSession({...token, user: userInfo})
-           this.getNumberOfUnReadNotifications()
-           this.getNumberOfUnReadChatsMessages()
-
-           let location = {
-             name: data.firstLogin ? 'change-password' : 'p-user-account',
-             params: { id: userInfo._id, firstLogin: data.firstLogin ? true : undefined},
-           }
-           console.log("LOGIN ", location)
-           this.$router.replace(location)
-         })
-         .catch(err=>{
-            this.error.show = true
-            this.error.msg = api.users.HandlerErrors.session.login(err)
-         })
-         .then(() => this.processing = false)
-    },
-
-    onSubmit: function (event){
-      event.preventDefault()
-      this.processing = true
-      this.login();
+    onLoginSubmit(){
+      this.onLogin.processing = true
+      this.login(this.credential)
+          .then(location => {
+            console.log('LOCATION ', location)
+            this.$router.replace(location)
+            this.getAllBackgroundInformation()
+                .then(vl => console.log('Ok get unread notification and chat messages'))
+                .catch(err => {
+                  console.error('Something wrong to get unread notification and chat messages')
+                  this.handleRequestErrors.notifications.getNotifications(err)
+                })
+          })
+          .catch(err => {
+            this.onLogin.error.show = true
+            this.onLogin.error.msg = this.handleRequestErrors.session.login(err)
+          })
+          .then(() => this.onLogin.processing = false)
     }
   }
 }

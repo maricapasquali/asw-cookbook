@@ -10,9 +10,11 @@ export default {
   name: "app-footer",
   data(){
     return {
-      administratorEmail: `administrator@${require("@app/app.config.json").app_name.toLowerCase()}.com`,
       isMobileDevice: window.navigator.userAgent.toLowerCase().includes("mobi")
     }
+  },
+  created() {
+    this.administratorEmail = `administrator@${this.app_name.toLowerCase()}.com`
   }
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <error-handler v-model="serverError" title="Server Error" variant="danger">
+  <error-handler v-model="value" title="Server Error" variant="danger">
     <template #more-details>
       <div v-if="isNetworkError">
         <p>Possible reason: </p>
@@ -16,14 +16,17 @@
 import ErrorHandler from "./error-handler";
 export default {
   name: "server-error-handler",
+  props: {
+    value: {
+      show: Boolean,
+      message: String
+    }
+  },
   components: {ErrorHandler},
   computed: {
     isNetworkError(){
-      return this.serverError.message === 'Network Error'
-    },
-    serverError(){
-      return this.$store.state.requestError.serverError
-    },
+      return this.value.message === 'Network Error'
+    }
   }
 }
 </script>

@@ -29,7 +29,6 @@
 </template>
 
 <script>
-import {bus} from "@/main";
 import api from '@api'
 import {mapGetters} from "vuex";
 
@@ -77,12 +76,12 @@ export default {
            this.value.push(data)
            //this.$emit('input', [...this.value, ...[data]])
 
-           this.socket.emit('recipe:comment', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
+           this.$socket.emit('recipe:comment', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
 
            console.log('You commented.')
            return true
          })
-         .catch(api.recipes.HandlerErrors.comments.createCommentOrResponse)
+         .catch(this.handleRequestErrors.comments.createCommentOrResponse)
          .then(success => this.commenting = { process: false, success })
     },
 
@@ -92,10 +91,10 @@ export default {
     }
   },
   created() {
-    bus.$on('recipe:comment', this.onAddCommentListener.bind(this))
+    this.$bus.$on('recipe:comment', this.onAddCommentListener.bind(this))
   },
   beforeDestroy() {
-    bus.$off('recipe:comment', this.onAddCommentListener.bind(this))
+    this.$bus.$off('recipe:comment', this.onAddCommentListener.bind(this))
   }
 }
 </script>

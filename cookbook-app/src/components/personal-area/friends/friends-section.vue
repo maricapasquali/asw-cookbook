@@ -95,10 +95,10 @@
 </template>
 
 <script>
-import {bus} from '@/main'
+
 import api, {Server} from '@api'
 import {mapGetters} from "vuex";
-import {mapping} from "@services/api/users/friends/utils";
+import {mapping} from "@api/users/friends/utils";
 
 export default {
   name: "friends-section",
@@ -188,7 +188,7 @@ export default {
                   return items
                 })
                 .catch(err => {
-                  api.friends.HandlerError.getFriendOf(err, {_forbiddenPage: true})
+                  this.handleRequestErrors.friends.getFriendOf(err, {_forbiddenPage: true})
                   return []
                 })
                 .finally(() => this.pagination.isBusy = false)
@@ -219,18 +219,18 @@ export default {
     }
   },
   created() {
-    bus.$on('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
-    bus.$on('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
+    this.$bus.$on('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
+    this.$bus.$on('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.fetchData.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.fetchData.bind(this))
   },
   beforeDestroy() {
-    bus.$off('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
-    bus.$off('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
+    this.$bus.$off('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
+    this.$bus.$off('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.fetchData.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.fetchData.bind(this))
   }
 }
 </script>

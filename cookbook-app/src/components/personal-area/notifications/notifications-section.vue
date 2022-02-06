@@ -13,7 +13,7 @@
                 </b-row>
               </b-col>
               <b-col cols="2" class="text-right">
-                <font-awesome-icon icon="times" size="s"/>
+                <font-awesome-icon icon="times"/>
               </b-col>
             </b-row>
             <b-row>
@@ -62,10 +62,10 @@
 </template>
 
 <script>
-import {bus} from '@/main'
+
 import {mapGetters, mapMutations} from "vuex";
 import api from '@api'
-import {dateFormat} from "@services/utils";
+import {dateFormat} from "~/utils";
 
 export default {
   name: "notifications-section",
@@ -151,7 +151,7 @@ export default {
           return { name: 'single-recipe', params: { id: doc.otherInfo.recipe.owner, recipe_id: doc.otherInfo.recipe._id }, hash: '#comment-'+doc.otherInfo.comment._id }
 
         case 'like':
-          if(doc.otherInfo.comment) return { name: 'single-recipe',
+          if(doc.otherInfo.comment || doc.otherInfo.liker === this.userIdentifier) return { name: 'single-recipe',
                                              params: { id: doc.otherInfo.owner, recipe_id: doc.otherInfo.recipe },
                                              hash: '#comment-' + doc.otherInfo.comment}
           else return doc.otherInfo.liker? { name: 'single-user', params: { id: doc.otherInfo.liker } } : ''
@@ -197,7 +197,7 @@ export default {
             return true
          })
          .catch(err => {
-           api.notifications.HandlerError.getNotifications(err)
+           this.handleRequestErrors.notifications.getNotifications(err)
            return false
          })
          .then(processEnd => this.loading = !processEnd)
@@ -234,7 +234,7 @@ export default {
          })
          .catch(err => {
            doc.read = false // doc.read = !doc.read
-           api.notifications.HandlerError.updateNotification(err)
+           this.handleRequestErrors.notifications.updateNotification(err)
          })
     },
 
@@ -248,7 +248,7 @@ export default {
            if(!this.docs[index].read) this.removeUnReadNotification()
            this.docs.splice(index, 1)
          })
-         .catch(api.notifications.HandlerError.deleteNotification)
+         .catch(this.handleRequestErrors.notifications.deleteNotification)
     },
 
     addNotification(notification){
@@ -260,12 +260,12 @@ export default {
     this.getNotifications()
 
     for (const eventName of this.events) {
-      bus.$on(eventName, this.addNotification.bind(this))
+      this.$bus.$on(eventName, this.addNotification.bind(this))
     }
   },
   beforeDestroy() {
     for (const eventName of this.events) {
-      bus.$off(eventName, this.addNotification.bind(this))
+      this.$bus.$off(eventName, this.addNotification.bind(this))
     }
   }
 }

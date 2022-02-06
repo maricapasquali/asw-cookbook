@@ -189,9 +189,7 @@
 
 <script>
 import api from '@api'
-import configuration from "@app/app.config.json";
-import {EmailValidator} from '@app/modules/validator'
-import {Countries, Genders} from '@services/app'
+import {Countries, Genders} from '~/app'
 import {mapGetters} from "vuex";
 export default {
   name: "sign-up",
@@ -199,7 +197,6 @@ export default {
     return {
       optionsGender: Genders.get(),
       optionsCountry: Countries.get(),
-      app_name: configuration.app_name,
       user:{
         img: new File([], "", undefined),
         firstname: '',
@@ -275,12 +272,12 @@ export default {
             this.error = { show: false, msg: '' }
             this.showCredentials = false
 
-            this.socket.emit('user:signup', data.userID)
+            this.$socket.emit('user:signup', data.userID)
 
          })
          .catch(err => {
             this.error.show = true
-            this.error.msg = api.users.HandlerErrors.signUp(err)
+            this.error.msg = this.handleRequestErrors.users.signUp(err)
          })
          .then(() => this.processing=false)
     },

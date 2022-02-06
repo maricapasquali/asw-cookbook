@@ -77,7 +77,6 @@
 </template>
 
 <script>
-import {isEmpty} from "@services/utils"
 export default {
   name: "recipe-details",
   props:{

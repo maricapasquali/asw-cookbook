@@ -107,7 +107,6 @@
 </template>
 
 <script>
-import {isEmpty, clone, equals} from '@services/utils'
 
 import api from '@api'
 import {mapGetters} from "vuex";
@@ -251,15 +250,15 @@ export default {
 
             if(this.createMode) {
               this.food = data
-              this.socket.emit('food:create', data)
+              this.$socket.emit('food:create', data)
             }
-            else if(this.updateMode) this.socket.emit('food:update', data)
+            else if(this.updateMode) this.$socket.emit('food:update', data)
 
             this.$emit('onSave', data)
           })
           .catch(err => {
-            if(this.createMode) return api.foods.HandlerError.createFood(err)
-            else if(this.updateMode) return api.foods.HandlerError.updateFood(err)
+            if(this.createMode) return this.handleRequestErrors.foods.createFood(err)
+            else if(this.updateMode) return this.handleRequestErrors.foods.updateFood(err)
             return false
           })
           .then(duplicate => {

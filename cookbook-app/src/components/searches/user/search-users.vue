@@ -81,7 +81,6 @@
 
 <script>
 
-import {bus} from '@/main'
 import api, {Server} from '@api'
 import {mapGetters} from "vuex";
 
@@ -113,7 +112,7 @@ export default {
     areOthers(){
       return this.users.length >0 && this.users.length < this.total
     },
-    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'userFriends'])
+    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn'])
   },
   methods: {
     // SEARCH
@@ -128,7 +127,7 @@ export default {
        api.users
           .getUsers({ userID: { search: 'partial', value: this.search.value } }, this.accessToken)
           .then(({data}) => this.users = data.items)
-          .catch(api.users.HandlerErrors.getUsersWithAndWithoutFilters)
+          .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
           .finally(() => this.search.processing = false)
     },
     resetSearch(val = ''){
@@ -174,7 +173,7 @@ export default {
            console.debug('Total = ', this.total)
 
          })
-         .catch(api.users.HandlerErrors.getUsersWithAndWithoutFilters)
+         .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
          .finally(() => this.processing = false)
     },
     others(){
@@ -215,16 +214,16 @@ export default {
     }
   },
   created() {
-    bus.$on('user:checked', this.fetchUsers.bind(this))
+    this.$bus.$on('user:checked', this.fetchUsers.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.onDeleteUser.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
-    bus.$off('user:checked', this.fetchUsers.bind(this))
+    this.$bus.$off('user:checked', this.fetchUsers.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.onDeleteUser.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeleteUser.bind(this))
   },
   mounted() {
     this.getUsers()

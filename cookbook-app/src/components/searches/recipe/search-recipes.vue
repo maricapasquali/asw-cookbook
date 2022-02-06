@@ -150,8 +150,6 @@
 </template>
 
 <script>
-import {Diets, RecipeCategories, Countries} from '@services/app'
-import {pushIfAbsent, isString, isEmpty, clone, equals} from '@services/utils'
 
 import api from '@api'
 import {mapGetters} from "vuex";
@@ -287,7 +285,7 @@ export default {
 
            return true
          })
-         .catch(err => api.recipes.HandlerErrors.getNumberRecipesForCountry(err))
+         .catch(err => this.handleRequestErrors.recipes.getNumberRecipesForCountry(err))
          .then((processEnd) => this.loading = !processEnd)
     },
 
@@ -385,7 +383,7 @@ export default {
             this.$emit('searching', data)
             return true
          })
-         .catch(err => api.recipes.HandlerErrors.getRecipe(err, { _forbiddenPage: typeof this.triggerSearch !== 'undefined' }))
+         .catch(err => this.handleRequestErrors.recipes.getRecipe(err, { _forbiddenPage: typeof this.triggerSearch !== 'undefined' }))
          .then(processEnd => this.processingSearch = !processEnd)
     },
 

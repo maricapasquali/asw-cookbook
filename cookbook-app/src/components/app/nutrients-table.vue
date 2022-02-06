@@ -8,7 +8,6 @@
 </template>
 
 <script>
-import {bus} from "@/main";
 
 export default {
   name: "nutrients-table",
@@ -167,10 +166,10 @@ export default {
     this.table = this.convertObjToArray(this.value)
     if(this.ingredients.length > 0) this.makeTable(this.ingredients)
 
-    bus.$on('food:update', this.onUpdateFood.bind(this))
+    this.$bus.$on('food:update', this.onUpdateFood.bind(this))
   },
   beforeDestroy() {
-    bus.$off('food:update', this.onUpdateFood.bind(this))
+    this.$bus.$off('food:update', this.onUpdateFood.bind(this))
   }
 }
 </script>

@@ -72,8 +72,6 @@ export default {
   name: "ChangePassword",
   data: function (){
     return {
-      app_name: require('@app/app.config.json').app_name,
-
       link: {
         valid: null,
         msg: 'Link non valido.'
@@ -140,7 +138,7 @@ export default {
         api.users.checkLinkResetPassword(this.$route.query.key)
             .then(() => this.link.valid = true)
             .catch(err => {
-                this.link.msg = api.users.HandlerErrors.checkLinkResetPassword(err)
+                this.link.msg = this.handleRequestErrors.users.checkLinkResetPassword(err)
                 this.link.valid = false
             })
             .finally(() => this.processing = false)
@@ -163,7 +161,7 @@ export default {
               })
               .catch(err => {
                 this.error.show = true
-                this.error.msg = api.users.HandlerErrors.getUserFromNickname(err)
+                this.error.msg = this.handleRequestErrors.users.getUserFromNickname(err)
               })
               .then(() => this.processing = false)
     },
@@ -176,7 +174,7 @@ export default {
                 this.$router.replace(this.changeDefaultPassword ? {name:'p-user-account', params: {id: this._id}} : {name: 'login'})
               })
               .catch(err => {
-                let msg = api.users.HandlerErrors.resetPassword(err)
+                let msg = this.handleRequestErrors.users.resetPassword(err)
                 if(msg) this.error = { show: true, msg }
               })
               .then(() => this.processing = false)

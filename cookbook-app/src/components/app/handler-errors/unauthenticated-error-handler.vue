@@ -1,5 +1,5 @@
 <template>
-  <b-modal v-model="unAuthenticatedError.show" title="Sessione scaduta" centered
+  <b-modal v-model="value.show" title="Sessione scaduta" centered
            @ok="continueHere" @cancel="goLogin" hide-header-close no-close-on-esc no-close-on-backdrop>
     <template #modal-ok>Continua</template>
     <template #modal-cancel>Login</template>
@@ -13,14 +13,10 @@
 <script>
 export default {
   name: "unauthenticated-error-handler",
-  computed: {
-    unAuthenticatedError: {
-      get(){
-        return this.$store.state.requestError.unAuthenticatedError
-      },
-      set(val){
-        this.$store.commit('showUnAuthenticatedError', { show: val })
-      }
+  props: {
+    value: {
+      show: Boolean,
+      message: String
     }
   },
   methods: {
@@ -28,9 +24,9 @@ export default {
       this.$router.push({name: 'login'})
     },
     continueHere(){
-      if(this.unAuthenticatedError._forbiddenPage) this.$router.replace({name: 'homepage'})
+      if(this.value._forbiddenPage) this.$router.replace({name: 'homepage'})
       else {
-        this.unAuthenticatedError = false
+        this.$emit('input', {show: false, message:''})
         // TODO: find way to no use 'this.$router.go' when request status is 401
         // this.$router.go(0)
       }

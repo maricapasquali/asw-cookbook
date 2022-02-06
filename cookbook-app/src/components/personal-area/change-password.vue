@@ -25,7 +25,6 @@
 <script>
 
 import api from '@api'
-import {PasswordValidator} from "@app/modules/validator";
 import {mapGetters} from "vuex";
 
 export default {
@@ -83,11 +82,11 @@ export default {
                .then(({data}) => {
                  console.log(data)
                  this.$emit('onChangePassword', data)
-                 this.socket.emit('user:update:password')
+                 this.$socket.emit('user:update:password')
                  this.show = false
                })
                .catch(err => {
-                 let message = api.users.HandlerErrors.changePassword(err)
+                 let message = this.handleRequestErrors.users.changePassword(err)
                  if(message) this.error = {show: true, message}
                })
                .then(() => this.processing = false)

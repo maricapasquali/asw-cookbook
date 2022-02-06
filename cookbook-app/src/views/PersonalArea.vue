@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import api from "@api"
+
 import {mapActions, mapGetters} from "vuex";
 
 export default {
@@ -60,18 +60,21 @@ export default {
       skeleton: 4,
 
       currentTab: 0,
-      reloadCurrentTab: false,
 
       tabs: [],
       tabsSigned: ['account', 'recipes', 'foods', 'friends', 'chats', 'notifications'],
       tabsAdmin: ['account', 'foods',  'reports', 'users','chats', 'notifications' ]
     }
   },
-  created() {
+  watch: {
+    active(val){
+      let find = this.tabs.find(o => o.id === val)
+      find.selected = true
+    }
+  },
+  created(){
     (this.isAdmin ? this.tabsAdmin : this.isSigned ? this.tabsSigned: [])
         .forEach(tab => this.tabs.push(this._mapping(tab)))
-  },
-  mounted(){
     console.log(`CHECK IF YOU IS AUTHORIZED ...`)
     if(this.accessToken){
 
@@ -79,21 +82,26 @@ export default {
 
         this.currentTab = this.tabs.findIndex(t => t.id === this.active)
 
-        this.socket.on('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
-        this.socket.on('access-token:errors', api.users.HandlerErrors.session.checkAccessToken.bind(this))
+        this.$socket.on('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
+        this.$socket.on('access-token:errors', this.onAccessTokenError.bind(this))
+        this.$socket.on('check:access-token', this.onAccessTokenOk.bind(this))
 
-        this.socket.emit('check:access-token', {_id: this.userIdentifier, resourceID: this.user})
+        this.$socket.emit('check:access-token', {_id: this.userIdentifier, resourceID: this.user})
 
-      } else api.users.HandlerErrors.session.wrongUserSession()
+      } else {
+        this.handleRequestErrors.session.wrongUserSession()
+        this.loading = true
+      }
 
     } else this.$router.replace({name: 'login'});
   },
   beforeDestroy() {
-    this.socket.off('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
-    this.socket.off('access-token:errors', api.users.HandlerErrors.session.checkAccessToken.bind(this))
+    this.$socket.off('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
+    this.$socket.off('access-token:errors', this.onAccessTokenError.bind(this))
+    this.$socket.off('check:access-token', this.onAccessTokenOk.bind(this))
   },
   computed: {
-    ...mapGetters(['accessToken', 'refreshToken', 'userIdentifier', 'socket', 'isSigned', 'isAdmin']),
+    ...mapGetters(['accessToken', 'userIdentifier', 'isSigned', 'isAdmin']),
 
     user(){
       return this.$route.params.id
@@ -134,7 +142,6 @@ export default {
         selected: this._isActive(id),
         click: () => {
           this.$router.push({ name:  this._route(id) })
-          this.loading = false
         }
       }
     },
@@ -168,10 +175,24 @@ export default {
     },
 
     /* Listeners check ACCESS TOKEN */
+    onAccessTokenOk(){
+      this.loading = false
+     // let find = this.tabs.find(o => o.id === this.active)
+    },
     onAccessTokenNotOk({description}){
       console.error("Expired access token. Required another.")
       console.error(description)
       this.requestNewAccessToken()
+          .then(res => {
+            if(res?.response?.status === 200) this.loading = false
+
+            if(res?.response?.status === 401) this.$router.replace({ name: 'login' })
+          })
+    },
+    onAccessTokenError(description) {
+      console.error(description)
+      this.handleRequestErrors.session.checkAccessToken(description)
+      this.loading = true
     }
   },
 }

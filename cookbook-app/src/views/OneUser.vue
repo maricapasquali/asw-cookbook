@@ -58,13 +58,12 @@
 </template>
 
 <script>
-import {bus} from "@/main";
-import {dateFormat} from "@services/utils";
-import {RecipeCategories} from "@services/app";
+
+import {dateFormat} from "~/utils";
 
 import api from '@api'
 import {mapGetters} from "vuex";
-import {mapping} from "@services/api/users/friends/utils";
+import {mapping} from "@api/users/friends/utils";
 import NotFound from "./404";
 
 export default {
@@ -142,7 +141,7 @@ export default {
            if(!_limit) this.recipePaginationOptions.page = page
            console.debug('Recipes : ',  this.recipes)
          })
-         .catch(err => api.recipes.HandlerErrors.getRecipe(err))
+         .catch(err => this.handleRequestErrors.recipes.getRecipe(err))
     },
 
     othersRecipes(){
@@ -177,7 +176,7 @@ export default {
            console.debug('Friends : ',  this.friends)
 
          })
-         .catch(api.friends.HandlerError.getFriendOf)
+         .catch(this.handleRequestErrors.friends.getFriendOf)
     },
 
     othersFriends(){
@@ -223,24 +222,24 @@ export default {
     }
   },
   created() {
-    bus.$on('recipe:create', this.fetchRecipe.bind(this))
-    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$on('recipe:delete', this.fetchRecipe.bind(this))
+    this.$bus.$on('recipe:create', this.fetchRecipe.bind(this))
+    this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:delete', this.fetchRecipe.bind(this))
 
-    bus.$on('friend:add', this.fetchFriend.bind(this))
-    bus.$on('friend:remove', this.fetchFriend.bind(this))
+    this.$bus.$on('friend:add', this.fetchFriend.bind(this))
+    this.$bus.$on('friend:remove', this.fetchFriend.bind(this))
 
-    bus.$on('user:delete', this.onDeleteUser.bind(this))
+    this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
-    bus.$off('recipe:create', this.fetchRecipe.bind(this))
-    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$off('recipe:delete', this.fetchRecipe.bind(this))
+    this.$bus.$off('recipe:create', this.fetchRecipe.bind(this))
+    this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$off('recipe:delete', this.fetchRecipe.bind(this))
 
-    bus.$off('friend:add', this.fetchFriend.bind(this))
-    bus.$off('friend:remove', this.fetchFriend.bind(this))
+    this.$bus.$off('friend:add', this.fetchFriend.bind(this))
+    this.$bus.$off('friend:remove', this.fetchFriend.bind(this))
 
-    bus.$off('user:delete', this.onDeleteUser.bind(this))
+    this.$bus.$off('user:delete', this.onDeleteUser.bind(this))
   },
   mounted() {
     this.getRecipes()

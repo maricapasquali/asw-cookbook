@@ -72,12 +72,12 @@ export default {
          .deleteAccount(this.id, this.accessToken)
          .then(({data}) => {
             console.debug(data)
-            this.socket.emit('user:delete', this.id)
+            this.$socket.emit('user:delete', this.id)
             this.$emit("onDeleteAccount", data)
             this.show = false
          })
          .catch(err => {
-            let message = api.users.HandlerErrors.deleteAccount(err)
+            let message = this.handleRequestErrors.users.deleteAccount(err)
             if(message) this.error = {show: true, message}
          })
          .finally(() => this.processing = false)

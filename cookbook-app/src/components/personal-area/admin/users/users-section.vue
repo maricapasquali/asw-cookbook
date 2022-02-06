@@ -101,9 +101,9 @@
 </template>
 
 <script>
-import {bus} from '@/main'
+
 import api from '@api'
-import {dateFormat} from "@services/utils";
+import {dateFormat} from "~/utils";
 import {mapGetters} from "vuex";
 import {_goToChat} from '@components/chats/utils'
 export default {
@@ -243,7 +243,7 @@ export default {
                    return data.items.map(u => this.remapping(u))
                 })
                .catch(err => {
-                 api.users.HandlerErrors.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
+                 this.handleRequestErrors.users.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
                  return []
                })
                .finally(() => this.pagination.isBusy = false)
@@ -297,14 +297,14 @@ export default {
     }
   },
   created() {
-    bus.$on('user:signup', this.fetchUsers.bind(this))
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.fetchUsers.bind(this))
+    this.$bus.$on('user:signup', this.fetchUsers.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.fetchUsers.bind(this))
   },
   beforeDestroy() {
-    bus.$off('user:signup', this.fetchUsers.bind(this))
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.fetchUsers.bind(this))
+    this.$bus.$off('user:signup', this.fetchUsers.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.fetchUsers.bind(this))
   }
 }
 </script>

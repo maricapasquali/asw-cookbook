@@ -25,8 +25,6 @@
 
 <script>
 
-import {ReaderStreamImage, ReaderStreamVideo} from "@services/filesystem";
-
 export default {
   name: "preview-uploader",
   props: {

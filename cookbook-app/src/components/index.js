@@ -1,76 +1,79 @@
-import CenterContainer from './center-container'
-import PreviewUploader from "./preview-uploader";
-import Loading from "./loading"
-import SelectWithImage from "./select-with-image";
-import WrapLoading from "./wrap-loading";
-import ElapsedTime from "./elapsedTime";
-import MiniTextEditor from "./mini-text-editor"
+// DIRECTIVES
+import directives from '@components/directives'
 
-import ServerErrorHandler from './app/handler-errors/server-error-handler'
-import BadRequestErrorHandler from './app/handler-errors/bad-request-error-handler'
-import UnAuthenticatedErrorHandler from './app/handler-errors/unauthenticated-error-handler'
-import ForbiddenErrorHandler from './app/handler-errors/forbidden-error-handler'
-import NotFoundErrorHandler from './app/handler-errors/not-found-error-handler'
+//COMPONENTS
+import CenterContainer from '@components/center-container'
+import PreviewUploader from "@components/preview-uploader";
+import Loading from "@components/loading"
+import SelectWithImage from "@components/select-with-image";
+import WrapLoading from "@components/wrap-loading";
+import ElapsedTime from "@components/elapsedTime";
+import MiniTextEditor from "@components/mini-text-editor"
 
-import InputPassword from "./app/input-password";
-import ModalAlert from "./app/modal-alert"
-import NotAuthorizedArea from "./app/not-authorized-area"
-import Navigator from "./app/navigator"
-import Footer from "./app/footer"
-import NutrientsTable from "./app/nutrients-table"
-import CountryImage from "./app/country-image"
-import Avatar from "./app/avatar"
-import Like from "./app/like"
-import BFriendship from "./app/b-friendship"
+import ServerErrorHandler from '@components/app/handler-errors/server-error-handler'
+import BadRequestErrorHandler from '@components/app/handler-errors/bad-request-error-handler'
+import UnAuthenticatedErrorHandler from '@components/app/handler-errors/unauthenticated-error-handler'
+import ForbiddenErrorHandler from '@components/app/handler-errors/forbidden-error-handler'
+import NotFoundErrorHandler from '@components/app/handler-errors/not-found-error-handler'
 
-import SignUp from "./login/SignUp";
+import InputPassword from "@components/app/input-password";
+import ModalAlert from "@components/app/modal-alert"
+import NotAuthorizedArea from "@components/app/not-authorized-area"
+import Navigator from "@components/app/navigator"
+import Footer from "@components/app/footer"
+import NutrientsTable from "@components/app/nutrients-table"
+import CountryImage from "@components/app/country-image"
+import Avatar from "@components/app/avatar"
+import Like from "@components/app/like"
+import BFriendship from "@components/app/b-friendship"
 
-import UserInformation from "./personal-area/user-information"
-import DeleteAccount from "./personal-area/delete-account"
-import ChangeUserID from "./personal-area/change-userid"
-import ChangePassword from "./personal-area/change-password"
-import RecipesSections from "./personal-area/recipes/recipe-sections"
-import LikerList from "./personal-area/recipes/liker-list"
-import RecipeForm from "./personal-area/recipes/recipe-form"
-import FoodSection from "./personal-area/foods/food-section"
-import ReportsSection from "./personal-area/admin/reports/reports-section"
-import UsersSection from "./personal-area/admin/users/users-section"
-import FriendsSection from "./personal-area/friends/friends-section"
-import NotificationsSection from "./personal-area/notifications/notifications-section"
+import SignUp from "@components/login/SignUp";
 
-import Chat from './chats/chat'
-import ChatHeader from './chats/chat-header'
-import ChatFooter from './chats/chat-footer'
-import ChatMessage from './chats/chat-message'
-import ChatAttachments from './chats/chat-attachments'
-import AttachmentPreview from './chats/attachment-preview'
-import ChatTyping from './chats/chat-typing'
+import UserInformation from "@components/personal-area/user-information"
+import DeleteAccount from "@components/personal-area/delete-account"
+import ChangeUserID from "@components/personal-area/change-userid"
+import ChangePassword from "@components/personal-area/change-password"
+import RecipesSections from "@components/personal-area/recipes/recipe-sections"
+import LikerList from "@components/personal-area/recipes/liker-list"
+import RecipeForm from "@components/personal-area/recipes/recipe-form"
+import FoodSection from "@components/personal-area/foods/food-section"
+import ReportsSection from "@components/personal-area/admin/reports/reports-section"
+import UsersSection from "@components/personal-area/admin/users/users-section"
+import FriendsSection from "@components/personal-area/friends/friends-section"
+import NotificationsSection from "@components/personal-area/notifications/notifications-section"
 
-import ChatItem from './personal-area/chats/chat-item'
-import ChatsSection from './personal-area/chats/chats-section'
+import Chat from '@components/chats/chat'
+import ChatHeader from '@components/chats/chat-header'
+import ChatFooter from '@components/chats/chat-footer'
+import ChatMessage from '@components/chats/chat-message'
+import ChatAttachments from '@components/chats/chat-attachments'
+import AttachmentPreview from '@components/chats/attachment-preview'
+import ChatTyping from '@components/chats/chat-typing'
 
-import FoodForm from "./foods/food-form"
-import FoodFinder from "./foods/food-finder"
-import BarcodeScanner from "./foods/barcode-scanner"
+import ChatItem from '@components/personal-area/chats/chat-item'
+import ChatsSection from '@components/personal-area/chats/chats-section'
 
-import PreviewRecipeTutorial from "./recipes/preview-recipe-tutorial"
-import PreviewRecipeImage from "./recipes/preview-recipe-image"
-import RecipeDetails from "./recipes/recipe-details"
-import IngredientList from "./recipes/ingredient-list"
+import FoodForm from "@components/foods/food-form"
+import FoodFinder from "@components/foods/food-finder"
+import BarcodeScanner from "@components/foods/barcode-scanner"
 
-import Comments from "./comments/comments"
-import Comment from "./comments/comment"
+import PreviewRecipeTutorial from "@components/recipes/preview-recipe-tutorial"
+import PreviewRecipeImage from "@components/recipes/preview-recipe-image"
+import RecipeDetails from "@components/recipes/recipe-details"
+import IngredientList from "@components/recipes/ingredient-list"
 
-import SearchUsers from "./searches/user/search-users"
-import SearchRecipes from "./searches/recipe/search-recipes"
-import CheckboxPillButton from "./searches/recipe/checkbox-pill-button"
-import FilterApply from "./searches/recipe/filter-apply"
-import WorldMap from "./searches/recipe/world-map"
+import Comments from "@components/comments/comments"
+import Comment from "@components/comments/comment"
 
-import ContainerCollapsable from './one-user/container-collapsable'
+import SearchUsers from "@components/searches/user/search-users"
+import SearchRecipes from "@components/searches/recipe/search-recipes"
+import CheckboxPillButton from "@components/searches/recipe/checkbox-pill-button"
+import FilterApply from "@components/searches/recipe/filter-apply"
+import WorldMap from "@components/searches/recipe/world-map"
 
+import ContainerCollapsable from '@components/one-user/container-collapsable'
 
-export default {
+const components = {
     CenterContainer,
     PreviewUploader,
     Loading,
@@ -140,4 +143,11 @@ export default {
     WorldMap,
 
     ContainerCollapsable
+}
+
+export default function install(Vue, options){
+    Object.values(components).forEach(comp => Vue.component(comp.name, comp))
+    Object.entries(directives).forEach(([id, directive]) => Vue.directive(id, directive))
+
+    console.log('Install plugin Custom Components and directives ...')
 }

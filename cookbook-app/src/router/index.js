@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import routes from "./routes";
-import * as handlerErrors from './handlerErrors'
 
 const originalPush = Router.prototype.push
 Router.prototype.push = function push (location) {
@@ -13,8 +12,6 @@ Router.prototype.replace = function replace (location) {
 }
 
 Vue.use(Router)
-
-export const HandlerErrors = handlerErrors
 
 export function scrollToRouterHash(){
     if(this.$route.hash) {

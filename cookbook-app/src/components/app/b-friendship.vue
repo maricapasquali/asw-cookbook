@@ -26,7 +26,6 @@
 <script>
 import api from '@api'
 import {mapGetters} from "vuex";
-import {bus} from "@/main";
 import {_goToChat} from '@components/chats/utils'
 
 export default {
@@ -57,7 +56,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['socket', 'accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned', 'userFriends']),
+    ...mapGetters(['socket', 'accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned']),
 
     chatId(){
       return 'btn-chat-' + this.otherUser._id
@@ -79,10 +78,10 @@ export default {
           .requestFriendShip(this.otherUser._id, this.accessToken)
           .then(({ data }) => {
             console.log('Request friendship pending. ')
-            this.socket.emit('friendship:request', data)
+            this.$socket.emit('friendship:request', data)
             return true
           })
-          .catch(err => api.friends.HandlerError.requestFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .catch(err => this.handleRequestErrors.friends.requestFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
           .then(duplicate => this.requestJustSend = duplicate)
     },
 
@@ -94,9 +93,9 @@ export default {
             console.log('Friendship is over. ')
             this.justFollow = false
             this.isMyFriend = false
-            this.socket.emit('friendship:remove', this.otherUser)
+            this.$socket.emit('friendship:remove', this.otherUser)
           })
-          .catch(err => api.friends.HandlerError.breakFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .catch(err => this.handleRequestErrors.friends.breakFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
     },
 
     //UPDATE
@@ -105,10 +104,10 @@ export default {
           .updateFriendShip(this.userIdentifier, this.otherUser._id, { state: state }, this.accessToken)
           .then(({data}) => {
             console.log('State friendship is '+state+'. ')
-            this.socket.emit('friendship:update', data)
+            this.$socket.emit('friendship:update', data)
             return state
           })
-          .catch(err => api.friends.HandlerError.updateFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .catch(err => this.handleRequestErrors.friends.updateFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
           .then(actualState => {
             if(actualState){
               this.requestToUpdate = false
@@ -138,8 +137,8 @@ export default {
     },
     onCheckFriendshipState(vl){
        if(vl){
-         this.socket.emit('check:user:friendship', vl._id)
-         this.socket.on('friendship:state:'+ vl._id, this.setFriendShip.bind(this, vl))
+         this.$socket.emit('check:user:friendship', vl._id)
+         this.$socket.on('friendship:state:'+ vl._id, this.setFriendShip.bind(this, vl))
        }
     },
 
@@ -188,14 +187,14 @@ export default {
   mounted() {
     console.debug('mounted b-friendship')
     this.onCheckFriendshipState(this.otherUser)
-    bus.$on('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
-    bus.$on('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
-    bus.$on('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
+    this.$bus.$on('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
+    this.$bus.$on('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
+    this.$bus.$on('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
   },
   beforeDestroy() {
-    bus.$off('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
-    bus.$off('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
-    bus.$off('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
+    this.$bus.$off('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
+    this.$bus.$off('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
+    this.$bus.$off('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
   }
 }
 </script>
