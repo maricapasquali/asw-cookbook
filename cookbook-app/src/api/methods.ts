@@ -35,14 +35,14 @@ instance.interceptors.response.use(function(res) {
         const originalConfig = err.config;
         console.error("interceptors.response : err = ", err)
 
-        let userIdentifier = store.getters.userIdentifier
+        let userIdentifier = store.getters['session/userIdentifier']
         console.debug('User is logged = ', userIdentifier)
 
         if (err.response && err.response.status === 401 && userIdentifier && !originalConfig._retry && !originalConfig.url.includes('refresh-token')) {
             originalConfig._retry = true;
             try {
-                const oldAccessToken = store.getters.accessToken
-                const refreshToken = store.getters.refreshToken
+                const oldAccessToken = store.getters['session/accessToken']
+                const refreshToken = store.getters['session/refreshToken']
 
                 const rs = await newAccessToken(userIdentifier,{ refresh_token: refreshToken }, oldAccessToken)
                 const { access_token } = rs.data;

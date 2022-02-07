@@ -8,8 +8,7 @@
 
 <script>
 
-import api from "@api";
-import {mapGetters} from "vuex";
+import {mapActions, mapGetters} from "vuex";
 
 export default {
   name: "like",
@@ -33,9 +32,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      accessToken: 'session/accessToken',
       userIdentifier: 'session/userIdentifier',
-      isAdmin: 'session/isAdmin'
     }),
     classesLike(){
       return {
@@ -45,9 +42,18 @@ export default {
     }
   },
   mounted() {
-    this.makeLike = this.value.find(l => l.user && l.user._id === this.userIdentifier) !== undefined
+    if(this.userIdentifier) {
+      this.makeLike = this.value.find(l => l.user && l.user._id === this.userIdentifier) !== undefined
+    } else {
+      if(this.comment) this.anonymousJustLikeCommentInSession(this.comment._id).then(val => this.makeLike = val)
+      else this.anonymousJustLikeRecipeInSession(this.recipe._id).then(val => this.makeLike = val)
+    }
   },
   methods: {
+    ...mapActions({
+      anonymousJustLikeCommentInSession: 'likes/anonymous:is:like-comment',
+      anonymousJustLikeRecipeInSession: 'likes/anonymous:is:like-recipe'
+    }),
     onLike(){
       if(!this.noLike){
 
@@ -58,9 +64,8 @@ export default {
           if(this.userIdentifier) like = this.value.find(l => l.user && l.user._id === this.userIdentifier);
           else like = this.value.find(l => !l.user)
           console.debug('Like to remove = ', JSON.stringify(like, null, 1))
-          api.recipes
-             .likes
-             .unLike(this.recipe.owner._id, this.recipe._id, like._id , this.accessToken, commentID)
+
+          this.$store.dispatch('likes/remove', { ownerID: this.recipe.owner._id, recipeID: this.recipe._id, likeID: like._id, commentID })
              .then(({data})=> {
                 console.debug('Unlike ', data)
                 this.$emit('input', this.value.filter(l => l._id !== like._id))
@@ -74,9 +79,7 @@ export default {
 
         }
         else {
-          api.recipes
-             .likes
-             .like(this.recipe.owner._id, this.recipe._id, this.accessToken, commentID)
+          this.$store.dispatch('likes/add', { ownerID: this.recipe.owner._id, recipeID: this.recipe._id, commentID })
              .then(({data})=> {
                   console.debug('Like ', data)
 
