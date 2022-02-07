@@ -108,7 +108,6 @@
 
 <script>
 
-import api from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -238,10 +237,10 @@ export default {
       let request = null
       switch (this.mode) {
         case 'create':
-          request = api.foods.createFood(this.food, this.accessToken)
+          request = this.$store.dispatch('foods/create', this.food)
           break;
         case 'update':
-          request = api.foods.updateFood(this.value._id, this.food, this.accessToken)
+          request = this.$store.dispatch('foods/update', {_id: this.value._id, body: this.food})
           break;
         default: throw new Error('mode is not valid.')
       }

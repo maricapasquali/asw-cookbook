@@ -2,8 +2,6 @@ import api from '@api'
 
 export default {
     all({ dispatch, rootState, rootGetters }) {
-        console.log('API IN ROOOT STATE ',rootState)
-        console.log('API IN ROOOT STATE ',rootGetters)
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
         return api.notifications.getNotifications(rootState.session.user._id, rootState.session.accessToken)

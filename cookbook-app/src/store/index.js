@@ -3,6 +3,7 @@ import Vuex from "vuex"
 
 import session from './modules/session'
 import notifications from './modules/notifications'
+import foods from './modules/foods'
 
 import actions from './actions'
 import getters from './getters'
@@ -14,7 +15,8 @@ Vue.use(Vuex)
 export default new Vuex.Store({
     modules: {
         session,
-        notifications
+        notifications,
+        foods
     },
     state: {
         _genders: app.Genders,

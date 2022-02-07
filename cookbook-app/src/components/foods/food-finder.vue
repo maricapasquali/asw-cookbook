@@ -35,7 +35,6 @@
 <script>
 import {ImageBarcodeReader, StreamBarcodeReader} from "vue-barcode-reader";
 
-import api from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -92,14 +91,13 @@ export default {
      if(this.barcodeSearch){
        console.debug('FoodFinder : On found = ', barcodeNumber)
 
-       api.foods
-          .getFoods(this.accessToken, {barcode: barcodeNumber})
-          .then(({data}) => {
-            console.debug(data)
-            if (data.total === 0) this.onError({ barcode: barcodeNumber, error: 'not found' })
-            else this.$emit('found', data.items[0])
-          })
-          .catch(err => this.handleRequestErrors.foods.searchFood(err, {_forbiddenPage: !this.isAccessibleArea }))
+       this.$store.dispatch('foods/filterByBarcode', barcodeNumber)
+           .then(({data}) => {
+             console.debug(data)
+             if (data.total === 0) this.onError({ barcode: barcodeNumber, error: 'not found' })
+             else this.$emit('found', data.items[0])
+           })
+           .catch(err => this.handleRequestErrors.foods.searchFood(err, {_forbiddenPage: !this.isAccessibleArea }))
 
      } else throw new Error('BarcodeSearch: Funzionalità non attivata.')
 
@@ -120,8 +118,7 @@ export default {
         this.foods = []
       }
       else {
-        api.foods
-           .getFoods(this.accessToken, {name: _startWith})
+        this.$store.dispatch('foods/filterByName', _startWith)
            .then(({data}) => {
              console.debug(data)
              this.foods = data.items
@@ -147,8 +144,7 @@ export default {
     },
 
     async getFood(foodID){
-      return await api.foods
-                      .getFood(foodID, this.accessToken)
+      return await this.$store.dispatch('foods/findById', foodID)
                       .then(({data}) => data)
                       .catch(err => {
                         this.handleRequestErrors.foods.getFood(err, {_forbiddenPage: !this.isAccessibleArea })

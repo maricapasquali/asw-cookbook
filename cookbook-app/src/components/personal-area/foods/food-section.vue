@@ -358,8 +358,7 @@ export default {
       let forPage = perPage || this.pagination.for_page
       let page = currentPage || this.pagination.currentPage
       this.pagination.isBusy = true
-      return api.foods
-                .getFoods(this.accessToken, {page: page, limit: forPage, ...({...ctx.filter})})
+      return this.$store.dispatch('foods/all', {page: page, limit: forPage, ...({...ctx.filter})})
                 .then(({data}) =>{
                     console.debug('Foods = ',data.items, ', total = ', data.total)
 
