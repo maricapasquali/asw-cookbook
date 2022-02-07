@@ -7,12 +7,14 @@ export default {
         if(getters['session/isLoggedIn']){
             let unreadNotification = dispatch('notifications/not-read');
             let unreadChatMessage = dispatch('session/getNumberOfUnReadChatsMessages');
-            return Promise.all([unreadNotification, unreadChatMessage])
+            let shoppingList = dispatch('shopping-list/get');
+            return Promise.all([unreadNotification, unreadChatMessage, shoppingList])
         }
         return Promise.resolve()
     },
     reset({commit}){
         commit('session/end')
         commit('notifications/reset')
+        commit('shopping-list/reset')
     }
 }

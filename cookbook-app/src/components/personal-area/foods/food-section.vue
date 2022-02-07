@@ -189,7 +189,6 @@
 
 <script>
 
-import api from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -201,7 +200,6 @@ export default {
 
       /* Shopping list */
       loadingSL: true,
-      shopping_list: [],
       foodSelected: '',
 
       /*Foods */
@@ -245,11 +243,11 @@ export default {
 
   computed: {
     ...mapGetters({
-      accessToken: 'session/accessToken',
       isSigned: 'session/isSigned',
       isAdmin: 'session/isAdmin',
       userIdentifier: 'session/userIdentifier',
-      username: 'session/username'
+      username: 'session/username',
+      shopping_list: 'shopping-list/list'
     }),
 
     classesShoppingList(){
@@ -284,16 +282,11 @@ export default {
       this.foodSelected = food._id
       const index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
       if(index === -1) {
-
-        let _food = {food: this.foodSelected, checked: false}
-        api.shoppingList
-           .createShoppingListPoint(this.userIdentifier, _food, this.accessToken)
+        this.$store.dispatch('shopping-list/add-point', this.foodSelected)
            .then(({data})=>{
               console.debug('New point = ', data)
-              // this.shopping_list.push(data)
-              this.shopping_list.unshift(data)
-
               console.debug('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
+              console.debug(this.shopping_list)
            })
            .catch(this.handleRequestErrors.shoppingList.createShoppingListPoint)
            .then(duplicate => {
@@ -306,32 +299,28 @@ export default {
     },
     patchShoppingList(index, checked){
       let point = this.shopping_list[index]
-      api.shoppingList
-         .updateShoppingListPoint(this.userIdentifier, point._id, { checked: checked } , this.accessToken)
+      this.$store.dispatch('shopping-list/update-point', {pointID: point._id, checked})
          .then(({data}) => {
-           point.checked = checked
            console.debug(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(point))
+           console.debug(this.shopping_list)
          })
          .catch(this.handleRequestErrors.shoppingList.updateShoppingListPoint)
     },
     removeFromShoppingList(index){
       let point = this.shopping_list[index]
-      api.shoppingList
-         .deleteShoppingListPoint(this.userIdentifier, point._id, this.accessToken)
+      this.$store.dispatch('shopping-list/remove-point', point._id)
          .then(({data}) => {
-            console.debug('Remove from shopping list: ', JSON.stringify(point))
-            this.shopping_list.splice(index, 1)
+            console.debug('Remove from shopping list : ', JSON.stringify(point))
+            console.debug(this.shopping_list)
          })
          .catch(this.handleRequestErrors.shoppingList.deleteShoppingListPoint)
     },
     getShoppingList(){
-      api.shoppingList
-         .getShoppingList(this.userIdentifier, this.accessToken)
-         .then(({data}) => {
-            this.shopping_list = data
-            this.loadingSL = false
-         })
-         .catch(this.handleRequestErrors.shoppingList.getShoppingList)
+      if(this.shopping_list.length > 0) this.loadingSL = false
+      else
+        this.$store.dispatch('shopping-list/get')
+           .then(({data}) => this.loadingSL = false)
+           .catch(this.handleRequestErrors.shoppingList.getShoppingList)
     },
 
     // Foods
