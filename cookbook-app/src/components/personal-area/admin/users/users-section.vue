@@ -103,7 +103,6 @@
 <script>
 
 import api from '@api'
-import {dateFormat} from "~/utils";
 import {mapGetters} from "vuex";
 import {_goToChat} from '@components/chats/utils'
 export default {

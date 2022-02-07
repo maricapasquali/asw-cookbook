@@ -71,7 +71,6 @@
 
 import api from '@api'
 import {scrollToRouterHash} from "@router";
-import {dateFormat} from "~/utils";
 import {mapGetters} from "vuex";
 
 export default {
@@ -87,7 +86,9 @@ export default {
     name(user){
       return user && user.userID ? user.userID : 'Anonimo'
     },
-    dateFormat: dateFormat
+    dateFormat: function (text){
+      return dateFormat(text)
+    }
   },
   computed:{
     ...mapGetters(['accessToken', 'socket']),

@@ -59,8 +59,6 @@
 
 <script>
 
-import {dateFormat} from "~/utils";
-
 import api from '@api'
 import {mapGetters} from "vuex";
 import {mapping} from "@api/users/friends/utils";
@@ -80,10 +78,12 @@ export default {
       return this.friends.length >0 && this.friends.length < this.friendsTotal
     },
 
-    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned', 'socket'])
+    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned', 'socket', 'getRecipeCategoryByValue'])
   },
   filters: {
-    dataFormatter: dateFormat
+    dataFormatter: function (text){
+      return dateFormat(text)
+    }
   },
   data(){
     return {
@@ -118,7 +118,7 @@ export default {
     /* User Recipes Section */
     remappingRecipe(recipe){
 
-      let _category = RecipeCategories.find(recipe.category)
+      let _category = this.getRecipeCategoryByValue(recipe.category)
       if(_category) recipe.category = _category
 
       return recipe

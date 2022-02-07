@@ -8,6 +8,8 @@
 </template>
 
 <script>
+import {mapGetters} from "vuex";
+
 export default {
   name: "country-image",
   props: {
@@ -36,13 +38,14 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['getCountryByValue']),
     imgId(){
       return  'country-image-'+ this.id
     }
   },
   methods: {
     select(val){
-      this.selected = Countries.find(val)
+      this.selected = this.getCountryByValue(val)
     }
   },
   mounted() {

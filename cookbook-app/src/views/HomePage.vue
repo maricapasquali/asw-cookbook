@@ -131,7 +131,7 @@ export default {
       return this.docs.length > 0 && this.docs.length < this.total
     },
 
-    ...mapGetters(['userIdentifier', 'accessToken', 'isAdmin'])
+    ...mapGetters(['userIdentifier', 'accessToken', 'isAdmin', 'getRecipeCategoryByValue'])
   },
   methods: {
     redirectToRecipe(rec){
@@ -150,7 +150,7 @@ export default {
     /* -- REQUEST --*/
 
     _remapRecipe(recipe){
-      let category = RecipeCategories.find(recipe.category)
+      let category = this.getRecipeCategoryByValue(recipe.category)
       if(category) recipe.category = category
     },
 

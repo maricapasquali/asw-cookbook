@@ -32,7 +32,7 @@
                           <b-col class="mb-2"> <strong>Categorie</strong> </b-col>
                           <b-col> <checkbox-pill-button v-model="filters.categories" :options="categories" class="w-100"/> </b-col>
                         </b-row>
-                        <b-row cols="1" class="mt-3" v-if="filters.countries.length">
+                        <b-row cols="1" class="mt-3" v-if="countries.length">
                           <b-col class="mb-2"> <strong>Paesi</strong> </b-col>
                           <b-col> <checkbox-pill-button v-model="filters.countries" :options="countries" class="w-100"/> </b-col>
                         </b-row>
@@ -91,17 +91,17 @@
 
             <filter-apply  v-for="(diet, index) in filters.diets" :key="diet" class="filters"
                            @remove="removeFilter('diets', index)">
-                <template #filter-name>{{ diet | fullName }} </template>
+                <template #filter-name>{{ _fullName(diet) }} </template>
             </filter-apply>
 
             <filter-apply v-for="(category, index) in filters.categories" :key="category" class="filters"
                           @remove="removeFilter('categories', index)">
-              <template #filter-name>{{ category | fullName }} </template>
+              <template #filter-name>{{ _fullName(category) }} </template>
             </filter-apply>
 
             <filter-apply v-for="(country, index) in filters.countries" :key="country" class="filters"
                           @remove="removeFilter('countries', index)">
-              <template #filter-name>{{ country | fullName }} </template>
+              <template #filter-name>{{ _fullName(country) }} </template>
             </filter-apply>
 
             <filter-apply v-for="(ingredient, index) in filters.ingredients" :key="ingredient._id" class="filters"
@@ -126,7 +126,7 @@
                           <b-col cols="7"> {{doc.name}} </b-col>
                           <b-col cols="5" class="text-right" v-if="doc.category || doc.country">
                             <b-row>
-                              <b-col> <span>{{ doc.category | fullName }}</span> </b-col>
+                              <b-col> <span>{{ _fullName(doc.category) }}</span> </b-col>
                               <b-col v-if="doc.country" class="pl-0"> <country-image v-model="doc.country" heigth="0" :id="index"/> </b-col>
                             </b-row>
                           </b-col>
@@ -181,8 +181,6 @@ export default {
       loading: true,
 
       countries: [],
-      diets: [],
-      categories: [],
 
       filters: {
         countries: [],
@@ -211,19 +209,12 @@ export default {
       }
     }
   },
-  filters: {
-    fullName(val) {
-      let country = Countries.find(val)
-      if(country) return country.text
-      let diet = Diets.find(val)
-      if(diet) return diet.text
-      let category = RecipeCategories.find(val)
-      if(category) return category.text
-      return ''
-    }
-  },
   computed:{
-    ...mapGetters(['accessToken']),
+    ...mapGetters(['accessToken', 'getCountryByValue', 'getRecipeCategoryByValue', 'getDietByValue']),
+    ...mapGetters({
+      categories: 'recipeCategories',
+      diets: 'concreteDiets',
+    }),
 
     showMap(){
       return this.withMap && this.$data._showMap && this.countries.length >0
@@ -252,6 +243,17 @@ export default {
     },
   },
   methods: {
+
+    _fullName(val) {
+      let country = this.getCountryByValue(val)
+      if(country) return country.text
+      let diet = this.getDietByValue(val)
+      if(diet) return diet.text
+      let category = this.getRecipeCategoryByValue(val)
+      if(category) return category.text
+      return ''
+    },
+
     _onShowFilters(){
       this.$data._showMap = true
     },
@@ -278,11 +280,11 @@ export default {
          .then(({data}) => {
            console.debug('Result rest api = ', data)
 
-           this.countries = data.filter(cn => Countries.find(cn.country))
-               .map(cn => ({...Countries.find(cn.country), ...{recipes: cn.number}}))
+           this.countries = data.filter(cn => this.getCountryByValue(cn.country))
+               .map(cn => ({...this.getCountryByValue(cn.country), ...{recipes: cn.number}}))
 
            if(this.withHistory) this._setFiltersFromRoute()
-
+           console.debug('this.countries = ', this.countries)
            return true
          })
          .catch(err => this.handleRequestErrors.recipes.getNumberRecipesForCountry(err))
@@ -401,19 +403,15 @@ export default {
     },
   },
   created() {
-    this.diets = Diets.get().filter(d => d.value !== '')
-    this.categories = RecipeCategories.get()
-
     if(this.withHistory) {
       window.onpopstate = function (e) {
         this._setFiltersFromRoute()
       }.bind(this)
     }
-  },
-  mounted() {
+
     if(!this.triggerSearch) this.getNumberRecipesForCountry()
-    else{
-      this.countries = Countries.get()
+    else {
+      this.countries = this.$store.getters.countries
       this.loading = false
     }
   }

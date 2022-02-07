@@ -99,8 +99,8 @@
             </b-col>
           </b-row>
           <b-row class="mt-2" align-h="between">
-            <b-col class="px-0" v-if="doc.category"> {{ doc.category | nameCategory }} </b-col>
-            <b-col v-if="doc.diet"> {{ doc.diet | nameDiet }} </b-col>
+            <b-col class="px-0" v-if="doc.category"> {{ nameCategory(doc.category) }} </b-col>
+            <b-col v-if="doc.diet"> {{ nameDiet(doc.diet) }} </b-col>
             <b-col class="text-right"> {{ doc.createdAt | dateFormat }}</b-col>
           </b-row>
         </b-container>
@@ -142,8 +142,6 @@
 
 <script>
 
-import {dateFormat} from "~/utils"
-
 import api from '@api'
 
 import {mapGetters} from "vuex";
@@ -166,7 +164,7 @@ export default {
   },
   computed: {
 
-    ...mapGetters(['userIdentifier', 'username', 'accessToken', 'isAdmin']),
+    ...mapGetters(['userIdentifier', 'username', 'accessToken', 'isAdmin', 'getDietByValue', 'getRecipeCategoryByValue']),
 
     youNotMakeLike(){
       return this.isAdmin || !this.doc.owner || this.doc.owner._id === this.userIdentifier
@@ -179,18 +177,19 @@ export default {
     }
   },
   filters: {
-    dateFormat: dateFormat,
-    nameCategory(text){
-      let category = RecipeCategories.find(text)
-      return category ? category.text : ''
-    },
-    nameDiet(text){
-      let diet = Diets.find(text)
-      return diet ? diet.text : ''
-    },
+    dateFormat: function (text){
+      return dateFormat(text)
+    }
   },
   methods: {
     scrollToRouterHash,
+
+    nameCategory(text){
+      return this.getRecipeCategoryByValue(text)?.text || ''
+    },
+    nameDiet(text){
+      return this.getDietByValue(text)?.text || ''
+    },
 
     isOwner(owner_recipe) {
       return owner_recipe._id === this.userIdentifier && owner_recipe.userID === this.username

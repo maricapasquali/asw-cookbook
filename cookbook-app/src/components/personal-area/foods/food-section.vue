@@ -189,8 +189,6 @@
 
 <script>
 
-import {dateFormat} from '~/utils'
-
 import api from '@api'
 import {mapGetters} from "vuex";
 

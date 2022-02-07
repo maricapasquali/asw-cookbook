@@ -188,7 +188,6 @@
 
 import api from '@api'
 
-import {Countries, Genders} from '~/app'
 import {mapGetters, mapMutations} from "vuex";
 
 export default {
@@ -202,8 +201,6 @@ export default {
   },
   data: function (){
     return {
-      countries: Countries.get(),
-      genders: Genders.get(),
       changeableUser: { information: {}, userID: '', _id: ''},
       user: { information: {}, userID: '', _id: ''},
       changeMode: false,
@@ -243,7 +240,7 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['userIdentifier', 'isAdmin', 'isSigned', 'accessToken', 'isLoggedIn', 'socket']),
+    ...mapGetters(['genders', 'getGenderByValue', 'countries', 'userIdentifier', 'isAdmin', 'isSigned', 'accessToken', 'isLoggedIn', 'socket']),
 
     oldProfileImage(){
       return this.user.information.img
@@ -257,7 +254,7 @@ export default {
               Object.values(this.validation).every(v => v === true)
     },
     gender: function (){
-      return Genders.find(this.user.information.sex).text
+      return this.getGenderByValue(this.user.information.sex)?.text
     },
     isOtherUser: function (){
       return this.userIdentifier !== this.id

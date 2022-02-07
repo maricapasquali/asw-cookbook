@@ -24,13 +24,13 @@
                   v-model="recipe.country"
                   placeholder="Seleziona ..."
                   type="text"
-                  :options="optionsCountry" />
+                  :options="countries" />
             </b-form-group>
           </b-col>
           <!-- DIET  -->
           <b-col>
             <b-form-group label="Regime alimentare" label-for="r-diet">
-              <b-form-select id="r-diet" v-model.trim="recipe.diet" :options="optionsDiet" >
+              <b-form-select id="r-diet" v-model.trim="recipe.diet" :options="diets" >
                 <template #first>
                   <b-form-select-option value="undefined" disabled> Seleziona ... </b-form-select-option>
                 </template>
@@ -42,7 +42,7 @@
             <b-form-group label="Categoria" label-for="r-category">
               <b-form-select id="r-category"
                              v-model.trim="recipe.category"
-                             :options="optionsCategory"
+                             :options="recipeCategories"
                              :state="validation.category"
                              @change="onInputRecipeCategory" >
                 <template #first>
@@ -171,8 +171,6 @@
 </template>
 
 <script>
-import {Countries, Diets, RecipeCategories} from '~/app'
-
 import api from '@api'
 import {mapGetters} from "vuex";
 
@@ -184,10 +182,6 @@ export default {
   },
   data(){
     return {
-      optionsCountry: Countries.get(),
-      optionsDiet: Diets.get(),
-      optionsCategory: RecipeCategories.get(),
-
       processing: false,
       show: false,
       recipe: {},
@@ -197,7 +191,8 @@ export default {
   },
   computed:{
 
-    ...mapGetters(['accessToken', 'userIdentifier', 'socket']),
+    ...mapGetters(['countries', 'diets', 'recipeCategories', 'accessToken', 'userIdentifier', 'socket',
+                   'getDietByValue', 'getRecipeCategoryByValue']),
 
     resetButtonClass(){
       return {
@@ -394,8 +389,8 @@ export default {
         _recipe.category = _recipe.category ? _recipe.category.value: undefined
         _recipe.diet =  _recipe.diet ? _recipe.diet.value : undefined
       }else{
-        _recipe.category = RecipeCategories.find(_recipe.category) || ''
-        _recipe.diet = Diets.find(_recipe.diet) || ''
+        _recipe.category = this.getRecipeCategoryByValue(_recipe.category) || ''
+        _recipe.diet = this.getDietByValue(_recipe.diet) || ''
       }
     },
 

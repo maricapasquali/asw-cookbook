@@ -184,9 +184,6 @@
 </template>
 
 <script>
-
-import {dateFormat} from "~/utils";
-
 import api from '@api'
 import {mapGetters} from "vuex";
 
@@ -258,9 +255,10 @@ export default {
     ...mapGetters([
       'accessToken',
       'userIdentifier',
-      'socket'
+      'socket',
+        'getDietByValue',
+        'getRecipeCategoryByValue'
     ]),
-
     itemsRecipes: {
       get(){
         if(this.searching.on){
@@ -294,7 +292,9 @@ export default {
     }
   },
   filters: {
-    dateFormat: dateFormat,
+    dateFormat: function (text){
+      return dateFormat(text)
+    },
   },
   methods:{
     tutorialNotFound(e){
@@ -364,12 +364,10 @@ export default {
     setDefaultValueOn(docs){
       const setting = (recipe) => {
 
-        let category = RecipeCategories.find(recipe.category)
+        let category = this.getRecipeCategoryByValue(recipe.category)
         if(category) recipe.category = category
 
-        let diet = Diets.find(recipe.diet)
-        recipe.diet = diet || Diets.find('')
-
+        recipe.diet = this.getDietByValue(recipe.diet) || this.getDietByValue('')
       }
       if(Array.isArray(docs)) docs.forEach(recipe => setting(recipe))
       else setting(docs)

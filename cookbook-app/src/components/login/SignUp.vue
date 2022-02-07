@@ -111,7 +111,7 @@
                       v-model="user.sex"
                       placeholder="Select gender"
                       type="text"
-                      :options="optionsGender">
+                      :options="genders">
                   </select-with-image>
                 </b-form-group>
 
@@ -126,7 +126,7 @@
                       v-model="user.country"
                       placeholder="Select country"
                       type="text"
-                      :options="optionsCountry">
+                      :options="countries">
                   </select-with-image>
                 </b-form-group>
                 <b-form-group
@@ -189,14 +189,11 @@
 
 <script>
 import api from '@api'
-import {Countries, Genders} from '~/app'
 import {mapGetters} from "vuex";
 export default {
   name: "sign-up",
   data: function() {
     return {
-      optionsGender: Genders.get(),
-      optionsCountry: Countries.get(),
       user:{
         img: new File([], "", undefined),
         firstname: '',
@@ -233,7 +230,7 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['socket']),
+    ...mapGetters(['socket', 'genders', 'countries']),
     validationInformation: function (){
       return this.validation.firstName && this.validation.lastName && this.validation.email
     },

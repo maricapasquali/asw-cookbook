@@ -101,7 +101,6 @@
   </li>
 </template>
 <script>
-import {dateFormat} from "~/utils";
 
 import api, {Server} from '@api'
 import {mapGetters} from "vuex";
@@ -137,7 +136,9 @@ export default {
     name(user){
       return user ? user.userID : "Anonimo"
     },
-    dateFormat: dateFormat
+    dateFormat: function (text){
+      return dateFormat(text)
+    }
   },
   computed:{
     commentId(){

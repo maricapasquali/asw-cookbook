@@ -65,7 +65,6 @@
 
 import {mapGetters, mapMutations} from "vuex";
 import api from '@api'
-import {dateFormat} from "~/utils";
 
 export default {
   name: "notifications-section",
@@ -108,7 +107,9 @@ export default {
     ...mapGetters(['userIdentifier', 'accessToken','isAdmin']),
   },
   filters: {
-    dateFormat
+    dateFormat: function (text){
+      return dateFormat(text)
+    }
   },
   methods: {
     deleteNotificationId(id){

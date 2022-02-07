@@ -32,7 +32,7 @@
                   <b-card-body :title="item.name">
                     <b-row align-v="center">
                       <b-col class="pr-1"> <country-image v-model="item.country" heigth="0" :id="item.name"/> </b-col>
-                      <b-col class="pl-1"> <span>{{ item.category | recipeCategoryName }}</span> </b-col>
+                      <b-col class="pl-1"> <span>{{ _recipeCategoryName(item.category) }}</span> </b-col>
                     </b-row>
                   </b-card-body>
                 </b-col>
@@ -52,7 +52,6 @@
 <script>
 import api from '@api'
 import {mapGetters, mapMutations} from "vuex";
-import {dateFormat} from "~/utils";
 import ChatUtils from '@components/chats/utils'
 
 export default {
@@ -80,10 +79,8 @@ export default {
     }
   },
   filters: {
-    dateFormat,
-    recipeCategoryName(val){
-      let category = RecipeCategories.find(val)
-      return category ? category.text : '';
+    dateFormat: function (text){
+      return dateFormat(text)
     }
   },
   watch: {
@@ -129,7 +126,7 @@ export default {
       }
     },
 
-    ...mapGetters(['isLoggedIn', 'socket', 'username', 'userIdentifier', 'username', 'accessToken']),
+    ...mapGetters(['isLoggedIn', 'socket', 'username', 'userIdentifier', 'username', 'accessToken', 'getRecipeCategoryByValue']),
 
     temporaryNameChat: {
       get(){
@@ -174,6 +171,9 @@ export default {
   },
 
   methods: {
+    _recipeCategoryName(val){
+      return this.getRecipeCategoryByValue(val)?.text || '';
+    },
 
     _goToTheBottom(behavior = 'auto'){
       console.debug('Go To The Bottom of the messages : behavior = ', behavior)
