@@ -6,6 +6,7 @@ import notifications from './modules/notifications'
 import foods from './modules/foods'
 import likes from './modules/likes'
 import comments from './modules/comments'
+import recipes from './modules/recipes'
 
 import actions from './actions'
 import getters from './getters'
@@ -20,7 +21,8 @@ export default new Vuex.Store({
         notifications,
         foods,
         likes,
-        comments
+        comments,
+        recipes
     },
     state: {
         _genders: app.Genders,

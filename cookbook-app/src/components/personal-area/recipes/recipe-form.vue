@@ -171,7 +171,7 @@
 </template>
 
 <script>
-import api from '@api'
+
 import {mapGetters} from "vuex";
 
 export default {
@@ -400,9 +400,6 @@ export default {
     _newRecipe(eventType, options = {shared: undefined, new: false}){
       console.debug('OPT = ', options, ', changeMode = ', this.isChangeMode !== undefined)
 
-      const _id = this.userIdentifier
-      if(!_id) { return; /* TODO: ERROR NOT AUTHORIZED */ }
-
       let request = null
 
       const formData = this._formData(options)
@@ -412,12 +409,12 @@ export default {
       if(options.new === false){
         console.log('Changed recipe ')
         // console.debug(this.recipe)
-        request = api.recipes.updateRecipe(_id, this.value._id, formData, this.accessToken)
+        request = this.$store.dispatch('recipes/update', {_id: this.value._id, body: formData})
       }
       else{
         console.log('New recipe ')
         // console.debug(this.recipe)
-        request = api.recipes.createRecipe(_id, formData, this.accessToken)
+        request = this.$store.dispatch('recipes/create', formData)
       }
 
       request

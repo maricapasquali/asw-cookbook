@@ -15,19 +15,19 @@ export default function (bus){
     }
 
     function recipeComment({notification, comment}) {
-        _operationOnRecipe('comment', notification, comment)
+        _operationOnRecipe.bind(this)('comment', notification, comment)
     }
 
     function createSharedRecipe({notification, recipe}) {
-        _operationOnRecipe('create', notification, recipe)
+        _operationOnRecipe.bind(this)('create', notification, recipe)
     }
 
     function updateSharedRecipe({notification, recipe}) {
-        _operationOnRecipe('update', notification, recipe)
+        _operationOnRecipe.bind(this)('update', notification, recipe)
     }
 
     function deleteSharedRecipe({notification, recipe}) {
-        _operationOnRecipe('delete', notification, recipe)
+        _operationOnRecipe.bind(this)('delete', notification, recipe)
     }
 
     return {

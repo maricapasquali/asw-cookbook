@@ -135,8 +135,7 @@ export default {
       const limit = _limit || this.recipePaginationOptions.limit
 
       console.debug('Recipe Pagination = ', {page, limit})
-      api.recipes
-         .getRecipes(this.user, this.accessToken, 'shared', {page, limit})
+      this.$store.dispatch('recipes/all-shared-for-user', { ownerID: this.user, pagination: {page, limit} })
          .then(({data}) =>{
            let _remapData = data.items.map(recipe => this.remappingRecipe(recipe))
 

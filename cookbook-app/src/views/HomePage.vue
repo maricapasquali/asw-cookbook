@@ -99,7 +99,7 @@
 
 <script>
 
-import api, {Server} from '@api'
+import {Server} from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -134,7 +134,6 @@ export default {
     ...mapGetters(['getRecipeCategoryByValue']),
     ...mapGetters({
       userIdentifier: 'session/userIdentifier',
-      accessToken: 'session/accessToken',
       isAdmin: 'session/isAdmin'
     })
   },
@@ -164,8 +163,7 @@ export default {
       const limit = _limit || this.optionsPagination.limit
 
       console.log('POST pagination: ', {page, limit})
-      api.recipes
-         .allSharedRecipes(this.accessToken, {page, limit})
+      this.$store.dispatch('recipes/all-shared', { pagination: {page, limit} })
          .then(({data}) => {
 
             console.log(data)

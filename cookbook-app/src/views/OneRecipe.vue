@@ -142,12 +142,11 @@
 
 <script>
 
-import api from '@api'
-
 import {mapGetters} from "vuex";
 import {scrollToRouterHash} from "@router";
 import NotFound from "./404";
 import {Server} from "@api";
+
 export default {
   name: "OneRecipe",
   props: {
@@ -168,7 +167,6 @@ export default {
     ...mapGetters({
       userIdentifier: 'session/userIdentifier',
       username: 'session/username',
-      accessToken: 'session/accessToken',
       isAdmin: 'session/isAdmin'
     }),
 
@@ -214,8 +212,7 @@ export default {
     getRecipe() {
       let {id, recipe_id} = this.$route.params;
       this.processing = true
-      api.recipes
-         .getRecipe(id, recipe_id, 'shared', this.accessToken)
+      this.$store.dispatch('recipes/one-shared', {ownerID: id, recipeID: recipe_id})
          .then(({data}) => this.setRecipe(data))
          .catch(err => this.handleRequestErrors.recipes.getRecipe(err))
          .then(processingEnd => this.processing = !processingEnd)

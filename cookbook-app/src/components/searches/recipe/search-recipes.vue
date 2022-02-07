@@ -276,8 +276,7 @@ export default {
 
     getNumberRecipesForCountry() {
       this.loading = true
-      api.recipes
-         .numberRecipesForCountry(this.accessToken)
+      this.$store.dispatch('recipes/number-for-country')
          .then(({data}) => {
            console.debug('Result rest api = ', data)
 
@@ -373,7 +372,7 @@ export default {
 
       let promiseSearch = undefined
       if(this.triggerSearch) promiseSearch = this.triggerSearch(filters)
-      else promiseSearch = api.recipes.allSharedRecipes(this.accessToken, {}, filters)
+      else promiseSearch = this.$store.dispatch('recipes/search-in-shared', {filters})
 
       promiseSearch
          .then(({data}) => {

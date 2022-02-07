@@ -341,8 +341,7 @@ export default {
     },
 
     getAttachmentsRecipes(){
-      api.recipes
-         .getRecipes(this.userIdentifier, this.accessToken, 'saved')
+      this.$store.dispatch('recipes/saved')
          .then(({data}) =>{
            this.recipes = data.items;
            console.debug('Attachments = > ', data.items)
@@ -386,8 +385,7 @@ export default {
         const permission = this.usersChat.filter(r => r.user._id !== this.userIdentifier)
                                          .map(r => ({user: r.user._id, granted: 'read'}))
 
-        executor = (resolve, reject) => api.recipes
-                                           .updatePermission(this.userIdentifier, this.attachment.id, permission, this.accessToken)
+        executor = (resolve, reject) => this.$store.dispatch('recipes/update-permission', {recipeID: this.attachment.id, permission})
                                            .then(({data}) => {
                                               console.log(data)
                                               resolve()
@@ -406,8 +404,7 @@ export default {
       if(link){
         const id = link.split('/').pop()
         if(!id) return new Promise((resolve, reject) => reject({reason: 'Resource id is not valid.', link}))
-        return api.recipes
-                  .getRecipe(this.userIdentifier, id, null,this.accessToken)
+        return this.$store.dispatch('recipes/one', id)
                   .then(({data}) =>{
                     console.debug('Attachments = > ', data)
                     return this.createObjectPreview(data, link)

@@ -184,7 +184,7 @@
 </template>
 
 <script>
-import api from '@api'
+
 import {mapGetters} from "vuex";
 
 import Vue from "vue";
@@ -336,8 +336,7 @@ export default {
       const limit = _limit || this.paginationOptions.limit
       console.debug('Pagination = ', {page, limit})
 
-      api.recipes
-         .getRecipes(this.userIdentifier, this.accessToken, this.active, {page, limit})
+      this.$store.dispatch('recipes/all', { pagination:  {page, limit}, type: this.active })
          .then(({data}) => {
             console.log(data)
             this.setDefaultValueOn(data.items)
@@ -373,7 +372,7 @@ export default {
 
     /* search */
     search(filters){
-      return api.recipes.getRecipes(this.userIdentifier,  this.accessToken, this.active, {}, filters)
+      return this.$store.dispatch('recipes/search-in-all', { filters, type: this.active  })
     },
     onSearching(data){
       console.debug('SEARCHING Recipes '+ this.active + ' are '+data.total)
@@ -495,9 +494,7 @@ export default {
         console.log('REMOVE LIKE ON RECIPE')
         let like = recipe.likes.find(l => l.user && l.user._id === this.userIdentifier)
         console.debug(like)
-        api.recipes
-           .likes
-           .unLike(recipe.owner._id, recipe._id, like._id , this.accessToken)
+        this.$store.dispatch('likes/remove', {ownerID: recipe.owner._id, recipeID:  recipe._id, likeID: like._id})
            .then(({data}) => {
              console.log(data)
              this.itemsRecipes.splice(this.deleteRecipe.index, 1)
@@ -508,8 +505,7 @@ export default {
       else
       {
         console.log('DELETE RECIPE')
-        api.recipes
-           .deleteRecipe(this.userIdentifier, recipe._id, this.accessToken)
+        this.$store.dispatch('recipes/remove', recipe._id)
            .then(({data}) => {
              console.log(data)
              this.itemsRecipes.splice(this.deleteRecipe.index, 1)

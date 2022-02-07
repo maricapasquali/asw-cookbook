@@ -37,8 +37,7 @@ export default {
     },
     _getRecipe(){
       let {recipe_id} = this.$route.params;
-      api.recipes
-         .getRecipe(this.userIdentifier, recipe_id, null, this.accessToken)
+      this.$store.dispatch('recipes/one', recipe_id)
          .then(({data}) => this.recipe = data)
          .catch(err => {
            console.error(err.response)
