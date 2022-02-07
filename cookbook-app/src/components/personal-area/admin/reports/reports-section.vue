@@ -91,7 +91,9 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['accessToken', 'socket']),
+    ...mapGetters({
+      accessToken: 'session/accessToken'
+    }),
 
     classCols(){
       return {

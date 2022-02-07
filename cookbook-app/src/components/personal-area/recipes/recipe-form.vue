@@ -191,8 +191,11 @@ export default {
   },
   computed:{
 
-    ...mapGetters(['countries', 'diets', 'recipeCategories', 'accessToken', 'userIdentifier', 'socket',
-                   'getDietByValue', 'getRecipeCategoryByValue']),
+    ...mapGetters(['countries', 'diets', 'recipeCategories', 'getDietByValue', 'getRecipeCategoryByValue']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier'
+    }),
 
     resetButtonClass(){
       return {

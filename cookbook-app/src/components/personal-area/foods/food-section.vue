@@ -244,7 +244,13 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['accessToken', 'isSigned', 'isAdmin', 'userIdentifier', 'username']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      isSigned: 'session/isSigned',
+      isAdmin: 'session/isAdmin',
+      userIdentifier: 'session/userIdentifier',
+      username: 'session/username'
+    }),
 
     classesShoppingList(){
       return {'shopping-list':true, 'align':true, 'scroll': this.isMobile }

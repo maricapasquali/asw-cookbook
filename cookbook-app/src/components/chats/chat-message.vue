@@ -85,7 +85,9 @@ export default {
     },
 
 
-    ...mapGetters(["userIdentifier"]),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier'
+    }),
 
     showDestName(){
       return this.group && !this.isMyMessage

@@ -55,7 +55,10 @@ export default {
       return 'editor-comment-'+ this.recipe._id
     },
 
-    ...mapGetters(['accessToken', 'isAdmin', 'socket']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      isAdmin: "session/isAdmin"
+    }),
     couldComment(){
       return !this.isAdmin && this.recipe.owner
     }

@@ -106,7 +106,7 @@ export function pushMessages(chats){ //[{info, messages}]
 
                 if(! ['chat', 'p-user-chats'].includes(this.$route.name) ) {
                     this.$bvToast.toast('Hai ricevuto un nuovo messaggio ' + dest, { title: 'Messaggio', solid: true, variant: 'info', })
-                    this.$store.commit('addUnReadMessage')
+                    this.$store.commit('session/addUnReadMessage')
                 }
 
                 this.$bus.$emit('push-message', chat.info, message)

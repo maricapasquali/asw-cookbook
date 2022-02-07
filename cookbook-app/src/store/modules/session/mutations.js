@@ -2,7 +2,7 @@ import Vue from "vue";
 
 export default {
 
-    setSession(state, session){
+    set(state, session){
         const _set = (_session) => {
             Vue.set(state, 'user', _session.user)
             Vue.set(state, 'accessToken', _session.access)
@@ -22,7 +22,7 @@ export default {
             })
         }
     },
-    endSession(state){
+    end(state){
         Vue.set(state, 'user', null)
         Vue.set(state, 'accessToken', null)
         Vue.set(state, 'refreshToken', null)
@@ -32,32 +32,22 @@ export default {
         localStorage.removeItem('token.access')
         localStorage.removeItem('token.refresh')
 
-        Vue.set(state, 'unreadNotifications', 0)
         Vue.set(state, 'unreadMessages', 0)
-
     },
-    changeUserId(state, newUserID){
+    ['change-username'](state, newUserID){
         if(state.user){
             Vue.set(state.user, 'userID', newUserID)
             localStorage.setItem('user.info', JSON.stringify(state.user))
             console.log('Change userID .')
         }
     },
-    setAccessToken(state, newAccessToken) {
+    ['set-access-token'](state, newAccessToken) {
         Vue.set(state, 'accessToken', newAccessToken)
         localStorage.setItem('token.access', newAccessToken)
         console.log('Refresh access token .')
     },
 
-    // UNREAD NOTIFICATIONS
-    addUnReadNotification(state, num){
-        if(num) Vue.set(state, 'unreadNotifications', num)
-        else Vue.set(state, 'unreadNotifications', state.unreadNotifications + 1)
-    },
-    removeUnReadNotification(state){
-        if(state.unreadNotifications > 0)
-            Vue.set(state, 'unreadNotifications', state.unreadNotifications - 1)
-    },
+    /*TODO: move on store/chat/mutations */
 
     // UNREAD MESSAGES
     addUnReadMessage(state, num){

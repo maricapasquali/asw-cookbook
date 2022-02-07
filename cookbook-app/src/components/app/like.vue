@@ -32,7 +32,11 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['accessToken', 'userIdentifier', 'isAdmin', 'socket']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    }),
     classesLike(){
       return {
         'mr-1': true,

@@ -15,8 +15,6 @@ export default {
 
     refreshToken: state => state.refreshToken,
 
-    unreadNotifications: state => state.unreadNotifications,
-
-    unreadChatsMessages: state => state.unreadMessages,
-
+    /*TODO: move on store/chat/getters */
+    unreadChatsMessages: state => state.unreadMessages
 }

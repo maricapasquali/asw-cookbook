@@ -9,7 +9,7 @@ export default function (bus){
         console.debug('comment response => ', { notification, response})
         if(notification) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('addUnReadNotification')
+            this.$store.commit('notifications/add-unread')
         }
         bus.$emit('comment:response', notification, response)
     }
@@ -20,7 +20,7 @@ export default function (bus){
             bus.$emit('comment:report', data)
         }else {
             this.$bvToast.toast(data.content, options)
-            this.$store.commit('addUnReadNotification')
+            this.$store.commit('notifications/add-unread')
             bus.$emit('comment:report', data)
         }
     }

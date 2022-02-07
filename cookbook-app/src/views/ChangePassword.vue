@@ -102,7 +102,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['isLoggedIn', 'accessToken'])
+    ...mapGetters({
+      isLoggedIn: 'session/isLoggedIn',
+      accessToken: 'session/accessToken'
+    })
   },
   watch: {
     processing(val) {

@@ -8,7 +8,7 @@
 
 <script>
 import api from '@api'
-import {mapGetters, mapMutations} from "vuex";
+import {mapActions, mapGetters} from "vuex";
 import NotFound from "./404";
 
 import { onUpdateUserInOneChat,  _onUpdateUserInOneChat, _onUpdateUserInfos } from '@components/chats/utils'
@@ -24,11 +24,12 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["userIdentifier", "accessToken", "socket"]),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      accessToken: 'session/accessToken'
+    }),
   },
   methods: {
-    ...mapMutations(["endSession"]),
-
     getChat(){
       if(this.userIdentifier) {
         api.chats
@@ -42,7 +43,7 @@ export default {
                 switch (err.response.status){
                   case 401: {
                     console.error("UnAuthorized: ", err.response.data)
-                    this.endSession()
+                    this.$store.dispatch('reset')
                     this.$router.replace({ name: 'login' });
                   }
                   break;

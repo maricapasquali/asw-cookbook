@@ -20,7 +20,7 @@
 <script>
 import api from '@api'
 
-import {mapGetters, mapMutations} from "vuex";
+import {mapGetters} from "vuex";
 
 export default {
   name: "delete-account",
@@ -39,7 +39,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['accessToken', 'socket'])
+    ...mapGetters({
+      accessToken: 'session/accessToken'
+    })
   },
   watch: {
     value(vl){
@@ -53,7 +55,7 @@ export default {
     }
   },
   methods:{
-    ...mapMutations(['endSession']),
+
     cancelDeleteAccount: function (e){
       this.processing = false
       this.error = {

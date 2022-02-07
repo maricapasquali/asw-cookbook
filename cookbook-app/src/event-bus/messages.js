@@ -34,7 +34,7 @@ export default function (bus){
 
                     if(! ['chat', 'p-user-chats'].includes(this.$route.name) ) {
                         this.$bvToast.toast('Hai ricevuto un nuovo messaggio ' + dest, { title: 'Messaggio', solid: true, variant: 'info', })
-                        store.commit('addUnReadMessage')
+                        store.commit('session/addUnReadMessage')
                     }
 
                     bus.$emit('push-message', chat.info, message)

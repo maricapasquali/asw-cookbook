@@ -69,7 +69,7 @@ export default {
     atLeastResult(){
       return this.foods.length > 0
     },
-    ...mapGetters(['accessToken']),
+    ...mapGetters({accessToken: 'session/accessToken'}),
 
     isAccessibleArea(){
       return ['search'].includes(this.$route.name)

@@ -78,7 +78,13 @@ export default {
       return this.friends.length >0 && this.friends.length < this.friendsTotal
     },
 
-    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned', 'socket', 'getRecipeCategoryByValue'])
+    ...mapGetters(['getRecipeCategoryByValue']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier',
+      isLoggedIn: 'session/isLoggedIn',
+      isSigned: 'session/isSigned'
+    })
   },
   filters: {
     dataFormatter: function (text){

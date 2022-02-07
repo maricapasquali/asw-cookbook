@@ -16,7 +16,12 @@ export default {
       unauthorized: null
     }
   },
-  computed: { ...mapGetters(["userIdentifier", "accessToken"]) },
+  computed: {
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      accessToken: 'session/accessToken'
+    })
+  },
   methods: {
     _getChat(){
       api.chats

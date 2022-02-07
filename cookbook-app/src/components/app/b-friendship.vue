@@ -56,7 +56,12 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['socket', 'accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier',
+      isLoggedIn: 'session/isLoggedIn',
+      isSigned: 'session/isSigned'
+    }),
 
     chatId(){
       return 'btn-chat-' + this.otherUser._id

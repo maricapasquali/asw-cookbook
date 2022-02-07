@@ -164,7 +164,13 @@ export default {
   },
   computed: {
 
-    ...mapGetters(['userIdentifier', 'username', 'accessToken', 'isAdmin', 'getDietByValue', 'getRecipeCategoryByValue']),
+    ...mapGetters(['getDietByValue', 'getRecipeCategoryByValue']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      username: 'session/username',
+      accessToken: 'session/accessToken',
+      isAdmin: 'session/isAdmin'
+    }),
 
     youNotMakeLike(){
       return this.isAdmin || !this.doc.owner || this.doc.owner._id === this.userIdentifier

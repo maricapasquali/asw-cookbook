@@ -230,7 +230,7 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['socket', 'genders', 'countries']),
+    ...mapGetters(['genders', 'countries']),
     validationInformation: function (){
       return this.validation.firstName && this.validation.lastName && this.validation.email
     },

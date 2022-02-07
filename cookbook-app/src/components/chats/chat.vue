@@ -126,7 +126,13 @@ export default {
       }
     },
 
-    ...mapGetters(['isLoggedIn', 'socket', 'username', 'userIdentifier', 'username', 'accessToken', 'getRecipeCategoryByValue']),
+    ...mapGetters({
+      isLoggedIn: 'session/isLoggedIn',
+      username: 'session/username',
+      userIdentifier: 'session/userIdentifier',
+      accessToken: 'session/accessToken'
+    }),
+    ...mapGetters(['getRecipeCategoryByValue']),
 
     temporaryNameChat: {
       get(){
@@ -206,7 +212,9 @@ export default {
       }
       console.debug('TYPING container height = ',  data)
     },
-    ...mapMutations(['removeUnReadMessage']),
+    ...mapMutations({
+      removeUnReadMessage: 'session/removeUnReadMessage'
+    }),
     readMessages(messages, init = false){
       if(messages.length) {
         let messagesIds = messages.map(m => m._id)

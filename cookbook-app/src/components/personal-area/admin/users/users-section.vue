@@ -166,7 +166,10 @@ export default {
   },
   computed: {
 
-    ...mapGetters(['accessToken', 'userIdentifier']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier'
+    }),
 
     showPagination(){
       return this.pagination.totals > 0

@@ -112,7 +112,11 @@ export default {
     areOthers(){
       return this.users.length >0 && this.users.length < this.total
     },
-    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn'])
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier',
+      isLoggedIn: 'session/isLoggedIn'
+    })
   },
   methods: {
     // SEARCH

@@ -99,7 +99,12 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["userIdentifier", "accessToken", "username", "isAdmin", "socket"]),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      accessToken: 'session/accessToken',
+      username: 'session/username',
+      isAdmin: 'session/isAdmin'
+    }),
     _friends(){
       return this.searchFriend.trim().length ? this.friends.filter(f => f.user.userID.toLowerCase().startsWith(this.searchFriend.toLowerCase()))
                                              : this.friends

@@ -57,7 +57,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userIdentifier', 'isAdmin']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    }),
     isChatOne(){
       return this.value && this._isChatOne(this.info)
     },

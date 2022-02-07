@@ -188,7 +188,7 @@
 
 import api from '@api'
 
-import {mapGetters, mapMutations} from "vuex";
+import {mapActions, mapGetters, mapMutations} from "vuex";
 
 export default {
   name: "user-information",
@@ -240,7 +240,14 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['genders', 'getGenderByValue', 'countries', 'userIdentifier', 'isAdmin', 'isSigned', 'accessToken', 'isLoggedIn', 'socket']),
+    ...mapGetters(['genders', 'getGenderByValue', 'countries']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin',
+      isSigned: 'session/isSigned',
+      accessToken: 'session/accessToken',
+      isLoggedIn: 'session/isLoggedIn'
+    }),
 
     oldProfileImage(){
       return this.user.information.img
@@ -261,7 +268,9 @@ export default {
     }
   },
   methods:{
-    ...mapMutations(['changeUserId', 'endSession']),
+    ...mapMutations({
+      changeUserId: 'session/change-username',
+    }),
     getUser(_id){
       api.users
          .getUser(_id || this.id, this.accessToken)
@@ -283,7 +292,7 @@ export default {
     },
 
     onDeleteAccount(){
-        this.endSession()
+        this.$store.dispatch('reset')
         this.$router.replace({ name: "homepage" })
     },
 

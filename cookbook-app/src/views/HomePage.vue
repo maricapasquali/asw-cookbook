@@ -131,7 +131,12 @@ export default {
       return this.docs.length > 0 && this.docs.length < this.total
     },
 
-    ...mapGetters(['userIdentifier', 'accessToken', 'isAdmin', 'getRecipeCategoryByValue'])
+    ...mapGetters(['getRecipeCategoryByValue']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      accessToken: 'session/accessToken',
+      isAdmin: 'session/isAdmin'
+    })
   },
   methods: {
     redirectToRecipe(rec){

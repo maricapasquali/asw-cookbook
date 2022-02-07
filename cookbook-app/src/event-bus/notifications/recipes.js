@@ -9,7 +9,7 @@ export default function (bus){
         console.debug('recipe ', op , ' => ', { notification, data })
         if(notification) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('addUnReadNotification')
+            this.$store.commit('notifications/add-unread')
         }
         bus.$emit('recipe:' + op, notification, data)
     }

@@ -149,7 +149,9 @@ export default {
       return this.mode === 'create'
     },
 
-    ...mapGetters(['accessToken', 'socket'])
+    ...mapGetters({
+      accessToken: 'session/accessToken'
+    })
   },
   watch: {
     validation: {

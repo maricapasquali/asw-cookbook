@@ -157,7 +157,9 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['login', 'getAllBackgroundInformation']),
+    ...mapActions({
+      login: 'session/login'
+    }),
 
     // VALIDATION
     checkUserID: function (){
@@ -221,12 +223,7 @@ export default {
           .then(location => {
             console.log('LOCATION ', location)
             this.$router.replace(location)
-            this.getAllBackgroundInformation()
-                .then(vl => console.log('Ok get unread notification and chat messages'))
-                .catch(err => {
-                  console.error('Something wrong to get unread notification and chat messages')
-                  this.handleRequestErrors.notifications.getNotifications(err)
-                })
+            console.debug('Store state: ', this.$store.state)
           })
           .catch(err => {
             this.onLogin.error.show = true

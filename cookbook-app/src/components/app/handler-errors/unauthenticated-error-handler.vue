@@ -20,16 +20,17 @@ export default {
     }
   },
   methods: {
+    _reset(){
+      this.$store.dispatch('reset')
+      this.$emit('input', {show: false, message:''})
+    },
     goLogin(){
+      this._reset()
       this.$router.push({name: 'login'})
     },
     continueHere(){
-      if(this.value._forbiddenPage) this.$router.replace({name: 'homepage'})
-      else {
-        this.$emit('input', {show: false, message:''})
-        // TODO: find way to no use 'this.$router.go' when request status is 401
-        // this.$router.go(0)
-      }
+      this._reset()
+      this.$router.replace({ name: this.value._forbiddenPage ? 'homepage' : this.$route.name })
     }
   }
 }

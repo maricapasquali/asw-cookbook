@@ -3,8 +3,8 @@ import mutations from './mutations'
 import actions from './actions'
 
 export default {
+    namespaced: true,
     state: {
-        unreadNotifications: 0,
         unreadMessages: 0,
     },
     getters,

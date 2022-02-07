@@ -7,7 +7,7 @@ export default function (bus){
     function friendShipRequest(notification){
         console.debug('friendship request => ', notification)
         this.$bvToast.toast(notification.content, options)
-        this.$store.commit('addUnReadNotification')
+        this.$store.commit('notifications/add-unread')
         bus.$emit('friendship:request:' + notification.user, notification)
     }
 
@@ -15,7 +15,7 @@ export default function (bus){
         console.debug('friendship remove => ', {notification, friendship})
         if(notification) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('addUnReadNotification')
+            this.$store.commit('notifications/add-unread')
             bus.$emit('friendship:remove:' + notification.user, notification)
         }
         if(friendship) bus.$emit('friend:remove', friendship)
@@ -25,7 +25,7 @@ export default function (bus){
         console.debug('friendship update => ', {notification, friendship})
         if(notification) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('addUnReadNotification')
+            this.$store.commit('notifications/add-unread')
             bus.$emit('friendship:update:' + notification.otherInfo.to, notification)
         }
         if(friendship) bus.$emit('friend:add', friendship)

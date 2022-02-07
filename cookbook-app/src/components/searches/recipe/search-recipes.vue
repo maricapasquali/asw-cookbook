@@ -210,10 +210,11 @@ export default {
     }
   },
   computed:{
-    ...mapGetters(['accessToken', 'getCountryByValue', 'getRecipeCategoryByValue', 'getDietByValue']),
+    ...mapGetters(['getCountryByValue', 'getRecipeCategoryByValue', 'getDietByValue']),
     ...mapGetters({
       categories: 'recipeCategories',
       diets: 'concreteDiets',
+      accessToken: 'session/accessToken'
     }),
 
     showMap(){

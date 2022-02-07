@@ -45,13 +45,13 @@ export default {
     }
   },
   computed:{
-    ...mapGetters([
-        'accessToken',
-        'isLoggedIn',
-        'isAdmin',
-        'userIdentifier',
-        'username'
-    ]),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      isLoggedIn: 'session/isLoggedIn',
+      isAdmin: 'session/isAdmin',
+      userIdentifier: 'session/userIdentifier',
+      username: 'session/username'
+    }),
     navigatorVisibility: function (){
       return !this.routeWithoutNavigationBar.includes(this.$route.name)
     },
@@ -82,7 +82,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(['init']),
+    ...mapActions(['initialization']),
     updateGUIListener(){
       this.$bus.$on('hide:navigation-bar', () => this.routeWithoutNavigationBar.push(this.$route.name))
       this.$bus.$on('hide:footer', () => this.routeWithoutFooter.push(this.$route.name))
@@ -141,11 +141,11 @@ export default {
 
     this.updateGUIListener()
 
-    this.init()
-        .then(vl => console.log('Ok get unread notification and chat messages'))
+    this.initialization()
+        .then(vl => console.log('Initialization ok : Store State ', this.$store.state))
         .catch(err => {
-          console.error('Something wrong to get unread notification and chat messages')
-          this.handleRequestErrors.notifications.getNotifications(err)
+          console.error('Something wrong during the initialization: ', err.message)
+          console.error(err.response)
         })
 
     this.registerFriendShipListener()

@@ -49,7 +49,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['accessToken', 'socket']),
+    ...mapGetters({
+      accessToken: 'session/accessToken'
+    }),
     validation: function (){
       return this.validationOld && this.newPassword.length > 0 && this.checkNewPassword
     }

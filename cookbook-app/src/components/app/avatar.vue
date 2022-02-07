@@ -11,7 +11,6 @@
 <script>
 
 import {Server} from "@api";
-import {mapGetters} from "vuex";
 
 export default {
   name: "avatar",
@@ -47,8 +46,7 @@ export default {
   computed: {
     avatarId(){
       return 'avatar'+(`-${this.user}` || '')
-    },
-    ...mapGetters(['socket']),
+    }
   },
   methods: {
     imageError(e){

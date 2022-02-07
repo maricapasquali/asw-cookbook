@@ -101,7 +101,12 @@ export default {
     this.$socket.off('check:access-token', this.onAccessTokenOk.bind(this))
   },
   computed: {
-    ...mapGetters(['accessToken', 'userIdentifier', 'isSigned', 'isAdmin']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier',
+      isSigned: 'session/isSigned',
+      isAdmin: 'session/isAdmin'
+    }),
 
     user(){
       return this.$route.params.id
@@ -133,7 +138,9 @@ export default {
     },
   },
   methods: {
-    ...mapActions(['requestNewAccessToken']),
+    ...mapActions({
+      requestNewAccessToken: 'session/requestNewAccessToken'
+    }),
 
     _mapping(id){
       return {

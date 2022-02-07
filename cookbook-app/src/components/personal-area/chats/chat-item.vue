@@ -82,7 +82,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["userIdentifier", "isAdmin"]),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    }),
 
     removeChatId(){
       return 'remove-chat-' + this.value._id

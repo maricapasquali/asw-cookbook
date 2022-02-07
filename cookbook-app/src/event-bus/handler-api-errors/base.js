@@ -43,6 +43,7 @@ export default function (bus){
     }
 
     function serverError(errOfRequest, propagation = true) {
+        console.error(errOfRequest)
         let error = 'Internal Server Error'
         if (errOfRequest.response?.status >= 500) printError(errOfRequest.response)
         else  error = errOfRequest?.response?.data?.description ||

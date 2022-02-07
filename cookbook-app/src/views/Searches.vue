@@ -16,7 +16,9 @@ export default {
   name: "Searches",
   components: {NotFound},
   computed:{
-    ...mapGetters(['isGuestOrSigned']),
+    ...mapGetters({
+      isGuestOrSigned: 'session/isGuestOrSigned'
+    }),
 
     item(){
       switch (this.$route.params.what){

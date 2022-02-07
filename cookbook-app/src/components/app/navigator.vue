@@ -79,16 +79,19 @@ export default {
   },
 
   computed:{
-    ...mapGetters([
-      'isLoggedIn',
-      'userIdentifier',
-      'username',
-      'isAdmin',
-      'isSigned',
-      'isGuestOrSigned',
-      'unreadNotifications',
-      'unreadChatsMessages'
-    ]),
+    ...mapGetters({
+      isLoggedIn: 'session/isLoggedIn',
+      userIdentifier: 'session/userIdentifier',
+      username: 'session/username',
+      isAdmin: 'session/isAdmin',
+      isSigned: 'session/isSigned',
+      isGuestOrSigned: 'session/isGuestOrSigned',
+      unreadChatsMessages: 'session/unreadChatsMessages'
+    }),
+
+    ...mapGetters({
+      unreadNotifications:  'notifications/numberUnreadNotifications'
+    }),
 
     isHomePageActive: function (){
       return this.$route.name === 'homepage'
@@ -129,13 +132,15 @@ export default {
     }
   },
   methods:{
-    ...mapActions(['logout']),
+    ...mapActions({
+      logout: 'session/logout'
+    }),
     onLogoutSubmit(){
       this.logoutProcessing = true
       this.logout()
           .then(() => {
-            if(this.$route.name === 'homepage') this.$router.go()
-            else this.$router.replace({name: 'homepage'})
+            this.$router.replace({name: 'homepage'})
+            console.debug('Store state: ', this.$store.state)
           })
           .catch(this.handleRequestErrors.session.logout)
           .finally(() => this.logoutProcessing = false)

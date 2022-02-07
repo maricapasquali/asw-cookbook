@@ -63,8 +63,7 @@
 
 <script>
 
-import {mapGetters, mapMutations} from "vuex";
-import api from '@api'
+import {mapGetters} from "vuex";
 
 export default {
   name: "notifications-section",
@@ -104,7 +103,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userIdentifier', 'accessToken','isAdmin']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    }),
   },
   filters: {
     dateFormat: function (text){
@@ -190,18 +192,18 @@ export default {
 
     getNotifications(){
       this.loading = true
-      api.notifications
-         .getNotifications(this.userIdentifier, this.accessToken)
-         .then(({data}) => {
+      this.$store
+          .dispatch('notifications/all')
+          .then(({data}) => {
             this.docs = data.items
             this.totals = data.totals
             return true
-         })
-         .catch(err => {
+          })
+          .catch(err => {
            this.handleRequestErrors.notifications.getNotifications(err)
            return false
-         })
-         .then(processEnd => this.loading = !processEnd)
+          })
+          .then(processEnd => this.loading = !processEnd)
     },
 
     clickNotification(event, index){
@@ -222,34 +224,29 @@ export default {
       }
     },
 
-    ...mapMutations(['removeUnReadNotification']),
-
     updateNotification(doc){
       console.log(doc._id + ' mark as read .')
-      api.notifications
-         .updateNotification(this.userIdentifier, doc._id, {read: true}, this.accessToken)
-         .then(({data}) => {
+      this.$store
+          .dispatch('notifications/read', doc._id)
+          .then(({data}) => {
               doc.read = true
-              this.removeUnReadNotification()
               console.log(data)
-         })
-         .catch(err => {
-           doc.read = false // doc.read = !doc.read
-           this.handleRequestErrors.notifications.updateNotification(err)
-         })
+          })
+          .catch(err => {
+            doc.read = false // doc.read = !doc.read
+            this.handleRequestErrors.notifications.updateNotification(err)
+          })
     },
 
     deleteNotification(index){
-      let notificationID =  this.docs[index]._id
-      console.log('Delete: ', notificationID)
-      // this.docs.splice(index, 1)
-      api.notifications
-         .deleteNotification(this.userIdentifier, notificationID, this.accessToken)
-         .then(({data}) => {
-           if(!this.docs[index].read) this.removeUnReadNotification()
-           this.docs.splice(index, 1)
-         })
-         .catch(this.handleRequestErrors.notifications.deleteNotification)
+      let notification =  this.docs[index]
+      console.log('Delete: ', notification._id)
+      this.$store
+          .dispatch('notifications/remove', notification)
+          .then(({data}) => {
+            this.docs.splice(index, 1)
+          })
+          .catch(this.handleRequestErrors.notifications.deleteNotification)
     },
 
     addNotification(notification){

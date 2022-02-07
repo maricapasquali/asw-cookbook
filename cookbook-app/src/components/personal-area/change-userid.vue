@@ -46,7 +46,9 @@ export default {
     this.userID = this.old_userID
   },
   computed: {
-    ...mapGetters(['accessToken', 'socket'])
+    ...mapGetters({
+      accessToken: 'session/accessToken'
+    })
   },
   watch: {
     value(val){

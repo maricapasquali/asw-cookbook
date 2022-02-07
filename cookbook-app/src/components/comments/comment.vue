@@ -176,7 +176,13 @@ export default {
       return this.comment.reported !== false
     },
 
-    ...mapGetters(['accessToken', 'userIdentifier', 'username', 'isAdmin', 'isLoggedIn', 'socket'])
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier',
+      username: 'session/username',
+      isAdmin: 'session/isAdmin',
+      isLoggedIn: 'session/isLoggedIn'
+    })
   },
   methods:{
     isThereProfileImg(user){

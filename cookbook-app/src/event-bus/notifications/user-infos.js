@@ -7,7 +7,7 @@ export default function (bus){
     function afterUpdatePassword(notification){
         console.debug('update password => ', notification)
         this.$bvToast.toast(notification.content, options)
-        this.$store.commit('addUnReadNotification')
+        this.$store.commit('notifications/add-unread')
         bus.$emit('user:update:password', notification)
     }
 
@@ -15,9 +15,9 @@ export default function (bus){
         console.debug('strike user => ', notification)
         this.$bvToast.toast(notification.content, options)
         bus.$emit('user:strike', notification)
-        this.$store.commit('addUnReadNotification')
+        this.$store.commit('notifications/add-unread')
         if(strike === 3){
-            this.$store.commit('endSession')
+            this.$store.dispatch('reset')
             this.$router.replace({ name: 'homepage' })
         }
     }

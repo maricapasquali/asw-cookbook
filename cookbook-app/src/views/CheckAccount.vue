@@ -17,7 +17,7 @@
 
 <script>
 import api from '@api'
-import {mapGetters} from "vuex";
+
 export default {
   name: "CheckAccount",
   data: function (){
@@ -32,9 +32,6 @@ export default {
         msg: 'ACCOUNT VERIFICATO.',
       },
     }
-  },
-  computed: {
-    ...mapGetters(['socket'])
   },
   created() {
     api.users

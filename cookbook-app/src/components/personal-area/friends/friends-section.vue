@@ -113,7 +113,10 @@ export default {
       return this.filter.state || this.filter.userID.value
     },
 
-    ...mapGetters(['userIdentifier', 'accessToken']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      accessToken: 'session/accessToken'
+    }),
   },
   data(){
     return {

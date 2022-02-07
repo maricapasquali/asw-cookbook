@@ -252,13 +252,11 @@ export default {
   },
 
   computed:{
-    ...mapGetters([
-      'accessToken',
-      'userIdentifier',
-      'socket',
-        'getDietByValue',
-        'getRecipeCategoryByValue'
-    ]),
+    ...mapGetters(['getDietByValue', 'getRecipeCategoryByValue' ]),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier',
+    }),
     itemsRecipes: {
       get(){
         if(this.searching.on){
