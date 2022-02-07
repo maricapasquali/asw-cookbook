@@ -69,9 +69,7 @@
 
 <script>
 
-import api from '@api'
 import {scrollToRouterHash} from "@router";
-import {mapGetters} from "vuex";
 
 export default {
   name: "reports-section",
@@ -91,10 +89,6 @@ export default {
     }
   },
   computed:{
-    ...mapGetters({
-      accessToken: 'session/accessToken'
-    }),
-
     classCols(){
       return {
         'text-center' : this.processing
@@ -116,9 +110,7 @@ export default {
 
     getReports: function (){
       this.processing = true
-      api.recipes
-         .comments
-         .getReportedComment(this.accessToken)
+      this.$store.dispatch('comments/reported')
          .then(({data}) => {
            console.log(data)
            this.docsReported = []
@@ -135,9 +127,7 @@ export default {
     deleteComment(index){
       let comment = this.docsReported[index]
       let recipe = comment.recipe
-      api.recipes
-         .comments
-         .deleteComment(recipe.owner._id, recipe._id, comment._id, this.accessToken)
+      this.$store.dispatch('comments/remove', {ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id})
          .then(({data}) =>{
             console.log(data)
             this.docsDeleted.push(this.docsReported[index])
@@ -151,9 +141,7 @@ export default {
     unreported(index){
       let comment = this.docsReported[index]
       let recipe = comment.recipe
-      api.recipes
-         .comments
-         .updateComment(recipe.owner._id, recipe._id, comment._id, this.accessToken, {action: 'un-report'})
+      this.$store.dispatch('comments/un-report', {ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id})
          .then(({data}) =>{
            console.log(data)
            this.docsReported.splice(index, 1)

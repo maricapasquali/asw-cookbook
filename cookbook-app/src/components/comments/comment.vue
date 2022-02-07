@@ -102,7 +102,7 @@
 </template>
 <script>
 
-import api, {Server} from '@api'
+import {Server} from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -177,7 +177,6 @@ export default {
     },
 
     ...mapGetters({
-      accessToken: 'session/accessToken',
       userIdentifier: 'session/userIdentifier',
       username: 'session/username',
       isAdmin: 'session/isAdmin',
@@ -197,9 +196,7 @@ export default {
     },
 
     report(){
-      api.recipes
-         .comments
-         .updateComment(this.recipe.owner._id, this.recipe._id, this.comment._id, this.accessToken, {action: 'report'})
+      this.$store.dispatch('comments/report', {ownerID: this.recipe.owner._id, recipeID: this.recipe._id, commentID: this.comment._id})
          .then(({status, data})=> {
            this.comment.reported = true
            this.$emit('reporting', this.comment)
@@ -220,9 +217,7 @@ export default {
     },
     addResponse(text){
       this.responding.process = true
-      api.recipes
-         .comments
-         .createResponse(this.recipe.owner._id, this.recipe._id, this.comment._id, {content: text}, this.accessToken)
+      this.$store.dispatch('comments/response', { ownerID: this.recipe.owner._id, recipeID: this.recipe._id, commentID: this.comment._id, content: text })
          .then(({data}) => {
            this.comment.responses.push(data)
            console.debug('You answered.')
@@ -249,13 +244,12 @@ export default {
 
       if(this.comment.content !== this.changeMode.content) {
         this.updatingOrDeleting.process = true
-        api.recipes
-           .comments
-           .updateComment(this.recipe.owner._id,
-               this.recipe._id,
-               this.comment._id,
-               this.accessToken,
-            { data: { content: this.changeMode.content } })
+        this.$store.dispatch('comments/update', {
+              ownerID: this.recipe.owner._id,
+              recipeID: this.recipe._id,
+              commentID: this.comment._id,
+              content: this.changeMode.content
+            })
            .then(({data}) => {
              console.debug('Update comment = ', data)
              this.comment.content = this.changeMode.content
@@ -273,9 +267,8 @@ export default {
     /* REMOVE COMMENT*/
     removeComment(){
       this.updatingOrDeleting.process = true
-      api.recipes
-         .comments
-         .deleteComment(this.recipe.owner._id, this.recipe._id, this.comment._id, this.accessToken)
+
+      this.$store.dispatch('comments/remove', {ownerID: this.recipe.owner._id, recipeID: this.recipe._id, commentID: this.comment._id } )
          .then(({data}) => {
            this.comment.content = ""
            this.$emit('remove', this.comment)

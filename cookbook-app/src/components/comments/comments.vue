@@ -29,7 +29,6 @@
 </template>
 
 <script>
-import api from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -56,7 +55,6 @@ export default {
     },
 
     ...mapGetters({
-      accessToken: 'session/accessToken',
       isAdmin: "session/isAdmin"
     }),
     couldComment(){
@@ -72,9 +70,8 @@ export default {
 
     addComments(text){
       this.commenting.process = true
-      api.recipes
-         .comments
-         .createComment(this.recipe.owner._id, this.recipe._id, {content: text}, this.accessToken)
+
+      this.$store.dispatch('comments/create', {ownerID: this.recipe.owner._id, recipeID: this.recipe._id, content: text})
          .then(({data}) => {
            this.value.push(data)
            //this.$emit('input', [...this.value, ...[data]])
