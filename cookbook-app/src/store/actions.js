@@ -7,7 +7,7 @@ export default {
         if(getters['session/isLoggedIn']){
             const promises = []
             promises.push(dispatch('notifications/not-read'))
-            promises.push(dispatch('session/getNumberOfUnReadChatsMessages'))
+            promises.push(dispatch('chats/not-read'))
             if(getters['session/isSigned']) {
                 promises.push(dispatch('shopping-list/get'))
                 promises.push(dispatch('friendships/own'))
@@ -19,6 +19,7 @@ export default {
     reset({commit}){
         commit('session/end')
         commit('notifications/reset')
+        commit('chats/reset')
         commit('shopping-list/reset')
         commit('friendships/reset')
     }

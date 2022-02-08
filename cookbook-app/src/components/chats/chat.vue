@@ -50,7 +50,6 @@
 </template>
 
 <script>
-import api from '@api'
 import {mapGetters, mapMutations} from "vuex";
 import ChatUtils from '@components/chats/utils'
 
@@ -129,8 +128,7 @@ export default {
     ...mapGetters({
       isLoggedIn: 'session/isLoggedIn',
       username: 'session/username',
-      userIdentifier: 'session/userIdentifier',
-      accessToken: 'session/accessToken'
+      userIdentifier: 'session/userIdentifier'
     }),
     ...mapGetters(['getRecipeCategoryByValue']),
 
@@ -213,15 +211,13 @@ export default {
       console.debug('TYPING container height = ',  data)
     },
     ...mapMutations({
-      removeUnReadMessage: 'session/removeUnReadMessage'
+      removeUnReadMessage: 'chats/remove-unread'
     }),
     readMessages(messages, init = false){
       if(messages.length) {
         let messagesIds = messages.map(m => m._id)
         console.log('Read messages = ', messagesIds)
-        api.chats
-            .messages
-            .readMessages(this.userIdentifier, this.value._id, {messages: messagesIds} , this.accessToken)
+        this.$store.dispatch('chats/messages/read', {chatID: this.value._id, messagesIds})
             .then((response) => {
               console.debug(response)
               if(response.status === 204) return console.debug('Message ('+message._id+') has already read.');
@@ -271,9 +267,7 @@ export default {
               attachment: _message.attachment ? _message.attachment.replace(this._linkAttachmentInfo.origin, '') : undefined,
               timestamp: _message.timestamp
             }
-            api.chats
-                .messages
-                .createMessage(this.userIdentifier, this.value._id, data, this.accessToken)
+            this.$store.dispatch('chats/messages/create', {chatID: this.value._id, data })
                 .then(({data}) => {
                   console.debug('Message has been delivered => ', JSON.stringify(data))
                   this._changeStateMyMessage({ ...data, delivered: true })

@@ -14,7 +14,4 @@ export default {
     accessToken: state => state.accessToken,
 
     refreshToken: state => state.refreshToken,
-
-    /*TODO: move on store/chat/getters */
-    unreadChatsMessages: state => state.unreadMessages
 }

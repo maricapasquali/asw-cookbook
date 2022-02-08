@@ -31,8 +31,6 @@ export default {
         localStorage.removeItem('user.info')
         localStorage.removeItem('token.access')
         localStorage.removeItem('token.refresh')
-
-        Vue.set(state, 'unreadMessages', 0)
     },
     ['change-username'](state, newUserID){
         if(state.user){
@@ -45,17 +43,5 @@ export default {
         Vue.set(state, 'accessToken', newAccessToken)
         localStorage.setItem('token.access', newAccessToken)
         console.log('Refresh access token .')
-    },
-
-    /*TODO: move on store/chat/mutations */
-
-    // UNREAD MESSAGES
-    addUnReadMessage(state, num){
-        if(num) Vue.set(state, 'unreadMessages', num)
-        else Vue.set(state, 'unreadMessages', state.unreadMessages + 1)
-    },
-    removeUnReadMessage(state){
-        if(state.unreadMessages > 0)
-            Vue.set(state, 'unreadMessages', state.unreadMessages - 1)
-    },
+    }
 }

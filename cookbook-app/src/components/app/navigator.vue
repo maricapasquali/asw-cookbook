@@ -86,10 +86,7 @@ export default {
       isAdmin: 'session/isAdmin',
       isSigned: 'session/isSigned',
       isGuestOrSigned: 'session/isGuestOrSigned',
-      unreadChatsMessages: 'session/unreadChatsMessages'
-    }),
-
-    ...mapGetters({
+      unreadChatsMessages: 'chats/unreadChatsMessages',
       unreadNotifications:  'notifications/numberUnreadNotifications'
     }),
 

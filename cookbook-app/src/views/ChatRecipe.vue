@@ -4,9 +4,7 @@
 </template>
 
 <script>
-import api from '@api'
 import OneRecipe from './OneRecipe'
-import {mapGetters} from "vuex";
 export default {
   name: "ChatRecipe",
   components: { 'one-recipe': OneRecipe },
@@ -16,16 +14,9 @@ export default {
       unauthorized: null
     }
   },
-  computed: {
-    ...mapGetters({
-      userIdentifier: 'session/userIdentifier',
-      accessToken: 'session/accessToken'
-    })
-  },
   methods: {
     _getChat(){
-      api.chats
-         .getChat(this.userIdentifier, this.$route.params.chat_id, this.accessToken)
+      this.$store.dispatch('chats/one', this.$route.params.chat_id)
          .then(({data}) => {
             //console.debug('Users chat => ', data.users.map(r => r.user.userID).join(', '))
             this._getRecipe()

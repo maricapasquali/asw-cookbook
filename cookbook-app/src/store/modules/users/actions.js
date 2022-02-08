@@ -12,6 +12,9 @@ export default {
     ['search-for-username']({rootState}, {search, username}){
         return api.users.getUsers({ userID: { search , value: username } }, rootState.session.accessToken)
     },
+    search({rootState}, {query, pagination}){
+        return api.users.getUsers(query,  rootState.session.accessToken, pagination)
+    },
 
     ['update-information']({dispatch, rootState, rootGetters}, newInfo){
         let isLoggedIn = rootGetters['session/isLoggedIn']

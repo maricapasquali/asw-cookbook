@@ -7,8 +7,8 @@
 </template>
 
 <script>
-import api from '@api'
-import {mapActions, mapGetters} from "vuex";
+
+import {mapGetters} from "vuex";
 import NotFound from "./404";
 
 import { onUpdateUserInOneChat,  _onUpdateUserInOneChat, _onUpdateUserInfos } from '@components/chats/utils'
@@ -25,15 +25,13 @@ export default {
   },
   computed: {
     ...mapGetters({
-      userIdentifier: 'session/userIdentifier',
-      accessToken: 'session/accessToken'
+      isLoggedIn: 'session/isLoggedIn'
     }),
   },
   methods: {
     getChat(){
-      if(this.userIdentifier) {
-        api.chats
-            .getChat(this.userIdentifier, this.$route.params.chat_id, this.accessToken)
+      if(this.isLoggedIn) {
+        this.$store.dispatch('chats/one', this.$route.params.chat_id)
             .then(({data}) => {
               this.chat = data
               console.debug(this.chat)

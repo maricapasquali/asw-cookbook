@@ -115,7 +115,7 @@
 </template>
 
 <script>
-import api from '@api'
+
 import {mapActions} from "vuex";
 
 export default {

@@ -71,7 +71,6 @@
 </template>
 
 <script>
-import api from '@api'
 import {mapping} from "@api/users/friends/utils";
 import {mapGetters} from "vuex";
 import {_goToChat, _baseInfoUser, _isChatOne, _isChatGroup} from '@components/chats/utils'
@@ -101,8 +100,6 @@ export default {
   computed: {
     ...mapGetters({
       userIdentifier: 'session/userIdentifier',
-      accessToken: 'session/accessToken',
-      username: 'session/username',
       isAdmin: 'session/isAdmin'
     }),
     _friends(){
@@ -146,8 +143,7 @@ export default {
     },
 
     getChats(){
-      api.chats
-         .getChats(this.userIdentifier, this.accessToken)
+      this.$store.dispatch('chats/own')
          .then(({data}) => {
             this.chats = data.items
             console.log('Chats = ', this.chats)
@@ -187,8 +183,7 @@ export default {
       }
     },
     onRemoveChat(){
-      api.chats
-          .removeChat(this.userIdentifier, this.deleteChat.chat._id, this.accessToken)
+      this.$store.dispatch('chats/remove', this.deleteChat.chat._id)
           .then(({data}) => {
             console.log(data.description)
             let userRole = { user: this.userIdentifier, role: 'reader' }
@@ -208,10 +203,9 @@ export default {
         chat.messages.push(message)
         this.chats.unshift(this.chats.splice(index, 1)[0])
       } else {
-        api.chats
-           .getChat(this.userIdentifier, chatInfo._id, this.accessToken)
+        this.$store.dispatch('chat', chatInfo._id)
            .then(({data}) => {
-              this.chats.unshift(chat)
+              this.chats.unshift(data)
               console.debug(data.users.map(r => r.user.role))
            })
            //TODO: HANDLER ERROR GET CHAT chatInfo._id

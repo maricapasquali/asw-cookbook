@@ -81,8 +81,7 @@
 
 <script>
 
-import api, {Server} from '@api'
-import {mapGetters} from "vuex";
+import {Server} from '@api'
 
 export default {
   name: "search-users",
@@ -112,11 +111,6 @@ export default {
     areOthers(){
       return this.users.length >0 && this.users.length < this.total
     },
-    ...mapGetters({
-      accessToken: 'session/accessToken',
-      userIdentifier: 'session/userIdentifier',
-      isLoggedIn: 'session/isLoggedIn'
-    })
   },
   methods: {
     // SEARCH
@@ -161,8 +155,7 @@ export default {
         this.search.value = ''
       }
 
-      api.users
-         .getUsers(query, this.accessToken, pagination)
+      this.$store.dispatch('users/search', {query, pagination})
          .then(({data}) => {
             let _data = data.items
 

@@ -4,9 +4,6 @@ import actions from './actions'
 
 export default {
     namespaced: true,
-    state: {
-        unreadMessages: 0,
-    },
     getters,
     mutations,
     actions
