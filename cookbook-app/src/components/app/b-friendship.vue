@@ -24,7 +24,6 @@
 </template>
 
 <script>
-import api from '@api'
 import {mapGetters} from "vuex";
 import {_goToChat} from '@components/chats/utils'
 
@@ -49,18 +48,13 @@ export default {
       isMyFriend: false,
     }
   },
-  watch: {
-    otherUser(vl){
-      console.debug('friendship: set other user => ', vl._id)
-      this.onCheckFriendshipState(vl)
-    }
-  },
   computed: {
     ...mapGetters({
       accessToken: 'session/accessToken',
       userIdentifier: 'session/userIdentifier',
       isLoggedIn: 'session/isLoggedIn',
-      isSigned: 'session/isSigned'
+      isSigned: 'session/isSigned',
+      friends: 'friendships/friends'
     }),
 
     chatId(){
@@ -79,8 +73,7 @@ export default {
 
     // POST
     sendRequestFriendShip(){
-      api.friends
-          .requestFriendShip(this.otherUser._id, this.accessToken)
+      this.$store.dispatch('friendships/request-to', this.otherUser._id)
           .then(({ data }) => {
             console.log('Request friendship pending. ')
             this.$socket.emit('friendship:request', data)
@@ -92,8 +85,7 @@ export default {
 
     // DELETE
     sendRemoveFriendShip(){
-      api.friends
-          .breakFriendShip(this.userIdentifier, this.otherUser._id, this.accessToken)
+      this.$store.dispatch('friendships/break-up-with', this.otherUser._id)
           .then(({data}) => {
             console.log('Friendship is over. ')
             this.justFollow = false
@@ -105,8 +97,7 @@ export default {
 
     //UPDATE
     _updateFriendShip(state){
-      api.friends
-          .updateFriendShip(this.userIdentifier, this.otherUser._id, { state: state }, this.accessToken)
+      this.$store.dispatch('friendships/update-request', {userID: this.otherUser._id, state})
           .then(({data}) => {
             console.log('State friendship is '+state+'. ')
             this.$socket.emit('friendship:update', data)
@@ -129,22 +120,20 @@ export default {
       return this._updateFriendShip('accepted')
     },
 
-    setFriendShip(vl, data){
-      if(data){
-        console.debug('other user = ', vl , ', friendship = ', data)
-        this.requestToUpdate = (data.from === vl._id && data.to === this.userIdentifier) && data.state === 'pending'
-        this.requestJustSend = (data.from === this.userIdentifier && data.to === vl._id) && data.state === 'pending'
-        let filter = (data.from === this.userIdentifier && data.to === vl._id) || (data.from === vl._id && data.to === this.userIdentifier)
-        this.justFollow = filter && data.state === 'accepted'
-        this.requestRejected = filter && data.state === 'rejected'
-        this.isMyFriend = (data.from === vl._id || data.to === vl._id) && data.state === 'accepted'
-      }
+    _renderFriendShip(data){
+      let vl = this.otherUser
+      console.debug('other user = ', vl , ', friendship = ', data)
+      this.requestToUpdate = (data.from?._id === vl._id && data.to?._id === this.userIdentifier) && data.state === 'pending'
+      this.requestJustSend = (data.from?._id === this.userIdentifier && data.to?._id === vl._id) && data.state === 'pending'
+      let filter = (data.from?._id === this.userIdentifier && data.to?._id === vl._id) || (data.from?._id === vl._id && data.to?._id === this.userIdentifier)
+      this.justFollow = filter && data.state === 'accepted'
+      this.requestRejected = filter && data.state === 'rejected'
+      this.isMyFriend = (data.from?._id === vl._id || data.to?._id === vl._id) && data.state === 'accepted'
     },
-    onCheckFriendshipState(vl){
-       if(vl){
-         this.$socket.emit('check:user:friendship', vl._id)
-         this.$socket.on('friendship:state:'+ vl._id, this.setFriendShip.bind(this, vl))
-       }
+    _setFriendShip(friends){
+      let _friends = friends || this.friends || []
+      _friends.filter(f => (f.from?._id === this.otherUser._id || f.to?._id === this.otherUser._id))
+              .forEach(data => { if(data) this._renderFriendShip(data)})
     },
 
     /* chat */
@@ -189,9 +178,15 @@ export default {
       this.$emit('remove-friend')
     }
   },
-  mounted() {
-    console.debug('mounted b-friendship')
-    this.onCheckFriendshipState(this.otherUser)
+  created() {
+    if(this.friends.length === 0) {
+      this.$store.dispatch('friendships/own')
+                 .then(({data}) => this._setFriendShip())
+                 .catch(this.handleRequestErrors.friends.getFriendOf)
+    }
+    else this._setFriendShip()
+
+    console.debug('created b-friendship')
     this.$bus.$on('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
     this.$bus.$on('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
     this.$bus.$on('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))

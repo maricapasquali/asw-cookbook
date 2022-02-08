@@ -8,7 +8,13 @@ export default {
             let unreadNotification = dispatch('notifications/not-read');
             let unreadChatMessage = dispatch('session/getNumberOfUnReadChatsMessages');
             let shoppingList = dispatch('shopping-list/get');
-            return Promise.all([unreadNotification, unreadChatMessage, shoppingList])
+            let friendships = dispatch('friendships/own');
+            return Promise.all([
+                unreadNotification,
+                unreadChatMessage,
+                shoppingList,
+                friendships
+            ])
         }
         return Promise.resolve()
     },
@@ -16,5 +22,6 @@ export default {
         commit('session/end')
         commit('notifications/reset')
         commit('shopping-list/reset')
+        commit('friendships/reset')
     }
 }

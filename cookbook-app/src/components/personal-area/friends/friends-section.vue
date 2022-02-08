@@ -96,9 +96,8 @@
 
 <script>
 
-import api, {Server} from '@api'
+import {Server} from '@api'
 import {mapGetters} from "vuex";
-import {mapping} from "@api/users/friends/utils";
 
 export default {
   name: "friends-section",
@@ -114,8 +113,7 @@ export default {
     },
 
     ...mapGetters({
-      userIdentifier: 'session/userIdentifier',
-      accessToken: 'session/accessToken'
+      userIdentifier: 'session/userIdentifier'
     }),
   },
   data(){
@@ -181,14 +179,11 @@ export default {
       let userID = ctx.filter.userID.value ? ctx.filter.userID : undefined
       let state = ctx.filter.state || undefined
 
-      return api.friends
-                .getFriendOf(this.userIdentifier, this.accessToken, { userID: userID, state: state }, { page: page, limit: forPage })
+      return this.$store.dispatch('friendships/own',{ userID, state, pagination: { page, limit: forPage } })
                 .then(({data}) => {
                   console.debug('Friends = ',data.items, ', total = ', data.total)
-                  let items = data.items.map(f => mapping(f, this.userIdentifier))
-                  console.debug('Friends = ',items)
                   this.pagination.totals = data.total
-                  return items
+                  return data.items
                 })
                 .catch(err => {
                   this.handleRequestErrors.friends.getFriendOf(err, {_forbiddenPage: true})

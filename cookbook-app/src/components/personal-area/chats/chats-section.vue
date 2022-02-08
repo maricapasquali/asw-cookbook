@@ -138,12 +138,8 @@ export default {
                 //TODO: HANDLER ERROR GET FRIEND IN CHATS SECTION
                 .catch(err => console.error(err))
       }else {
-        api.friends
-           .getFriendOf(this.userIdentifier, this.accessToken, {state: 'accepted'})
-           .then(({data}) => {
-              this.friends = data.items.map(f => mapping(f, this.userIdentifier))
-              console.debug(this.friends)
-           })
+        this.$store.dispatch('friendships/own', { state: 'accepted' })
+           .then(({data}) => console.debug('friendships/own = ', data.items))
             //TODO: HANDLER ERROR GET FRIEND IN CHATS SECTION
            .catch(err => console.error(err))
       }

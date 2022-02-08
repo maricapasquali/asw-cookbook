@@ -59,9 +59,7 @@
 
 <script>
 
-import api from '@api'
 import {mapGetters} from "vuex";
-import {mapping} from "@api/users/friends/utils";
 import NotFound from "./404";
 
 export default {
@@ -80,10 +78,7 @@ export default {
 
     ...mapGetters(['getRecipeCategoryByValue']),
     ...mapGetters({
-      accessToken: 'session/accessToken',
-      userIdentifier: 'session/userIdentifier',
-      isLoggedIn: 'session/isLoggedIn',
-      isSigned: 'session/isSigned'
+      userIdentifier: 'session/userIdentifier'
     })
   },
   filters: {
@@ -160,26 +155,20 @@ export default {
     },
 
     /* User Friends Section */
-    remappingFriend: mapping,
-
     getFriends(currentPage, _limit) {
       const page = currentPage || 1
       const limit = _limit || this.friendsPaginationOptions.limit
       console.debug('Friend Pagination = ', {page, limit})
 
       let state = this.userIdentifier === this.user ? 'accepted': undefined
-      api.friends
-         .getFriendOf(this.user, this.accessToken, { state: state }, {page, limit})
+      this.$store.dispatch('friendships/of', { userID: this.user, state, pagination: {page, limit} })
          .then(({data}) => {
-           let _remapData = data.items.map(friend => this.remappingFriend(friend, this.user))
-
-           if(currentPage) this.friends.push(..._remapData)
-           else this.friends = _remapData
+           if(currentPage) this.friends.push(...data.items)
+           else this.friends = data.items
 
            this.friendsTotal = data.total
            if(!_limit) this.friendsPaginationOptions.page = page
            console.debug('Friends : ',  this.friends)
-
          })
          .catch(this.handleRequestErrors.friends.getFriendOf)
     },

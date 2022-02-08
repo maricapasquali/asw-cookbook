@@ -8,6 +8,7 @@ import likes from './modules/likes'
 import comments from './modules/comments'
 import recipes from './modules/recipes'
 import shoppingList from './modules/shopping-list'
+import friends from './modules/friends'
 
 import actions from './actions'
 import getters from './getters'
@@ -24,7 +25,8 @@ export default new Vuex.Store({
         likes,
         comments,
         recipes,
-        'shopping-list': shoppingList
+        'shopping-list': shoppingList,
+        friendships: friends
     },
     state: {
         _genders: app.Genders,
