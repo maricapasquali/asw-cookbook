@@ -204,8 +204,7 @@ export default {
     sendLinkResetPassword: function (event){
       event.preventDefault()
       this.resetPassword.processing = true
-      api.users
-         .sendEmailResetPassword(this.resetPassword.email)
+      this.$store.dispatch('users/reset-password/request', this.resetPassword.email)
          .then(() =>{
            this.resetPassword.success = true
            this.resetPassword.showSend = false

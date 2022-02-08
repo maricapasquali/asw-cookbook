@@ -113,16 +113,11 @@ export default function (bus){
     function resetPassword(err) {
         console.error(err)
         switch (err.response?.status){
-            case 400:
-                badRequest(err)
-                break
+            case 400: return _badRequestString(err)
+            case 401: return 'Sessione scaduta.'
+            case 403: return 'Non sei autorizzato a resettare la password diquesto utente.'
             case 404: return 'Utente non trovato.'
-            default: {
-                let status = err.response?.status
-                if(status === 401 || status === 403)
-                    return 'Non sei autorizzato a effettuare questa operazione.'
-                return serverError(err, false)
-            }
+            default: return serverError(err, false)
         }
     }
 

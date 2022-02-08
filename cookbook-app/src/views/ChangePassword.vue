@@ -6,7 +6,12 @@
        <b-card v-if="link.valid">
          <div class="text-center"> <h1 class="text-primary"><em>{{ app_name }}</em></h1><h3 v-if="changeDefaultPassword"><em>Cambia DEFAULT password</em></h3></div>
          <b-card-body>
-           <b-alert variant="danger" v-model="error.show">{{error.msg}}</b-alert>
+           <b-alert variant="danger" v-model="error.show" show>
+            <div>
+              <div>{{error.msg}}</div>
+              <div class="d-flex justify-content-end"><b-button  v-if="error.tryAgain" @click="tryAgain">Riprova</b-button></div>
+            </div>
+           </b-alert>
            <b-form @submit="change" >
              <b-form-group
                  v-if="!success.userID && !changeDefaultPassword"
@@ -21,6 +26,7 @@
                    @input="checkUserID"
                    type="text"
                    placeholder="Enter userID"
+                   @keypress.enter="checkUser"
                    required
                ></b-form-input>
              </b-form-group>
@@ -47,7 +53,8 @@
            </b-form>
          </b-card-body>
        </b-card>
-       <b-alert variant="danger" :show="link.valid===false">
+       <not-found v-if="isNotFound" />
+       <b-alert v-else variant="danger" :show="link.valid===false">
          <b-container>
            <b-row cols="1">
              <b-col class="py-2">
@@ -66,10 +73,11 @@
 </template>
 
 <script>
-import api from "@api";
 import {mapGetters} from "vuex";
+import NotFound from "./404";
 export default {
   name: "ChangePassword",
+  components: {NotFound},
   data: function (){
     return {
       link: {
@@ -97,15 +105,24 @@ export default {
 
       error: {
         show: false,
-        msg: ''
+        msg: '',
+        tryAgain: false
       }
     }
   },
   computed: {
     ...mapGetters({
       isLoggedIn: 'session/isLoggedIn',
-      accessToken: 'session/accessToken'
-    })
+      accessToken: 'session/accessToken',
+
+      temporaryToken: 'users/reset-password/tempAccessToken',
+      temporaryUserIdentifier: 'users/reset-password/tempUserIdentifier',
+      isInTempSession: 'users/reset-password/isInTempSession'
+    }),
+
+    isNotFound(){
+      return this.$route.name === 'change-password' && (!this.isLoggedIn || (this.isLoggedIn && !this.$route.params.firstLogin))
+    }
   },
   watch: {
     processing(val) {
@@ -113,16 +130,20 @@ export default {
     },
     'link.valid'(val){
       this.processing = false
+      if(val === false) this.$store.commit('users/reset-password/unset-info')
     }
   },
   created() {
-    this.token = this.accessToken;
     this.checkLink()
+    if(!this.isLoggedIn) {
+      this.$store.commit('users/reset-password/set-info')
+      if(this.isInTempSession) this.success.userID = true
+    }
   },
 
   methods: {
     checkLink: function (){
-      console.log("CHANGE PASSW ", this.$route)
+      console.debug("CHANGE PASSWORD ", this.$route)
       this.changeDefaultPassword = this.isLoggedIn
       if(this.changeDefaultPassword){
         if(this.$route.params.firstLogin){
@@ -138,7 +159,7 @@ export default {
         console.error(this.link)
       }
       else {
-        api.users.checkLinkResetPassword(this.$route.query.key)
+        this.$store.dispatch('users/reset-password/check-link', this.$route.query.key)
             .then(() => this.link.valid = true)
             .catch(err => {
                 this.link.msg = this.handleRequestErrors.users.checkLinkResetPassword(err)
@@ -153,34 +174,39 @@ export default {
     },
 
     checkUser: function (){
-      this.processing = true
+      if(this.validation.userID){
+        this.processing = true
 
-      api.users.getUserFromNickname(this.userID)
-              .then(response => {
-                console.log("Temporary Token (5 MIN) ", response.data.temporary_token)
-                this.success.userID = true
-                this.token = response.data.temporary_token
-                this._id = response.data._id
-              })
-              .catch(err => {
-                this.error.show = true
-                this.error.msg = this.handleRequestErrors.users.getUserFromNickname(err)
-              })
-              .then(() => this.processing = false)
+        this.$store.dispatch('users/reset-password/exist-with-username', this.userID)
+            .then(response => this.success.userID = true)
+            .catch(err => {
+              this.error.show = true
+              this.error.msg = this.handleRequestErrors.users.getUserFromNickname(err)
+            })
+            .then(() => this.processing = false)
+      }
+    },
+
+    tryAgain(){
+      this.success.userID = false
+      this.error = { show: false, msg: '' , tryAgain: false }
     },
 
     change: function (){
       this.processing = true
 
-      api.users.changeOldPassword(this._id, {new_hash_password: this.hash_password},  this.token, true)
-              .then(response => {
-                this.$router.replace(this.changeDefaultPassword ? {name:'p-user-account', params: {id: this._id}} : {name: 'login'})
+      this.$store.dispatch('users/reset-password/make', { userID:  this.temporaryUserIdentifier || this._id, newPassword: this.hash_password, accessToken: this.temporaryToken || this.accessToken })
+              .then(res => {
+                console.warn('response ', res)
+                if(res?.status === 200){
+                  this.$router.replace(this.changeDefaultPassword ? {name:'p-user-account', params: {id: this._id}} : {name: 'login'})
+                } else {
+                  let msg = this.handleRequestErrors.users.resetPassword(res)
+                  if(msg) this.error = { show: true, msg , tryAgain: res.response?.status === 401 }
+                  this.validation.password = false
+                }
+                this.processing = false
               })
-              .catch(err => {
-                let msg = this.handleRequestErrors.users.resetPassword(err)
-                if(msg) this.error = { show: true, msg }
-              })
-              .then(() => this.processing = false)
     }
 
   }

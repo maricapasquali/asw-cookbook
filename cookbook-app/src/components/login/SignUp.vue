@@ -188,8 +188,7 @@
 </template>
 
 <script>
-import api from '@api'
-import {mapGetters} from "vuex";
+import {mapActions, mapGetters} from "vuex";
 export default {
   name: "sign-up",
   data: function() {
@@ -239,6 +238,9 @@ export default {
     }
   },
   methods: {
+    ...mapActions({
+      registerUser : 'users/signup'
+    }),
     forward: function (){
       this.showCredentials = true
       this.showInformation = false
@@ -252,7 +254,6 @@ export default {
       this.validation.email = EmailValidator.check(email)
     },
 
-
     signup: function (){
       console.log('signup')
       const formData = new FormData()
@@ -262,21 +263,17 @@ export default {
       //for(const [k, v] of formData.entries()) console.log(k, ' -> ', v);
 
       this.processing = true
-      api.users
-         .signup(formData)
+      this.registerUser(formData)
          .then(({data}) =>{
             this.success = true
-            this.error = { show: false, msg: '' }
             this.showCredentials = false
-
             this.$socket.emit('user:signup', data.userID)
-
          })
          .catch(err => {
             this.error.show = true
             this.error.msg = this.handleRequestErrors.users.signUp(err)
          })
-         .then(() => this.processing=false)
+         .then(() => this.processing = false)
     },
 
     onSubmit: function (event){

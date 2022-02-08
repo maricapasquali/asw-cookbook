@@ -128,8 +128,7 @@ export default {
 
        this.$router.push({query: { name: this.search.value }})
 
-       api.users
-          .getUsers({ userID: { search: 'partial', value: this.search.value } }, this.accessToken)
+       this.$store.dispatch('users/search-for-username', { search: 'partial', username: this.search.value })
           .then(({data}) => this.users = data.items)
           .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
           .finally(() => this.search.processing = false)

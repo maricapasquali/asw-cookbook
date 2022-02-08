@@ -179,12 +179,14 @@ export default {
     }
   },
   created() {
-    if(this.friends.length === 0) {
-      this.$store.dispatch('friendships/own')
-                 .then(({data}) => this._setFriendShip())
-                 .catch(this.handleRequestErrors.friends.getFriendOf)
+    if(this.isLoggedIn){
+      if(this.friends.length === 0) {
+        this.$store.dispatch('friendships/own')
+            .then(({data}) => this._setFriendShip())
+            .catch(this.handleRequestErrors.friends.getFriendOf)
+      }
+      else this._setFriendShip()
     }
-    else this._setFriendShip()
 
     console.debug('created b-friendship')
     this.$bus.$on('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))

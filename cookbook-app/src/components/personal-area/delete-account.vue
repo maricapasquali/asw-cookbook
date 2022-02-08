@@ -70,8 +70,7 @@ export default {
       e.preventDefault()
 
       this.processing = true
-      api.users
-         .deleteAccount(this.id, this.accessToken)
+      this.$store.dispatch('users/erase', this.id)
          .then(({data}) => {
             console.debug(data)
             this.$socket.emit('user:delete', this.id)

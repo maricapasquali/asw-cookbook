@@ -16,7 +16,6 @@
 </template>
 
 <script>
-import api from '@api'
 
 export default {
   name: "CheckAccount",
@@ -34,13 +33,12 @@ export default {
     }
   },
   created() {
-    api.users
-       .checkAccount(this.$route.query)
+    this.$store.dispatch('users/check-account', this.$route.query)
        .then(({data}) => {
           this.success.show = true
           this.$socket.emit('user:signup', data._id)
        })
-       .catch( err => {
+       .catch(err => {
          this.error.show = true
          this.error.msg = this.handleRequestErrors.users.checkAccount(err)
        })

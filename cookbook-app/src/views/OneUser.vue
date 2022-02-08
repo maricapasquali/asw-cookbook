@@ -224,6 +224,9 @@ export default {
     this.$bus.$on('friend:remove', this.fetchFriend.bind(this))
 
     this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
+
+    this.getRecipes()
+    this.getFriends()
   },
   beforeDestroy() {
     this.$bus.$off('recipe:create', this.fetchRecipe.bind(this))
@@ -234,10 +237,6 @@ export default {
     this.$bus.$off('friend:remove', this.fetchFriend.bind(this))
 
     this.$bus.$off('user:delete', this.onDeleteUser.bind(this))
-  },
-  mounted() {
-    this.getRecipes()
-    this.getFriends()
   }
 }
 </script>

@@ -140,7 +140,7 @@ export default {
       this.logout()
           .then(() => {
             this.$router.replace({name: 'homepage'})
-            console.debug('Store state: ', this.$store.state)
+            // console.debug('Store state: ', this.$store.state)
           })
           .catch(this.handleRequestErrors.session.logout)
           .finally(() => this.logoutProcessing = false)

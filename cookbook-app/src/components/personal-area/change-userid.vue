@@ -19,7 +19,6 @@
 </template>
 
 <script>
-import api from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -73,8 +72,7 @@ export default {
       e.preventDefault()
       this.processing = true
 
-      api.users
-         .changeUserID(this.id, {old_userID: this.old_userID, new_userID: this.userID}, this.accessToken)
+      this.$store.dispatch('users/update-username', { oldUsername: this.old_userID, newUsername: this.userID })
          .then(response => {
             console.log("CHANGE USER ID...")
             this.$emit("onChangeUserID", this.userID)

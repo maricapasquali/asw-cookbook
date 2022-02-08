@@ -186,9 +186,7 @@
 
 <script>
 
-import api from '@api'
-
-import {mapActions, mapGetters, mapMutations} from "vuex";
+import {mapGetters, mapMutations} from "vuex";
 
 export default {
   name: "user-information",
@@ -272,8 +270,7 @@ export default {
       changeUserId: 'session/change-username',
     }),
     getUser(_id){
-      api.users
-         .getUser(_id || this.id, this.accessToken)
+      this.$store.dispatch('users/information-of', _id || this.id)
          .then(({data}) =>{
             this.user = data
             this.changeableUser = clone(this.user)
@@ -328,8 +325,8 @@ export default {
         Object.entries(this.changeableUser.information).filter(([k, v]) => this.user.information[k] !== v).forEach(([k, v]) => formData.append(k, v))
         for(let [k, v] of formData.entries()) console.debug(k, " = ", v)
 
-        api.users
-           .updateUserInfo(this.id, formData, this.accessToken).then(response => {
+        this.$store.dispatch('users/update-information', formData)
+            .then(response => {
               console.log(response.data)
               this.changeMode = false;
               this.user.information = response.data.info

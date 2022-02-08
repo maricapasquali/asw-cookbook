@@ -102,7 +102,6 @@
 
 <script>
 
-import api from '@api'
 import {mapGetters} from "vuex";
 import {_goToChat} from '@components/chats/utils'
 export default {
@@ -236,11 +235,9 @@ export default {
        if(ctx.filter.userID.value) filter = { userID: ctx.filter.userID }
        if(ctx.filter.fullname.value) filter = { fullname: ctx.filter.fullname }
 
-      return api.users
-                .getUsers(filter || {}, this.accessToken, paginationOption)
+      return this.$store.dispatch('users/all', { filters: filter || {}, pagination: paginationOption })
                 .then(({data}) => {
                    console.log(data)
-
                    this.pagination.totals = data.total
                    return data.items.map(u => this.remapping(u))
                 })

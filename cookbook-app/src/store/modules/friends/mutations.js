@@ -15,7 +15,7 @@ export default {
         let friendship = _state._friends.find(f => (f.from._id === friendID || f.to._id === friendID))
         if(friendship) Object.assign(friendship, updatedFriendship)
     },
-    reset(){
+    reset(state){
         Vue.set(state, '_friends', [])
     }
 }

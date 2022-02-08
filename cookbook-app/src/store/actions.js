@@ -5,16 +5,14 @@ export default {
     initialization({commit, getters, dispatch}, session){
         commit('session/set', session)
         if(getters['session/isLoggedIn']){
-            let unreadNotification = dispatch('notifications/not-read');
-            let unreadChatMessage = dispatch('session/getNumberOfUnReadChatsMessages');
-            let shoppingList = dispatch('shopping-list/get');
-            let friendships = dispatch('friendships/own');
-            return Promise.all([
-                unreadNotification,
-                unreadChatMessage,
-                shoppingList,
-                friendships
-            ])
+            const promises = []
+            promises.push(dispatch('notifications/not-read'))
+            promises.push(dispatch('session/getNumberOfUnReadChatsMessages'))
+            if(getters['session/isSigned']) {
+                promises.push(dispatch('shopping-list/get'))
+                promises.push(dispatch('friendships/own'))
+            }
+            return Promise.all(promises)
         }
         return Promise.resolve()
     },

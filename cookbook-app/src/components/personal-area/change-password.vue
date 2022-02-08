@@ -24,7 +24,6 @@
 
 <script>
 
-import api from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -80,7 +79,7 @@ export default {
       e.preventDefault()
       console.log("Change password ...")
       this.processing = true
-      api.users.changeOldPassword(this.id,{old_password: this.oldPassword, new_hash_password: this.newPassword}, this.accessToken)
+      this.$store.dispatch('users/update-password',{oldPassword: this.oldPassword, newPassword: this.newPassword})
                .then(({data}) => {
                  console.log(data)
                  this.$emit('onChangePassword', data)

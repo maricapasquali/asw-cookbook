@@ -129,7 +129,7 @@ export default {
 
     getFriends(){
       if(this.isAdmin){
-        api.users.getUsers({}, this.accessToken)
+        this.$store.dispatch('users/all')
                  .then(({data}) => {
                    this.friends = data.items.filter(u => u.signup === 'checked')
                                             .map(user => ({user: {_id: user._id, userID: user.userID, img: user.information.img, country: user.information.country} }))
