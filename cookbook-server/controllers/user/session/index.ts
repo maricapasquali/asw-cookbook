@@ -61,7 +61,7 @@ export function logout(req, res){
             .where('_id').equals(id)
             .then(user => {
                 if(!user) return res.status(404).json({description: 'User not found'})
-                if(isAlreadyLoggedOut(user)) return res.status(409).json({ description: 'User is already logged out' })
+                if(isAlreadyLoggedOut(user)) return res.status(204).send()
 
                 user.credential.lastAccess = Date.now()
                 user.save().then(() => res.status(200).json({logout: true}), err => res.status(500).send({description: err.message}))
@@ -80,7 +80,7 @@ export function update_access_token(req, res){
     if(!refresh_token) return res.status(400).json({description: 'Missing refresh token'})
 
     let decoded_aToken = tokensManager.checkValidityOfToken(access_token);
-    if(decoded_aToken!==false) return res.status(409).send({description: 'Access token is still valid'})
+    if(decoded_aToken!==false) return res.status(204).send()
 
     let decoded_rToken = tokensManager.checkValidityOfToken(refresh_token);
     if(!decoded_rToken)

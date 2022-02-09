@@ -606,7 +606,21 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT  
-  
+
+tags:
+  - name: Users
+  - name: Session
+  - name: Recipes
+  - name: Comments
+  - name: Reports
+  - name: Likes
+  - name: Foods
+  - name: Shopping List
+  - name: Friends
+  - name: Chats
+  - name: Messages
+  - name: Notifications
+
 paths:
 
 #USERS
@@ -921,6 +935,8 @@ paths:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
           description: "User not found"
+        409:
+          description: Old username or password is uncorrect
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1064,6 +1080,8 @@ paths:
       responses:
         200:
           description: User is logged out
+        204:
+          description: User is already logged out
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1072,8 +1090,6 @@ paths:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
           description: User not found
-        409:
-          description: User is already logged out
         500:
           $ref: "#/components/responses/general_error"
   /users/{id}/refresh-token:
@@ -1105,6 +1121,8 @@ paths:
                 properties:
                   access_token:
                     type: string
+        204:
+          description: Access token is still valid
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1113,8 +1131,6 @@ paths:
           $ref: "#/components/responses/forbidden_post_error"
         404:
           description: User not found
-        409:
-          description: Access token is still valid
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1584,6 +1600,8 @@ paths:
       responses:
         200:
           description: Comment has been reported / Comment has been un-reported / Content of comment has been updated
+        204:
+          description: You have already reported it
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -2029,6 +2047,14 @@ paths:
           description: User not found
         409:
           description: Request has already been sent/exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  actualState:
+                    type: string
+                    description: friendship state
         500:
           $ref: "#/components/responses/general_error"
 
@@ -2084,8 +2110,6 @@ paths:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
-        404:
-          description: User not found
         500:
           $ref: "#/components/responses/general_error"  
     
@@ -2133,6 +2157,14 @@ paths:
           description: Friend not found
         409:
           description: Request has already been changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  actualState:
+                    type: string
+                    description: friendship state
         500:
           $ref: "#/components/responses/general_error"
     delete:

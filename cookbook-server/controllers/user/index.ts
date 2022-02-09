@@ -406,7 +406,7 @@ export function update_credential_user(req, res){
                             user.credential.userID = new_userID
                             user.save().then(() => res.status(200).json({update: change}),
                                 err => res.status(500).json({description: err.message}))
-                        }else return res.status(400).json({description: 'Old UserID is incorrect'});
+                        }else return res.status(409).json({description: 'Old UserID is incorrect'});
                     },
                     err => res.status(500).json({description: err.message}))
 
@@ -422,7 +422,7 @@ export function update_credential_user(req, res){
                             user.credential.hash_password = new_hash_password
                             user.save().then(() => res.status(200).json({update: change}),
                                 err => res.status(500).json({description: err.message}))
-                        }else return res.status(400).json({description: 'Old Password is incorrect'});
+                        }else return res.status(409).json({description: 'Old Password is incorrect'});
                     },
                     err => res.status(500).json({description: err.message}))
 
@@ -441,9 +441,9 @@ export function checkLinkResetPassword(req, res){
              .then(emailLink => {
                  if(!emailLink) return res.status(404).json({description: 'Key not valid'})
                  if(emailLink.expired < Date.now()) {
-                     emailLink.delete()
-                              .then(() => res.status(410).json({description: 'Link expired'}),
-                                    err => res.status(500).json({description: err.message}))
+                     emailLink.delete().then(() => console.debug('Remove expired email link for reset password.'),
+                                             err => console.error('ERROR on remove expired email link for reset password. Reason: ', err))
+                     return res.status(410).json({description: 'Link expired'})
                  }
                  else return res.status(200).json({description: 'Link valid'})
              }, err => res.status(500).json({description: err.message}))
