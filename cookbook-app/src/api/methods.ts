@@ -1,6 +1,5 @@
 import axios, {AxiosRequestConfig, AxiosResponse} from 'axios'
 import store from '../store'
-import {newAccessToken} from "./users/session";
 
 import {Server} from "./index";
 
@@ -37,31 +36,23 @@ instance.interceptors.response.use(function(res) {
         console.error("interceptors.response : err = ", err)
 
         let userIdentifier = store.getters['session/userIdentifier']
-        console.debug('User is logged = ', userIdentifier)
+        console.debug('User is logged = ', !!userIdentifier)
 
-        if (err.response && err.response.status === 401 && userIdentifier && !originalConfig._retry && !originalConfig.url.includes('refresh-token')) {
+        if (err.response?.status === 401 && userIdentifier && !originalConfig._retry && !originalConfig.url.includes('refresh-token')) {
             originalConfig._retry = true;
-            try {
-                const oldAccessToken = store.getters['session/accessToken']
-                const refreshToken = store.getters['session/refreshToken']
-
-                const rs = await newAccessToken(userIdentifier,{ refresh_token: refreshToken }, oldAccessToken)
-                const { access_token } = rs.data;
-                console.debug("Interceptors : after refresh => access token = ", access_token)
-
-                store.commit('session/set-access-token', access_token)
-
-                return instance({
-                    ...originalConfig,
-                    headers: {
-                        authorization: 'Bearer ' + access_token,
+            return store.dispatch('session/requestNewAccessToken')
+                .then(res => {
+                    console.debug("Interceptors : result request  ", res)
+                    if(res?.status === 200 || res?.status === 204) {
+                        console.debug(
+                            res?.status === 200 ? "Interceptors : Access token has been updated."
+                                : (res?.status === 204 ? "Interceptors : Access token is still valid." : '')
+                        )
+                        return instance({ ...originalConfig, headers: { authorization: 'Bearer ' + res?.data.access_token } });
                     }
-                });
-            } catch (_error) {
-                console.error("Refresh token err: ", _error)
-                if(_error.response && _error.response.status === 401) store.dispatch('reset')
-                return Promise.reject(_error);
-            }
+                    console.error("Interceptors : Refresh token err: ", res.response)
+                    return Promise.reject(res);
+                })
         }
 
         return Promise.reject(err);
