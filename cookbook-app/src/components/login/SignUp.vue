@@ -16,14 +16,12 @@
               <b-form-group
                   id="input-group-0"
                   label-for="input-0"
+                  label="Immagine Profilo" label-sr-only
               >
-                <image-preview-uploader
-                    zoomable
-                    id="input-0"
-                    :value="user.img"
-                    @selectImage="user.img=$event"
-                >
-                </image-preview-uploader>
+                <preview-uploader avatar zoomable id="input-0"
+                    @selectFile="user.img=$event"
+                    @cancelSelectFile="user.img=null"
+                />
               </b-form-group>
               <b-row cols-md="2" cols-sm="1" cols="1">
 
@@ -110,11 +108,10 @@
 
                   <select-with-image
                       id="input-6"
-                      :value="user.sex"
+                      v-model="user.sex"
                       placeholder="Select gender"
                       type="text"
-                      @select="user.sex=$event.value"
-                      :options="optionsGender">
+                      :options="genders">
                   </select-with-image>
                 </b-form-group>
 
@@ -125,13 +122,11 @@
                     class="pr-md-2"
                 >
                   <select-with-image
-
                       id="input-7"
-                      :value="user.country"
+                      v-model="user.country"
                       placeholder="Select country"
                       type="text"
-                      @select="user.country=$event.value"
-                      :options="optionsCountry">
+                      :options="countries">
                   </select-with-image>
                 </b-form-group>
                 <b-form-group
@@ -193,19 +188,11 @@
 </template>
 
 <script>
-import api from '@api'
-import configuration from "@app/app.config.json";
-import {EmailValidator} from '@app/modules/validator'
-import InputPassword from "../input-password";
-
+import {mapActions, mapGetters} from "vuex";
 export default {
   name: "sign-up",
-  components: {InputPassword},
   data: function() {
     return {
-      optionsGender: require('@assets/genders.js'),
-      optionsCountry: require('@assets/countries.js'),
-      app_name: configuration.app_name,
       user:{
         img: new File([], "", undefined),
         firstname: '',
@@ -236,7 +223,13 @@ export default {
       showInformation: true
     }
   },
+  watch: {
+    processing(val){
+      if(val) this.error = { show: false, msg:'' }
+    }
+  },
   computed:{
+    ...mapGetters(['genders', 'countries']),
     validationInformation: function (){
       return this.validation.firstName && this.validation.lastName && this.validation.email
     },
@@ -245,6 +238,9 @@ export default {
     }
   },
   methods: {
+    ...mapActions({
+      registerUser : 'users/signup'
+    }),
     forward: function (){
       this.showCredentials = true
       this.showInformation = false
@@ -258,7 +254,6 @@ export default {
       this.validation.email = EmailValidator.check(email)
     },
 
-
     signup: function (){
       console.log('signup')
       const formData = new FormData()
@@ -268,17 +263,17 @@ export default {
       //for(const [k, v] of formData.entries()) console.log(k, ' -> ', v);
 
       this.processing = true
-      api.users.signup(formData).then(r =>{
-        this.success = true
-        this.error = {
-          show: false,
-          msg: ''
-        }
-        this.showCredentials = false
-      }).catch(err => {
-        this.error.show = true
-        this.error.msg = api.users.HandlerErrors.signUp(err)
-      }).then(() => this.processing=false)
+      this.registerUser(formData)
+         .then(({data}) =>{
+            this.success = true
+            this.showCredentials = false
+            this.$socket.emit('user:signup', data.userID)
+         })
+         .catch(err => {
+            this.error.show = true
+            this.error.msg = this.handleRequestErrors.users.signUp(err)
+         })
+         .then(() => this.processing = false)
     },
 
     onSubmit: function (event){

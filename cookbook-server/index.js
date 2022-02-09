@@ -45,7 +45,8 @@ new Hosting(app)
         }
     })
     .setPort(port_server)
+    .setSocket(require('./sockets'))
     .build()
-    .listen((server) => {
-        console.log(`Server running at ${server.protocol}://${server.hostname}:${server.port}/api-docs`);
+    .listen((hosting) => {
+        console.log(`Server running at ${hosting.protocol}://${hosting.hostname}:${hosting.port}/api-docs`);
     });

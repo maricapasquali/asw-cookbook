@@ -1,48 +1,52 @@
 <template>
-    <div v-if="authorized">
+  <b-skeleton-wrapper :loading="loading">
+    <template #loading>
       <b-card no-body>
         <b-tabs content-class="mt-1" ref="tabs">
-          <!-- BOTH -->
-          <b-tab ref="account-tab" title="Account" class="p-3" @click="getInformation" lazy>
-            <user-information :id="$route.params.id" :access-token="accessToken" @onSessionExpired="sessionTimeout=true"/>
+          <b-tab v-for="i in skeleton" :key="i">
+            <template #title>
+              <div style="width: 100px"><b-skeleton width="100%"/></div>
+            </template>
+            <b-container>
+              <b-row cols="1" class="text-center py-5" style="height: 500px">
+                <b-col class="text-center" align-self="center"><b-spinner variant="primary" /></b-col>
+              </b-row>
+            </b-container>
           </b-tab>
-          <!-- SIGNED -->
-          <b-tab v-if="isSignedUser" title="Ricette" @click="getRecipes" :active="isActive('recipes')" lazy><p>Ricette</p></b-tab>
-          <!-- BOTH -->
-          <b-tab title="Alimenti" @click="getFoods" :active="isActive('foods')" lazy><p>Alimenti</p></b-tab>
-          <!-- ADMIN -->
-          <b-tab v-if="isAdminUser" title="Segnalazioni" @click="getReports" :active="isActive('reports')" lazy><p>Segnalazioni</p></b-tab>
-          <!-- ADMIN -->
-          <b-tab v-if="isAdminUser" title="Utenti" @click="getUsers" :active="isActive('users')" lazy><p>Utenti</p></b-tab>
-          <!-- SIGNED -->
-          <b-tab v-if="isSignedUser" title="Amici" @click="getFriends" :active="isActive('friends')" lazy><p>Amici</p></b-tab>
-          <!-- BOTH -->
-          <b-tab title="Chats" @click="getChats" :active="isActive('chats')" lazy><p>Chats</p></b-tab>
-          <!-- BOTH -->
-          <b-tab title="Notifiche" @click="getNotifications" :active="isActive('notifications')" lazy><p>Notifiche</p></b-tab>
-
         </b-tabs>
       </b-card>
-    </div>
-    <div v-else-if="error.show">
-      <modal-alert v-model="error.show" variant="danger">
-        <template v-slot:msg>
-          <p>{{error.message}}</p>
-          <router-link :to="{name: 'homepage'}" replace><b-button variant="primary">Vai alla HomePage</b-button></router-link>
-        </template>
-      </modal-alert>
-    </div>
-    <div v-else><not-authorized-area/></div>
+    </template>
+    <b-card no-body>
+      <b-tabs v-model="currentTab" content-class="mt-1" ref="tabs" lazy>
+        <b-tab v-for="tab in tabs" :key="tab.id" :title="tab.title" @click="tab.click" :active="tab.selected">
+          <!-- BOTH -->
+          <user-information v-if="isAccountTab" :id="user" personal-area />
+          <!-- SIGNED -->
+          <recipe-sections v-if="isRecipesTab"  />
+          <!-- BOTH -->
+          <food-section v-if="isFoodsTab"/>
+          <!-- ADMIN -->
+          <reports-section v-if="isReportsTab" />
+          <!-- ADMIN -->
+          <users-section v-if="isUsersTab" />
+          <!-- SIGNED -->
+          <friends-section v-if="isFriendsTab" />
+          <!-- BOTH -->
+          <chats-section v-if="isChatsTab" />
+          <!-- BOTH -->
+          <notifications-section v-if="isNotificationsTab" />
+        </b-tab>
+      </b-tabs>
+    </b-card>
+  </b-skeleton-wrapper>
 </template>
 
 <script>
-import Utils from '@services/utils'
-import api from "@api"
-import {Session} from "@services/session";
-import {bus} from "@/main"
+
+import {mapActions, mapGetters} from "vuex";
+
 export default {
   name: "PersonalArea",
-  components: {Navigator},
   props:{
     active: {
       type: String,
@@ -52,104 +56,152 @@ export default {
   },
   data: function (){
     return {
-      authorized: false,
-      sessionTimeout: false,
-      error:{
-        show: false,
-        message: ''
-      },
-      userRole: '',
-      accessToken: ''
+      loading: false,
+      skeleton: 4,
+
+      currentTab: 0,
+
+      tabs: [],
+      tabsSigned: ['account', 'recipes', 'foods', 'friends', 'chats', 'notifications'],
+      tabsAdmin: ['account', 'foods',  'reports', 'users','chats', 'notifications' ]
     }
   },
-
-  created() {
-    console.log(`CHECK IF YOU IS AUTHORIZED ...`)
-    this.accessToken = Session.accessToken()
-    if(this.accessToken){
-      api.users.isAuthorized(this.$route.params.id, this.accessToken)
-          .then(response =>{
-            this.authorized = true
-            this.userRole = response.data.isSigned ? 'signed' : response.data.isAdmin ? 'admin' : ''
-            this.select()
-          })
-          .catch(error => {
-            this.authorized = false
-            this.error.message = api.users.HandlerErrors.isAuthorized(error);
-            console.log(this.error.message)
-            if(Utils.isString(this.error.message)){
-              this.error.show = true
-            }
-            else if(error.response.status === 401){
-              console.error("isAuthorized: Error 401")
-              bus.$emit("session-end")
-              this.$router.replace({name: 'login'});
-            }
-          })
-    }else {
-      this.$router.replace({name: 'login'});
+  watch: {
+    active(val){
+      let find = this.tabs.find(o => o.id === val)
+      find.selected = true
     }
+  },
+  created(){
+    (this.isAdmin ? this.tabsAdmin : this.isSigned ? this.tabsSigned: [])
+        .forEach(tab => this.tabs.push(this._mapping(tab)))
+    console.log(`CHECK IF YOU IS AUTHORIZED ...`)
+    if(this.accessToken){
+
+      if(this.user === this.userIdentifier){
+
+        this.currentTab = this.tabs.findIndex(t => t.id === this.active)
+
+        this.$socket.on('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
+        this.$socket.on('access-token:errors', this.onAccessTokenError.bind(this))
+        this.$socket.on('check:access-token', this.onAccessTokenOk.bind(this))
+
+        this.$socket.emit('check:access-token', {_id: this.userIdentifier, resourceID: this.user})
+
+      } else {
+        this.handleRequestErrors.session.wrongUserSession()
+        this.loading = true
+      }
+
+    } else this.$router.replace({name: 'login'});
+  },
+  beforeDestroy() {
+    this.$socket.off('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
+    this.$socket.off('access-token:errors', this.onAccessTokenError.bind(this))
+    this.$socket.off('check:access-token', this.onAccessTokenOk.bind(this))
   },
   computed: {
-    loading: function (){
-      return !(this.authorized || this.error.show || this.sessionTimeout)
-    },
-    isAdminUser() {
-      return this.userRole === 'admin'
-    },
-    isSignedUser() {
-      return this.userRole === 'signed'
-    }
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier',
+      isSigned: 'session/isSigned',
+      isAdmin: 'session/isAdmin'
+    }),
 
+    user(){
+      return this.$route.params.id
+    },
+
+    isAccountTab(){
+      return this._isActive('account')
+    },
+    isRecipesTab(){
+      return this._isActive('recipes')
+    },
+    isFoodsTab(){
+      return this._isActive('foods')
+    },
+    isReportsTab(){
+      return this._isActive('reports')
+    },
+    isUsersTab(){
+      return this._isActive('users')
+    },
+    isFriendsTab(){
+      return this._isActive('friends')
+    },
+    isChatsTab(){
+      return this._isActive('chats')
+    },
+    isNotificationsTab(){
+      return this._isActive('notifications')
+    },
   },
   methods: {
-    isActive: function (target){
-      return target === this.active
-    },
+    ...mapActions({
+      requestNewAccessToken: 'session/requestNewAccessToken'
+    }),
 
-    select: function (){
-      switch (this.active){
-        case 'account' : this.getInformation();break
-        case 'recipes' : this.getRecipes();break
-        case 'foods' : this.getFoods();break
-        case 'friends' : this.getFriends();break
-        case 'chats' : this.getChats();break
-        case 'notification' : this.getNotifications();break
-        case 'reports' : this.getReports();break
-        case 'users' : this.getUsers();break
+    _mapping(id){
+      return {
+        id,
+        title: this._title(id),
+        selected: this._isActive(id),
+        click: () => {
+          this.$router.push({ name:  this._route(id) })
+        }
       }
     },
 
-    navigate: function (dest){
-      if(this.$route.name !== dest) this.$router.push({name:  dest})
+    _title(target){
+      switch (target){
+        case 'account' : return 'Account'
+        case 'recipes' : return 'Ricette'
+        case 'foods' : return 'Cibo'
+        case 'friends' : return 'Amici'
+        case 'chats' : return 'Chats'
+        case 'notifications' : return 'Notifiche'
+        case 'reports' : return 'Segnalazioni'
+        case 'users' : return 'Utenti'
+      }
+    },
+    _route: function (target){
+      switch (target){
+        case 'account' : return 'p-user-account'
+        case 'recipes' : return 'p-user-recipes'
+        case 'foods' : return 'p-user-foods'
+        case 'friends' : return 'p-user-friends'
+        case 'chats' : return 'p-user-chats'
+        case 'notifications' : return 'p-user-notifications'
+        case 'reports' : return 'p-user-reports'
+        case 'users' : return 'p-user-users'
+      }
+    },
+    _isActive: function (target){
+      return target === this.active
     },
 
-    getInformation: function (){
-      this.navigate('p-user-account')
+    /* Listeners check ACCESS TOKEN */
+    onAccessTokenOk(){
+      this.loading = false
+     // let find = this.tabs.find(o => o.id === this.active)
     },
-    getRecipes: function (){
-      this.navigate('p-user-recipes')
-    },
-    getFoods: function (){
-      this.navigate('p-user-foods')
-    },
-    getFriends: function (){
-      this.navigate('p-user-friends')
-    },
-    getChats: function (){
-      this.navigate('p-user-chats')
-    },
-    getNotifications: function (){
-      this.navigate('p-user-notifications')
-    },
+    onAccessTokenNotOk({description}){
+      console.error("Expired access token. Required another.")
+      console.error(description)
+      this.requestNewAccessToken()
+          .then(res => {
+            if(res?.response?.status === 200) this.loading = false
 
-    getReports: function (){
-      this.navigate('p-user-reports')
+            if(res?.response?.status === 401) this.$router.replace({ name: 'login' })
+          })
     },
-    getUsers: function (){
-      this.navigate('p-user-users')
+    onAccessTokenError(description) {
+      console.error(description)
+      this.handleRequestErrors.session.checkAccessToken(description)
+      this.loading = true
     }
-  }
+  },
 }
 </script>
 

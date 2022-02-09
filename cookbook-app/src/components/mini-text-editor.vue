@@ -1,7 +1,7 @@
 <template>
   <b-card  v-if="show">
     <template #header v-if="closable">
-      <b-col align="end" >
+      <b-col class="text-right">
         <b-icon-x-square-fill font-scale="1.5" class="icon" @click="closeEditor"/>
       </b-col>
     </template>
@@ -15,7 +15,7 @@
     </b-row>
 
     <template #footer v-if="isContentNotEmpty">
-      <b-col  align="end">
+      <b-col  class="text-right">
         <b-button variant="primary" @click="endEdit">
           <slot name="edit">Edit</slot>
         </b-button>
@@ -35,7 +35,8 @@ export default {
     noclosable:{
       type: Boolean,
       default: false
-    }
+    },
+    resetContent: Boolean
   },
   data(){
     return {
@@ -47,6 +48,12 @@ export default {
     value(val, old){
       this.show = val
     },
+    resetContent(val){
+      if(val) {
+        this.content = ''
+        this.closeEditor()
+      }
+    }
   },
   computed:{
     closable(){
@@ -65,8 +72,6 @@ export default {
     },
     endEdit() {
       this.$emit('end-edit',this.content)
-      this.content = ''
-      this.closeEditor()
     }
   },
   mounted() {

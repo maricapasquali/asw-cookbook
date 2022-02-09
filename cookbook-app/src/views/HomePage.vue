@@ -16,76 +16,91 @@
               <b-skeleton width="25%"></b-skeleton>
             </b-col>
           </b-row>
-          <b-button class="details-recipes"  variant="link">Dettagli</b-button>
+          <b-button variant="info" class="details-recipes" disabled><b-icon-info-circle/></b-button>
           <template #footer>
             <b-row align-h="between">
               <b-col><b-skeleton-icon  icon="heart" :icon-props="{ variant: 'light' }"></b-skeleton-icon></b-col>
-              <b-col align="end"><b-skeleton-icon icon="chat" :icon-props="{ variant: 'light' }"></b-skeleton-icon></b-col>
+              <b-col class="text-right"><b-skeleton-icon icon="chat" :icon-props="{ variant: 'light' }"></b-skeleton-icon></b-col>
             </b-row>
           </template>
         </b-card>
       </template>
 
-     <div>
-      <b-row >
-        <b-card v-for="doc in docs" :key="doc.recipe._id" class="recipe-post p-0 mt-3 mx-auto col-lg-7">
-          <template #header>
-            <b-row align-h="between">
-              <b-col>
-                <router-link :to="{name: 'single-user', params: {id: doc.owner._id }}">
-                  <strong><em>{{doc.owner.userID }}</em></strong>
+     <b-container fluid class="recipe-post-container px-0">
+      <b-row cols="1">
+        <b-col v-for="(doc, ind) in docs" :key="doc._id" class="mx-auto px-1 mb-3" cols="12" sm="10" md="9" lg="7">
+          <b-card  class="recipe-post">
+            <!-- Author and date -->
+            <template #header>
+              <b-row align-h="between" align-v="center">
+                <b-col v-if="doc.owner" >
+                  <b-row cols="1" cols-sm="1" cols-md="2">
+                    <b-col md="3"> <avatar v-model="doc.owner.img" :user="doc.owner._id"  variant="light" :size=30 /> </b-col>
+                    <b-col md="9">
+                      <router-link :to="{name: 'single-user', params: {id: doc.owner._id }}">
+                        <strong> <em> {{ doc.owner.userID }}</em></strong>
+                      </router-link>
+                    </b-col>
+                  </b-row>
+                </b-col>
+                <b-col class="text-right">
+                  <elapsed-time v-model="doc.createdAt" :language="language" />
+                </b-col>
+              </b-row>
+            </template>
+
+            <!-- Image / Tutorial -->
+            <preview-recipe-tutorial class="recipes-tutorial" v-model="doc.tutorial" :poster="doc.img" with-image/>
+
+            <!-- Description: name, country, category -->
+            <b-row :class="{'description-post': true, 'py-2': !doc.country}" align-h="between">
+              <b-col class="d-flex align-items-center pl-2">
+                <router-link :to="redirectToRecipe(doc)" class="recipe-post-link">
+                  {{doc.name}}
                 </router-link>
               </b-col>
-              <b-col align="end">
-                <elapsed-time v-model="doc.recipe.timestamp" :language="language" />
+              <b-col class="d-flex justify-content-end pr-1" >
+                <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.category.text}} </span>
+                <country-image v-model="doc.country" :id="doc._id"/>
               </b-col>
             </b-row>
-          </template>
-          <router-link to=""> <!-- TODO: add link to page of one specific recipe -->
-            <b-img fluid class="recipes-image" :src="doc.recipe.img" @error="imgNotFound"/>
-          </router-link>
-          <b-row class="description-post" align-h="between">
-            <b-col class="d-flex align-items-center pl-2">  {{doc.recipe.name}} </b-col>
-            <b-col class="d-flex justify-content-end pr-1" >
-              <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.recipe.category}} </span>
-              <b-img v-if="doc.recipe.nationality" :id="imageId(doc.recipe._id)" class="country-image" :src="doc.recipe.nationality.src"></b-img>
-              <b-tooltip :target="imageId(doc.recipe._id)" triggers="hover">
-                <p>{{doc.recipe.nationality.text}}</p>
-              </b-tooltip>
-            </b-col>
-          </b-row>
 
-          <recipe-details :recipeId="doc.recipe._id" class="details-recipes"/>
+            <!-- Details -->
+            <recipe-details :recipe="doc" class="details-recipes" />
 
-          <template #footer>
-            <b-row align-h="between">
-              <b-col>
-                <!-- Like of a RECIPE -->
-                <like v-model="doc.recipe.likes" @like="like(doc.recipe)" @unlike="unlike(doc.recipe)"/>
-              </b-col>
-              <b-col align="end">
-                <b-icon-chat class="icon" v-b-toggle="commentsId(doc.recipe._id)"/>
-              </b-col>
-            </b-row>
-            <b-collapse :id="commentsId(doc.recipe._id)" class="mt-2">
-              <!-- LIST COMMENT for a RECIPE -->
-              <comments v-model="doc.recipe.comments" :recipeId="doc.recipe._id" :language="language"  :isOwner="isOwner(doc.owner)" />
-            </b-collapse>
-          </template>
+            <!-- Likes and Comments -->
+            <template #footer>
+              <b-row align-h="between">
+                <b-col>
+                  <!-- Like of a RECIPE -->
+                  <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike(ind)"/>
+                </b-col>
+                <b-col class="text-right">
+                  <b-icon-chat class="icon" v-b-toggle="commentsId(doc._id)"/>
+                </b-col>
+              </b-row>
+              <b-collapse :id="commentsId(doc._id)" class="mt-2">
+                <!-- LIST COMMENT for a RECIPE -->
+                <comments v-model="doc.comments" :recipe="doc" :language="language" />
+              </b-collapse>
+            </template>
 
-        </b-card>
+          </b-card>
+        </b-col>
       </b-row>
-      <b-row class="mt-3" align-h="center" v-if="!$data._others">
+      <b-row class="mt-3" align-h="center" v-if="areOthers">
         <b-button variant="link" @click="others">Altri ...</b-button>
       </b-row>
-     </div>
+     </b-container>
     </b-skeleton-wrapper>
 
   </b-container>
 </template>
 
 <script>
-import {Session} from "@services/session";
+
+import {Server} from '@api'
+import {mapGetters} from "vuex";
 
 export default {
   name: "HomePage",
@@ -94,270 +109,151 @@ export default {
       skeletons: 5,
 
       language: 'it',
-      optionsCountry: require('@assets/countries.js'),
-      defaultImageRecipes: require('@assets/images/recipe-image.jpg'),
-
-      showDetails: false,
 
       docs: [],
+      total: 0,
+      optionsPagination: {
+        page: 1,
+        limit: 2
+      },
 
-      _others: false,
-
-      _newPostInd: 0,
+      error: {
+        show: false,
+        message: ''
+      }
     }
   },
   computed: {
     isNotLoaded(){
       return this.docs.length === 0
-    }
-  },
-  watch: {
-    docs: {
-      handler(val){
-        console.log('Update docs ..')
-      },
-      deep: false
-    }
+    },
+    areOthers(){
+      return this.docs.length > 0 && this.docs.length < this.total
+    },
+
+    ...mapGetters(['getRecipeCategoryByValue']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    })
   },
   methods: {
-    imageId(id){
-      return 'country-image-'+ id
+    redirectToRecipe(rec){
+      return rec.owner ?  { name: 'single-recipe', params: { id: rec.owner._id, recipe_id: rec._id } } :
+                          { name: 'recipe', params: { recipe_id: rec._id } }
     },
+
     commentsId(id){
       return 'comments-'+ id
     },
-    imgNotFound(e){
-      console.error('image recipes not found...')
-      e.target.src = this.defaultImageRecipes
-    },
 
-    isOwner(owner_recipe){
-      let session = Session.userInfo()
-      return session && owner_recipe._id === session._id && owner_recipe.userID === session.userID
+    youNotMakeLike(index){
+      const owner = this.docs[index].owner
+      return this.isAdmin || !owner || owner._id === this.userIdentifier
     },
     /* -- REQUEST --*/
 
-    like(recipe){
-      //TODO: REQUEST ADD LIKE FROM RECIPE
-      console.debug("Like ", recipe)
-    },
-    unlike(recipe){
-      //TODO: REQUEST REMOVE LIKE FROM RECIPE
-      console.debug("UNLike ",recipe)
+    _remapRecipe(recipe){
+      let category = this.getRecipeCategoryByValue(recipe.category)
+      if(category) recipe.category = category
     },
 
-    updateDocs(){
-      this.docs.forEach(p => {
-        p.recipe.img = p.recipe.img || this.defaultImageRecipes
-        let nationality = this.optionsCountry.find(c => c.value === p.recipe.nationality)
-        if(nationality) p.recipe.nationality = nationality
-      })
+    getPost(currentPage, _limit){
+      const page = currentPage || 1
+      const limit = _limit || this.optionsPagination.limit
+
+      console.log('POST pagination: ', {page, limit})
+      this.$store.dispatch('recipes/all-shared', { pagination: {page, limit} })
+         .then(({data}) => {
+
+            console.log(data)
+            data.items.forEach(r => this._remapRecipe(r))
+            if(currentPage) this.docs.push(...data.items)
+            else this.docs = data.items
+
+            this.total = data.total
+            if(!_limit) this.optionsPagination.page = page
+         })
+         .catch(this.handleRequestErrors.recipes.allSharedRecipes)
     },
-
-    getPost(){
-      // TODO: REQUEST POST RECIPES
-      this.docs = [
-        {
-          owner: {
-            _id: '31312313b',
-            userID: 'Mario Rossi'
-          },
-          recipe : {
-            _id: '1231413421321asx',
-            timestamp: Date.parse("2021-10-23T10:41:00"),
-            name: 'Fiorentina al sangue',
-            category: 'Secondi',
-            nationality: 'IT',
-            likes: 0,
-            comments: [       {
-              number: 1,
-              content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-              timestamp: Date.parse("2021-10-23T13:41:00"),
-              likes: 0,
-              reported: false
-            }],
-          }
-        },
-        {
-          owner: {
-            _id: '612df857e9e11fd2d82cb95f',
-            userID: 'maricapasquali01'
-          },
-          recipe : {
-            _id: '1231413421321asa',
-            timestamp:  Date.parse("2021-10-21T10:30:00"),
-            name: 'Pancake',
-            category: 'Dolci',
-            nationality: 'US',
-            likes: 0,
-            comments: [
-              {
-                number: 12,
-                content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                timestamp: Date.parse("2021-10-21T14:00:00"),
-                likes: 0,
-                reported: true
-              },
-              {
-                number: 11,
-                user: {userID: "hanna smith", _id: "sfsfw3223"},
-                content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                timestamp: Date.parse("2021-10-20T12:00:00"),
-                likes: 0,
-                reported: false
-              },
-              {
-
-                number: 10,
-                content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                timestamp: Date.parse("2021-10-19T12:00:00"),
-                likes: 0,
-                reported: false,
-                response: {
-                  owner_recipe: {
-                    _id: '612df857e9e11fd2d82cb95f',
-                    userID: "maricapasquali01",
-                    img: ""
-                  },
-                  timestamp: Date.parse("2021-10-19T13:00:00"),
-                  content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                  likes: 0,
-                  reported: false
-                }
-              },
-            ],
-          },
-        },
-        {
-          owner: {
-            _id: '31312313b',
-            userID: 'Mario Rossi'
-          },
-          recipe : {
-            _id: '1231413421321asB',
-            timestamp: Date.parse("2021-10-18T10:30:00"),
-            name: 'Lasagne',
-            category: 'Primi',
-            nationality: 'IT',
-            likes: 5,
-            comments: [],
-          }
-        },
-        {
-          owner: {
-            _id: '31312313b',
-            userID: 'Mario Rossi'
-          },
-          recipe : {
-            _id: '1231413421321asc',
-            timestamp: Date.parse("2021-10-17T12:30:00"),
-            name: 'Spaghetti alla carbonara',
-            category: 'Primi',
-            nationality: 'IT',
-            likes: 0,
-            comments: [],
-          }
-        }
-      ]
-
-      this.updateDocs()
-    },
-
-
-
-    newPost(){
-      setInterval(function (){
-        this.docs.unshift( {
-          owner: {
-            _id: '31312313www',
-            userID: 'MarinaCavalli01'
-          },
-          recipe : {
-            _id: '12345'+this.$data._newPostInd,
-            timestamp: Date.now(),
-            name: 'Funghi in padella - '+this.$data._newPostInd,
-            category: 'Contorni',
-            nationality: 'IT',
-            likes: 0,
-            comments: [],
-          }
-        })
-        this.$data._newPostInd++
-        this.updateDocs()
-      }.bind(this), 10000)
-    },
-
     others(){
-      //TODO: REQUEST OTHER 10 POST RECIPE
-      console.debug("Altri 10 post ..")
-      if(!this.$data._others){
-        this.docs.push( {
-          owner: {
-            _id: '31312313www',
-            userID: 'MarinaCavalli01'
-          },
-          recipe : {
-            _id: '1231413421321assss',
-            timestamp: Date.parse("2021-10-14T10:30:00"),
-            name: 'Patate al forno',
-            category: 'Contorni',
-            nationality: 'IT',
-            likes: 5,
-            comments: [],
-          }
-        },)
-        this.docs.push({
-          owner: {
-            _id: '31312313www',
-            userID: 'MarinaCavalli01'
-          },
-          recipe : {
-            _id: '1231413421321asss1',
-            timestamp: Date.parse("2021-10-13T10:30:00"),
-            name: 'Fagioli alla messicana',
-            category: 'Secondi',
-            nationality: 'MX',
-            likes: 0,
-            comments: [],
-          }
-        })
+      console.debug("Altri "+this.optionsPagination.limit+" post ..")
+      this.getPost(this.optionsPagination.page + 1)
+    },
 
-        this.updateDocs()
-        this.$data._others = true
+    /* Listener notification */
+    onUpdatedRecipeListeners(_, recipe) {
+      if (recipe) {
+        let index = this.docs.findIndex(r => r._id === recipe._id)
+        if (index !== -1) {
+          this._remapRecipe(recipe)
+          this.docs.splice(index, 1, recipe)
+        }
       }
+    },
+    onDeletedRecipeListeners(_, recipe) {
+      if (recipe) this.getPost(0, this.optionsPagination.page * this.optionsPagination.limit)
+    },
+
+    onNewRecipeListeners(_, recipe){
+      if(recipe) {
+        this._remapRecipe(recipe)
+        this.docs.unshift(recipe)
+        this.total+=1
+      }
+    },
+
+    /* Listener update */
+    onUpdateInfos(userInfo) {
+      if(userInfo && (userInfo.information || userInfo.userID)) {
+        this.docs.filter(recipe => recipe.owner && recipe.owner._id === userInfo._id)
+                 .forEach(recipe => {
+                    if(userInfo.information) recipe.owner.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
+                    if(userInfo.userID) recipe.owner.userID = userInfo.userID
+                 })
+      }
+    },
+    onDeletedUserListeners(id){
+      console.debug('on delete user => _id = ', id)
+      this.docs.filter(recipe => recipe.owner && recipe.owner._id === id).forEach(recipe => recipe.owner = null)
     }
+  },
+  created() {
+    this.$bus.$on('recipe:create', this.onNewRecipeListeners.bind(this))
+    this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+  },
+  beforeDestroy() {
+    this.$bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
+    this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
   },
   mounted() {
     this.getPost()
-    // setTimeout(this.getPost.bind(this), 1000)
-    // this.newPost()
   },
 }
 </script>
 
 <style scoped lang="scss">
 
-.recipes-image{
-  position: relative;
-  width: 100%;
-  height: 300px;
-}
-
-.description-post, .details-recipes {
+.description-post {
   position: absolute;
   background-color: $overlay;
   color: white;
-}
-
-.description-post{
   top:10%;
   left: 15px;
   width: 100%;
 }
 .details-recipes{
-  left: 0;
-  bottom: 0;
-  border-radius: 0;
+  position: absolute;
+  right: 5px;
+  bottom: 185px
 }
 
 .recipe-post {
@@ -368,6 +264,7 @@ export default {
       color: white;
     }
   }
+
   & >.card-body{
     position: relative;
     padding: 0;
@@ -376,6 +273,14 @@ export default {
   & .country-image{
     width: 50px;
     height: 40px
+  }
+
+  & .recipe-post-link{
+    color: white;
+  }
+
+  & .recipes-tutorial{
+    height: 300px;
   }
 }
 

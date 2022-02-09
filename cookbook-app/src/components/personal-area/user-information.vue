@@ -1,41 +1,45 @@
 <template>
   <div>
     <b-container class="p-0" fluid>
-      <div v-if="changeMode">
+      <div v-if="personalArea && changeMode">
         <wrap-loading v-model="processing">
           <template>
-            <image-preview-uploader v-if="changeableUser.information.img" :default="changeableUser.information.img" @selectImage="changeImage($event)" ></image-preview-uploader>
-            <image-preview-uploader v-else @selectImage="changeImage($event)"></image-preview-uploader>
-
-            <b-form-group>
-              <label for="input-country"><b>Paese</b></label>
-              <select-with-image id="input-country" placeholder="Seleziona paese ..." :value="changeableUser.information.country"
-                                 @select="selectCountry($event)" :options="countries"></select-with-image>
+            <b-form-group label-for="input-image-profile" label="Immagine Profilo" label-sr-only>
+              <preview-uploader avatar id="input-image-profile"
+                  :default="oldProfileImage"
+                  @selectFile="changeableUser.information.img = $event"
+                  @cancelSelectFile="changeableUser.information.img = oldProfileImage"
+                  zoomable
+                  removable/>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-name"><b>Nome *</b></label>
+            <b-form-group label-for="input-country">
+              <template #label> <b>Paese</b> </template>
+              <select-with-image id="input-country" placeholder="Seleziona paese ..." v-model="changeableUser.information.country" :options="countries"></select-with-image>
+            </b-form-group>
+
+            <b-form-group label-for="input-name">
+              <template #label> <b>Nome *</b> </template>
               <b-form-input id="input-name" type="text" :state="validation.firstname" v-model="changeableUser.information.firstname" @input="checkRequiredField($event, 'firstname')"></b-form-input>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-lastname"><b>Cognome *</b></label>
+            <b-form-group label-for="input-lastname">
+              <template #label> <b>Cognome *</b> </template>
               <b-form-input id="input-lastname" type="text" :state="validation.lastname" v-model="changeableUser.information.lastname" @input="checkRequiredField($event, 'lastname')"></b-form-input>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-birth-date"><b>Data di nascita</b></label>
+            <b-form-group label-for="input-birth-date">
+              <template #label> <b>Data di nascita</b> </template>
               <b-form-input id="input-birth-date" type="date" v-model="changeableUser.information.birth_date"></b-form-input>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-gender"><b>Genere</b></label>
-              <select-with-image id="input-gender" placeholder="Seleziona genere ..." :value="changeableUser.information.sex"
-                                 @select="selectGender($event)" :options="genders"></select-with-image>
+            <b-form-group label-for="input-gender">
+              <template #label> <b>Genere</b> </template>
+              <select-with-image id="input-gender" placeholder="Seleziona genere ..." v-model="changeableUser.information.sex" :options="genders"></select-with-image>
             </b-form-group>
 
-            <b-form-group>
-              <label for="input-occupation"><b>Occupazione</b></label>
+            <b-form-group label-for="input-occupation">
+              <template #label> <b>Occupazione</b> </template>
               <b-form-input id="input-occupation" type="text" v-model="changeableUser.information.occupation"></b-form-input>
             </b-form-group>
 
@@ -43,21 +47,21 @@
               <b>Contatti</b>
               <ul>
                 <li>
-                  <b-form-group>
-                    <label for="input-email"><b>Email * </b></label>
+                  <b-form-group label-for="input-email">
+                    <template #label> <b>Email *</b> </template>
                     <b-form-input id="input-email" type="email" :state="validation.email" v-model="changeableUser.information.email" @input="checkRequiredField($event, 'email')"></b-form-input>
                   </b-form-group>
                 </li>
                 <li>
-                  <b-form-group>
-                    <label for="input-tel-num"><b>Numero di telefono</b></label>
+                  <b-form-group label-for="input-tel-num">
+                    <template #label> <b>Numero di telefono</b> </template>
                     <b-form-input id="input-tel-num" type="tel" v-model="changeableUser.information.tel_number"></b-form-input>
                   </b-form-group>
                 </li>
               </ul>
             </div>
 
-            <b-row align-h="between" v-if="accessToken">
+            <b-row align-h="between">
               <b-col class="d-flex justify-content-start"><b-button variant="secondary" @click="cancel"> Annulla </b-button></b-col>
               <b-col class="d-flex justify-content-end"><b-button v-if="isChangedSomething" variant="primary" @click="save"> Salva </b-button></b-col>
             </b-row>
@@ -109,11 +113,10 @@
 
           <b-row align-h="between" class="text-center">
             <b-col class="d-flex justify-content-start">
-              <b-img v-if="user.information.img" width="100" height="100" rounded="circle" :src="user.information.img" alt="immagine profilo" @error="imgErr"></b-img>
-              <b-img v-else width="100" height="100" :src="img_profile" alt="immagine profilo"></b-img>
+              <avatar v-model="user.information.img" variant="light" :user="user._id"/>
             </b-col>
             <b-col align-self="center" class="d-flex justify-content-end">
-              <b-img v-if="user.information.country" width="100" height="70" :src="country"></b-img>
+              <country-image id="owner" v-model="user.information.country" width="100" height="70" />
             </b-col>
           </b-row>
 
@@ -153,20 +156,23 @@
                 </b-col>
               </b-row>
             </b-col>
-            <b-col  v-if="accessToken" align-self="end" class="d-flex justify-content-end px-0">
+            <b-col  v-if="personalArea" align-self="end" class="d-flex justify-content-end px-0">
               <b-button-group vertical>
                 <b-button v-if="!changeMode" variant="secondary" @click="changeMode = true"> Modifica </b-button>
                 <b-button v-if="user.isSigned && !user.isAdmin" variant="secondary" @click="changeUserID=true"> Cambia userID </b-button>
                 <b-button variant="secondary"  @click="changePassword=true"> Cambia password </b-button>
                 <b-button v-if="user.isSigned && !user.isAdmin" variant="secondary" @click="deleteAccount=true"> Cancella Account </b-button>
               </b-button-group>
+              <!-- DELETE ACCOUNT -->
+              <delete-account v-model="deleteAccount" :id="user._id" @onDeleteAccount="onDeleteAccount"/>
+              <!-- CHANGE PASSWORD -->
+              <change-password v-model="changePassword" :id="user._id"/>
+              <!-- CHANGE USERID-->
+              <change-userid v-model="changeUserID" :id="user._id" :old_userID="user.userID" @onChangeUserID="onChangeUserID"/>
             </b-col>
-            <b-col  v-if="isOtherUser" align-self="end" class="d-flex justify-content-end px-0">
+            <b-col  v-else-if="isLoggedIn && isOtherUser" align-self="end" class="d-flex justify-content-end px-0">
               <b-button-group vertical>
-                <b-button v-if="!friendship.request && !friendship.just" variant="secondary" @click="requestFriendShip"> Segui </b-button>
-                <b-button v-else v-if="friendship.just" variant="secondary" @click="removeFriendShip">Smetti di seguire</b-button>
-                <b-button v-else v-if="friendship.request && !friendship.just" variant="primary" disabled>Richiesta inviata</b-button>
-                <b-button variant="secondary" @click="goChat"> Chat </b-button>
+                <b-friendship :other-user="user" with-chat/>
               </b-button-group>
             </b-col>
           </b-row>
@@ -175,42 +181,24 @@
       </b-container>
 
     </b-container>
-    <!-- DISPLAY ERRORS -->
-    <modal-alert v-model="error.show" variant="danger" >
-      <template v-slot:msg> {{error.message}} </template>
-    </modal-alert>
-    <!-- DELETE ACCOUNT -->
-    <delete-account v-if="deleteAccount" @close="deleteAccount=false" :id="user._id" @sessionExpired="onSessionExpired"/>
-    <!-- CHANGE PASSWORD -->
-    <change-password v-if="changePassword" @close="changePassword=false" :id="user._id" @sessionExpired="onSessionExpired"/>
-    <!-- CHANGE USERID-->
-    <change-userid v-if="changeUserID" @close="changeUserID=false" @sessionExpired="onSessionExpired"
-                   :id="user._id" :old_userID="user.userID" @changeUserID="onChangeUserID"/>
-
   </div>
 </template>
 
 <script>
-import api from '@api'
-import {EmailValidator} from '@app/modules/validator'
-import Utils from "@services/utils"
-import {Session} from "@services/session"
-import {bus} from "@/main";
+
+import {mapGetters, mapMutations} from "vuex";
 
 export default {
   name: "user-information",
   props:{
     id: String,
-    accessToken: {
-      type: String,
-      default: undefined
+    personalArea: {
+      type: Boolean,
+      default: false
     }
   },
   data: function (){
     return {
-      img_profile: require('@assets/icons/person-circle.svg'),
-      countries: require('@assets/countries.js'),
-      genders: require('@assets/genders.js'),
       changeableUser: { information: {}, userID: '', _id: ''},
       user: { information: {}, userID: '', _id: ''},
       changeMode: false,
@@ -223,28 +211,20 @@ export default {
         lastname: true,
       },
       processing: false,
-      error:{
+      error: {
         show: false,
         message: ''
-      },
-      friendship: {
-        request: false,
-        just: false,
       }
     }
   },
   created() {
     console.log(`CREATE GUI INFO USER (${this.id})...`)
-    api.users.getUser(this.id, this.accessToken).then((response)=>{
-      this.user = response.data
-      this.changeableUser = Utils.clone(this.user)
-      console.log(this.user)
-      console.log(this.changeableUser)
-    }).catch(err => {
-      this.error.show = true
-      this.error.message = api.users.HandlerErrors.getUser(err)
-      console.error(err)
-    })
+    this.getUser()
+
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+  },
+  beforeDestroy() {
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
   },
   filters: {
     localDate: function (text, country){
@@ -258,49 +238,59 @@ export default {
     }
   },
   computed:{
+    ...mapGetters(['genders', 'getGenderByValue', 'countries']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin',
+      isSigned: 'session/isSigned',
+      accessToken: 'session/accessToken',
+      isLoggedIn: 'session/isLoggedIn'
+    }),
+
+    oldProfileImage(){
+      return this.user.information.img
+    },
+
     isNotLoaded() {
       return this.user._id.length === 0;
     },
     isChangedSomething: function (){
-      return !Utils.equals(this.changeableUser.information, this.user.information) &&
+      return !equals(this.changeableUser.information, this.user.information) &&
               Object.values(this.validation).every(v => v === true)
     },
-    country: function (){
-      return this.countries.find(o => this.user.information.country === o.value).src
-    },
     gender: function (){
-      return this.genders.find(g => this.user.information.sex === g.value).text
+      return this.getGenderByValue(this.user.information.sex)?.text
     },
     isOtherUser: function (){
-      return Session.accessToken() && Session.userInfo()._id !== this.id
+      return this.userIdentifier !== this.id
     }
   },
   methods:{
-    imgErr: function (){
-      this.changeableUser.information.img = this.img_profile
-      this.user.information.img = this.img_profile
+    ...mapMutations({
+      changeUserId: 'session/change-username',
+    }),
+    getUser(_id){
+      this.$store.dispatch('users/information-of', _id || this.id)
+         .then(({data}) =>{
+            this.user = data
+            this.changeableUser = clone(this.user)
+            console.log(this.user)
+            console.log(this.changeableUser)
+         })
+         .catch(err => this.handleRequestErrors.users.getUser(err, {_forbiddenPage: this.personalArea }))
+         .then(notFound => {
+           if(notFound) this.$emit('not-found')
+         })
     },
-    onSessionExpired: function (){
-      this.$emit('onSessionExpired')
-    },
+
     onChangeUserID: function(val){
       this.user.userID = val
-      this.changeUserID = false
-      bus.$emit('userID', val);
+      this.changeUserId(val)
     },
 
-    changeImage: function (val){
-      console.log(val)
-      this.changeableUser.information.img = val && val.size === 0 ? this.user.information.img : val
-    },
-
-    selectCountry: function (e){
-      console.log("select contry = ", e)
-      this.changeableUser.information.country = e.value
-    },
-    selectGender: function (e){
-      console.log("select gender = ", e)
-      this.changeableUser.information.sex = e.value
+    onDeleteAccount(){
+        this.$store.dispatch('reset')
+        this.$router.replace({ name: "homepage" })
     },
 
     checkRequiredField: function (val, field){
@@ -324,53 +314,57 @@ export default {
 
     cancel: function (){
       this.changeMode = false;
-      this.changeableUser = Utils.clone(this.user)
+      this.changeableUser = clone(this.user)
     },
 
     save: function (){
       this.processing = true
 
-      if(!Utils.equals(this.changeableUser.information, this.user.information)) {
+      if(!equals(this.changeableUser.information, this.user.information)) {
         let formData = new FormData();
         Object.entries(this.changeableUser.information).filter(([k, v]) => this.user.information[k] !== v).forEach(([k, v]) => formData.append(k, v))
-        for(let [k, v] of formData.entries()) console.warn(k, " = ", v)
+        for(let [k, v] of formData.entries()) console.debug(k, " = ", v)
 
-        api.users.updateUserInfo(this.id, formData, this.accessToken).then(response => {
-          console.log(response.data)
-          this.changeMode = false;
-          this.user.information = response.data.info
-        }).catch(err => {
-          this.error.message = api.users.HandlerErrors.updateUser(err)
-          if(Utils.isString(this.error.message)){
-            this.error.show = true
-          }else if(err.response.status === 401){
-            //this.$router.replace({ name: 'login' })
-            this.onSessionExpired()
-          }
-        }).then(() => {
-          this.processing = false
-          this.changeableUser.information = Utils.clone(this.user.information)
-        })
+        this.$store.dispatch('users/update-information', formData)
+            .then(response => {
+              console.log(response.data)
+              this.changeMode = false;
+              this.user.information = response.data.info
+
+              this.$socket.emit('user:update:info', { _id: this.id, information: response.data.info } )
+
+              this.changeableUser.information = clone(this.user.information)
+           })
+           .catch(this.handleRequestErrors.users.updateUser)
+           .finally(() => this.processing = false)
       }
     },
 
-    requestFriendShip: function (){
-      this.friendship.request = true
-      //TODO: REQUEST FRIENDSHIP
-    },
-    removeFriendShip: function (){
-      this.friendship.request = false
-      this.friendship.just = false
-      //TODO: REMOVE FRIENDSHIP
-    },
-    goChat: function (){
-      //TODO: GO IN CHAT
+    /* Listeners update */
+    onUpdateInfos(userInfo){
+
+      if(!this.personalArea && userInfo && this.id === userInfo._id) {
+        if(userInfo.information) {
+          this.user.information = userInfo.information
+          this.changeableUser.information = clone(this.user.information)
+        }
+        if(userInfo.userID) {
+          this.user.userID = userInfo.userID
+          this.changeableUser.userID = userInfo.userID
+        }
+      }
+
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+::v-deep .accept-request{
+  background-color: #f8f9fa;
+  border-color: #f8f9fa;
+  color: $component-color;
+}
 .user-infos {
   border: 1px dashed black;
   border-radius: 10px;

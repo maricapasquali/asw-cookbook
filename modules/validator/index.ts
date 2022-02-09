@@ -28,3 +28,8 @@ class CPasswordValidator extends StringValidator {
 
 export const EmailValidator: StringValidator = new CEmailValidator();
 export const PasswordValidator: StringValidator = new CPasswordValidator();
+
+export default {
+    EmailValidator,
+    PasswordValidator
+}

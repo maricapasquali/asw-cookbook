@@ -1,33 +1,34 @@
 <template>
-  <div>
-    <loading v-model="processing" :zIndex="10000"></loading>
-    <b-modal body-class="position-static"
-             v-model="show"
-             title="Cancellazione account"
-             @hide="cancelDeleteAccount"
-             @ok="eraseAccount"
-             centered>
-      <b-alert v-model="error.show" variant="danger">{{error.message}}</b-alert>
-      Sei sicura/o di voler cancellare definitivamente l'account?
-      <template v-slot:modal-ok> Si </template>
-      <template v-slot:modal-cancel> No </template>
-    </b-modal>
-  </div>
+  <b-modal body-class="position-static"
+           v-model="show"
+           title="Cancellazione account"
+           @cancel="cancelDeleteAccount"
+           @ok="eraseAccount"
+           :hide-footer="processing"
+           no-close-on-backdrop
+           no-close-on-esc
+           centered>
+    <b-alert v-model="error.show" variant="danger">{{error.message}}</b-alert>
+    <wrap-loading v-model="processing">
+      <slot name="message"><span class="py-2"> Sei sicura/o di voler cancellare definitivamente l'account? </span></slot>
+    </wrap-loading>
+    <template v-slot:modal-ok> Si </template>
+    <template v-slot:modal-cancel> No </template>
+  </b-modal>
 </template>
 
 <script>
-import api from '@api'
-import {Session} from "@services/session";
-import Utils from "@services/utils";
+import {mapGetters} from "vuex";
 
 export default {
   name: "delete-account",
   props:{
-    id: String
+    id: String,
+    value: Boolean
   },
   data: function (){
     return {
-      show: true,
+      show: false,
       processing: false,
       error:{
         show: false,
@@ -35,38 +36,50 @@ export default {
       }
     }
   },
-  mounted() {
-    console.log("v-model = ", this.value)
+  computed: {
+    ...mapGetters({
+      accessToken: 'session/accessToken'
+    })
+  },
+  watch: {
+    value(vl){
+      this.show = vl
+    },
+    show(vl){
+      this.$emit('input', vl)
+    },
+    processing(val){
+      if(val) this.error = { show: false, message: '' }
+    }
   },
   methods:{
+
     cancelDeleteAccount: function (e){
       this.processing = false
       this.error = {
         show: false,
         message: ''
       }
-      console.log("cancel  ...")
+      console.debug("close delete account modal  ...")
       this.$emit("close")
     },
 
     eraseAccount: function (e){
       e.preventDefault()
-      this.processing = true
-      api.users.deleteAccount(this.id, Session.accessToken())
-          .then(response => {
-            Session.end()
 
-            this.$router.replace({ name: "homepage"})
-          })
-          .catch(err => {
-            this.error.message = api.users.HandlerErrors.deleteAccount(err)
-            if(Utils.isString(this.error.message)){
-              this.error.show = true
-            }else if(err.response.status === 401){
-              this.$emit('onSessionExpired')
-            }
-          })
-          .then(() => this.processing = false)
+      this.processing = true
+      this.$store.dispatch('users/erase', this.id)
+         .then(({data}) => {
+            console.debug(data)
+            this.$socket.emit('user:delete', this.id)
+            this.$emit("onDeleteAccount", data)
+            this.show = false
+         })
+         .catch(err => {
+            let message = this.handleRequestErrors.users.deleteAccount(err)
+            if(message) this.error = {show: true, message}
+         })
+         .finally(() => this.processing = false)
     }
   }
 }
