@@ -1,13 +1,16 @@
 const path = require('path')
 const fs = require('fs')
-const {port_server, hostname, protocol, port_client} = require("./modules/hosting/variables");
-const appConfig = require('./app.config.json')
+const config = require("./env.config")
+
+const app_name = config.appName
+const server_origin = config.server.origin
+const client_port = config.client.port
 
 module.exports = {
     pages: {
         index: {
             entry: 'cookbook-app/src/main.js',
-            title: appConfig.app_name,
+            title: app_name,
             template: 'cookbook-app/public/index.html'
         }
     },
@@ -58,14 +61,14 @@ module.exports = {
     },
     outputDir: path.join(__dirname, 'cookbook-app/dist'),
     devServer: {
-        port: port_client,
+        port: client_port,
         https: {
             key: fs.readFileSync(path.join(__dirname,"cookbook-app/sslcert","privatekey.pem")),
             cert: fs.readFileSync(path.join(__dirname,"cookbook-app/sslcert","cert.pem"))
         },
         proxy: {
             '^/api': {
-                target: `${protocol}://${hostname}:${port_server}`,
+                target: server_origin,
                 changeOrigin: true,
             },
         }

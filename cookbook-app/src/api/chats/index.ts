@@ -2,7 +2,9 @@ import * as methods from "../methods";
 import {AxiosResponse} from "axios";
 
 import * as _messages from './messages'
-import {client_origin} from "../../../../modules/hosting/variables";
+import * as config from "../../../../env.config";
+
+const client_origin = config.client.origin
 
 export const messages = _messages
 

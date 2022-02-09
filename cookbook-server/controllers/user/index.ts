@@ -5,7 +5,6 @@ import {Chat, EmailLink, Friend, Notification, ShoppingList, User} from '../../m
 import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
 import {IMailer, Mailer} from "../../modules/mailer";
-import {client_origin} from "../../../modules/hosting/variables";
 import {IUser, SignUp} from "../../models/schemas/user";
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
 import {
@@ -28,7 +27,10 @@ import ObjectId = Types.ObjectId
 import {EmailValidator} from "../../../modules/validator";
 import {IChat} from "../../models/schemas/chat";
 
-const app_name = require('../../../app.config.json').app_name
+import * as config from "../../../env.config"
+
+const app_name = config.appName
+const client_origin = config.client.origin
 
 const mailer: IMailer = new Mailer(`no-reply@${app_name.toLowerCase()}.com`);
 

@@ -1,12 +1,10 @@
 import io, {Socket} from "socket.io-client";
 
-import {domain_server} from "../../../modules/hosting/variables";
+import {Server} from "../api";
 
 type SocketAuthorization = { key: string, userinfo?: { _id: string, userID: string, isAdmin?: boolean }}
 
-const serverURI = process.env.VUE_APP_SERVER || domain_server
-
-export const socket: Socket = io(serverURI , {
+export const socket: Socket = io(Server.origin , {
     autoConnect: false
 })
 

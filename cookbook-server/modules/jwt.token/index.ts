@@ -2,7 +2,10 @@ import {sign, verify, decode} from 'jsonwebtoken'
 import * as fs from "fs";
 import * as path from "path";
 
-import {server_origin, client_origin} from "../../../modules/hosting/variables";
+import * as config from "../../../env.config"
+
+const server_api_origin = config.server["sub-domain"].api
+const client_origin = config.client.origin
 
 export type DecodedTokenType = { _id: string, role: string }
 
@@ -25,7 +28,7 @@ export class JwtToken implements IJwtToken {
                 typ: "JWT",
             },
             audience: client_origin,
-            issuer: server_origin
+            issuer: server_api_origin
         }
     }
 
