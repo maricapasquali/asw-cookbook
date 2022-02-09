@@ -34,7 +34,7 @@ export default {
                   .session
                   .newAccessToken(state.user._id, { refresh_token: state.refreshToken }, state.accessToken)
                   .then(response => {
-                      commit('set-access-token', response.data.access_token)
+                      if(response.status === 200) commit('set-access-token', response.data.access_token)
                       return response
                   })
                   .catch(error => {

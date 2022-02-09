@@ -17,7 +17,7 @@ export default function (bus) {
             case 404:
                 notFound(err, { name: 'Utente', id: err.response?.config?.urlParams?.id })
                 break
-            case 409: return true
+            case 409: return err.response?.data?.actualState
             default:
                 serverError(err)
                 break

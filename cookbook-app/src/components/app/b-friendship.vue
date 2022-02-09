@@ -70,6 +70,14 @@ export default {
     }
   },
   methods: {
+    _setActualState(state){
+      if(state){
+        this.requestToUpdate = false
+        this.requestRejected = state === 'rejected'
+        this.justFollow = state === 'accepted'
+        this.isMyFriend = this.justFollow
+      }
+    },
 
     // POST
     sendRequestFriendShip(){
@@ -80,7 +88,7 @@ export default {
             return true
           })
           .catch(err => this.handleRequestErrors.friends.requestFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
-          .then(duplicate => this.requestJustSend = duplicate)
+          .then(this._setActualState)
     },
 
     // DELETE
@@ -104,14 +112,7 @@ export default {
             return state
           })
           .catch(err => this.handleRequestErrors.friends.updateFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
-          .then(actualState => {
-            if(actualState){
-              this.requestToUpdate = false
-              this.requestRejected = actualState === 'rejected'
-              this.justFollow = actualState === 'accepted'
-              this.isMyFriend = this.justFollow
-            }
-          })
+          .then(this._setActualState)
     },
     rejectRequest(){
       return this._updateFriendShip('rejected')

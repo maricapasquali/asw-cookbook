@@ -191,7 +191,7 @@ export default {
       console.error(description)
       this.requestNewAccessToken()
           .then(res => {
-            if(res?.response?.status === 200) this.loading = false
+            if(res?.status === 200) this.loading = false
 
             if(res?.response?.status === 401) this.$router.replace({ name: 'login' })
           })
