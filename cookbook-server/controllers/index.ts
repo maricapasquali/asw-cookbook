@@ -7,7 +7,11 @@ import FileType = FileUploader.FileType;
 import * as path from "path";
 import {Document, Model, Query} from "mongoose";
 
-export const tokensManager: IJwtToken = new JwtToken()
+import * as config from "../../env.config"
+const server_api_origin = config.server["sub-domain"].api
+const client_origin = config.client.origin
+
+export const tokensManager: IJwtToken = new JwtToken(client_origin, server_api_origin)
 export const accessManager: IRbac = new RBAC()
 
 type AuthorizationValue = {userID: string, password: string} | {access_token: string}

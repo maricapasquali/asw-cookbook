@@ -1,6 +1,7 @@
 import axios, {AxiosRequestConfig, AxiosResponse} from 'axios'
-import * as variables from "../../../modules/hosting/variables"
 import store from '../store'
+
+import {Server} from "./index";
 
 declare module 'axios' {
     interface AxiosRequestConfig {
@@ -9,7 +10,7 @@ declare module 'axios' {
 }
 
 const instance = axios.create({
-    baseURL: process.env.VUE_APP_SERVER_ORIGIN || variables.server_origin,
+    baseURL: process.env.VUE_APP_API_ORIGIN || Server.api.origin,
     headers: {
         "Content-Type": "application/json",
     },

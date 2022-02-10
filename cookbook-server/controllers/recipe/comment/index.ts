@@ -113,7 +113,7 @@ function report(req, res){
 
             _getUser(req, res, { operation: Operation.CREATE, subject: Subject.COMMENT_REPORT, others: decodedToken => comment.user && decodedToken._id == comment.user._id})
                 .then(user => {
-                    if(user && comment.reported.find(r => r.user && r.user._id == user)) return res.status(409).json({description: 'You have already reported it.'})
+                    if(user && comment.reported.find(r => r.user && r.user._id == user)) return res.status(204).send()
                     comment.reported.push(new Report({user: user}))
                     comment.save()
                         .then(_doc => res.status(200).json({description: 'Comment has been reported.'}),

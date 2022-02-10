@@ -2,14 +2,12 @@ import * as core from "express-serve-static-core";
 import * as http from "http";
 import * as https from "https";
 
-import * as variables from './variables'
-
 export class Hosting {
-    protocol: string = variables.protocol
-    hostname: string = variables.hostname
+    protocol: string
+    hostname: string = "localhost"
     port: number
 
-    optHttps: () => { key:string, cert: string }
+    optHttps: () => { key: Buffer, cert: Buffer }
 
     private readonly app = null
     private instanceServer: http.Server | https.Server
@@ -23,7 +21,7 @@ export class Hosting {
         this.protocol = p
         return this
     }
-    setHttpsOptions(optHttps: () => { key:string, cert: string}){
+    setHttpsOptions(optHttps: () => { key: Buffer, cert: Buffer}){
         this.optHttps = optHttps
         return this
     }
@@ -44,6 +42,9 @@ export class Hosting {
     }
 
     build(): Hosting {
+        if(!this.port) throw new Error("Hosting: You must set port.")
+        if(!this.protocol) this.protocol = this.optHttps ? "https" : "http"
+
         switch (this.protocol) {
             case "http":
             {
@@ -66,7 +67,11 @@ export class Hosting {
         return this
     }
 
-    listen(callback: (hosting: Hosting) => void): void{
-        this.instanceServer.listen(this.port, () => callback(this));
+    listen(callback?: (hosting: Hosting) => void): void{
+        this.instanceServer.listen(this.port, () => callback?.call(null, this));
+    }
+
+    get origin(){
+        return `${this.protocol}://${this.hostname}:${this.port}`
     }
 }

@@ -1,4 +1,5 @@
 import * as crypto from 'crypto'
+import * as _ from "lodash";
 
 export function unixTimestampToString(ts: number, get: string = 'date_time', locals: string = 'it-IT', options: object = {}): string {
     let date = new Date(ts)
@@ -28,4 +29,8 @@ export function decodeToArray(encodedString: string): Array<any> {
 export function areThereDuplicatesIn(array: Array<any>, mapper?: (value: any) => any): Boolean {
     mapper = mapper || ( (p) => p )
     return new Set(array.map(p => mapper(p))).size < array.length
+}
+
+export function hasKey(obj: object, key: string[] | string): boolean {
+    return _.hasIn(obj, key)
 }

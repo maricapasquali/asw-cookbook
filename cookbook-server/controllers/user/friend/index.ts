@@ -41,9 +41,12 @@ export function request_friendship(req, res){
                 others: (decodedToken => decodedToken._id === id)
             })
     if(decodedToken) {
-        Friend.exists({from: id, to: decodedToken._id})
+        // Friend.exists({from: id, to: decodedToken._id})
+        Friend.findOne()
+              .where('from').equals(id)
+              .where('to').equals(decodedToken._id)
               .then((result) => {
-                  if(result) return res.status(409).json({description: 'Request has already been exist. '})
+                  if(result) return res.status(409).json({description: 'Request has already been exist. ', actualState: result.state})
 
                   existById(User, [id, decodedToken._id])
                       .then(() => {
@@ -93,8 +96,8 @@ export function list_friends(req, res){
                     filters.state = state
                 }
                 else delete filters.state
-
-            } else {
+            }
+            else {
                 if(state) return res.status(400).json({ description: 'Query \'state\' is not available.' })
             }
             console.debug('filters = ', JSON.stringify(filters))
@@ -110,7 +113,7 @@ export function list_friends(req, res){
             Friend.find(filters)
                   .populate(populatePipeline)
                   .then((friends) =>{
-                      let mapperItems = friends
+                      let mapperItems = friends.filter(friend => !( (!friend.from && friend.to._id == id) || (!friend.to && friend.from._id == id) ) )
                       if(userID) {
                           mapperItems = friends.filter(
                               friend => ! (!friend.from && !friend.to) &&
@@ -157,7 +160,7 @@ export function update_friendship(req, res){
                   if(!friendship) return res.status(404).json('FriendShip is not found.')
 
                   if(!FriendShip.State.isPending(friendship.state))
-                      return res.status(409).json({ description: 'State friendship has already been changed.'})
+                      return res.status(409).json({ description: 'State friendship has already been changed.', actualState: friendship.state})
 
                   friendship.state = state
                   friendship.updatedAt = Date.now()

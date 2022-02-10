@@ -8,19 +8,34 @@ import Subject = RBAC.Subject;
 import {Types} from "mongoose";
 import ObjectId = Types.ObjectId
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
+import {AccessLocker} from "../../../modules/access.locker";
+
+const locker = new AccessLocker(5, 15) //max attempts 5 & try again in 15 minutes
 
 export function login(req, res){
     const {userID, password} = extractAuthorization(req.headers)
     if(!userID && !password) return res.status(400).json({description: 'userID and password are required.'})
     if(!userID) return res.status(400).json({description: 'userID is required.'})
     if(!password) return res.status(400).json({description: 'password is required.'})
-    //TODO: ADD ACCESS CONTROL: NUMERBER ATTEMPS 5
+
+    const ip = req.header('x-forwarded-for') || req.socket?.remoteAddress || req.connection?.remoteAddress;
+    if(!locker.checkAttempts(ip)) return res.status(409).json({ description: 'Finished login attempts.', tryAgainIn: locker._maxAttempts });
+
     User.findOne()
         .where("credential.userID").equals(userID)
         .then(user => {
-            if(!user) return res.status(404).json({description: 'User is not found'});
-            if(SignUp.State.isPending(user.signup)) return res.status(403).json({signup: user.signup, description: 'User yet to be verified'});
-            if(Strike.isBlocked(user.strike)) return res.status(403).json({ blocked: true, description: 'Blocked account.'})
+            if(!user) {
+                locker.reduceAttempts(ip)
+                return res.status(404).json({ description: 'User is not found', remainAttempts: locker.getRemainAttempts(ip) });
+            }
+            if(SignUp.State.isPending(user.signup)) {
+                locker.reduceAttempts(ip)
+                return res.status(403).json({signup: user.signup, description: 'User yet to be verified', remainAttempts: locker.getRemainAttempts(ip)});
+            }
+            if(Strike.isBlocked(user.strike)) {
+                locker.reduceAttempts(ip)
+                return res.status(403).json({ blocked: true, description: 'Blocked account.', remainAttempts: locker.getRemainAttempts(ip)})
+            }
             const result = bcrypt.compareSync(password, user.credential.hash_password)
             console.debug('Password is correct = ', result)
             if(result) {
@@ -28,7 +43,8 @@ export function login(req, res){
                 const token = tokensManager.createNewTokens({_id: user._id, userID: user.credential.userID, role: user.credential.role})
                 user.credential.lastAccess = 0
                 user.save()
-                    .then(u =>
+                    .then(u => {
+                        locker.resetAttempts(ip)
                         res.status(200).json({
                             token,
                             userInfo: {
@@ -38,10 +54,12 @@ export function login(req, res){
                                 isAdmin: accessManager.isAdminUser(u.credential)? true : undefined
                             },
                             firstLogin: firstLogin ? true : undefined})
-                    ,
-                    err => res.status(500).json({description: err.message}))
+                    }, err => res.status(500).json({description: err.message}))
             }
-            else res.status(403).json({description: 'Password is uncorrected'});
+            else {
+                locker.reduceAttempts(ip)
+                res.status(403).json({description: 'Password is uncorrected', remainAttempts: locker.getRemainAttempts(ip)});
+            }
         }, err => res.status(500).json({description: err.message}))
 }
 
@@ -61,7 +79,11 @@ export function logout(req, res){
             .where('_id').equals(id)
             .then(user => {
                 if(!user) return res.status(404).json({description: 'User not found'})
-                if(isAlreadyLoggedOut(user)) return res.status(409).json({ description: 'User is already logged out' })
+
+                const [type, value] = req.headers.authorization.split(' ')
+                tokensManager.addInRevokeList(value)
+
+                if(isAlreadyLoggedOut(user)) return res.status(204).send()
 
                 user.credential.lastAccess = Date.now()
                 user.save().then(() => res.status(200).json({logout: true}), err => res.status(500).send({description: err.message}))
@@ -80,14 +102,16 @@ export function update_access_token(req, res){
     if(!refresh_token) return res.status(400).json({description: 'Missing refresh token'})
 
     let decoded_aToken = tokensManager.checkValidityOfToken(access_token);
-    if(decoded_aToken!==false) return res.status(409).send({description: 'Access token is still valid'})
+    if(decoded_aToken!==false) return res.status(204).send()
+
+    if(tokensManager.isInRevokeList(access_token)) tokensManager.addInRevokeList(refresh_token)
 
     let decoded_rToken = tokensManager.checkValidityOfToken(refresh_token);
     if(!decoded_rToken)
-        return res.status(401).send({description: 'Refresh token was expired. Please make a new signin request'})
+        return res.status(401).json({description: 'Refresh token was expired. Please make a new signin request'})
 
     if(!accessManager.isAuthorized(decoded_rToken.role, RBAC.Operation.UPDATE, RBAC.Subject.SESSION, decoded_rToken._id !== id))
-        return res.status(403).send({description: 'User is unauthorized to update session.'})
+        return res.status(403).json({description: 'User is unauthorized to update session.'})
 
     User.findOne()
         .where('signup').equals(SignUp.State.CHECKED)

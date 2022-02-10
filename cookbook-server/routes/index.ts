@@ -7,7 +7,7 @@ import notificationRoute from './notification'
 import chatRoute from './chat'
 import * as path from "path";
 
-export = function (app: any) {
+export default function (app: any) {
     app.get('/images/:filename', (req, res) => res.status(200).sendFile(
         path.resolve('cookbook-server/images/' + req.params.filename)
     ))
