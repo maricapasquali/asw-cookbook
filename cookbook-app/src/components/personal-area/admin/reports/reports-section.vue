@@ -120,7 +120,7 @@ export default {
              else this.docsDeleted.push(comment)
            })
          })
-         .catch(this.handleRequestErrors.recipes.comments.getReportedComment)
+         .catch(this.handleRequestErrors.comments.getReportedComment)
          .finally(() => this.processing = false)
     },
 
@@ -136,7 +136,7 @@ export default {
             this.$socket.emit('comment:delete', comment._id)
             if(comment.user) this.$socket.emit('user:strike', comment.user._id)
          })
-         .catch(this.handleRequestErrors.recipes.comments.deleteComment)
+         .catch(this.handleRequestErrors.comments.deleteComment)
     },
     unreported(index){
       let comment = this.docsReported[index]
@@ -148,7 +148,7 @@ export default {
 
            this.$socket.emit('comment:unreport', comment._id)
          })
-         .catch(this.handleRequestErrors.recipes.comments.updateComment)
+         .catch(this.handleRequestErrors.comments.updateComment)
     },
 
     /*Listeners update*/

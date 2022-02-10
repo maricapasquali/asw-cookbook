@@ -499,7 +499,7 @@ export default {
              console.log(data)
              this.itemsRecipes.splice(this.deleteRecipe.index, 1)
            })
-           .catch(this.handleRequestErrors.recipes.likes.makeOrUnmakeLike)
+           .catch(this.handleRequestErrors.likes.makeOrUnmakeLike)
            .then(this._closeDeleteMode)
       }
       else
