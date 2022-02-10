@@ -28,6 +28,7 @@ import {EmailValidator} from "../../../modules/validator";
 import {IChat} from "../../models/schemas/chat";
 
 import * as config from "../../../env.config"
+import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 
 const app_name = config.appName
 const client_origin = config.client.origin
@@ -95,10 +96,8 @@ export function create_user(req, res){
             res.status(201).json({ userID: user._id })
             if(accessManager.isSignedUser(user.credential)) send_email_signup(user)
         }, err => {
-            if(err.name === 'ValidationError')
-                return res.status(400).json({description: err.message})
-            if(err.code === 11000)
-                return res.status(409).json({description: 'Username has been already used'})
+            if(MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
+            if(MongooseDuplicateError.is(err)) return res.status(409).json({description: 'Username has been already used'})
             res.status(500).json({code: 0, description: err.message})
         })
 }
@@ -260,7 +259,7 @@ export function update_user(req, res){
                 user.save()
                     .then((u) => res.status(200).json({update: true, info: u.information}),
                          err => {
-                            if(err.name === 'ValidationError') return res.status(400).json({description: err.message})
+                            if(MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
                             return res.status(500).json({description: err.message})
                     })
             }, err => res.status(500).json({description: err.message}))

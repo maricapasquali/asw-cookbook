@@ -1063,8 +1063,40 @@ paths:
           $ref: "#/components/responses/bad_request"
         403:
           description: User not authorized or User yet to be verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  remainAttempts:
+                    type: number
+                    description: number of remain attempt to try access
         404:
           description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  remainAttempts:
+                    type: number
+                    description: number of remain attempt to try access
+        409:
+          description: Finished login attempts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  tryAgainIn:
+                    type: number
+                    description: minutes you must wait before trying to log in again
         500:
           $ref: "#/components/responses/general_error"
   /users/{id}/logout:

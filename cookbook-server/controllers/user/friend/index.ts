@@ -96,8 +96,8 @@ export function list_friends(req, res){
                     filters.state = state
                 }
                 else delete filters.state
-
-            } else {
+            }
+            else {
                 if(state) return res.status(400).json({ description: 'Query \'state\' is not available.' })
             }
             console.debug('filters = ', JSON.stringify(filters))
@@ -113,7 +113,7 @@ export function list_friends(req, res){
             Friend.find(filters)
                   .populate(populatePipeline)
                   .then((friends) =>{
-                      let mapperItems = friends
+                      let mapperItems = friends.filter(friend => !( (!friend.from && friend.to._id == id) || (!friend.to && friend.from._id == id) ) )
                       if(userID) {
                           mapperItems = friends.filter(
                               friend => ! (!friend.from && !friend.to) &&

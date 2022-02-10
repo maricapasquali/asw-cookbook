@@ -2,11 +2,6 @@ import {sign, verify, decode} from 'jsonwebtoken'
 import * as fs from "fs";
 import * as path from "path";
 
-import * as config from "../../../env.config"
-
-const server_api_origin = config.server["sub-domain"].api
-const client_origin = config.client.origin
-
 export type DecodedTokenType = { _id: string, role: string }
 
 export interface IJwtToken {
@@ -15,20 +10,26 @@ export interface IJwtToken {
     checkValidityOfToken(token: string): DecodedTokenType | false
     getDecodedToken(token: string): object
     areTheSame(actual_token: string, expected_token: string): boolean
+    addInRevokeList(token: string): void
+    isInRevokeList(token: string): boolean
 }
 
 export class JwtToken implements IJwtToken {
     private readonly privateKey;
     private readonly signOptions;
-    constructor() {
+
+    private readonly _revokeList: Set<string>
+
+    constructor(audience: string, issuer: string) {
+        this._revokeList = new Set()
         this.privateKey = fs.readFileSync(path.join(__dirname, 'private.key'))
         this.signOptions = {
             algorithm: "HS512",
             header: {
                 typ: "JWT",
             },
-            audience: client_origin,
-            issuer: server_api_origin
+            audience,
+            issuer
         }
     }
 
@@ -45,7 +46,9 @@ export class JwtToken implements IJwtToken {
     }
 
     checkValidityOfToken(token: string): DecodedTokenType | false {
-        console.debug('Verify token.')
+        console.debug('Verify token...')
+        console.debug('Revoke list: ', this._revokeList)
+        if(this.isInRevokeList(token)) return false
         try {
             return verify(token, this.privateKey)
         }catch (e){
@@ -61,5 +64,15 @@ export class JwtToken implements IJwtToken {
 
     areTheSame(actual_token: string, expected_token: string): boolean {
         return actual_token === expected_token
+    }
+
+    addInRevokeList(token: string): void {
+        this._revokeList.add(token)
+        console.log('Token: Add in revoke list .')
+        console.log(this._revokeList)
+    }
+
+    isInRevokeList(token: string): boolean {
+        return this._revokeList.has(token)
     }
 }

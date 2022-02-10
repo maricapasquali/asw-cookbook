@@ -189,8 +189,8 @@ export function list_chat(req, res) {
                        chatGroup = chatGroup.filter(chat => chat.messages.length > 0)
                                             .map(chat => {
                                                 chat.messages = chat.messages
-                                                                    .filter(m => m.sender._id != user._id)
-                                                                    .filter(m => !m.read.find(r => r.user._id == user._id))
+                                                                    .filter(m => m.sender?._id != user._id)
+                                                                    .filter(m => !m.read.find(r => r.user?._id == user._id))
                                                // console.debug('messages uread = ',chat.messages )
                                                return chat
                                             })
