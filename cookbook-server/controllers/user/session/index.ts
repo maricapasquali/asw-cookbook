@@ -19,7 +19,7 @@ export function login(req, res){
     if(!password) return res.status(400).json({description: 'password is required.'})
 
     const ip = req.header('x-forwarded-for') || req.socket?.remoteAddress || req.connection?.remoteAddress;
-    if(!locker.checkAttempts(ip)) return res.status(409).json({ description: 'Finished login attempts.', tryAgainIn: locker._maxAttempts });
+    if(!locker.checkAttempts(ip)) return res.status(409).json({ description: 'Finished login attempts.', tryAgainIn: locker.getTryAgainInMinutes(ip) });
 
     User.findOne()
         .where("credential.userID").equals(userID)
@@ -80,8 +80,8 @@ export function logout(req, res){
             .then(user => {
                 if(!user) return res.status(404).json({description: 'User not found'})
 
-                const [type, value] = req.headers.authorization.split(' ')
-                tokensManager.addInRevokeList(value)
+                let {access_token} = extractAuthorization(req.headers)
+                if(access_token) tokensManager.addInRevokeList(access_token)
 
                 if(isAlreadyLoggedOut(user)) return res.status(204).send()
 
