@@ -56,6 +56,11 @@ export class AccessLocker implements IAccessLocker {
         return this._maxAttempts - (this._ips[ip]?.number || this._maxAttempts )
     }
 
+    getTryAgainInMinutes(ip: string): number {
+        let now = Date.now()
+        return new Date((this._ips[ip]?.again || now) - now).getMinutes()
+    }
+
     private isMaxAttempts(ip: string): boolean {
         return this._ips[ip]?.number >= this._maxAttempts
     }
