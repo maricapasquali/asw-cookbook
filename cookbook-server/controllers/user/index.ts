@@ -245,7 +245,7 @@ export function update_user(req, res){
     if(decoded_token) {
         let userBody = req.body
         if(req.file) userBody.img = req.file.filename
-        if(!userBody.img) userBody.img = undefined
+        if(userBody.img?.length === 0) userBody.img = null
         if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
         console.log("Update info user = ", userBody)
 

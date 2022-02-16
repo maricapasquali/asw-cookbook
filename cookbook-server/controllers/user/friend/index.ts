@@ -113,7 +113,7 @@ export function list_friends(req, res){
             Friend.find(filters)
                   .populate(populatePipeline)
                   .then((friends) =>{
-                      let mapperItems = friends.filter(friend => !( (!friend.from && friend.to._id == id) || (!friend.to && friend.from._id == id) ) )
+                      let mapperItems = friends.filter(friend => !( (!friend.from && friend.to?._id == id) || (!friend.to && friend.from?._id == id) ) )
                       if(userID) {
                           mapperItems = friends.filter(
                               friend => ! (!friend.from && !friend.to) &&
