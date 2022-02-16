@@ -74,6 +74,7 @@
 
             <!-- Table aliment  -->
             <b-table id="food-table" fixed responsive :stacked="isMobile"
+                     @context-changed="abortRequest"
                      :tbody-tr-class="rowClass"
                      ref="foodTable"
                      :filter="filters"
@@ -93,12 +94,12 @@
 
               <template #empty>
                 <div class="text-center text-primary my-2">
-                  <strong class="ml-2">Non ci sono alimenti...</strong>
+                  <strong class="ml-2">Non ci sono alimenti </strong>
                 </div>
               </template>
               <template #emptyfiltered>
                 <div class="text-center text-primary my-2">
-                  <strong class="ml-2">Non ci sono alimenti filtrati ...</strong>
+                  <strong class="ml-2">Non ci sono alimenti {{ searchIsOn ?  'filtrati' : '' }}</strong>
                 </div>
               </template>
 
@@ -147,7 +148,7 @@
       <!-- Shopping List -->
       <b-col id="shopping-list" class="my-5" v-if="isSigned">
         <h2 class="align">Lista della spesa</h2>
-        <food-finder @found="addInShoppingList" id="finder-food" ref="foodFinder" />
+        <food-finder @found="addInShoppingList" id="finder-food" ref="foodFinder"/>
         <b-skeleton-wrapper :loading="loadingSL">
           <template #loading>
             <b-list-group class="shopping-list align">
@@ -188,11 +189,9 @@
 </template>
 
 <script>
-import {bus} from '@/main'
-import {clone, dateFormat} from '@services/utils'
 
-import api from '@api'
 import {mapGetters} from "vuex";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "food-section",
@@ -201,9 +200,10 @@ export default {
       skeleton: 6,
       isMobile: false,
 
+      pendingRequests: null,
+      idRequest: 'foods-all',
       /* Shopping list */
       loadingSL: true,
-      shopping_list: [],
       foodSelected: '',
 
       /*Foods */
@@ -246,7 +246,17 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['accessToken', 'isSigned', 'isAdmin', 'userIdentifier', 'username']),
+    ...mapGetters({
+      isSigned: 'session/isSigned',
+      isAdmin: 'session/isAdmin',
+      userIdentifier: 'session/userIdentifier',
+      username: 'session/username',
+      shopping_list: 'shopping-list/list'
+    }),
+
+    searchIsOn() {
+      return this.filters.barcode || this.filters.name
+    },
 
     classesShoppingList(){
       return {'shopping-list':true, 'align':true, 'scroll': this.isMobile }
@@ -278,26 +288,17 @@ export default {
     addInShoppingList(food){
       console.debug(food)
       this.foodSelected = food._id
-      let index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
+      const index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
       if(index === -1) {
-
-        let _food = {food: this.foodSelected, checked: false}
-        api.shoppingList
-           .createShoppingListPoint(this.userIdentifier, _food, this.accessToken)
+        this.$store.dispatch('shopping-list/add-point', this.foodSelected)
            .then(({data})=>{
               console.debug('New point = ', data)
-              // this.shopping_list.push(data)
-              this.shopping_list.unshift(data)
-
               console.debug('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
-           }).catch(err => {
-            //TODO: HANDLER ERROR add element of SHOPPING LIST
-              //no dovrebbe avvenire mai
-              if(err.response && err.response.status === 409){
-                let index = this.shopping_list.findIndex(point => point.food._id === this.foodSelected)
-                this.patchShoppingList(index, false)
-              }
-              console.error(err.response)
+              console.debug(this.shopping_list)
+           })
+           .catch(this.handleRequestErrors.shoppingList.createShoppingListPoint)
+           .then(duplicate => {
+                if(duplicate && index !== -1) this.patchShoppingList(index, false)
            })
       }
       else if(this.shopping_list[index].checked) {
@@ -306,39 +307,28 @@ export default {
     },
     patchShoppingList(index, checked){
       let point = this.shopping_list[index]
-      api.shoppingList
-         .updateShoppingListPoint(this.userIdentifier, point._id, { checked: checked } , this.accessToken)
+      this.$store.dispatch('shopping-list/update-point', {pointID: point._id, checked})
          .then(({data}) => {
-           point.checked = checked
            console.debug(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(point))
-         }).catch(err => {
-          //TODO: HANDLER ERROR patch element of SHOPPING LIST
-            console.error(err)
+           console.debug(this.shopping_list)
          })
+         .catch(this.handleRequestErrors.shoppingList.updateShoppingListPoint)
     },
     removeFromShoppingList(index){
-
       let point = this.shopping_list[index]
-      api.shoppingList
-         .deleteShoppingListPoint(this.userIdentifier, point._id, this.accessToken)
+      this.$store.dispatch('shopping-list/remove-point', point._id)
          .then(({data}) => {
-            console.debug('Remove from shopping list: ', JSON.stringify(point))
-            this.shopping_list.splice(index, 1)
-         }).catch(err => {
-            //todo: HANDLER ERROR remove element of SHOPPING LIST
-            console.error(err)
+            console.debug('Remove from shopping list : ', JSON.stringify(point))
+            console.debug(this.shopping_list)
          })
+         .catch(this.handleRequestErrors.shoppingList.deleteShoppingListPoint)
     },
     getShoppingList(){
-      api.shoppingList
-         .getShoppingList(this.userIdentifier, this.accessToken)
-         .then(({data}) => {
-            this.shopping_list = data
-            this.loadingSL = false
-         }).catch(err => {
-            //todo: HANDLER ERROR GET SHOPPING LIST
-            console.error(err)
-         })
+      if(this.shopping_list.length > 0) this.loadingSL = false
+      else
+        this.$store.dispatch('shopping-list/get')
+           .then(({data}) => this.loadingSL = false)
+           .catch(this.handleRequestErrors.shoppingList.getShoppingList)
     },
 
     // Foods
@@ -358,15 +348,18 @@ export default {
         details: food,
       }
     },
-
+    abortRequest(){
+      this.pendingRequests.cancel(this.idRequest, 'search food abort.')
+    },
     getFoods(ctx){
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+
       console.debug('ctx = ', ctx);
       let {perPage, currentPage} = ctx || {}
       let forPage = perPage || this.pagination.for_page
       let page = currentPage || this.pagination.currentPage
       this.pagination.isBusy = true
-      return api.foods
-                .getFoods(this.accessToken, {page: page, limit: forPage, ...({...ctx.filter})})
+      return this.$store.dispatch('foods/all', {query: ctx.filter, pagination: {page: page, limit: forPage}, options})
                 .then(({data}) =>{
                     console.debug('Foods = ',data.items, ', total = ', data.total)
 
@@ -384,12 +377,13 @@ export default {
                     return items
                  })
                 .catch(err => {
-                    console.error(err)
+                  this.handleRequestErrors.foods.getFoods(err)
                     return []
                 })
                 .finally(() =>{
                     this.loadingFood = false
                     this.pagination.isBusy = false
+                    this.pendingRequests.remove(this.idRequest)
                 })
     },
 
@@ -470,21 +464,23 @@ export default {
   },
 
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
     if(this.isSigned) this.getShoppingList()
 
-    bus.$on('food:create', this.onCreateFood.bind(this))
-    bus.$on('food:update', this.onUpdateFood.bind(this))
+    this.$bus.$on('food:create', this.onCreateFood.bind(this))
+    this.$bus.$on('food:update', this.onUpdateFood.bind(this))
 
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
-    bus.$off('food:create', this.onCreateFood.bind(this))
-    bus.$off('food:update', this.onUpdateFood.bind(this))
+    this.pendingRequests.cancelAll('All Foods cancels.')
+    this.$bus.$off('food:create', this.onCreateFood.bind(this))
+    this.$bus.$off('food:update', this.onUpdateFood.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
 
     console.debug('Destroy food section...')
   }

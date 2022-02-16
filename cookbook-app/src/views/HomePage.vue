@@ -26,82 +26,96 @@
         </b-card>
       </template>
 
-     <b-container fluid class="recipe-post-container px-0">
-      <b-row cols="1">
-        <b-col v-for="(doc, ind) in docs" :key="doc._id" class="mx-auto px-1 mb-3" cols="12" sm="10" md="9" lg="7">
-          <b-card  class="recipe-post">
-            <!-- Author and date -->
-            <template #header>
-              <b-row align-h="between" align-v="center">
-                <b-col v-if="doc.owner" >
-                  <b-row cols="1" cols-sm="1" cols-md="2">
-                    <b-col md="3"> <avatar v-model="doc.owner.img" :user="doc.owner._id"  variant="light" :size=30 /> </b-col>
-                    <b-col md="9">
-                      <router-link :to="{name: 'single-user', params: {id: doc.owner._id }}">
-                        <strong> <em> {{ doc.owner.userID }}</em></strong>
-                      </router-link>
-                    </b-col>
-                  </b-row>
+      <b-container fluid class="recipe-post-container px-0">
+        <b-row class="new-recipes" v-show="newArrivals.toRead">
+          <b-col class="text-center">
+            <b-button class="px-3" @click="goToNewRecipes" variant="light">
+              <b-icon-arrow-up-short />
+              <span>{{newArrivals.toRead}} nuove ricette</span>
+            </b-button>
+          </b-col>
+        </b-row>
+
+        <b-row cols="1" class="posts" v-scroll="onScrollWindow">
+          <b-col v-for="(doc, ind) in docs" :key="doc._id" class="mx-auto px-1 mb-3" cols="12" sm="10" md="9" lg="7">
+            <b-card  class="recipe-post">
+              <!-- Author and date -->
+              <template #header>
+                <b-row align-h="between" align-v="center">
+                  <b-col v-if="doc.owner" >
+                    <b-row cols="1" cols-sm="1" cols-md="2">
+                      <b-col md="3"> <avatar v-model="doc.owner.img" :user="doc.owner._id"  variant="light" :size=30 /> </b-col>
+                      <b-col md="9">
+                        <router-link :to="{name: 'single-user', params: {id: doc.owner._id }}">
+                          <strong> <em> {{ doc.owner.userID }}</em></strong>
+                        </router-link>
+                      </b-col>
+                    </b-row>
+                  </b-col>
+                  <b-col class="text-right">
+                    <elapsed-time v-model="doc.createdAt" :language="language" />
+                  </b-col>
+                </b-row>
+              </template>
+
+              <!-- Image / Tutorial -->
+              <preview-recipe-tutorial class="recipes-tutorial" v-model="doc.tutorial" :poster="doc.img" with-image/>
+
+              <!-- Description: name, country, category -->
+              <b-row :class="{'description-post': true, 'py-2': !doc.country}" align-h="between">
+                <b-col class="d-flex align-items-center pl-2">
+                  <router-link :to="redirectToRecipe(doc)" class="recipe-post-link">
+                    {{doc.name}}
+                  </router-link>
                 </b-col>
-                <b-col class="text-right">
-                  <elapsed-time v-model="doc.createdAt" :language="language" />
-                </b-col>
-              </b-row>
-            </template>
-
-            <!-- Image / Tutorial -->
-            <preview-recipe-tutorial class="recipes-tutorial" v-model="doc.tutorial" :poster="doc.img" with-image/>
-
-            <!-- Description: name, country, category -->
-            <b-row :class="{'description-post': true, 'py-2': !doc.country}" align-h="between">
-              <b-col class="d-flex align-items-center pl-2">
-                <router-link :to="redirectToRecipe(doc)" class="recipe-post-link">
-                  {{doc.name}}
-                </router-link>
-              </b-col>
-              <b-col class="d-flex justify-content-end pr-1" >
-                <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.category.text}} </span>
-                <country-image v-model="doc.country" :id="doc._id"/>
-              </b-col>
-            </b-row>
-
-            <!-- Details -->
-            <recipe-details :recipe="doc" class="details-recipes" />
-
-            <!-- Likes and Comments -->
-            <template #footer>
-              <b-row align-h="between">
-                <b-col>
-                  <!-- Like of a RECIPE -->
-                  <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike(ind)"/>
-                </b-col>
-                <b-col class="text-right">
-                  <b-icon-chat class="icon" v-b-toggle="commentsId(doc._id)"/>
+                <b-col class="d-flex justify-content-end pr-1" >
+                  <span class="d-flex align-items-center justify-content-center pr-2">  {{doc.category.text}} </span>
+                  <country-image v-model="doc.country" :id="doc._id"/>
                 </b-col>
               </b-row>
-              <b-collapse :id="commentsId(doc._id)" class="mt-2">
-                <!-- LIST COMMENT for a RECIPE -->
-                <comments v-model="doc.comments" :recipe="doc" :language="language" />
-              </b-collapse>
-            </template>
 
-          </b-card>
-        </b-col>
-      </b-row>
-      <b-row class="mt-3" align-h="center" v-if="areOthers">
-        <b-button variant="link" @click="others">Altri ...</b-button>
-      </b-row>
-     </b-container>
+              <!-- Details -->
+              <recipe-details :recipe="doc" class="details-recipes" />
+
+              <!-- Likes and Comments -->
+              <template #footer>
+                <b-row align-h="between">
+                  <b-col>
+                    <!-- Like of a RECIPE -->
+                    <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike(ind)"/>
+                  </b-col>
+                  <b-col class="text-right">
+                    <b-icon-chat class="icon" v-b-toggle="commentsId(doc._id)"/>
+                  </b-col>
+                </b-row>
+                <b-collapse :id="commentsId(doc._id)" class="mt-2">
+                  <!-- LIST COMMENT for a RECIPE -->
+                  <comments v-model="doc.comments" :recipe="doc" :language="language" />
+                </b-collapse>
+              </template>
+
+            </b-card>
+          </b-col>
+        </b-row>
+        <b-row class="mt-3" align-h="center" v-if="!loadOther && areOthers">
+          <b-button variant="link" @click="others">Altri ...</b-button>
+        </b-row>
+        <b-row class="load-others mt-3" align-h="center" v-show="loadOther">
+          <b-col class="text-center">
+            <b-spinner variant="primary" label="Altri ..."></b-spinner>
+          </b-col>
+        </b-row>
+      </b-container>
     </b-skeleton-wrapper>
 
   </b-container>
 </template>
 
 <script>
-import {bus} from "@/main";
-import {RecipeCategories} from "@services/app";
-import api, {Server} from '@api'
+
+import Server from '@api/server.info'
 import {mapGetters} from "vuex";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "HomePage",
@@ -109,15 +123,20 @@ export default {
     return {
       skeletons: 5,
 
-      language: 'it',
+      pendingRequests: null,
+      newArrivals: {
+        toRead: 0,
+        total: 0
+      },
+
+      loadOther: false,
 
       docs: [],
       total: 0,
       optionsPagination: {
         page: 1,
-        limit: 2
-      },
-
+        limit: 2 //TODO: CHANGE 2 TO 5
+      }
     }
   },
   computed: {
@@ -128,7 +147,11 @@ export default {
       return this.docs.length > 0 && this.docs.length < this.total
     },
 
-    ...mapGetters(['userIdentifier', 'accessToken', 'isAdmin'])
+    ...mapGetters(['getRecipeCategoryByValue', 'language']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    })
   },
   methods: {
     redirectToRecipe(rec){
@@ -147,8 +170,8 @@ export default {
     /* -- REQUEST --*/
 
     _remapRecipe(recipe){
-      let category = RecipeCategories.find(recipe.category)
-      if(category) recipe.category = category
+      let category = this.getRecipeCategoryByValue(recipe.category)
+      recipe.category = category || { text: '' }
     },
 
     getPost(currentPage, _limit){
@@ -156,8 +179,13 @@ export default {
       const limit = _limit || this.optionsPagination.limit
 
       console.log('POST pagination: ', {page, limit})
-      api.recipes
-         .allSharedRecipes(this.accessToken, {page, limit})
+
+      let _id = 'all-shared'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id, {message: 'homepage old recipes abort.'})
+
+      if(currentPage) this.loadOther = true
+
+      this.$store.dispatch('recipes/all-shared', { pagination: {page, limit, skip: this.newArrivals.total }, options })
          .then(({data}) => {
 
             console.log(data)
@@ -168,15 +196,29 @@ export default {
             this.total = data.total
             if(!_limit) this.optionsPagination.page = page
          })
-          //TODO: HANDLER ERROR HOME-PAGE
-         .catch(err => {
-            console.error(err)
-            if(err.response && err.response.status === 401) this.$router.go()
+         .catch(this.handleRequestErrors.recipes.allSharedRecipes)
+         .then(() => {
+           if(currentPage) this.loadOther = false
+           this.pendingRequests.remove(_id)
          })
     },
     others(){
-      console.debug("Altri "+this.optionsPagination.limit+" post ..")
+      console.debug("Altri "+this.optionsPagination.limit+" ricette ...")
       this.getPost(this.optionsPagination.page + 1)
+    },
+
+    onScrollWindow({toBottom, toTop}){
+      if(toTop) this.newArrivals.toRead = 0
+      // if(toBottom && this.loadOther === false) this.others()
+    },
+
+    goToNewRecipes() {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    },
+
+    setNewArrivals(){
+      this.newArrivals.total+=1
+      if(document.documentElement.scrollTop > 0) this.newArrivals.toRead +=1
     },
 
     /* Listener notification */
@@ -198,6 +240,8 @@ export default {
         this._remapRecipe(recipe)
         this.docs.unshift(recipe)
         this.total+=1
+
+        this.setNewArrivals()
       }
     },
 
@@ -217,28 +261,49 @@ export default {
     }
   },
   created() {
-    bus.$on('recipe:create', this.onNewRecipeListeners.bind(this))
-    bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+    this.pendingRequests = QueuePendingRequests.create()
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
-  },
-  beforeDestroy() {
-    bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
-    bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:create', this.onNewRecipeListeners.bind(this))
+    this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
-  },
-  mounted() {
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+
     this.getPost()
   },
+  beforeDestroy() {
+    this.pendingRequests.cancelAll('Homepage cancel.')
+
+    this.$bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
+    this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+    this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
+  }
 }
 </script>
 
 <style scoped lang="scss">
+.recipe-post-container {
+  .new-recipes{
+    position: sticky;
+    z-index: 100;
+    top: 8%;
+    left: 50%;
+    margin-bottom: 15px;
+    & button {
+      border-radius: 1.25rem;
+      box-shadow: 0 0 19px 5px #00000096;
+      font-size: 15pt;
+    }
+  }
+  .load-others {
+    position: sticky;
+  }
+}
+
 
 .description-post {
   position: absolute;

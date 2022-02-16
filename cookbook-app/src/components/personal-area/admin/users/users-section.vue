@@ -15,6 +15,7 @@
     <!-- Table user  -->
     <b-row cols="1" class="mt-3 mb-5 mx-auto">
       <b-table id="user-table" responsive hover :stacked="isMobile" v-resize="onResize"
+               @context-changed="abortRequest"
                ref="userTable"
                :tbody-tr-class="rowClass"
                :busy.sync="pagination.isBusy"
@@ -35,7 +36,7 @@
 
         <template #empty>
           <div class="text-center text-primary my-2">
-            <strong class="ml-2">Non ci sono utenti iscritti...</strong>
+            <strong class="ml-2">Non ci sono utenti iscritti </strong>
           </div>
         </template>
 
@@ -90,7 +91,7 @@
                     align="fill" aria-controls="user-table" />
     </b-row>
     <!-- DELETE ACCOUNT -->
-    <delete-account v-model="deleteAccount.show" :id="deleteAccount.user._id" @onDeleteAccount="afterDeleteAccount" admin-version>
+    <delete-account v-model="deleteAccount.show" :id="deleteAccount.user._id" @onDeleteAccount="afterDeleteAccount">
       <template v-slot:message>
         <p> Sei sicuro di voler eliminare l'account di <strong><i>{{ deleteAccount.user.userID }}</i></strong>? </p>
       </template >
@@ -101,16 +102,17 @@
 </template>
 
 <script>
-import {bus} from '@/main'
-import api from '@api'
-import {dateFormat} from "@services/utils";
+
 import {mapGetters} from "vuex";
 import {_goToChat} from '@components/chats/utils'
+import {QueuePendingRequests} from "@api/request";
 export default {
   name: "users-section",
   data(){
     return {
       isMobile: false,
+      pendingRequests: null,
+      idRequest: 'users-all',
 
       pagination: {
         isBusy: false,
@@ -167,7 +169,10 @@ export default {
   },
   computed: {
 
-    ...mapGetters(['accessToken', 'userIdentifier']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier'
+    }),
 
     showPagination(){
       return this.pagination.totals > 0
@@ -220,8 +225,12 @@ export default {
       }
     },
 
-
+    abortRequest(){
+      this.pendingRequests.cancel(this.idRequest, 'search user abort.')
+    },
     getUser(ctx) {
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+
       this.pagination.isBusy = true
       let {currentPage, perPage} = ctx
       console.log('FILTERS ' , ctx.filter)
@@ -234,20 +243,20 @@ export default {
        if(ctx.filter.userID.value) filter = { userID: ctx.filter.userID }
        if(ctx.filter.fullname.value) filter = { fullname: ctx.filter.fullname }
 
-      return api.users
-                .getUsers(filter || {}, this.accessToken, paginationOption)
+      return this.$store.dispatch('users/all', { filters: filter || {}, pagination: paginationOption, options })
                 .then(({data}) => {
                    console.log(data)
-
                    this.pagination.totals = data.total
                    return data.items.map(u => this.remapping(u))
                 })
-                //TODO: HANDLER ERROR GET USERS (admin)
                .catch(err => {
-                 console.error(err)
+                 this.handleRequestErrors.users.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
                  return []
                })
-               .finally(() => this.pagination.isBusy = false)
+               .finally(() => {
+                 this.pagination.isBusy = false
+                 this.pendingRequests.remove(this.idRequest)
+               })
     },
 
     /* --- DELETE ACCOUNT OF USER --- */
@@ -298,14 +307,16 @@ export default {
     }
   },
   created() {
-    bus.$on('user:signup', this.fetchUsers.bind(this))
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.fetchUsers.bind(this))
+    this.pendingRequests = QueuePendingRequests.create()
+    this.$bus.$on('user:signup', this.fetchUsers.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.fetchUsers.bind(this))
   },
   beforeDestroy() {
-    bus.$off('user:signup', this.fetchUsers.bind(this))
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.fetchUsers.bind(this))
+    this.pendingRequests.cancelAll('(admin) all users cancel.')
+    this.$bus.$off('user:signup', this.fetchUsers.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.fetchUsers.bind(this))
   }
 }
 </script>

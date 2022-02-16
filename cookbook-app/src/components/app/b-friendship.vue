@@ -12,7 +12,7 @@
           <b-button variant="primary" class="accept-request" @click="acceptRequest">Accetta</b-button>
         </b-button-group>
         <b-button class="request-reject" v-else-if="requestRejected" variant="danger" disabled>Richiesta rifiutata</b-button>
-        <b-button variant="success" v-else @click="sendRequestFriendShip">Segui</b-button>
+        <b-button variant="success" v-else-if="!noFollowButton" @click="sendRequestFriendShip">Segui</b-button>
       </b-button-group>
 
       <b-button :id="chatId" v-if="withChat && isMyFriend" variant="secondary" @click="_goToChat(otherUser._id)">
@@ -24,9 +24,7 @@
 </template>
 
 <script>
-import api from '@api'
 import {mapGetters} from "vuex";
-import {bus} from "@/main";
 import {_goToChat} from '@components/chats/utils'
 
 export default {
@@ -36,7 +34,8 @@ export default {
       type: Object,
       required: true
     },
-    withChat: Boolean
+    withChat: Boolean,
+    noFollowButton: Boolean
   },
   data(){
     return {
@@ -49,14 +48,14 @@ export default {
       isMyFriend: false,
     }
   },
-  watch: {
-    otherUser(vl){
-      console.debug('friendship: set other user => ', vl._id)
-      this.onCheckFriendshipState(vl)
-    }
-  },
   computed: {
-    ...mapGetters(['socket', 'accessToken', 'userIdentifier', 'isLoggedIn', 'isSigned', 'userFriends']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier',
+      isLoggedIn: 'session/isLoggedIn',
+      isSigned: 'session/isSigned',
+      friends: 'friendships/friends'
+    }),
 
     chatId(){
       return 'btn-chat-' + this.otherUser._id
@@ -66,50 +65,54 @@ export default {
       return this.otherUser._id !== this.userIdentifier
     },
 
+    isAccessibleArea(){
+      return ['single-user', 'search'].includes(this.$route.name)
+    }
   },
   methods: {
+    _setActualState(state){
+      if(state){
+        this.requestToUpdate = false
+        this.requestRejected = state === 'rejected'
+        this.justFollow = state === 'accepted'
+        this.isMyFriend = this.justFollow
+      }
+    },
 
     // POST
     sendRequestFriendShip(){
-      api.friends
-          .requestFriendShip(this.otherUser._id, this.accessToken)
+      this.$store.dispatch('friendships/request-to', this.otherUser._id)
           .then(({ data }) => {
             console.log('Request friendship pending. ')
-            this.requestJustSend = true
-            this.socket.emit('friendship:request', data)
+            this.$socket.emit('friendship:request', data)
+            return true
           })
-          //TODO: HANDLER ERROR ADD FRIENDSHIP
-          .catch(err => console.error(err))
+          .catch(err => this.handleRequestErrors.friends.requestFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .then(this._setActualState)
     },
 
     // DELETE
     sendRemoveFriendShip(){
-      api.friends
-          .breakFriendShip(this.userIdentifier, this.otherUser._id, this.accessToken)
+      this.$store.dispatch('friendships/break-up-with', this.otherUser._id)
           .then(({data}) => {
             console.log('Friendship is over. ')
             this.justFollow = false
             this.isMyFriend = false
-            this.socket.emit('friendship:remove', this.otherUser)
+            this.$socket.emit('friendship:remove', this.otherUser)
           })
-          //TODO: HANDLER ERROR DELETE FRIENDSHIP
-          .catch(err => console.error(err))
+          .catch(err => this.handleRequestErrors.friends.breakFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
     },
 
     //UPDATE
     _updateFriendShip(state){
-      api.friends
-          .updateFriendShip(this.userIdentifier, this.otherUser._id, { state: state }, this.accessToken)
+      this.$store.dispatch('friendships/update-request', {userID: this.otherUser._id, state})
           .then(({data}) => {
             console.log('State friendship is '+state+'. ')
-            this.requestToUpdate = false
-            this.requestRejected = state === 'rejected'
-            this.justFollow = state === 'accepted'
-            this.isMyFriend = this.justFollow
-            this.socket.emit('friendship:update', data)
+            this.$socket.emit('friendship:update', data)
+            return state
           })
-          //TODO: HANDLER ERROR UPDATE FRIENDSHIP
-          .catch(err => console.error(err))
+          .catch(err => this.handleRequestErrors.friends.updateFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .then(this._setActualState)
     },
     rejectRequest(){
       return this._updateFriendShip('rejected')
@@ -118,22 +121,20 @@ export default {
       return this._updateFriendShip('accepted')
     },
 
-    setFriendShip(vl, data){
-      if(data){
-        console.debug('other user = ', vl , ', friendship = ', data)
-        this.requestToUpdate = (data.from === vl._id && data.to === this.userIdentifier) && data.state === 'pending'
-        this.requestJustSend = (data.from === this.userIdentifier && data.to === vl._id) && data.state === 'pending'
-        let filter = (data.from === this.userIdentifier && data.to === vl._id) || (data.from === vl._id && data.to === this.userIdentifier)
-        this.justFollow = filter && data.state === 'accepted'
-        this.requestRejected = filter && data.state === 'rejected'
-        this.isMyFriend = (data.from === vl._id || data.to === vl._id) && data.state === 'accepted'
-      }
+    _renderFriendShip(data){
+      let vl = this.otherUser
+      console.debug('other user = ', vl , ', friendship = ', data)
+      this.requestToUpdate = (data.from?._id === vl._id && data.to?._id === this.userIdentifier) && data.state === 'pending'
+      this.requestJustSend = (data.from?._id === this.userIdentifier && data.to?._id === vl._id) && data.state === 'pending'
+      let filter = (data.from?._id === this.userIdentifier && data.to?._id === vl._id) || (data.from?._id === vl._id && data.to?._id === this.userIdentifier)
+      this.justFollow = filter && data.state === 'accepted'
+      this.requestRejected = filter && data.state === 'rejected'
+      this.isMyFriend = (data.from?._id === vl._id || data.to?._id === vl._id) && data.state === 'accepted'
     },
-    onCheckFriendshipState(vl){
-       if(vl){
-         this.socket.emit('check:user:friendship', vl._id)
-         this.socket.on('friendship:state:'+ vl._id, this.setFriendShip.bind(this, vl))
-       }
+    _setFriendShip(friends){
+      let _friends = friends || this.friends || []
+      _friends.filter(f => (f.from?._id === this.otherUser._id || f.to?._id === this.otherUser._id))
+              .forEach(data => { if(data) this._renderFriendShip(data)})
     },
 
     /* chat */
@@ -178,17 +179,25 @@ export default {
       this.$emit('remove-friend')
     }
   },
-  mounted() {
-    console.debug('mounted b-friendship')
-    this.onCheckFriendshipState(this.otherUser)
-    bus.$on('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
-    bus.$on('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
-    bus.$on('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
+  created() {
+    if(this.isLoggedIn){
+      if(this.friends.length === 0) {
+        this.$store.dispatch('friendships/own')
+            .then(({data}) => this._setFriendShip())
+            .catch(this.handleRequestErrors.friends.getFriendOf)
+      }
+      else this._setFriendShip()
+    }
+
+    console.debug('created b-friendship')
+    this.$bus.$on('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
+    this.$bus.$on('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
+    this.$bus.$on('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
   },
   beforeDestroy() {
-    bus.$off('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
-    bus.$off('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
-    bus.$off('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
+    this.$bus.$off('friendship:request:' + this.otherUser._id, this.onListenFriendshipRequest.bind(this))
+    this.$bus.$off('friendship:update:' + this.otherUser._id, this.onListenFriendshipUpdate.bind(this))
+    this.$bus.$off('friendship:remove:' + this.otherUser._id, this.onListenFriendshipRemove.bind(this))
   }
 }
 </script>

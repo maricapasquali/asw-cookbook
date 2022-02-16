@@ -1,7 +1,9 @@
 import Vue from 'vue'
-import App from '@/App'
 import router from '@router'
-import store from '@/store'
+import store from '@store'
+
+import App from '@/App'
+
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 // Import Bootstrap an BootstrapVue CSS files (order is important)
 import 'bootstrap/dist/css/bootstrap.css'
@@ -38,14 +40,20 @@ import VueZoomer from 'vue-zoomer'
 Vue.use(VueZoomer)
 
 // Import my components
-import components from "@components"
-Object.values(components).forEach(comp => Vue.component(comp.name, comp))
+import Components from "@components"
+Vue.use(Components)
 
-// Import my directives
-import directives from '@components/directives'
-Object.entries(directives).forEach(([id, directive]) => Vue.directive(id, directive))
+// Import my event bus
+import EventBusPlugin from '@event-bus'
+Vue.use(EventBusPlugin)
 
-export const bus = new Vue();
+// Import my socket.io
+import SocketPlugin from '@socket'
+Vue.use(SocketPlugin)
+
+// Import my utils
+import AppPlugins from '@/plugins'
+Vue.use(AppPlugins)
 
 new Vue({
     router,

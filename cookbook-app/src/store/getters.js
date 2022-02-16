@@ -1,21 +1,29 @@
 export default {
-    isAdmin: state => state.user && state.user.isAdmin,
+    genders: state => state._genders,
 
-    isSigned: state => state.user && state.user.isSigned,
+    countries: state => state._countries,
 
-    isGuestOrSigned: state => !state.user || state.user.isSigned,
+    diets: state => state._diets,
 
-    isLoggedIn: state => state.user && state.accessToken && state.refreshToken,
+    recipeCategories: state => state._recipeCategories,
 
-    username: state => state.user && state.user.userID,
+    concreteDiets: state => state._diets.filter(d => d.value !== ''),
 
-    userIdentifier: state => state.user && state.user._id,
+    getCountryByValue: (state) => (value) => {
+        return state._countries.find(country => country.value === value)
+    },
 
-    userFriends: state => state.user && state.user.friends,
+    getDietByValue: (state) => (value) => {
+        return state._diets.find(diet => diet.value === value)
+    },
 
-    accessToken: state => state.accessToken,
+    getGenderByValue: (state) => (value) => {
+        return state._genders.find(gender => gender.value === value)
+    },
 
-    refreshToken: state => state.refreshToken,
+    getRecipeCategoryByValue: (state) => (value) => {
+        return state._recipeCategories.find(rCategory => rCategory.value === value)
+    },
 
-    socket: state => state.socket
+    language: state => state.language,
 }

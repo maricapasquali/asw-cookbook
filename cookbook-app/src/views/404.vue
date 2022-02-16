@@ -1,12 +1,18 @@
 <template>
   <b-container fluid="sm">
-    <b-row cols="1" align-v="center" class="vh-100">
-        <b-card>
+    <b-row cols="1" align-v="center" :class="classObject">
+        <b-card class="col">
           <b-card-body class="text-center">
            <b-container fluid>
              <b-row cols="1" class="text-center">
-               <img width="150" height="150" :src="image" :alt="alt" />
-               <router-link :to="{name: 'homepage'}" replace><b-button>Vai alla HomePage</b-button></router-link>
+               <b-col>
+                 <b-img fluid :src="image" :alt="alt" />
+               </b-col>
+               <b-col v-if="!asset">
+                 <router-link :to="{name: 'homepage'}" replace>
+                   <b-button class="go-home p-3" variant="primary">Vai alla HomePage</b-button>
+                 </router-link>
+               </b-col>
              </b-row>
            </b-container>
           </b-card-body>
@@ -16,7 +22,6 @@
 </template>
 
 <script>
-import {bus} from "@/main";
 
 export default {
   name: "NotFound",
@@ -37,7 +42,7 @@ export default {
       }
     },
     image(){
-      switch (this.asset){
+      switch (this.asset) {
         case 'recipe':
           return require('@assets/images/404-recipe.png')
         case 'user':
@@ -45,12 +50,16 @@ export default {
         case 'chat':
           return require('@assets/images/404-chat.png')
         default:
+          this.$bus.$emit('hide:navigation-bar')
+          this.$bus.$emit('hide:footer')
           return require('@assets/images/404-page.png')
       }
+    },
+    classObject() {
+      return {
+        'vh-100': !this.asset
+      }
     }
-  },
-  created() {
-    bus.$emit('hideNavigationBar', this.$route.name)
   }
 }
 </script>
@@ -58,5 +67,9 @@ export default {
 <style scoped>
 img{
   object-fit: contain;
+}
+.go-home {
+  font-size: 16pt;
+  border-radius: 1.25rem;
 }
 </style>

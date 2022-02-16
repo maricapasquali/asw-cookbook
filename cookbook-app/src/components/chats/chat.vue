@@ -32,7 +32,7 @@
                   <b-card-body :title="item.name">
                     <b-row align-v="center">
                       <b-col class="pr-1"> <country-image v-model="item.country" heigth="0" :id="item.name"/> </b-col>
-                      <b-col class="pl-1"> <span>{{ item.category | recipeCategoryName }}</span> </b-col>
+                      <b-col class="pl-1"> <span>{{ _recipeCategoryName(item.category) }}</span> </b-col>
                     </b-row>
                   </b-card-body>
                 </b-col>
@@ -50,11 +50,8 @@
 </template>
 
 <script>
-import api from '@api'
-import {mapGetters} from "vuex";
-import {dateFormat} from "@services/utils";
+import {mapGetters, mapMutations} from "vuex";
 import ChatUtils from '@components/chats/utils'
-import {RecipeCategories} from "../../services/app";
 
 export default {
   name: "chat",
@@ -81,10 +78,8 @@ export default {
     }
   },
   filters: {
-    dateFormat,
-    recipeCategoryName(val){
-      let category = RecipeCategories.find(val)
-      return category ? category.text : '';
+    dateFormat: function (text){
+      return dateFormat(text)
     }
   },
   watch: {
@@ -130,7 +125,12 @@ export default {
       }
     },
 
-    ...mapGetters(['isLoggedIn', 'socket', 'username', 'userIdentifier', 'username', 'accessToken']),
+    ...mapGetters({
+      isLoggedIn: 'session/isLoggedIn',
+      username: 'session/username',
+      userIdentifier: 'session/userIdentifier'
+    }),
+    ...mapGetters(['getRecipeCategoryByValue']),
 
     temporaryNameChat: {
       get(){
@@ -150,7 +150,7 @@ export default {
     },
 
     amINotReaderUser(){
-      return this.value && this.value.users.find(u => u.user._id === this.userIdentifier && u.role !== 'reader')
+      return this.value && this.value.users.find(u => u.user?._id === this.userIdentifier && u.role !== 'reader')
     },
 
     infoChat(){
@@ -175,6 +175,9 @@ export default {
   },
 
   methods: {
+    _recipeCategoryName(val){
+      return this.getRecipeCategoryByValue(val)?.text || '';
+    },
 
     _goToTheBottom(behavior = 'auto'){
       console.debug('Go To The Bottom of the messages : behavior = ', behavior)
@@ -195,7 +198,7 @@ export default {
     },
 
     sendTyping(typing = false){
-      this.socket.emit('chat:typing', this.temporaryNameChat, { _id: this.userIdentifier, userID: this.isChatGroup && this.username, typing: typing } )
+      this.$socket.emit('chat:typing', this.temporaryNameChat, { _id: this.userIdentifier, userID: this.isChatGroup && this.username, typing: typing } )
     },
     receiveTyping(data){
       const index = this.writeUsers.findIndex(w => w._id === data._id)
@@ -207,22 +210,25 @@ export default {
       }
       console.debug('TYPING container height = ',  data)
     },
-
-    readMessages(messages){
+    ...mapMutations({
+      removeUnReadMessage: 'chats/remove-unread'
+    }),
+    readMessages(messages, init = false){
       if(messages.length) {
         let messagesIds = messages.map(m => m._id)
         console.log('Read messages = ', messagesIds)
-        api.chats
-            .messages
-            .readMessages(this.userIdentifier, this.value._id, {messages: messagesIds} , this.accessToken)
+        this.$store.dispatch('chats/messages/read', {chatID: this.value._id, messagesIds})
             .then((response) => {
               console.debug(response)
               if(response.status === 204) return console.debug('Message ('+message._id+') has already read.');
               const {description, readers} = response.data
               const reader = Object.values(readers)[0].user
-              messages.forEach(message => message.read.push(readers[message._id]))
+              messages.forEach(message => {
+                message.read.push(readers[message._id])
+                if(init) this.removeUnReadMessage()
+              })
               console.debug(description, ' from ', reader.userID)
-              this.socket.emit('chat:read', this.temporaryNameChat, messages)
+              this.$socket.emit('chat:read', this.temporaryNameChat, messages)
             })
             //TODO: HANDLER ERRORS MARK LIKE READ MESSAGE
             .catch(err => console.error(err))
@@ -261,13 +267,11 @@ export default {
               attachment: _message.attachment ? _message.attachment.replace(this._linkAttachmentInfo.origin, '') : undefined,
               timestamp: _message.timestamp
             }
-            api.chats
-                .messages
-                .createMessage(this.userIdentifier, this.value._id, data, this.accessToken)
+            this.$store.dispatch('chats/messages/create', {chatID: this.value._id, data })
                 .then(({data}) => {
                   console.debug('Message has been delivered => ', JSON.stringify(data))
                   this._changeStateMyMessage({ ...data, delivered: true })
-                  this.socket.emit('chat:messages', this.temporaryNameChat, data)
+                  this.$socket.emit('chat:messages', this.temporaryNameChat, data)
 
                   this.resetAttachment()
                 })
@@ -308,12 +312,12 @@ export default {
 
     _initialization(chat){
       if(chat) {
-        this.socket.emit('chat:enter', this._infoForSocket)
+        this.$socket.emit('chat:enter', this._infoForSocket)
 
         this.messages = chat.messages.map(message => Object.assign(message, {delivered: true}))
 
         const unReadMessage = this.messages.filter(m => m.sender._id !== this.userIdentifier && !m.read.find(r => r.user._id === this.userIdentifier))
-        this.readMessages(unReadMessage.reverse())
+        this.readMessages(unReadMessage.reverse(), true)
 
         this.$nextTick(() => this._goToTheBottom())
 
@@ -331,8 +335,7 @@ export default {
     },
 
     getAttachmentsRecipes(){
-      api.recipes
-         .getRecipes(this.userIdentifier, this.accessToken, 'saved')
+      this.$store.dispatch('recipes/saved')
          .then(({data}) =>{
            this.recipes = data.items;
            console.debug('Attachments = > ', data.items)
@@ -376,8 +379,7 @@ export default {
         const permission = this.usersChat.filter(r => r.user._id !== this.userIdentifier)
                                          .map(r => ({user: r.user._id, granted: 'read'}))
 
-        executor = (resolve, reject) => api.recipes
-                                           .updatePermission(this.userIdentifier, this.attachment.id, permission, this.accessToken)
+        executor = (resolve, reject) => this.$store.dispatch('recipes/update-permission', {recipeID: this.attachment.id, permission})
                                            .then(({data}) => {
                                               console.log(data)
                                               resolve()
@@ -396,8 +398,7 @@ export default {
       if(link){
         const id = link.split('/').pop()
         if(!id) return new Promise((resolve, reject) => reject({reason: 'Resource id is not valid.', link}))
-        return api.recipes
-                  .getRecipe(this.userIdentifier, id, null,this.accessToken)
+        return this.$store.dispatch('recipes/one', id)
                   .then(({data}) =>{
                     console.debug('Attachments = > ', data)
                     return this.createObjectPreview(data, link)
@@ -410,24 +411,24 @@ export default {
     }
   },
   created() {
-    this.socket.on('enter', this.enterChat.bind(this))
-    this.socket.on('leave', this.leaveChat.bind(this))
-    this.socket.on('read-messages', this.receiveConfirmReadMessages.bind(this))
-    this.socket.on('typing', this.receiveTyping.bind(this))
-    this.socket.on('messages', this.receiveMessages.bind(this))
+    this.$socket.on('enter', this.enterChat.bind(this))
+    this.$socket.on('leave', this.leaveChat.bind(this))
+    this.$socket.on('read-messages', this.receiveConfirmReadMessages.bind(this))
+    this.$socket.on('typing', this.receiveTyping.bind(this))
+    this.$socket.on('messages', this.receiveMessages.bind(this))
   },
   mounted() {
     this._initialization(this.value)
   },
 
   beforeDestroy() {
-    this.socket.off('enter', this.enterChat.bind(this))
-    this.socket.off('leave', this.leaveChat.bind(this))
-    this.socket.off('read-messages', this.receiveConfirmReadMessages.bind(this))
-    this.socket.off('typing', this.receiveTyping.bind(this))
-    this.socket.off('messages', this.receiveMessages.bind(this))
+    this.$socket.off('enter', this.enterChat.bind(this))
+    this.$socket.off('leave', this.leaveChat.bind(this))
+    this.$socket.off('read-messages', this.receiveConfirmReadMessages.bind(this))
+    this.$socket.off('typing', this.receiveTyping.bind(this))
+    this.$socket.off('messages', this.receiveMessages.bind(this))
 
-    this.socket.emit('chat:leave', this._infoForSocket)
+    this.$socket.emit('chat:leave', this._infoForSocket)
   }
 }
 </script>

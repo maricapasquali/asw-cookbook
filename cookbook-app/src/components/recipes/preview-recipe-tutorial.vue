@@ -14,7 +14,7 @@ export default {
   props: {
     value: String,
     poster: String,
-
+    withoutDefaultPoster: Boolean,
     withImage: Boolean
   },
   data(){
@@ -24,7 +24,7 @@ export default {
   },
   computed: {
     _poster(){
-      return this.poster || this.defaultImageRecipe
+      return this.poster || (!this.withoutDefaultPoster && this.defaultImageRecipe)
     },
     _showOnlyPoster(){
       return this.withImage && !this.$data._video

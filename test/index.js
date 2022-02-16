@@ -1,6 +1,7 @@
 const assert = require('assert');
 const {EmailValidator, PasswordValidator} = require('../modules/validator')
 const {RBAC} = require("../cookbook-server/modules/rbac");
+const {AccessLocker} = require("../cookbook-server/modules/access.locker");
 
 describe('Validator', function (){
     describe('Email', function() {
@@ -63,5 +64,45 @@ describe('RBAC', function (){
         it('is signed', function() {
             assert(accessManager.isSignedUser(user1))
         })
+    })
+})
+
+describe('AccessLocker', function (){
+    const MS = 1000
+    const SEC = 60
+
+    const ip1 = '::1'
+    const attempt = 4
+    const tryAgainMinutes = 0.5
+
+    const sleep = (minutes) => new Promise(resolve => setTimeout(resolve, minutes*SEC*MS))
+
+    this.timeout(SEC*MS);
+
+    const locker = new AccessLocker(attempt, tryAgainMinutes)
+    locker.insert(ip1)
+
+    it('User tries to access ', async function (){
+        assert(locker.checkAttempts(ip1))
+
+        locker.reduceAttempts(ip1)
+        assert(locker.checkAttempts(ip1))
+
+        locker.reduceAttempts(ip1)
+        assert(locker.checkAttempts(ip1))
+
+        locker.reduceAttempts(ip1)
+        assert(locker.checkAttempts(ip1))
+
+        locker.reduceAttempts(ip1)
+        assert(!locker.checkAttempts(ip1))
+        console.log(`User must be wait ${tryAgainMinutes} minutes before try again.`)
+        console.log('.......')
+        await sleep(tryAgainMinutes)
+        console.log(`After ${tryAgainMinutes} minutes `);
+
+        assert(locker.checkAttempts(ip1))
+        console.log('User can try again.')
+        locker.reduceAttempts(ip1)
     })
 })

@@ -30,11 +30,6 @@ export default {
       enum: ['danger', 'success', 'warning', 'info', 'dark']
     }
   },
-  data: function (){
-    return {
-      app_name: require("@app/app.config.json").app_name,
-    }
-  },
   methods:{
     clickOk: function (){
       this.$emit('ok')

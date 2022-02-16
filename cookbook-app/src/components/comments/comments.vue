@@ -9,9 +9,11 @@
             <b-button ref="btn-comment" variant="link" v-b-toggle="editorAddComment">Commenta</b-button>
           </div>
           <b-collapse :id="editorAddComment">
-            <mini-text-editor @end-edit="addComments"  @close="closeEditorComment">
-              <template #edit>Commenta</template>
-            </mini-text-editor>
+            <wrap-loading v-model="commenting.process">
+              <mini-text-editor :reset-content="commenting.success" @end-edit="addComments" @close="closeEditorComment">
+                <template #edit>Commenta</template>
+              </mini-text-editor>
+            </wrap-loading>
           </b-collapse>
         </b-col>
       </b-row>
@@ -27,8 +29,6 @@
 </template>
 
 <script>
-import {bus} from "@/main";
-import api from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -41,13 +41,22 @@ export default {
       default: 'it'
     },
   },
-
+  data(){
+    return {
+      commenting: {
+        process: false,
+        success: null
+      }
+    }
+  },
   computed:{
     editorAddComment(){
-      return 'editor-comment-'+ this.recipe.id
+      return 'editor-comment-'+ this.recipe._id
     },
 
-    ...mapGetters(['accessToken', 'isAdmin', 'socket']),
+    ...mapGetters({
+      isAdmin: "session/isAdmin"
+    }),
     couldComment(){
       return !this.isAdmin && this.recipe.owner
     }
@@ -60,19 +69,20 @@ export default {
     },
 
     addComments(text){
-      api.recipes
-         .comments
-         .createComment(this.recipe.owner._id, this.recipe._id, {content: text}, this.accessToken)
-         .then(({data})=> {
+      this.commenting.process = true
+
+      this.$store.dispatch('comments/create', {ownerID: this.recipe.owner._id, recipeID: this.recipe._id, content: text})
+         .then(({data}) => {
            this.value.push(data)
            //this.$emit('input', [...this.value, ...[data]])
 
-           this.socket.emit('recipe:comment', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
+           this.$socket.emit('recipe:comment', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
 
            console.log('You commented.')
+           return true
          })
-          //TODO: HANDLER ERROR ADD COMMENT TO RECIPE
-         .catch(err => console.error(err))
+         .catch(this.handleRequestErrors.comments.createCommentOrResponse)
+         .then(success => this.commenting = { process: false, success })
     },
 
     /* Listeners notification */
@@ -81,10 +91,10 @@ export default {
     }
   },
   created() {
-    bus.$on('recipe:comment', this.onAddCommentListener.bind(this))
+    this.$bus.$on('recipe:comment', this.onAddCommentListener.bind(this))
   },
   beforeDestroy() {
-    bus.$off('recipe:comment', this.onAddCommentListener.bind(this))
+    this.$bus.$off('recipe:comment', this.onAddCommentListener.bind(this))
   }
 }
 </script>

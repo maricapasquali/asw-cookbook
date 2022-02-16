@@ -33,7 +33,6 @@
 
 <script>
 import {mapGetters} from "vuex";
-import {dateFormat} from "@services/utils";
 export default {
   name: "chat-message",
   props: {
@@ -86,7 +85,9 @@ export default {
     },
 
 
-    ...mapGetters(["userIdentifier"]),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier'
+    }),
 
     showDestName(){
       return this.group && !this.isMyMessage

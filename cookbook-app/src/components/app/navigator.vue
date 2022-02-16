@@ -1,7 +1,8 @@
 <template>
   <div id="navigator-app">
+    <loading v-model="logoutProcessing" fixed/>
     <!-- NAV BAR -->
-    <b-navbar ref="navigator" toggleable="sm" type="dark" class="navigator-bar" fixed="top">
+    <b-navbar ref="navigator" toggleable="sm" type="dark" :class="classNavigator" fixed="top">
       <b-navbar-brand :to="{name: 'homepage'}" :active="isHomePageActive">{{ app_name }}</b-navbar-brand>
 
       <b-navbar-toggle target="nav-collapse">
@@ -13,7 +14,6 @@
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-<!--          <b-nav-item :active="isHomePageActive" :to="{name: 'homepage'}" > HomePage </b-nav-item>-->
           <b-nav-item-dropdown text="Ricerca" v-if="isGuestOrSigned" right>
             <b-dropdown-item :active="isSearchRecipesActive" :to="{name:'search', params: {what: 'recipes'}}">ricette</b-dropdown-item>
             <b-dropdown-item :active="isSearchUsersActive" :to="{name:'search', params: {what: 'users'}}">utenti</b-dropdown-item>
@@ -24,6 +24,11 @@
         <b-navbar-nav class="ml-auto">
           <b-nav-item-dropdown v-if="isLoggedIn" right>
             <template #button-content>
+              <b-avatar badge-left badge-top variant="none"  badge-variant="light">
+                <template #badge>
+                  <span> {{totalNotRead}} <span class="sr-only">notifiche e messaggi non letti</span></span>
+                </template>
+              </b-avatar>
               <em>{{ username }}</em>
             </template>
             <b-dropdown-item :active="isAccountActive" :to="{name: 'p-user-account', params: {id: userIdentifier }}">Account</b-dropdown-item>
@@ -35,56 +40,64 @@
             <b-dropdown-item v-if="isAdmin" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userIdentifier}}">Alimenti</b-dropdown-item>
             <b-dropdown-item v-if="isAdmin" :active="isUsersActive" :to="{name: 'p-user-users', params: {id: userIdentifier}}">Utenti</b-dropdown-item>
 
-            <b-dropdown-item :active="isNotificationsActive" :to="{name: 'p-user-notifications', params: {id: userIdentifier}}">Notifiche</b-dropdown-item>
-            <b-dropdown-item :active="isChatsActive" :to="{name: 'p-user-chats', params: {id: userIdentifier}}">Chats</b-dropdown-item>
-            <b-dropdown-item @click="logout">Sign Out</b-dropdown-item>
+            <b-dropdown-item :active="isNotificationsActive" :to="{name: 'p-user-notifications', params: {id: userIdentifier}}">
+             <b-row>
+               <b-col cols="6">
+                 <span>Notifiche</span>
+               </b-col>
+               <b-col class="text-right px-1"  cols="6">
+                 <h5><b-badge :variant="isNotificationsActive ? 'light': 'primary'"  v-if="unreadNotifications>0">{{unreadNotifications}}<span class="sr-only">notifiche non lette</span></b-badge></h5>
+               </b-col>
+             </b-row>
+            </b-dropdown-item>
+            <b-dropdown-item :active="isChatsActive" :to="{name: 'p-user-chats', params: {id: userIdentifier}}">
+              <b-row>
+                <b-col cols="6">
+                  <span>Chats</span>
+                </b-col>
+                <b-col class="text-right px-1"  cols="6">
+                  <h5><b-badge :variant="isChatsActive ? 'light': 'primary'"  v-if="unreadChatsMessages>0">{{unreadChatsMessages}}<span class="sr-only">messaggi non letti</span></b-badge></h5>
+                </b-col>
+              </b-row>
+            </b-dropdown-item>
+            <b-dropdown-item @click="onLogoutSubmit">Sign Out</b-dropdown-item>
 
           </b-nav-item-dropdown>
           <b-nav-item v-else :to="{name: 'login'}"> Login </b-nav-item>
-
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
-    <!-- ERRORS MODAL -->
-    <modal-alert v-model="error.show" variant="danger">
-      <template v-slot:msg>
-        {{error.message}}
-      </template>
-    </modal-alert>
   </div>
 </template>
 
 <script>
 
-import api from '@api'
-import {bus} from "@/main";
-
-import {isString} from '@services/utils'
-
-import {mapGetters, mapMutations} from 'vuex'
+import {mapActions, mapGetters} from 'vuex'
 
 export default {
   name: "app-navigator",
   data: function (){
     return {
-      app_name : require("@app/app.config.json").app_name,
-      error: {
-        show: false,
-        message: ''
-      }
+      logoutProcessing: false
     }
   },
 
   computed:{
-    ...mapGetters([
-      'isLoggedIn',
-      'userIdentifier',
-      'username',
-      'isAdmin',
-      'isSigned',
-      'isGuestOrSigned',
-      'accessToken'
-    ]),
+    ...mapGetters({
+      isLoggedIn: 'session/isLoggedIn',
+      userIdentifier: 'session/userIdentifier',
+      username: 'session/username',
+      isAdmin: 'session/isAdmin',
+      isSigned: 'session/isSigned',
+      isGuestOrSigned: 'session/isGuestOrSigned',
+      unreadChatsMessages: 'chats/unreadChatsMessages',
+      unreadNotifications:  'notifications/numberUnreadNotifications'
+    }),
+
+    totalNotRead(){
+      return this.unreadNotifications + this.unreadChatsMessages
+    },
+
     isHomePageActive: function (){
       return this.$route.name === 'homepage'
     },
@@ -118,36 +131,24 @@ export default {
     isChatsActive: function (){
       return this.$route.name === 'p-user-chats'
     },
+
+    classNavigator(){
+      return { 'navigator-bar': true, 'navigator-bar-in-logout': this.logoutProcessing }
+    }
   },
   methods:{
-    ...mapMutations([
-      'endSession'
-    ]),
-
-    logout: function (){
-      bus.$emit('onLogout', true)
-      console.log(this.userIdentifier)
-      console.log(this.accessToken)
-      api.users.session
-               .logout(this.userIdentifier, this.accessToken)
-               .then(response => {
-                 this.endSession()
-                 console.debug("LOGOUT OK.")
-                 if(this.$route.name === 'homepage') this.$router.go()
-                 else this.$router.replace({name: 'homepage'})
-               })
-               .catch(err => {
-                 this.error.message = api.users.HandlerErrors.logout(err)
-                 if(isString(this.error.message)){
-                   this.error.show = true
-                 } else if(err.response.status === 409){
-                   this.endSession()
-                   console.debug("LOGOUT 409.")
-                 } else{
-                   this.error.show = true
-                 }
-               })
-               .then(() => bus.$emit('onLogout', false))
+    ...mapActions({
+      logout: 'session/logout'
+    }),
+    onLogoutSubmit(){
+      this.logoutProcessing = true
+      this.logout()
+          .then(() => {
+            this.$router.replace({name: 'homepage'})
+            // console.debug('Store state: ', this.$store.state)
+          })
+          .catch(this.handleRequestErrors.session.logout)
+          .finally(() => this.logoutProcessing = false)
     }
   }
 }
@@ -157,4 +158,17 @@ export default {
 .navigator-bar{
   background-color: $nav-color;
 }
+.navigator-bar.navigator-bar-in-logout {
+  z-index: 2!important;
+}
+
+.nav-notification {
+  position: relative;
+  & .badge {
+    position: absolute;
+    top: -3px;
+    left: 12px;
+  }
+}
+
 </style>

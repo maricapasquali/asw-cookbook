@@ -61,7 +61,6 @@
 
 <script>
 
-import {dateFormat} from "@services/utils";
 import {mapGetters} from "vuex";
 
 import ChatUtils from '@components/chats/utils'
@@ -73,7 +72,9 @@ export default {
     skeleton: Boolean
   },
   filters: {
-    dateFormat
+    dateFormat: function (text){
+      return dateFormat(text)
+    }
   },
   data(){
     return {
@@ -81,7 +82,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["userIdentifier", "isAdmin"]),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    }),
 
     removeChatId(){
       return 'remove-chat-' + this.value._id
@@ -103,8 +107,8 @@ export default {
     },
 
     numberUnReadMessages(){
-      return this.value.messages.filter(m => m.sender._id !== this.userIdentifier)
-                                .filter(m => !m.read.find(r => r.user._id === this.userIdentifier)).length
+      return this.value.messages.filter(m => m.sender?._id !== this.userIdentifier)
+                                .filter(m => !m.read.find(r => r.user?._id === this.userIdentifier)).length
     },
 
     receiverUserIdentifier(){

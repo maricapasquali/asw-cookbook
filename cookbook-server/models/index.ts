@@ -27,6 +27,6 @@ export const Comment: Model<IComment> = model<IComment>('Comment', CommentSchema
 export const Report: Model<IReport> = model<IReport>('Report', ReportSchema)
 
 export const Notification: Model<INotification> = model<INotification>('Notification', NotificationSchema)
-//TODO: ADD OTHER SCHEMAS
+
 export const Chat: Model<IChat> = model<IChat>('Chat', ChatSchema)
 export const Message: Model<IMessage> = model<IMessage>('Message', MessageSchema)

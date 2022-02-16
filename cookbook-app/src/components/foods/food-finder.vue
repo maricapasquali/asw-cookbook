@@ -10,7 +10,7 @@
         <b-form-group label="Trova" label-for="find-ingredient" id="ingredient-group" :class="{'with-barcode': barcodeSearch}">
           <div v-outside="_hideDropdownOutSide" >
             <b-input-group>
-              <b-form-input @focus="_showDropdown" id="find-ingredient" placeholder="Ingrediente" v-model="startWith" @input="findFoods" ref="find-ingredient" type="search" autocomplete="off"/>
+              <b-form-input :disabled="disabled" @focus="_showDropdown" id="find-ingredient" placeholder="Ingrediente" v-model="startWith" @input="findFoods" ref="find-ingredient" type="search" autocomplete="off"/>
               <template #append> <barcode-scanner @onFound="onDecode" @onError="onError" :show="barcodeSearch"/> </template>
             </b-input-group>
             <div v-show="!hideDropdown && startWith.length>0">
@@ -35,7 +35,6 @@
 <script>
 import {ImageBarcodeReader, StreamBarcodeReader} from "vue-barcode-reader";
 
-import api from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -49,7 +48,8 @@ export default {
     foodAdder:{
       type: Boolean,
       default: false
-    }
+    },
+    disabled: Boolean
   },
   data(){
     return {
@@ -68,7 +68,11 @@ export default {
     atLeastResult(){
       return this.foods.length > 0
     },
-    ...mapGetters(['accessToken'])
+    ...mapGetters({accessToken: 'session/accessToken'}),
+
+    isAccessibleArea(){
+      return ['search'].includes(this.$route.name)
+    }
   },
   methods: {
     _boldStartWith(text){
@@ -87,18 +91,13 @@ export default {
      if(this.barcodeSearch){
        console.debug('FoodFinder : On found = ', barcodeNumber)
 
-       api.foods
-          .getFoods(this.accessToken, {barcode: barcodeNumber})
-          .then(({data}) => {
-            console.debug(data)
-            if (data.total === 0) throw new Error(`Barcode (${barcodeNumber}) is not found`)
-            else this.$emit('found', data.items[0])
-          })
-          .catch(err => {
-            //TODO: HANDLER ERROR FOUND FOOD WITH BARCODE == 'barcodeNumber'
-            console.error(err);
-            this.onError({ barcode: barcodeNumber, error: 'not found' })
-          })
+       this.$store.dispatch('foods/filterByBarcode', barcodeNumber)
+           .then(({data}) => {
+             console.debug(data)
+             if (data.total === 0) this.onError({ barcode: barcodeNumber, error: 'not found' })
+             else this.$emit('found', data.items[0])
+           })
+           .catch(err => this.handleRequestErrors.foods.searchFood(err, {_forbiddenPage: !this.isAccessibleArea }))
 
      } else throw new Error('BarcodeSearch: Funzionalità non attivata.')
 
@@ -119,15 +118,16 @@ export default {
         this.foods = []
       }
       else {
-        api.foods
-           .getFoods(this.accessToken, {name: _startWith})
+        this.$store.dispatch('foods/filterByName', _startWith)
            .then(({data}) => {
              console.debug(data)
              this.foods = data.items
              this.hideDropdown = false
            })
-           //TODO: HANDLER ERROR LIST INGREDIENT that start with 'ingredientStart'
-           .catch(err => this.foods = [])
+           .catch(err => {
+             this.foods = []
+             this.handleRequestErrors.foods.searchFood(err, {_forbiddenPage: !this.isAccessibleArea })
+           })
       }
     },
 
@@ -144,12 +144,10 @@ export default {
     },
 
     async getFood(foodID){
-      return await api.foods
-                      .getFood(foodID, this.accessToken)
+      return await this.$store.dispatch('foods/findById', foodID)
                       .then(({data}) => data)
                       .catch(err => {
-                        //TODO: HANDLER ERROR GET ONE FOOD
-                        console.error(err);
+                        this.handleRequestErrors.foods.getFood(err, {_forbiddenPage: !this.isAccessibleArea })
                         return { nutritional_values: {} }
                       })
     },

@@ -1,5 +1,5 @@
 <template>
-  <b-container fluid >
+  <b-container fluid>
     <b-row>
       <b-col>
         <b-form-group label-for="search-user-input">
@@ -18,62 +18,78 @@
     </b-row>
     <b-skeleton-wrapper :loading="processing">
       <template #loading>
-        <b-card v-for="i in skeleton" :key="i">
-          <b-row>
-            <b-col cols="3" align-self="center"><b-skeleton type="avatar"/> </b-col>
-            <b-col align-self="center" cols="6">
-              <b-row cols="1">
-                <b-col><b-skeleton width="50%" /></b-col>
-                <b-col><b-skeleton width="30%" /></b-col>
-              </b-row>
-            </b-col>
-            <b-col class="text-right" align-self="center" cols="3">
-              <b-row cols="1">
-                <b-col class="text-right"> <b-skeleton width="100%" /> </b-col>
-                <b-col class="text-right mt-3"><b-skeleton width="100%" /> </b-col>
-              </b-row>
+        <b-container fluid class="px-0">
+          <b-row cols="1" cols-sm="1" cols-md="2" cols-lg="3" cols-xl="4">
+            <b-col v-for="i in skeleton" :key="i">
+              <b-card >
+                <b-container>
+                  <b-row>
+                    <b-col cols="3" align-self="center"><b-skeleton type="avatar"/> </b-col>
+                    <b-col align-self="center" cols="6">
+                      <b-row cols="1">
+                        <b-col><b-skeleton width="50%" /></b-col>
+                        <b-col><b-skeleton width="30%" /></b-col>
+                      </b-row>
+                    </b-col>
+                  </b-row>
+                  <b-row cols="1" align-h="end">
+                    <b-col cols="4" class="text-right">
+                      <b-skeleton width="100%" />
+                      <b-skeleton width="100%" />
+                    </b-col>
+                  </b-row>
+                </b-container>
+              </b-card>
             </b-col>
           </b-row>
-        </b-card>
+        </b-container>
       </template>
       <wrap-loading v-model="search.processing">
-        <b-row cols="1" class="user-container">
-          <b-col v-if="atLeastOneUser">
-            <div class="mb-2" v-if="search.mode"><strong > Risultati: </strong></div>
-            <b-card v-for="(user, index) in users" :key="user._id">
-              <b-row>
-                <b-col align-self="center" class="text-center px-0" cols="3"><avatar v-model="user.information.img" :user="user._id"/></b-col>
-                <b-col align-self="center" cols="5">
-                  <b-row cols="1">
-                    <b-col>
-                      <router-link :to="{name: 'single-user', params: {id: user._id}}"> {{user.userID}} </router-link>
+        <b-container fluid class="px-0">
+          <b-row v-if="search.mode">
+            <b-col ><strong > Risultati: </strong></b-col>
+          </b-row>
+
+          <b-row cols="1" cols-sm="1" cols-md="2" cols-lg="3" cols-xl="4">
+
+            <b-col v-for="(user, index) in users" :key="user._id" >
+              <b-card no-body class="container-find-user">
+                <b-container class="p-4">
+                  <b-row cols="1" cols-sm="2" class="body-find-user h-100">
+                    <b-col cols="12" sm="4" class="mb-2">
+                      <avatar v-model="user.information.img" :user="user._id"/>
                     </b-col>
-                    <b-col v-if="user.information.occupation">{{user.information.occupation}}</b-col>
-                  </b-row>
-                </b-col>
-                <b-col class="text-right" align-self="center" cols="4">
-                  <b-row cols="1">
-
-                    <b-col v-if="user.information.country">
-                      <country-image v-model="user.information.country" :id="user._id" width="70" height="60"/>
+                    <b-col cols="12" sm="8" class="px-0">
+                      <b-container fluid>
+                        <b-row cols="1">
+                          <b-col>
+                            <router-link :to="{name: 'single-user', params: {id: user._id}}"> {{user.userID}} </router-link>
+                          </b-col>
+                          <b-col v-if="user.information.occupation">
+                            <span>{{user.information.occupation}}</span>
+                          </b-col>
+                        </b-row>
+                      </b-container>
                     </b-col>
-
-                    <b-friendship class="col mt-3" :other-user="otherUser(index)"/>
-
                   </b-row>
-                </b-col>
-              </b-row>
-            </b-card>
-            <b-row class="mb-2" v-if="!search.mode && areOthers">
-              <b-col class="text-center">
-                <b-button variant="link" @click="others"> Altri </b-button>
-              </b-col>
-            </b-row>
-          </b-col>
-          <b-col v-else-if="search.mode && !atLeastOneUser" class="mt-4" >
-            <strong class="mx-5"> Risultati: Nessun utente </strong>
-          </b-col>
-        </b-row>
+                  <b-row cols="1" class="text-right footer-find-user" >
+                    <country-image class="col" v-if="user.information.country" v-model="user.information.country"  :id="user._id" width="70" height="60"/>
+                    <b-friendship class="col" :other-user="otherUser(index)"/>
+                  </b-row>
+                </b-container>
+              </b-card>
+            </b-col>
+            <b-col v-if="search.mode && !atLeastOneUser" class="mt-4" >
+              <strong> Nessun utente </strong>
+            </b-col>
+          </b-row>
+
+          <b-row v-if="!search.mode && areOthers" class="mt-2">
+            <b-col class="text-center">
+              <b-button variant="link" @click="others"> Altri </b-button>
+            </b-col>
+          </b-row>
+        </b-container>
       </wrap-loading>
     </b-skeleton-wrapper>
   </b-container>
@@ -81,15 +97,16 @@
 
 <script>
 
-import {bus} from '@/main'
-import api, {Server} from '@api'
-import {mapGetters} from "vuex";
+import Server from '@api/server.info'
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "search-users",
   data(){
     return {
-      skeleton: 4,
+      skeleton: 6,
+      pendingRequests: null,
+
       processing: true,
       search: {
         mode: false,
@@ -101,7 +118,7 @@ export default {
       total: 0,
       pagination: {
         page: 1,
-        limit: 3 //TODO: CHANGE
+        limit: 4 //TODO: CHANGE
       },
 
     }
@@ -113,7 +130,6 @@ export default {
     areOthers(){
       return this.users.length >0 && this.users.length < this.total
     },
-    ...mapGetters(['accessToken', 'userIdentifier', 'isLoggedIn', 'userFriends'])
   },
   methods: {
     // SEARCH
@@ -125,11 +141,16 @@ export default {
 
        this.$router.push({query: { name: this.search.value }})
 
-       api.users
-          .getUsers({ userID: { search: 'partial', value: this.search.value } }, this.accessToken)
+       let _id = 'search-users'
+       let options = this._optionsUsers(_id, 'search users abort.')
+
+       this.$store.dispatch('users/search-for-username', { search: 'partial', username: this.search.value, options })
           .then(({data}) => this.users = data.items)
-          .catch(err => console.error(err))
-          .finally(() => this.search.processing = false)
+          .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
+          .finally(() => {
+            this.search.processing = false
+            this.pendingRequests.remove(_id)
+          })
     },
     resetSearch(val = ''){
       if( this.search.mode && val.length === 0 ) {
@@ -141,6 +162,10 @@ export default {
       }
     },
     // USERS
+    _optionsUsers(_id, message){
+      return QueuePendingRequests.makeOptions(this.pendingRequests, _id, {message})
+    },
+
     getUsers(currentPage, limit){
       const page = currentPage || 1
       const _limit = limit || this.pagination.limit
@@ -159,8 +184,9 @@ export default {
         this.search.value = ''
       }
 
-      api.users
-         .getUsers(query, this.accessToken, pagination)
+      let _id = 'users'
+      let options = this._optionsUsers(_id, 'get users abort.')
+      this.$store.dispatch('users/search', { query, pagination, options })
          .then(({data}) => {
             let _data = data.items
 
@@ -174,8 +200,11 @@ export default {
            console.debug('Total = ', this.total)
 
          })
-         .catch(err => console.error(err))
-         .finally(() => this.processing = false)
+         .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
+         .finally(() => {
+           this.processing = false
+           this.pendingRequests.remove(_id)
+         })
     },
     others(){
       this.getUsers(this.pagination.page + 1)
@@ -215,26 +244,49 @@ export default {
     }
   },
   created() {
-    bus.$on('user:checked', this.fetchUsers.bind(this))
+    this.pendingRequests = QueuePendingRequests.create()
+    this.$bus.$on('user:checked', this.fetchUsers.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.onDeleteUser.bind(this))
-  },
-  beforeDestroy() {
-    bus.$off('user:checked', this.fetchUsers.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.onDeleteUser.bind(this))
-  },
-  mounted() {
     this.getUsers()
 
-    window.onpopstate = function (e){
-      this.getUsers()
-    }.bind(this)
+    window.onpopstate = function (e){ this.getUsers() }.bind(this)
+  },
+  beforeDestroy() {
+    this.pendingRequests.cancelAll('Search users cancel operation.')
+
+    this.$bus.$off('user:checked', this.fetchUsers.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.onDeleteUser.bind(this))
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.container-find-user{
+  position: relative;
+  min-height: 170px;
+  .footer-find-user {
+    position: absolute;
+    bottom: 11px;
+    right: 20px;
+  }
+}
+@media only screen and (max-width: 768px) {
+  .container-find-user {
+    min-height: 0!important;
+  }
+}
+@media only screen and (max-width: 400px){
+  .container-find-user{
+    & .footer-find-user {
+      position: unset!important;
+    }
+    & .body-find-user {
+      height: unset!important;
+    }
+  }
+}
 </style>

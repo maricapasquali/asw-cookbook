@@ -3,12 +3,11 @@
     <template #loading>
       <b-skeleton-table :rows="7" :columns="2" :table-props="{ bordered: true, striped: true }"/>
     </template>
-    <b-table striped :items="getItems" :fields="fields"></b-table>
+    <b-table class="nutritional-table" v-resize="onResize" striped :items="getItems" :fields="fields" :stacked="isMobile"></b-table>
   </b-skeleton-wrapper>
 </template>
 
 <script>
-import {bus} from "@/main";
 
 export default {
   name: "nutrients-table",
@@ -48,6 +47,7 @@ export default {
   },
   data(){
     return {
+      isMobile: false,
       nutrients: [
         { value: 'energy', text: 'Energia (kcal)' },
         { value: 'protein', text: 'Proteine (g)' },
@@ -83,6 +83,9 @@ export default {
   },
 
   methods:{
+    onResize({screenWidth}){
+      this.isMobile = screenWidth <= 576
+    },
     convertObjToArray(nObj){
       if(!nObj) return this.emptyNutritionalTable()
       let array = []
@@ -167,10 +170,10 @@ export default {
     this.table = this.convertObjToArray(this.value)
     if(this.ingredients.length > 0) this.makeTable(this.ingredients)
 
-    bus.$on('food:update', this.onUpdateFood.bind(this))
+    this.$bus.$on('food:update', this.onUpdateFood.bind(this))
   },
   beforeDestroy() {
-    bus.$off('food:update', this.onUpdateFood.bind(this))
+    this.$bus.$off('food:update', this.onUpdateFood.bind(this))
   }
 }
 </script>

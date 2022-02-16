@@ -51,7 +51,10 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.17.2",
+    "@babel/plugin-proposal-optional-chaining": "^7.16.7",
     "@vue/cli-service": "^4.5.13",
+    "babel-loader": "^8.2.3",
     "nodemon": "^2.0.12",
     "sass": "^1.38.2",
     "sass-loader": "^10.2.0",

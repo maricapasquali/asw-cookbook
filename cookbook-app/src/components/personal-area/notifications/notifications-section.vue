@@ -1,7 +1,32 @@
 <template>
-  <b-container>
-    <b-row cols="1" class="my-3">
-
+  <b-skeleton-wrapper :loading="loading">
+    <template #loading>
+      <b-container>
+        <b-row cols="1" class="my-3">
+          <b-alert  v-for="i in skeleton" :key="i" class="skeleton-notification my-0" variant="light" show>
+            <b-row>
+              <b-col>
+                <b-row>
+                  <b-col>
+                    <b-skeleton width="100%" />
+                  </b-col>
+                </b-row>
+              </b-col>
+              <b-col cols="2" class="text-right">
+                <font-awesome-icon icon="times"/>
+              </b-col>
+            </b-row>
+            <b-row>
+              <b-col class="text-right mt-3">
+                <small><b-skeleton width="40%" /></small>
+              </b-col>
+            </b-row>
+          </b-alert>
+        </b-row>
+      </b-container>
+    </template>
+    <b-container>
+      <b-row cols="1" class="my-3">
         <b-alert
             v-for="(doc, index) in docs" :key="index"
             :class="classAlert(doc)" show
@@ -30,20 +55,23 @@
             </b-col>
           </b-row>
         </b-alert>
-    </b-row>
-  </b-container>
+        <span v-if="docs.length===0">Non ci sono notifiche.</span>
+      </b-row>
+    </b-container>
+  </b-skeleton-wrapper>
 </template>
 
 <script>
-import {bus} from '@/main'
+
 import {mapGetters} from "vuex";
-import api from '@api'
-import {dateFormat} from "@services/utils";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "notifications-section",
   data(){
     return {
+      skeleton: 5,
+      loading: false,
       docs: [],
       totals: 0,
       pagination: {
@@ -76,10 +104,15 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userIdentifier', 'accessToken','isAdmin']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    }),
   },
   filters: {
-    dateFormat
+    dateFormat: function (text){
+      return dateFormat(text)
+    }
   },
   methods: {
     deleteNotificationId(id){
@@ -122,7 +155,7 @@ export default {
           return { name: 'single-recipe', params: { id: doc.otherInfo.recipe.owner, recipe_id: doc.otherInfo.recipe._id }, hash: '#comment-'+doc.otherInfo.comment._id }
 
         case 'like':
-          if(doc.otherInfo.comment) return { name: 'single-recipe',
+          if(doc.otherInfo.comment || doc.otherInfo.liker === this.userIdentifier) return { name: 'single-recipe',
                                              params: { id: doc.otherInfo.owner, recipe_id: doc.otherInfo.recipe },
                                              hash: '#comment-' + doc.otherInfo.comment}
           else return doc.otherInfo.liker? { name: 'single-user', params: { id: doc.otherInfo.liker } } : ''
@@ -159,16 +192,22 @@ export default {
     },
 
     getNotifications(){
+      let _id = 'notifications-all'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
 
-      api.notifications
-         .getNotifications(this.userIdentifier, this.accessToken)
-         .then(({data}) => {
+      this.loading = true
+      this.$store.dispatch('notifications/all', {options})
+          .then(({data}) => {
             this.docs = data.items
             this.totals = data.totals
-         })
-          //TODO: HANDLER ERROR GET NOTIFICATIONS
-         .catch(err => console.error(err))
-
+            return true
+          })
+          .catch(err => {
+           this.handleRequestErrors.notifications.getNotifications(err)
+           return false
+          })
+          .then(processEnd => this.loading = !processEnd)
+          .then(() => this.pendingRequests.remove(_id))
     },
 
     clickNotification(event, index){
@@ -191,29 +230,27 @@ export default {
 
     updateNotification(doc){
       console.log(doc._id + ' mark as read .')
-      api.notifications
-         .updateNotification(this.userIdentifier, doc._id, {read: true}, this.accessToken)
-         .then(({data}) => {
+      this.$store
+          .dispatch('notifications/read', doc._id)
+          .then(({data}) => {
               doc.read = true
               console.log(data)
-         })
-         //TODO: HANDLER ERROR UPDATE NOTIFICATION
-         .catch(err => {
-           doc.read = false
-           // doc.read = !doc.read
-           console.error(err)
-         })
+          })
+          .catch(err => {
+            doc.read = false // doc.read = !doc.read
+            this.handleRequestErrors.notifications.updateNotification(err)
+          })
     },
 
     deleteNotification(index){
-      let notificationID =  this.docs[index]._id
-      console.log('Delete: ', notificationID)
-      // this.docs.splice(index, 1)
-      api.notifications
-         .deleteNotification(this.userIdentifier, notificationID, this.accessToken)
-         .then(({data}) => this.docs.splice(index, 1))
-          //TODO: HANDLER ERROR DELETE NOTIFICATION
-         .catch(err => console.error(err))
+      let notification =  this.docs[index]
+      console.log('Delete: ', notification._id)
+      this.$store
+          .dispatch('notifications/remove', notification)
+          .then(({data}) => {
+            this.docs.splice(index, 1)
+          })
+          .catch(this.handleRequestErrors.notifications.deleteNotification)
     },
 
     addNotification(notification){
@@ -222,15 +259,17 @@ export default {
     }
   },
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
     this.getNotifications()
 
     for (const eventName of this.events) {
-      bus.$on(eventName, this.addNotification.bind(this))
+      this.$bus.$on(eventName, this.addNotification.bind(this))
     }
   },
   beforeDestroy() {
+    this.pendingRequests.cancelAll('all notifications cancel')
     for (const eventName of this.events) {
-      bus.$off(eventName, this.addNotification.bind(this))
+      this.$bus.$off(eventName, this.addNotification.bind(this))
     }
   }
 }
@@ -246,6 +285,10 @@ export default {
 
 .notification{
   cursor: pointer;
+}
+
+.skeleton-notification {
+  border: 1px  solid lightgray;
 }
 
 </style>

@@ -111,7 +111,7 @@
                       v-model="user.sex"
                       placeholder="Select gender"
                       type="text"
-                      :options="optionsGender">
+                      :options="genders">
                   </select-with-image>
                 </b-form-group>
 
@@ -126,7 +126,7 @@
                       v-model="user.country"
                       placeholder="Select country"
                       type="text"
-                      :options="optionsCountry">
+                      :options="countries">
                   </select-with-image>
                 </b-form-group>
                 <b-form-group
@@ -188,18 +188,11 @@
 </template>
 
 <script>
-import api from '@api'
-import configuration from "@app/app.config.json";
-import {EmailValidator} from '@app/modules/validator'
-import {Countries, Genders} from '@services/app'
-import {mapGetters} from "vuex";
+import {mapActions, mapGetters} from "vuex";
 export default {
   name: "sign-up",
   data: function() {
     return {
-      optionsGender: Genders.get(),
-      optionsCountry: Countries.get(),
-      app_name: configuration.app_name,
       user:{
         img: new File([], "", undefined),
         firstname: '',
@@ -230,8 +223,13 @@ export default {
       showInformation: true
     }
   },
+  watch: {
+    processing(val){
+      if(val) this.error = { show: false, msg:'' }
+    }
+  },
   computed:{
-    ...mapGetters(['socket']),
+    ...mapGetters(['genders', 'countries']),
     validationInformation: function (){
       return this.validation.firstName && this.validation.lastName && this.validation.email
     },
@@ -240,6 +238,9 @@ export default {
     }
   },
   methods: {
+    ...mapActions({
+      registerUser : 'users/signup'
+    }),
     forward: function (){
       this.showCredentials = true
       this.showInformation = false
@@ -253,7 +254,6 @@ export default {
       this.validation.email = EmailValidator.check(email)
     },
 
-
     signup: function (){
       console.log('signup')
       const formData = new FormData()
@@ -263,21 +263,17 @@ export default {
       //for(const [k, v] of formData.entries()) console.log(k, ' -> ', v);
 
       this.processing = true
-      api.users
-         .signup(formData)
+      this.registerUser(formData)
          .then(({data}) =>{
             this.success = true
-            this.error = { show: false, msg: '' }
             this.showCredentials = false
-
-            this.socket.emit('user:signup', data.userID)
-
+            this.$socket.emit('user:signup', data.userID)
          })
          .catch(err => {
             this.error.show = true
-            this.error.msg = api.users.HandlerErrors.signUp(err)
+            this.error.msg = this.handleRequestErrors.users.signUp(err)
          })
-         .then(() => this.processing=false)
+         .then(() => this.processing = false)
     },
 
     onSubmit: function (event){

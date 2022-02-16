@@ -425,12 +425,12 @@ export function list_all_recipes(req, res){
     getUser(req, res)
         .then(user => {
 
-            let {page, limit} = req.query
+            let {page, limit, skip} = req.query
 
             let filters = getFilters(req.query)
             pagination(
                 Recipe.find(filters).sort({ createdAt: -1, _id: -1 }),
-                page && limit ? {page: +page, limit: +limit}: undefined,
+                page && limit ? {page: +page, limit: +limit, skip: +skip}: undefined,
             )
             .then(recipes => res.status(200).json(recipes),
                   err => res.status(500).json({code: err.code || 0, description: err.message}))

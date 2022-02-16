@@ -1,35 +1,36 @@
 <template>
-  <div>
-    <loading v-model="processing" :zIndex="10000"></loading>
-    <b-modal body-class="position-static"
-             v-model="show" title="Cambia userID" @hide="close"
-             :hide-footer="validation!==true"
-             ok-only centered>
-      <b-alert v-model="error.show" variant="danger">{{error.message}}</b-alert>
-      <b-form-group label="UserID" label-for="c-userID">
+  <b-modal body-class="position-static"
+           v-model="show" title="Cambia userID"
+           :hide-footer="validation!==true || processing"
+           @hide="close"
+           no-close-on-esc
+           no-close-on-backdrop
+           ok-only centered>
+    <b-alert v-model="error.show" variant="danger">{{error.message}}</b-alert>
+    <wrap-loading v-model="processing">
+      <b-form-group label="UserID" label-for="c-userID" class="py-2">
         <b-form-input id="c-userID" type="text" v-model.trim="userID" @input="check" :state="validation"/>
       </b-form-group>
-      <template v-slot:modal-footer>
-        <b-button variant="primary" @click="changeUserID">Cambia</b-button>
-      </template>
-    </b-modal>
-  </div>
+    </wrap-loading>
+    <template v-slot:modal-footer>
+      <b-button variant="primary" @click="changeUserID">Cambia</b-button>
+    </template>
+  </b-modal>
 </template>
 
 <script>
-import api from '@api'
-import {isString} from "@services/utils";
 import {mapGetters} from "vuex";
 
 export default {
   name: "change-userid",
   props:{
+    value: Boolean,
     id: String,
     old_userID: String
   },
   data: function (){
     return {
-      show: true,
+      show: false,
       processing: false,
       error:{
         show: false,
@@ -44,37 +45,43 @@ export default {
     this.userID = this.old_userID
   },
   computed: {
-    ...mapGetters(['accessToken', 'socket'])
+    ...mapGetters({
+      accessToken: 'session/accessToken'
+    })
+  },
+  watch: {
+    value(val){
+      this.show = val
+    },
+    show(vl){
+      this.$emit('input', vl)
+    },
+    processing(val){
+      if(val) this.error = { show: false, message: '' }
+    }
   },
   methods: {
     check: function (){
       this.validation = this.userID.length===0 ? false : (this.old_userID === this.userID ? null : true)
     },
     close: function (){
+      console.debug("close change userID modal  ...")
       this.$emit("close")
     },
     changeUserID: function (e){
       e.preventDefault()
-      this.error = { show: false, message: '' }
       this.processing = true
 
-      api.users
-         .changeUserID(this.id, {old_userID: this.old_userID, new_userID: this.userID}, this.accessToken)
+      this.$store.dispatch('users/update-username', { oldUsername: this.old_userID, newUsername: this.userID })
          .then(response => {
             console.log("CHANGE USER ID...")
-            this.$emit("changeUserID", this.userID)
-
-            this.socket.emit('user:update:info', { _id: this.id, userID: this.userID })
-
+            this.$emit("onChangeUserID", this.userID)
+            this.$socket.emit('user:update:info', { _id: this.id, userID: this.userID })
+            this.show = false
          })
          .catch(err => {
-            console.error(err)
-            this.error.message = api.users.HandlerErrors.changeUserID(err)
-            if(isString(this.error.message)){
-              this.error.show = true
-            }else if(err.response.status === 401){
-              this.$emit('onSessionExpired')
-            }
+           let message = this.handleRequestErrors.users.changeUserID(err)
+           if(message) this.error = {show: true, message}
          })
          .finally(() => this.processing = false)
     }

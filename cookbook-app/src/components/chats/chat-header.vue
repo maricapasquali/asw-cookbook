@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import {dateFormat} from "@services/utils";
+
 import {mapGetters} from "vuex";
 
 import ChatUtils from '@components/chats/utils'
@@ -42,7 +42,9 @@ export default {
     value: Object
   },
   filters: {
-    dateFormat
+    dateFormat: function (text){
+      return dateFormat(text)
+    }
   },
   data(){
     return {
@@ -55,7 +57,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['userIdentifier', 'isAdmin']),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    }),
     isChatOne(){
       return this.value && this._isChatOne(this.info)
     },

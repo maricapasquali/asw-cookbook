@@ -5,7 +5,6 @@ import {Chat, EmailLink, Friend, Notification, ShoppingList, User} from '../../m
 import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
 import {IMailer, Mailer} from "../../modules/mailer";
-import {client_origin} from "../../../modules/hosting/variables";
 import {IUser, SignUp} from "../../models/schemas/user";
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
 import {
@@ -28,7 +27,11 @@ import ObjectId = Types.ObjectId
 import {EmailValidator} from "../../../modules/validator";
 import {IChat} from "../../models/schemas/chat";
 
-const app_name = require('../../../app.config.json').app_name
+import * as config from "../../../env.config"
+import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
+
+const app_name = config.appName
+const client_origin = config.client.origin
 
 const mailer: IMailer = new Mailer(`no-reply@${app_name.toLowerCase()}.com`);
 
@@ -93,10 +96,8 @@ export function create_user(req, res){
             res.status(201).json({ userID: user._id })
             if(accessManager.isSignedUser(user.credential)) send_email_signup(user)
         }, err => {
-            if(err.name === 'ValidationError')
-                return res.status(400).json({description: err.message})
-            if(err.code === 11000)
-                return res.status(409).json({description: 'Username has been already used'})
+            if(MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
+            if(MongooseDuplicateError.is(err)) return res.status(409).json({description: 'Username has been already used'})
             res.status(500).json({code: 0, description: err.message})
         })
 }
@@ -244,7 +245,7 @@ export function update_user(req, res){
     if(decoded_token) {
         let userBody = req.body
         if(req.file) userBody.img = req.file.filename
-        if(!userBody.img) userBody.img = undefined
+        if(userBody.img?.length === 0) userBody.img = null
         if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
         console.log("Update info user = ", userBody)
 
@@ -258,7 +259,7 @@ export function update_user(req, res){
                 user.save()
                     .then((u) => res.status(200).json({update: true, info: u.information}),
                          err => {
-                            if(err.name === 'ValidationError') return res.status(400).json({description: err.message})
+                            if(MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
                             return res.status(500).json({description: err.message})
                     })
             }, err => res.status(500).json({description: err.message}))
@@ -406,7 +407,7 @@ export function update_credential_user(req, res){
                             user.credential.userID = new_userID
                             user.save().then(() => res.status(200).json({update: change}),
                                 err => res.status(500).json({description: err.message}))
-                        }else return res.status(400).json({description: 'Old UserID is incorrect'});
+                        }else return res.status(409).json({description: 'Old UserID is incorrect'});
                     },
                     err => res.status(500).json({description: err.message}))
 
@@ -422,7 +423,7 @@ export function update_credential_user(req, res){
                             user.credential.hash_password = new_hash_password
                             user.save().then(() => res.status(200).json({update: change}),
                                 err => res.status(500).json({description: err.message}))
-                        }else return res.status(400).json({description: 'Old Password is incorrect'});
+                        }else return res.status(409).json({description: 'Old Password is incorrect'});
                     },
                     err => res.status(500).json({description: err.message}))
 
@@ -441,9 +442,9 @@ export function checkLinkResetPassword(req, res){
              .then(emailLink => {
                  if(!emailLink) return res.status(404).json({description: 'Key not valid'})
                  if(emailLink.expired < Date.now()) {
-                     emailLink.delete()
-                              .then(() => res.status(410).json({description: 'Link expired'}),
-                                    err => res.status(500).json({description: err.message}))
+                     emailLink.delete().then(() => console.debug('Remove expired email link for reset password.'),
+                                             err => console.error('ERROR on remove expired email link for reset password. Reason: ', err))
+                     return res.status(410).json({description: 'Link expired'})
                  }
                  else return res.status(200).json({description: 'Link valid'})
              }, err => res.status(500).json({description: err.message}))

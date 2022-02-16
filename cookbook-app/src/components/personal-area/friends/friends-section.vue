@@ -1,7 +1,7 @@
 <template>
   <b-container v-resize="onResize">
 
-    <b-container class="friend-search-container my-3 p-3">
+    <b-container class="friend-search-container my-3 p-3" v-if="haveFriend">
       <strong> Ricerca </strong>
       <b-row cols="1" cols-sm="2">
         <b-col>
@@ -36,6 +36,7 @@
     </b-container>
 
     <b-table :items="_friends"
+             @context-changed="abortRequest"
              :fields="fields"
              :filter="filter"
              :current-page="pagination.currentPage"
@@ -64,19 +65,26 @@
 
       <template #cell(state)="row" >
         <b-button-group class="pl-4" vertical>
-          <b-friendship :other-user="row.item.user" with-chat @add-friend="fetchData" @remove-friend="fetchData"/>
+          <b-friendship :other-user="row.item.user" with-chat @add-friend="fetchData" @remove-friend="fetchData" no-follow-button/>
         </b-button-group>
+      </template>
+
+      <template #table-busy>
+        <div  class="text-center text-primary my-2">
+          <b-spinner class="align-middle"></b-spinner>
+          <strong class="ml-2">Caricamento...</strong>
+        </div>
       </template>
 
       <template #empty>
         <div class="text-center text-primary my-2">
-          <strong class="ml-2">Non ci sono amici...</strong>
+          <strong class="ml-2">Non ci sono amici </strong>
         </div>
       </template>
 
       <template #emptyfiltered>
         <div class="text-center text-primary my-2">
-          <strong class="ml-2">Non ci sono amici filtrati ...</strong>
+          <strong class="ml-2">Non ci sono amici {{ searchIsOn ? 'filtrati': ''}} </strong>
         </div>
       </template>
 
@@ -88,10 +96,10 @@
 </template>
 
 <script>
-import {bus} from '@/main'
-import api, {Server} from '@api'
+
+import Server from '@api/server.info'
 import {mapGetters} from "vuex";
-import {mapping} from "@services/api/users/friends/utils";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "friends-section",
@@ -106,11 +114,20 @@ export default {
       return this.filter.state || this.filter.userID.value
     },
 
-    ...mapGetters(['userIdentifier', 'accessToken']),
+    haveFriend(){
+      return this.pagination.totals > 0
+    },
+
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier'
+    }),
   },
   data(){
     return {
       isMobile: false,
+      pendingRequests: null,
+      idRequest: 'friend-all',
+
       filterOptions: {
         state: [
           { text: 'Seleziona stato della richiesta di amicizia', value: '' },
@@ -160,8 +177,12 @@ export default {
         state: ''
       }
     },
-
+    abortRequest(){
+      this.pendingRequests.cancel(this.idRequest, 'search friend abort.')
+    },
     _friends(ctx){
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+
       console.debug('ctx = ', ctx);
       let {perPage, currentPage} = ctx || {}
       let forPage = perPage || this.pagination.for_page
@@ -171,21 +192,20 @@ export default {
       let userID = ctx.filter.userID.value ? ctx.filter.userID : undefined
       let state = ctx.filter.state || undefined
 
-      return api.friends
-                .getFriendOf(this.userIdentifier, this.accessToken, { userID: userID, state: state }, { page: page, limit: forPage })
+      return this.$store.dispatch('friendships/own',{ userID, state, pagination: { page, limit: forPage }, options})
                 .then(({data}) => {
                   console.debug('Friends = ',data.items, ', total = ', data.total)
-                  let items = data.items.map(f => mapping(f, this.userIdentifier))
-                  console.debug('Friends = ',items)
                   this.pagination.totals = data.total
-                  return items
+                  return data.items
                 })
-                // TODO: HANDLER ERROR GET FRIEND OF SECTION
                 .catch(err => {
-                  console.error(err)
+                  this.handleRequestErrors.friends.getFriendOf(err, {_forbiddenPage: true})
                   return []
                 })
-                .finally(() => this.pagination.isBusy = false)
+                .finally(() => {
+                  this.pagination.isBusy = false
+                  this.pendingRequests.remove(this.idRequest)
+                })
     },
 
     /* Listeners notification */
@@ -213,18 +233,20 @@ export default {
     }
   },
   created() {
-    bus.$on('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
-    bus.$on('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
+    this.pendingRequests = QueuePendingRequests.create()
+    this.$bus.$on('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
+    this.$bus.$on('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$on('user:delete', this.fetchData.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$on('user:delete', this.fetchData.bind(this))
   },
   beforeDestroy() {
-    bus.$off('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
-    bus.$off('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
+    this.pendingRequests.cancelAll('all friends cancel.')
+    this.$bus.$off('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
+    this.$bus.$off('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateInfos.bind(this))
-    bus.$off('user:delete', this.fetchData.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
+    this.$bus.$off('user:delete', this.fetchData.bind(this))
   }
 }
 </script>

@@ -7,11 +7,9 @@
 </template>
 
 <script>
-import api from '@api'
-import {mapGetters, mapMutations} from "vuex";
-import NotFound from "./404";
 
-import {bus} from '@/main'
+import {mapGetters} from "vuex";
+import NotFound from "./404";
 
 import { onUpdateUserInOneChat,  _onUpdateUserInOneChat, _onUpdateUserInfos } from '@components/chats/utils'
 
@@ -26,15 +24,14 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["userIdentifier", "accessToken", "socket"]),
+    ...mapGetters({
+      isLoggedIn: 'session/isLoggedIn'
+    }),
   },
   methods: {
-    ...mapMutations(["endSession"]),
-
     getChat(){
-      if(this.userIdentifier) {
-        api.chats
-            .getChat(this.userIdentifier, this.$route.params.chat_id, this.accessToken)
+      if(this.isLoggedIn) {
+        this.$store.dispatch('chats/one', this.$route.params.chat_id)
             .then(({data}) => {
               this.chat = data
               console.debug(this.chat)
@@ -44,7 +41,7 @@ export default {
                 switch (err.response.status){
                   case 401: {
                     console.error("UnAuthorized: ", err.response.data)
-                    this.endSession()
+                    this.$store.dispatch('reset')
                     this.$router.replace({ name: 'login' });
                   }
                   break;
@@ -72,10 +69,10 @@ export default {
 
   created() {
     this.getChat()
-    bus.$on('user:update:info', this.onUpdateUserInOneChat.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateUserInOneChat.bind(this))
   },
   beforeDestroy() {
-    bus.$off('user:update:info', this.onUpdateUserInOneChat.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateUserInOneChat.bind(this))
   }
 }
 </script>

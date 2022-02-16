@@ -15,14 +15,14 @@
                         <template #prepend>
                           <b-input-group-text><b-icon-book /></b-input-group-text>
                         </template>
-                        <b-form-input id="search-recipe-input" type="search" v-model="filters.name" @keypress.enter="search" placeholder="Inserisci nome ricetta completo o parziale" :disabled="loading"/>
+                        <b-form-input id="search-recipe-input" type="search" v-model="filters.name" @keypress.enter="search" placeholder="Inserisci nome ricetta completo o parziale" />
                         <b-input-group-append>
                           <b-button id="filters-form" variant="info" v-b-toggle.search-filters> <b-icon-filter scale="2x" /></b-button>
                           <b-tooltip target="filters-form">Filtri</b-tooltip>
                         </b-input-group-append>
                       </b-input-group>
                     </b-form-group>
-                    <b-collapse id="search-filters" ref="collapse-filters" :visible="withAllFiltersVisible" @show="_onShowFilters" @hide="_onHideFilters">
+                    <b-collapse id="search-filters" ref="collapse-filters" v-model="$data._showAllFilters" @show="_onShowFilters" @hide="_onHideFilters">
                       <b-container fluid >
                         <b-row cols="1" class="mt-3">
                           <b-col class="mb-2"> <strong>Regimi alimentari</strong> </b-col>
@@ -32,7 +32,7 @@
                           <b-col class="mb-2"> <strong>Categorie</strong> </b-col>
                           <b-col> <checkbox-pill-button v-model="filters.categories" :options="categories" class="w-100"/> </b-col>
                         </b-row>
-                        <b-row cols="1" class="mt-3">
+                        <b-row cols="1" class="mt-3" v-if="countries.length">
                           <b-col class="mb-2"> <strong>Paesi</strong> </b-col>
                           <b-col> <checkbox-pill-button v-model="filters.countries" :options="countries" class="w-100"/> </b-col>
                         </b-row>
@@ -91,17 +91,17 @@
 
             <filter-apply  v-for="(diet, index) in filters.diets" :key="diet" class="filters"
                            @remove="removeFilter('diets', index)">
-                <template #filter-name>{{ diet | fullName }} </template>
+                <template #filter-name>{{ _fullName(diet) }} </template>
             </filter-apply>
 
             <filter-apply v-for="(category, index) in filters.categories" :key="category" class="filters"
                           @remove="removeFilter('categories', index)">
-              <template #filter-name>{{ category | fullName }} </template>
+              <template #filter-name>{{ _fullName(category) }} </template>
             </filter-apply>
 
             <filter-apply v-for="(country, index) in filters.countries" :key="country" class="filters"
                           @remove="removeFilter('countries', index)">
-              <template #filter-name>{{ country | fullName }} </template>
+              <template #filter-name>{{ _fullName(country) }} </template>
             </filter-apply>
 
             <filter-apply v-for="(ingredient, index) in filters.ingredients" :key="ingredient._id" class="filters"
@@ -116,7 +116,7 @@
         <b-container fluid v-if="docs.length" >
           <b-row cols="1" cols-sm="2" cols-md="2" cols-lg="3" cols-xl="4">
             <b-col v-for="(doc, index) in docs" :key="doc._id" class="recipe-found-container mb-3 ">
-              <router-link :to="{name: 'single-recipe', params: {id: doc.owner._id, recipe_id: doc._id}}">
+              <router-link :to="_routeRecipe(doc)">
                 <b-card class="recipe-found" body-class="py-0">
                   <preview-recipe-image v-model="doc.img" />
                   <b-container fluid>
@@ -126,7 +126,7 @@
                           <b-col cols="7"> {{doc.name}} </b-col>
                           <b-col cols="5" class="text-right" v-if="doc.category || doc.country">
                             <b-row>
-                              <b-col> <span>{{ doc.category | fullName }}</span> </b-col>
+                              <b-col> <span>{{ _fullName(doc.category) }}</span> </b-col>
                               <b-col v-if="doc.country" class="pl-0"> <country-image v-model="doc.country" heigth="0" :id="index"/> </b-col>
                             </b-row>
                           </b-col>
@@ -150,11 +150,9 @@
 </template>
 
 <script>
-import {Diets, RecipeCategories, Countries} from '@services/app'
-import {pushIfAbsent, isString, isEmpty, clone, equals} from '@services/utils'
 
-import api from '@api'
 import {mapGetters} from "vuex";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "search-recipes",
@@ -182,10 +180,10 @@ export default {
       _showMap: true,
       loading: true,
 
-      countries: [],
-      diets: [],
-      categories: [],
+      pendingRequests: null,
 
+      countries: [],
+      _showAllFilters: false,
       filters: {
         countries: [],
         diets: [],
@@ -213,22 +211,16 @@ export default {
       }
     }
   },
-  filters: {
-    fullName(val) {
-      let country = Countries.find(val)
-      if(country) return country.text
-      let diet = Diets.find(val)
-      if(diet) return diet.text
-      let category = RecipeCategories.find(val)
-      if(category) return category.text
-      return ''
-    }
-  },
   computed:{
-    ...mapGetters(['accessToken']),
+    ...mapGetters(['getCountryByValue', 'getRecipeCategoryByValue', 'getDietByValue']),
+    ...mapGetters({
+      categories: 'recipeCategories',
+      diets: 'concreteDiets',
+      accessToken: 'session/accessToken'
+    }),
 
     showMap(){
-      return this.withMap && this.$data._showMap
+      return this.withMap && this.$data._showMap && this.countries.length >0
     },
     isDesktop(){
       return screen.width >= 540;
@@ -254,6 +246,20 @@ export default {
     },
   },
   methods: {
+    _routeRecipe(doc){
+      return { name: doc.owner?._id ? 'single-recipe' : 'recipe', params: { id: doc.owner?._id, recipe_id: doc._id }}
+    },
+
+    _fullName(val) {
+      let country = this.getCountryByValue(val)
+      if(country) return country.text
+      let diet = this.getDietByValue(val)
+      if(diet) return diet.text
+      let category = this.getRecipeCategoryByValue(val)
+      if(category) return category.text
+      return ''
+    },
+
     _onShowFilters(){
       this.$data._showMap = true
     },
@@ -261,12 +267,10 @@ export default {
       this.$data._showMap = false
     },
     _hideFilters(){
-      if(this.$refs['collapse-filters'].show)
-        this.$root.$emit('bv::toggle::collapse', 'search-filters')
+      if(this.$data._showAllFilters) this.$data._showAllFilters = false
     },
     _showFilters(){
-      if(!this.$refs['collapse-filters'].show)
-        this.$root.$emit('bv::toggle::collapse', 'search-filters')
+      if(!this.$data._showAllFilters) this.$data._showAllFilters = true
     },
 
     recipeInfoId(doc){
@@ -274,20 +278,22 @@ export default {
     },
 
     getNumberRecipesForCountry() {
-      this.loading = true
-      api.recipes
-         .numberRecipesForCountry(this.accessToken)
+      let _id = 'number-for-country'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
+
+      this.$store.dispatch('recipes/number-for-country', { options })
          .then(({data}) => {
            console.debug('Result rest api = ', data)
 
-           this.countries = data.filter(cn => Countries.find(cn.country))
-               .map(cn => ({...Countries.find(cn.country), ...{recipes: cn.number}}))
+           this.countries = data.filter(cn => this.getCountryByValue(cn.country))
+               .map(cn => ({...this.getCountryByValue(cn.country), ...{recipes: cn.number}}))
 
            if(this.withHistory) this._setFiltersFromRoute()
+           console.debug('this.countries = ', this.countries)
+           return true
          })
-         //TODO: HANDLER ERROR  Number Recipes For Country
-         .catch(err => console.error(err))
-         .finally(() => this.loading = false)
+         .catch(err => this.handleRequestErrors.recipes.getNumberRecipesForCountry(err))
+         .then(() => this.pendingRequests.remove(_id))
     },
 
     onAddIngredient(food){
@@ -369,9 +375,12 @@ export default {
 
       console.debug('Search = ', JSON.stringify(filters))
 
+      let _id = 'search-in-shared'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id,{ message: 'Search recipes abort.' })
+
       let promiseSearch = undefined
-      if(this.triggerSearch) promiseSearch = this.triggerSearch(filters)
-      else promiseSearch = api.recipes.allSharedRecipes(this.accessToken, {}, filters)
+      if(this.triggerSearch) promiseSearch = this.triggerSearch(filters, options)
+      else promiseSearch = this.$store.dispatch('recipes/search-in-shared', {filters, options})
 
       promiseSearch
          .then(({data}) => {
@@ -382,10 +391,11 @@ export default {
             this._hideFilters()
 
             this.$emit('searching', data)
+            return true
          })
-         //TODO: HANDLER ERROR  SEARCH BETWEEN SHARED RECIPES
-         .catch(err => console.error(err))
-         .finally(() => this.processingSearch = false)
+         .catch(err => this.handleRequestErrors.recipes.getRecipe(err, { _forbiddenPage: typeof this.triggerSearch !== 'undefined' }))
+         .then(processEnd => this.processingSearch = !processEnd)
+         .then(() => this.pendingRequests.remove(_id))
     },
 
     removeFilter(type, index = -1){
@@ -402,21 +412,23 @@ export default {
     },
   },
   created() {
-    this.diets = Diets.get().filter(d => d.value !== '')
-    this.categories = RecipeCategories.get()
+    this.pendingRequests = QueuePendingRequests.create()
+    this.$data._showAllFilters = this.withAllFiltersVisible
 
     if(this.withHistory) {
       window.onpopstate = function (e) {
         this._setFiltersFromRoute()
       }.bind(this)
     }
-  },
-  mounted() {
+
     if(!this.triggerSearch) this.getNumberRecipesForCountry()
-    else{
-      this.countries = Countries.get()
+    else {
+      this.countries = this.$store.getters.countries
       this.loading = false
     }
+  },
+  beforeDestroy() {
+    this.pendingRequests.cancelAll('Search recipes cancel operation.')
   }
 }
 </script>

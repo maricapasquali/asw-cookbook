@@ -50,7 +50,6 @@
 
 <script>
 import * as bcryptjs from "bcryptjs";
-import {PasswordValidator} from "@app/modules/validator";
 
 export default {
   name: "input-password",

@@ -1,5 +1,5 @@
 <template>
-  <b-overlay :z-index="zIndex" :show="value" :spinner-variant="spinnerVariant" :spinner-type="spinnerType" opacity="0.3" no-wrap></b-overlay>
+  <b-overlay :z-index="zIndex" :show="value" :spinner-variant="spinnerVariant" :spinner-type="spinnerType" opacity="0.3" :fixed="fixed" no-wrap></b-overlay>
 </template>
 
 <script>
@@ -18,7 +18,8 @@ export default {
     spinnerVariant:{
       type: String,
       default: "secondary"
-    }
+    },
+    fixed: Boolean
   }
 }
 </script>

@@ -1,23 +1,21 @@
 import * as _ from 'lodash'
 import  api from "@api";
-import  {isCallable} from "@services/utils";
-import {bus} from "@/main";
-import {Server} from "@services/api";
+import Server from "@api/server.info";
 
 export function _lastAccess(chatType, users){
     let _lastAccess = '';
     if(chatType === 'one' && users.length === 2){
-        const otherUser =  users.find(r => r.user._id !== this.userIdentifier)
-        _lastAccess = otherUser && otherUser.user.lastAccess
+        const otherUser =  users.find(r => r.user?._id !== this.userIdentifier)
+        _lastAccess = otherUser && otherUser.user?.lastAccess
 
-        console.debug('Other user => ', otherUser.user.userID,' Last access = ', _lastAccess)
+        console.debug('Other user => ', otherUser.user?.userID,' Last access = ', _lastAccess)
     }
     else {
-        const otherUsers = users.filter(r => r.user._id !== this.userIdentifier)
+        const otherUsers = users.filter(r => r.user?._id !== this.userIdentifier)
         const _maxItem = _.maxBy(otherUsers.map(r => r.user), 'lastAccess')
-        _lastAccess = otherUsers.every(r=> r.user.lastAccess !== 0) ? _maxItem && _maxItem.lastAccess : 0
+        _lastAccess = otherUsers.every(r=> r.user?.lastAccess !== 0) ? _maxItem && _maxItem.lastAccess : 0
 
-        const otherUsersLastAccess = otherUsers.map(r => { const obj = {}; obj[r.user.userID] = r.user.lastAccess || false; return obj })
+        const otherUsersLastAccess = otherUsers.map(r => { const obj = {}; obj[r.user?.userID] = r.user?.lastAccess || false; return obj })
         console.debug('Other users => ', JSON.stringify(otherUsersLastAccess), ' Last access = ', _lastAccess)
     }
     return _lastAccess
@@ -25,16 +23,16 @@ export function _lastAccess(chatType, users){
 
 export function _baseInfoUser(chatInfo, users) {
     if (chatInfo.type === 'one' && users.length === 2) {
-        const otherUser = users.find(r => r.user._id !== this.userIdentifier)
+        const otherUser = users.find(r => r.user?._id !== this.userIdentifier)
         if (otherUser) console.debug('Other user: base info = ', JSON.stringify(otherUser.user))
-        return otherUser && {_id: otherUser.user._id, name: otherUser.user.userID, img: otherUser.user.img}
+        return otherUser && {_id: otherUser.user?._id, name: otherUser.user.userID, img: otherUser.user.img}
     } else
         if(chatInfo.type === 'group' && this.isAdmin) {
             const otherUser = users.find(r => r.user.role !== 'admin')
-            return otherUser && {_id: otherUser.user._id, name: otherUser.user.userID}
+            return otherUser && {_id: otherUser.user?._id, name: otherUser.user?.userID}
         }
         return {
-        _id: users.filter(r => r.user._id !== this.userIdentifier).map(r => r.user._id),
+        _id: users.filter(r => r.user?._id !== this.userIdentifier).map(r => r.user?._id),
         name: chatInfo.name,
         img: chatInfo.img
     }
@@ -49,7 +47,7 @@ export function _isChatGroup(chatInfo){
 }
 
 export function _withAdmin(users){
-    return users.some(r => r.user.role === 'admin')
+    return users.some(r => r.user?.role === 'admin')
 }
 
 export function _goToChat(user_id, callbackCreateChat) {
@@ -65,8 +63,7 @@ export function _goToChat(user_id, callbackCreateChat) {
     }
     const link = (chat_id) => ({ name: 'chat', params: { chat_id } })
 
-    api.chats
-        .createChat(this.userIdentifier, formData, this.accessToken)
+    this.$store.dispatch('chats/create', formData)
         .then(({data}) => {
             if(isCallable(callbackCreateChat)) callbackCreateChat(data)
             this.$router.push(link(data._id))
@@ -89,11 +86,11 @@ export function pushMessages(chats){ //[{info, messages}]
             // if chatInfo.type === 'one' & MY ROLE IS 'READER' IN chatInfo.usersRole THEN UPDATE MY ROLE: 'READER' -> 'WRITER'
             if(chat.info.type === 'one' && chat.info.usersRole.find(r => r.role === 'reader' && r.user === this.userIdentifier)) {
                 const role = 'writer'
-                api.chats.updateRoleInChatOne(this.userIdentifier, chat.info._id , {role}, this.accessToken)
+                this.$store.dispatch('chats/update-role', {chatID: chat.info._id, role})
                     .then(({data}) => {
                         console.log(data)
-                        this.socket.on('chat:change:role:ok', () => bus.$emit('chat:change:role', chat.info._id, {user: this.userIdentifier, role}))
-                        this.socket.emit('chat:change:role', chat.info._id, { user: this.userIdentifier, role })
+                        this.$socket.on('chat:change:role:ok', () => this.$bus.$emit('chat:change:role', chat.info._id, {user: this.userIdentifier, role}))
+                        this.$socket.emit('chat:change:role', chat.info._id, { user: this.userIdentifier, role })
                     })
                     .catch(err => console.error(err))
             }
@@ -106,10 +103,11 @@ export function pushMessages(chats){ //[{info, messages}]
                 const dest = chat.info.type === 'one' || this.isAdmin ? 'da ' + message.sender.userID :
                              chat.info.type === 'group' ? 'in ' + chat.info.name : ''
 
-                if(! ['chat', 'p-user-chats'].includes(this.$route.name) )
+                if(! ['chat', 'p-user-chats'].includes(this.$route.name) ) {
                     this.$bvToast.toast('Hai ricevuto un nuovo messaggio ' + dest, { title: 'Messaggio', solid: true, variant: 'info', })
-
-                bus.$emit('push-message', chat.info, message)
+                }
+                this.$store.commit('chats/add-unread')
+                this.$bus.$emit('push-message', chat.info, message)
             })
         })
 
@@ -123,7 +121,7 @@ export function _onUpdateUserInfos(user, newInfos){
     }
 }
 export function _onUpdateUserInOneChat(chat, userInfo){
-    const foundUserInChat = chat.users.find(r => r.user && r.user._id === userInfo._id)
+    const foundUserInChat = chat.users.find(r => r.user?._id === userInfo._id)
     this._onUpdateUserInfos(foundUserInChat && foundUserInChat.user, userInfo)
     chat.messages.filter(m => m.sender && m.sender._id === userInfo._id)
         .forEach(m => this._onUpdateUserInfos(m.sender, userInfo))
@@ -137,7 +135,7 @@ export function onUpdateUserInChatSection(userInfo){
     if(userInfo){
         if(this.chats.length) this.chats.forEach(chat => this._onUpdateUserInOneChat(chat, userInfo))
         if(this.friends.length) {
-            const foundUserFriend = this.friends.find(f => f.user && f.user._id === userInfo._id)
+            const foundUserFriend = this.friends.find(f => f.user?._id === userInfo._id)
             this._onUpdateUserInfos(foundUserFriend && foundUserFriend.user, userInfo)
         }
     }

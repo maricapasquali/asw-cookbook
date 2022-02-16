@@ -24,13 +24,13 @@
                   v-model="recipe.country"
                   placeholder="Seleziona ..."
                   type="text"
-                  :options="optionsCountry" />
+                  :options="countries" />
             </b-form-group>
           </b-col>
           <!-- DIET  -->
           <b-col>
             <b-form-group label="Regime alimentare" label-for="r-diet">
-              <b-form-select id="r-diet" v-model.trim="recipe.diet" :options="optionsDiet" >
+              <b-form-select id="r-diet" v-model.trim="recipe.diet" :options="diets" >
                 <template #first>
                   <b-form-select-option value="undefined" disabled> Seleziona ... </b-form-select-option>
                 </template>
@@ -42,7 +42,7 @@
             <b-form-group label="Categoria" label-for="r-category">
               <b-form-select id="r-category"
                              v-model.trim="recipe.category"
-                             :options="optionsCategory"
+                             :options="recipeCategories"
                              :state="validation.category"
                              @change="onInputRecipeCategory" >
                 <template #first>
@@ -172,10 +172,6 @@
 
 <script>
 
-import {clone, equals, isBoolean} from '@services/utils'
-import {Countries, Diets, RecipeCategories} from '@services/app'
-
-import api from '@api'
 import {mapGetters} from "vuex";
 
 export default {
@@ -186,10 +182,6 @@ export default {
   },
   data(){
     return {
-      optionsCountry: Countries.get(),
-      optionsDiet: Diets.get(),
-      optionsCategory: RecipeCategories.get(),
-
       processing: false,
       show: false,
       recipe: {},
@@ -199,7 +191,11 @@ export default {
   },
   computed:{
 
-    ...mapGetters(['accessToken', 'userIdentifier', 'socket']),
+    ...mapGetters(['countries', 'diets', 'recipeCategories', 'getDietByValue', 'getRecipeCategoryByValue']),
+    ...mapGetters({
+      accessToken: 'session/accessToken',
+      userIdentifier: 'session/userIdentifier'
+    }),
 
     resetButtonClass(){
       return {
@@ -396,16 +392,13 @@ export default {
         _recipe.category = _recipe.category ? _recipe.category.value: undefined
         _recipe.diet =  _recipe.diet ? _recipe.diet.value : undefined
       }else{
-        _recipe.category = RecipeCategories.find(_recipe.category) || ''
-        _recipe.diet = Diets.find(_recipe.diet) || ''
+        _recipe.category = this.getRecipeCategoryByValue(_recipe.category) || ''
+        _recipe.diet = this.getDietByValue(_recipe.diet) || ''
       }
     },
 
     _newRecipe(eventType, options = {shared: undefined, new: false}){
       console.debug('OPT = ', options, ', changeMode = ', this.isChangeMode !== undefined)
-
-      const _id = this.userIdentifier
-      if(!_id) { return; /* TODO: ERROR NOT AUTHORIZED */ }
 
       let request = null
 
@@ -416,12 +409,12 @@ export default {
       if(options.new === false){
         console.log('Changed recipe ')
         // console.debug(this.recipe)
-        request = api.recipes.updateRecipe(_id, this.value._id, formData, this.accessToken)
+        request = this.$store.dispatch('recipes/update', {_id: this.value._id, body: formData})
       }
       else{
         console.log('New recipe ')
         // console.debug(this.recipe)
-        request = api.recipes.createRecipe(_id, formData, this.accessToken)
+        request = this.$store.dispatch('recipes/create', formData)
       }
 
       request
@@ -431,17 +424,20 @@ export default {
               this._setOptionSelection(data, false)
               this.$emit('onChanged', data)
 
-              this.socket.emit('recipe:update', data)
-
+              this.$socket.emit('recipe:update', data)
+              if(this.value.shared === false && data.shared === true) {
+                console.log('Share a saved recipe.')
+                this.$socket.emit('recipe:create', data)
+              }
             } else {
               this.$emit(eventType, data)
               this.resetFormRecipe()
-              if(data.shared) this.socket.emit('recipe:create', data)
+              if(data.shared) this.$socket.emit('recipe:create', data)
             }
           })
           .catch(err => {
-            // TODO: HANDLER ERROR add new RECIPE / modify RECIPE
-            console.error(err)
+            if(options.new === false) this.handleRequestErrors.recipes.updateRecipe(err)
+            else this.handleRequestErrors.recipes.createRecipe(err)
           })
           .finally(() => this.processing = false)
     },
@@ -451,6 +447,7 @@ export default {
 
       const addOnFormData = (k, v) => {
         if(Array.isArray(v)) formData.append(k, JSON.stringify(v))
+        else if(v instanceof File && v.size === 0) formData.append(k, '')
         else formData.append(k, v)
       }
 

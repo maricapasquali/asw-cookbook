@@ -41,9 +41,11 @@ export default {
   },
   methods: {
     collapseListener(id, isJustShown) {
-      // this.$emit('collapsed', {elementId: id, show: isJustShown})
-      this.showSectionCollapse = isJustShown
-      this.$emit('collapsed', {show: isJustShown})
+      if(id === this.identifier){
+        // this.$emit('collapsed', {elementId: id, show: isJustShown})
+        this.showSectionCollapse = isJustShown
+        this.$emit('collapsed', {show: isJustShown})
+      }
     },
     loadingOthers(){
       if(!this.withLoadingOthers) throw new Error('Loading Others: Funzionalità non attivata.')
@@ -64,13 +66,6 @@ export default {
   border: 1px dashed black;
   color: white;
 
-  //& > div:first-child {
-  //  margin: 10px 0;
-  //  & > div {
-  //    padding: 1%;
-  //  }
-  //}
-
   & > div {
     margin: 10px 0;
     & > div {
@@ -89,6 +84,4 @@ export default {
     }
   }
 }
-
-
 </style>

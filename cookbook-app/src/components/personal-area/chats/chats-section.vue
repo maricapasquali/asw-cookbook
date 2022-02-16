@@ -71,19 +71,19 @@
 </template>
 
 <script>
-import api from '@api'
-import {bus} from '@/main'
-import {mapping} from "@services/api/users/friends/utils";
+import {mapping} from "@api/users/friends/utils";
 import {mapGetters} from "vuex";
 import {_goToChat, _baseInfoUser, _isChatOne, _isChatGroup} from '@components/chats/utils'
 
 import { onUpdateUserInChatSection,  _onUpdateUserInOneChat, _onUpdateUserInfos } from '@components/chats/utils'
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "chats-section",
   data(){
     return {
       skeletons: 3,
+      pendingRequests: null,
       processing: true,
 
       searchChat: '',
@@ -100,13 +100,16 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["userIdentifier", "accessToken", "username", "isAdmin", "socket"]),
+    ...mapGetters({
+      userIdentifier: 'session/userIdentifier',
+      isAdmin: 'session/isAdmin'
+    }),
     _friends(){
       return this.searchFriend.trim().length ? this.friends.filter(f => f.user.userID.toLowerCase().startsWith(this.searchFriend.toLowerCase()))
                                              : this.friends
     },
     writeableChats(){
-      const _writeableChats = this.chats.filter(chat => chat.users.find(r => r.user._id === this.userIdentifier && r.role !== 'reader'))
+      const _writeableChats = this.chats.filter(chat => chat.users.find(r => r.user?._id === this.userIdentifier && r.role !== 'reader'))
       console.debug('writeableChats ', _writeableChats)
       return this.searchChat.trim().length ?
           _writeableChats.map(chat => ({name: this._baseInfoUser(chat.info, chat.users).name, chat}))
@@ -124,8 +127,10 @@ export default {
     _baseInfoUser,
 
     getFriends(){
+      let idRequest = 'friend-user'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
       if(this.isAdmin){
-        api.users.getUsers({}, this.accessToken)
+        this.$store.dispatch('users/all', {options})
                  .then(({data}) => {
                    this.friends = data.items.filter(u => u.signup === 'checked')
                                             .map(user => ({user: {_id: user._id, userID: user.userID, img: user.information.img, country: user.information.country} }))
@@ -133,29 +138,31 @@ export default {
                  })
                 //TODO: HANDLER ERROR GET FRIEND IN CHATS SECTION
                 .catch(err => console.error(err))
+                .then(() =>  this.pendingRequests.remove(idRequest))
       }else {
-        api.friends
-           .getFriendOf(this.userIdentifier, this.accessToken, {state: 'accepted'})
-           .then(({data}) => {
-              this.friends = data.items.map(f => mapping(f, this.userIdentifier))
-              console.debug(this.friends)
-           })
+        this.$store.dispatch('friendships/own', { state: 'accepted', options })
+           .then(({data}) => console.debug('friendships/own = ', data.items))
             //TODO: HANDLER ERROR GET FRIEND IN CHATS SECTION
            .catch(err => console.error(err))
+           .then(() =>  this.pendingRequests.remove(idRequest))
       }
     },
 
     getChats(){
-      api.chats
-         .getChats(this.userIdentifier, this.accessToken)
+      let idRequest = 'chats-own'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
+      this.$store.dispatch('chats/own', {options})
          .then(({data}) => {
             this.chats = data.items
             console.log('Chats = ', this.chats)
-            this.chats.forEach(chat => console.debug(chat.users.map(r => r.user.role)))
+            this.chats.forEach(chat => console.debug(chat.users.map(r => r.user?.role)))
          })
          //TODO: HANDLER ERROR GET CHATS
          .catch(err => console.error(err))
-         .finally(() => this.processing = false)
+         .finally(() => {
+           this.processing = false
+           this.pendingRequests.remove(idRequest)
+         })
     },
 
     /* ADD CHAT */
@@ -187,13 +194,12 @@ export default {
       }
     },
     onRemoveChat(){
-      api.chats
-          .removeChat(this.userIdentifier, this.deleteChat.chat._id, this.accessToken)
+      this.$store.dispatch('chats/remove', this.deleteChat.chat._id)
           .then(({data}) => {
             console.log(data.description)
             let userRole = { user: this.userIdentifier, role: 'reader' }
             this.onListenerChangeRole(this.deleteChat.chat._id, userRole)
-            this.socket.emit('chat:change:role',this.deleteChat.chat._id, userRole)
+            this.$socket.emit('chat:change:role',this.deleteChat.chat._id, userRole)
             console.debug(this.chats)
           })
           //TODO: HANDLER ERROR DELETE CHAT
@@ -208,10 +214,9 @@ export default {
         chat.messages.push(message)
         this.chats.unshift(this.chats.splice(index, 1)[0])
       } else {
-        api.chats
-           .getChat(this.userIdentifier, chatInfo._id, this.accessToken)
+        this.$store.dispatch('chat', chatInfo._id)
            .then(({data}) => {
-              this.chats.unshift(chat)
+              this.chats.unshift(data)
               console.debug(data.users.map(r => r.user.role))
            })
            //TODO: HANDLER ERROR GET CHAT chatInfo._id
@@ -282,25 +287,28 @@ export default {
     }
   },
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
+
     this.getFriends()
     this.getChats()
 
-    bus.$on('push-message', this.onListenersPushMessage.bind(this))
-    bus.$on('chat:change:role', this.onListenerChangeRole.bind(this))
+    this.$bus.$on('push-message', this.onListenersPushMessage.bind(this))
+    this.$bus.$on('chat:change:role', this.onListenerChangeRole.bind(this))
 
-    bus.$on('user:update:info', this.onUpdateUserInChatSection.bind(this))
-    bus.$on('friend:add', this.onAddFriendShip.bind(this))
-    bus.$on('friend:remove', this.onRemoveFriendShip.bind(this))
-    bus.$on('user:delete', this.onDeleteUser.bind(this))
+    this.$bus.$on('user:update:info', this.onUpdateUserInChatSection.bind(this))
+    this.$bus.$on('friend:add', this.onAddFriendShip.bind(this))
+    this.$bus.$on('friend:remove', this.onRemoveFriendShip.bind(this))
+    this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
-    bus.$off('push-message', this.onListenersPushMessage.bind(this))
-    bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))
+    this.pendingRequests.cancelAll('all chats cancel.')
+    this.$bus.$off('push-message', this.onListenersPushMessage.bind(this))
+    this.$bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))
 
-    bus.$off('user:update:info', this.onUpdateUserInChatSection.bind(this))
-    bus.$off('friend:add', this.onAddFriendShip.bind(this))
-    bus.$off('friend:remove', this.onRemoveFriendShip.bind(this))
-    bus.$off('user:delete', this.onDeleteUser.bind(this))
+    this.$bus.$off('user:update:info', this.onUpdateUserInChatSection.bind(this))
+    this.$bus.$off('friend:add', this.onAddFriendShip.bind(this))
+    this.$bus.$off('friend:remove', this.onRemoveFriendShip.bind(this))
+    this.$bus.$off('user:delete', this.onDeleteUser.bind(this))
   }
 }
 </script>

@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import {dateFormat} from "@services/utils";
+
 export default {
   name: "elapsed-time",
   props:{
@@ -25,7 +25,7 @@ export default {
   },
   methods:{
     elapsed(){
-      // this.elapsedTimeStamp = Utils.toElapsedTimeFromNow(this.value, this.language)
+
       let SEPARATOR = ' ', NOW, HOURS, MIN, DAYS
       switch (this.language){
         case 'it':

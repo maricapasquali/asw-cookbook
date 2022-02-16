@@ -3,16 +3,17 @@ import registerChatHandlers from './chat'
 import registerNotificationHandlers from './notification'
 import registerUpdateHandlers from './update'
 
-import {client_origin} from "../../modules/hosting/variables";
 import {Server} from 'socket.io'
 import * as https from "https";
 import * as http from "http";
 
-export = function (server: http.Server | https.Server): void {
+import * as config from "../../env.config"
+
+export default function (server: http.Server | https.Server): void {
 
     const io = new Server(server, {
         cors: {
-          origin: client_origin
+          origin: config.client.origin
         }
     })
 
