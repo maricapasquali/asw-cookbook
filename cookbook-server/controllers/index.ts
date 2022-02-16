@@ -105,7 +105,7 @@ export const FileConfigurationVideo: UploaderConfiguration = {
     dest: path.resolve('cookbook-server/videos'),
 }
 
-export type PaginationOptions = { page: number, limit: number }
+export type PaginationOptions = { page: number, limit: number, skip?: number }
 export type PaginationResult = { items: Document[], total: number, paginationInfo?: PaginationOptions }
 export function pagination(query: Query<Document[], Document, {}, Document>, options?: PaginationOptions): Promise<PaginationResult> {
     let qc = query.toConstructor()
@@ -114,7 +114,10 @@ export function pagination(query: Query<Document[], Document, {}, Document>, opt
                     if(nDocs == 0) return Promise.resolve({ items: [] as Document[] , total: nDocs, paginationInfo: options })
                     let _query = new qc()
                     let _paginationInfo = options
-                    if(options) _query = _query.limit(options.limit).skip((options.page - 1) * options.limit)
+                    if(options) {
+                        console.debug('pagination: ', _paginationInfo)
+                        _query = _query.limit(options.limit).skip(((options.page - 1) * options.limit) + (options.skip || 0))
+                    }
                     else _paginationInfo = undefined
                     return _query.then(docs => Promise.resolve({ items: docs, total: nDocs, paginationInfo: _paginationInfo }), err => Promise.reject(err))
                 }, err => Promise.reject(err))
@@ -123,7 +126,7 @@ export function paginationOf(array: Array<any>, options?: PaginationOptions): Pa
     let start: number = 0
     let end: number = array.length
     if(options){
-        start = (options.page - 1) * options.limit
+        start = ((options.page - 1) * options.limit) + (options.skip || 0)
         end = start + options.limit
         console.debug('start = ', start, ', end = ', end)
     }

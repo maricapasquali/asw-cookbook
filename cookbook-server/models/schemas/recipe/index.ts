@@ -64,7 +64,6 @@ export const RecipeSchema: Schema<IRecipe> = new Schema<IRecipe>({
 })
 
 RecipeSchema.index({owner: 1, name: 1, shared: 1}, { unique: true, name: 'unique-recipe-for-user' })
-RecipeSchema.index({'permission.user': 1, 'permission.granted': 1}, { unique: true, name: 'unique-permission-for-user' })
 
 RecipeSchema.pre(['find', 'findOne'], function() {
    this.populate(RecipePopulationPipeline)
