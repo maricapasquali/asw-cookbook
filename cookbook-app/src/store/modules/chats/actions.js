@@ -13,10 +13,11 @@ export default {
             })
     },
 
-    own({rootGetters, dispatch, rootState}){
+    own({rootGetters, dispatch, rootState}, payload){
+        let {options} = payload || {}
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.chats.getChats(rootState.session.user._id, rootState.session.accessToken)
+        return api.chats.getChats(rootState.session.user._id, rootState.session.accessToken, null, options)
     },
     remove({rootGetters, dispatch, rootState}, chatID){
         let isLoggedIn = rootGetters['session/isLoggedIn']

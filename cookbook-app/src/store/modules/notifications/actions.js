@@ -1,10 +1,11 @@
 import api from '@api'
 
 export default {
-    all({ dispatch, rootState, rootGetters }) {
+    all({ dispatch, rootState, rootGetters }, payload) {
+        let {options} = payload || {}
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.notifications.getNotifications(rootState.session.user._id, rootState.session.accessToken)
+        return api.notifications.getNotifications(rootState.session.user._id, rootState.session.accessToken, null, null, options)
     },
     read({ commit, dispatch, getters, rootState, rootGetters }, notificationID){
         let isLoggedIn = rootGetters['session/isLoggedIn']

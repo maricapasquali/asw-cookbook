@@ -30,6 +30,7 @@ import BFriendship from "@components/app/b-friendship"
 import SignUp from "@components/login/SignUp";
 
 import UserInformation from "@components/personal-area/user-information"
+import ChangeUserInformation from "@components/personal-area/change-user-information"
 import DeleteAccount from "@components/personal-area/delete-account"
 import ChangeUserID from "@components/personal-area/change-userid"
 import ChangePassword from "@components/personal-area/change-password"
@@ -102,6 +103,7 @@ const components = {
     SignUp,
 
     UserInformation,
+    ChangeUserInformation,
     DeleteAccount,
     ChangeUserID,
     ChangePassword,

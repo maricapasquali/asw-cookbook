@@ -1,6 +1,7 @@
 import * as methods from "../methods";
 import {AxiosResponse} from "axios";
 import {getHeaderBearerAuthorization} from "../utils";
+import {FoodsQueryOptions, OptionsRequestType, PaginationOptions} from "../request-options";
 
 
 export function createFood(food: object, token: string): Promise<AxiosResponse>  {
@@ -11,9 +12,9 @@ export function createFood(food: object, token: string): Promise<AxiosResponse> 
     })
 }
 
-export type FoodsQueryOptions = {name?: string, barcode?: string, owner?: string}
-export function getFoods(token?: string, query?: FoodsQueryOptions, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse>  {
+export function getFoods(token?: string, query?: FoodsQueryOptions, paginationOptions?: PaginationOptions, options?: OptionsRequestType): Promise<AxiosResponse>  {
     return methods.get('/foods', {
+        cancelToken: options?.cancelToken,
         headers: getHeaderBearerAuthorization(token),
         params: {
             ...paginationOptions,

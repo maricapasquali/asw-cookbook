@@ -41,18 +41,14 @@ export default function (bus){
 
     function getRecipe(err, info) {
         switch (err.response?.status) {
-            case 400: {
-                badRequest(err)
-                return false
-            }
-            case 401: {
+            case 400:
+                return true
+            case 401:
                 unAuthenticated(err, info)
                 return false;
-            }
-            case 403: {
+            case 403:
                 forbidden(err)
                 return false
-            }
             case 404: return true;
         }
         serverError(err)

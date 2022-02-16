@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import  api from "@api";
-import {Server} from "@api";
+import Server from "@api/server.info";
 
 export function _lastAccess(chatType, users){
     let _lastAccess = '';

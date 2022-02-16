@@ -1,8 +1,10 @@
 import * as methods from "../methods";
 import  {AxiosResponse} from "axios";
+import {OptionsRequestType, PaginationOptions} from "../request-options";
 
-export function getNotifications(user: string, token: string, query?: {readed?: boolean}, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse> {
+export function getNotifications(user: string, token: string, query?: {readed?: boolean}, paginationOptions?: PaginationOptions, options?: OptionsRequestType): Promise<AxiosResponse> {
     return methods.get('/users/:id/notifications', {
+        cancelToken: options?.cancelToken,
         headers: {
             authorization: 'Bearer ' + token
         },

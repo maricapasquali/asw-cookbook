@@ -1,10 +1,11 @@
 import api from '@api'
 export default {
 
-    reported({dispatch, rootState, rootGetters}){
+    reported({dispatch, rootState, rootGetters}, payload){
+        let {options} = payload || {}
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.recipes.comments.getReportedComment(rootState.session.accessToken)
+        return api.recipes.comments.getReportedComment(rootState.session.accessToken, options)
     },
 
     remove({dispatch, rootState, rootGetters},  {ownerID, recipeID, commentID }){

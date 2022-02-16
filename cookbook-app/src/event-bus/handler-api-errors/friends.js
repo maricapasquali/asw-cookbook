@@ -47,9 +47,7 @@ export default function (bus) {
 
     function getFriendOf(err, info) {
         switch (err.response?.status) {
-            case 400:
-                badRequest(err)
-                break
+            case 400: break
             case 401:
                 unAuthenticated(err, info || {_forbiddenPage: false})
                 break

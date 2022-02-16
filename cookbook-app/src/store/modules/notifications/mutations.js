@@ -2,8 +2,8 @@ import Vue from "vue";
 
 export default  {
     ['add-unread'](state, num){
-        if(num) Vue.set(state, 'unreadNotifications', num)
-        else Vue.set(state, 'unreadNotifications', state.unreadNotifications + 1)
+        if(typeof num === "undefined") Vue.set(state, 'unreadNotifications', state.unreadNotifications + 1)
+        else if(num >= 0) Vue.set(state, 'unreadNotifications', num)
     },
     ['remove-unread'](state){
         if(state.unreadNotifications > 0) Vue.set(state, 'unreadNotifications', state.unreadNotifications - 1)

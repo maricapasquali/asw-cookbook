@@ -76,12 +76,14 @@ import {mapGetters} from "vuex";
 import {_goToChat, _baseInfoUser, _isChatOne, _isChatGroup} from '@components/chats/utils'
 
 import { onUpdateUserInChatSection,  _onUpdateUserInOneChat, _onUpdateUserInfos } from '@components/chats/utils'
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "chats-section",
   data(){
     return {
       skeletons: 3,
+      pendingRequests: null,
       processing: true,
 
       searchChat: '',
@@ -125,8 +127,10 @@ export default {
     _baseInfoUser,
 
     getFriends(){
+      let idRequest = 'friend-user'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
       if(this.isAdmin){
-        this.$store.dispatch('users/all')
+        this.$store.dispatch('users/all', {options})
                  .then(({data}) => {
                    this.friends = data.items.filter(u => u.signup === 'checked')
                                             .map(user => ({user: {_id: user._id, userID: user.userID, img: user.information.img, country: user.information.country} }))
@@ -134,16 +138,20 @@ export default {
                  })
                 //TODO: HANDLER ERROR GET FRIEND IN CHATS SECTION
                 .catch(err => console.error(err))
+                .then(() =>  this.pendingRequests.remove(idRequest))
       }else {
-        this.$store.dispatch('friendships/own', { state: 'accepted' })
+        this.$store.dispatch('friendships/own', { state: 'accepted', options })
            .then(({data}) => console.debug('friendships/own = ', data.items))
             //TODO: HANDLER ERROR GET FRIEND IN CHATS SECTION
            .catch(err => console.error(err))
+           .then(() =>  this.pendingRequests.remove(idRequest))
       }
     },
 
     getChats(){
-      this.$store.dispatch('chats/own')
+      let idRequest = 'chats-own'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
+      this.$store.dispatch('chats/own', {options})
          .then(({data}) => {
             this.chats = data.items
             console.log('Chats = ', this.chats)
@@ -151,7 +159,10 @@ export default {
          })
          //TODO: HANDLER ERROR GET CHATS
          .catch(err => console.error(err))
-         .finally(() => this.processing = false)
+         .finally(() => {
+           this.processing = false
+           this.pendingRequests.remove(idRequest)
+         })
     },
 
     /* ADD CHAT */
@@ -276,6 +287,8 @@ export default {
     }
   },
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
+
     this.getFriends()
     this.getChats()
 
@@ -288,6 +301,7 @@ export default {
     this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
+    this.pendingRequests.cancelAll('all chats cancel.')
     this.$bus.$off('push-message', this.onListenersPushMessage.bind(this))
     this.$bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))
 

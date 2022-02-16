@@ -70,11 +70,13 @@
 <script>
 
 import {scrollToRouterHash} from "@router";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "reports-section",
   data(){
     return {
+      pendingRequests: null,
       processing: false,
       docsReported: [],
       docsDeleted: []
@@ -109,8 +111,10 @@ export default {
     },
 
     getReports: function (){
+      let _id = 'reported-comments'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
       this.processing = true
-      this.$store.dispatch('comments/reported')
+      this.$store.dispatch('comments/reported', {options})
          .then(({data}) => {
            console.log(data)
            this.docsReported = []
@@ -121,7 +125,10 @@ export default {
            })
          })
          .catch(this.handleRequestErrors.comments.getReportedComment)
-         .finally(() => this.processing = false)
+         .finally(() => {
+            this.processing = false
+            this.pendingRequests.remove(_id)
+         })
     },
 
     deleteComment(index){
@@ -191,6 +198,7 @@ export default {
     }
   },
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('comment:report', this.getReports.bind(this) )
 
     this.$bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
@@ -198,14 +206,14 @@ export default {
 
     this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
     this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
-  },
-  mounted() {
+
     this.getReports()
   },
   updated() {
     this.scrollToRouterHash()
   },
   beforeDestroy() {
+    this.pendingRequests.cancelAll('all reported cancel.')
     this.$bus.$off('comment:report', this.getReports.bind(this) )
 
     this.$bus.$off('comment:delete',  this.renderDeleteComment.bind(this))

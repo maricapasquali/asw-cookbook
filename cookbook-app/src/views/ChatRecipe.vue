@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import OneRecipe from './OneRecipe'
+import OneRecipe from './user-area/OneRecipe'
 export default {
   name: "ChatRecipe",
   components: { 'one-recipe': OneRecipe },

@@ -10,7 +10,7 @@
 
 <script>
 
-import {Server} from "@api";
+import Server from "@api/server.info";
 
 export default {
   name: "avatar",
@@ -58,7 +58,7 @@ export default {
         this.$data._image = vl ? Server.images.path(vl) : ''
     },
     setOnline(vl){
-      console.debug(`State of \'${vl._id}\' is ${vl.online ? 'online': 'offline'}`)
+      // console.debug(`State of \'${vl._id}\' is ${vl.online ? 'online': 'offline'}`)
       if(vl.online) {
         pushIfAbsent(this.$data._onlines, vl._id)
         if(this.$data._onlines.length > 0) this.$emit('online', vl)
@@ -80,11 +80,11 @@ export default {
       } else this.setOnline(false)
     }
   },
-  mounted() {
+  created() {
     this.$data._default = this.group ? 'people-fill': ''
     this.setImage(this.value)
     if(this.user) this.onCheckUserState(this.user)
-  },
+  }
 }
 </script>
 

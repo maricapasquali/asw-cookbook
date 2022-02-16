@@ -11,6 +11,7 @@ export default function (bus){
                 else return 'Credenziali non corrette.'
             }
             case 404: return 'Utente non trovato.'
+            case 409: return `Finiti i tentativi di accesso. Riprova tra ${err.response?.data?.tryAgainIn} minuti.`
             default: return serverError(err, false)
         }
     }

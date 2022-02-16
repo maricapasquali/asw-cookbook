@@ -1,10 +1,10 @@
 import api from '@api'
 
 export default  {
-    all({dispatch, rootState, rootGetters}, queries){
+    all({dispatch, rootState, rootGetters}, {query, pagination, options}){
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.foods.getFoods(rootState.session.accessToken, queries)
+        return api.foods.getFoods(rootState.session.accessToken, query, pagination, options)
     },
     create({dispatch, rootState, rootGetters}, body){
         let isLoggedIn = rootGetters['session/isLoggedIn']

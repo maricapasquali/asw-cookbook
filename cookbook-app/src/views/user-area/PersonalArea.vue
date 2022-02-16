@@ -2,7 +2,7 @@
   <b-skeleton-wrapper :loading="loading">
     <template #loading>
       <b-card no-body>
-        <b-tabs content-class="mt-1" ref="tabs">
+        <b-tabs content-class="mt-1">
           <b-tab v-for="i in skeleton" :key="i">
             <template #title>
               <div style="width: 100px"><b-skeleton width="100%"/></div>
@@ -17,24 +17,9 @@
       </b-card>
     </template>
     <b-card no-body>
-      <b-tabs v-model="currentTab" content-class="mt-1" ref="tabs" lazy>
-        <b-tab v-for="tab in tabs" :key="tab.id" :title="tab.title" @click="tab.click" :active="tab.selected">
-          <!-- BOTH -->
-          <user-information v-if="isAccountTab" :id="user" personal-area />
-          <!-- SIGNED -->
-          <recipe-sections v-if="isRecipesTab"  />
-          <!-- BOTH -->
-          <food-section v-if="isFoodsTab"/>
-          <!-- ADMIN -->
-          <reports-section v-if="isReportsTab" />
-          <!-- ADMIN -->
-          <users-section v-if="isUsersTab" />
-          <!-- SIGNED -->
-          <friends-section v-if="isFriendsTab" />
-          <!-- BOTH -->
-          <chats-section v-if="isChatsTab" />
-          <!-- BOTH -->
-          <notifications-section v-if="isNotificationsTab" />
+      <b-tabs>
+        <b-tab v-for="tab in tabs" :key="tab.id" :title="tab.title" @click="onClickTab(tab.route)" :active="tab.selected" class="p-3" lazy>
+          <router-view></router-view>
         </b-tab>
       </b-tabs>
     </b-card>
@@ -47,40 +32,22 @@ import {mapActions, mapGetters} from "vuex";
 
 export default {
   name: "PersonalArea",
-  props:{
-    active: {
-      type: String,
-      default: 'account',
-      enum: ['account', 'recipes', 'foods', 'friends', 'chats', 'notifications', 'reports', 'users']
-    }
-  },
   data: function (){
     return {
       loading: false,
       skeleton: 4,
-
-      currentTab: 0,
 
       tabs: [],
       tabsSigned: ['account', 'recipes', 'foods', 'friends', 'chats', 'notifications'],
       tabsAdmin: ['account', 'foods',  'reports', 'users','chats', 'notifications' ]
     }
   },
-  watch: {
-    active(val){
-      let find = this.tabs.find(o => o.id === val)
-      find.selected = true
-    }
-  },
   created(){
     (this.isAdmin ? this.tabsAdmin : this.isSigned ? this.tabsSigned: [])
         .forEach(tab => this.tabs.push(this._mapping(tab)))
-    console.log(`CHECK IF YOU IS AUTHORIZED ...`)
     if(this.accessToken){
 
       if(this.user === this.userIdentifier){
-
-        this.currentTab = this.tabs.findIndex(t => t.id === this.active)
 
         this.$socket.on('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
         this.$socket.on('access-token:errors', this.onAccessTokenError.bind(this))
@@ -93,7 +60,7 @@ export default {
         this.loading = true
       }
 
-    } else this.$router.replace({name: 'login'});
+    } else this.$router.replace({ name: 'login' });
   },
   beforeDestroy() {
     this.$socket.off('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
@@ -111,30 +78,17 @@ export default {
     user(){
       return this.$route.params.id
     },
-
-    isAccountTab(){
-      return this._isActive('account')
-    },
-    isRecipesTab(){
-      return this._isActive('recipes')
-    },
-    isFoodsTab(){
-      return this._isActive('foods')
-    },
-    isReportsTab(){
-      return this._isActive('reports')
-    },
-    isUsersTab(){
-      return this._isActive('users')
-    },
-    isFriendsTab(){
-      return this._isActive('friends')
-    },
-    isChatsTab(){
-      return this._isActive('chats')
-    },
-    isNotificationsTab(){
-      return this._isActive('notifications')
+    active: function (){
+      switch (this.$route.name){
+        case 'p-user-account' : return 'account'
+        case 'p-user-recipes' : return 'recipes'
+        case 'p-user-foods' : return 'foods'
+        case 'p-user-friends' : return 'friends'
+        case 'p-user-chats' : return 'chats'
+        case 'p-user-notifications' : return 'notifications'
+        case 'p-user-reports' : return 'reports'
+        case 'p-user-users' : return 'users'
+      }
     },
   },
   methods: {
@@ -145,40 +99,24 @@ export default {
     _mapping(id){
       return {
         id,
-        title: this._title(id),
-        selected: this._isActive(id),
-        click: () => {
-          this.$router.push({ name:  this._route(id) })
-        }
+        ...this._infoTab(id),
+        selected: id === this.active
       }
     },
-
-    _title(target){
+    _infoTab(target){
       switch (target){
-        case 'account' : return 'Account'
-        case 'recipes' : return 'Ricette'
-        case 'foods' : return 'Cibo'
-        case 'friends' : return 'Amici'
-        case 'chats' : return 'Chats'
-        case 'notifications' : return 'Notifiche'
-        case 'reports' : return 'Segnalazioni'
-        case 'users' : return 'Utenti'
+        case 'account' : return { title: 'Account', route: 'p-user-account' }
+        case 'recipes' : return { title: 'Ricette', route: 'p-user-recipes' }
+        case 'foods' : return { title: 'Cibo', route: 'p-user-foods' }
+        case 'friends' : return { title: 'Amici', route: 'p-user-friends' }
+        case 'chats' : return { title: 'Chats', route: 'p-user-chats' }
+        case 'notifications' : return { title: 'Notifiche', route: 'p-user-notifications' }
+        case 'reports' : return { title: 'Segnalazioni', route: 'p-user-reports' }
+        case 'users' : return { title: 'Utenti', route:  'p-user-users' }
       }
     },
-    _route: function (target){
-      switch (target){
-        case 'account' : return 'p-user-account'
-        case 'recipes' : return 'p-user-recipes'
-        case 'foods' : return 'p-user-foods'
-        case 'friends' : return 'p-user-friends'
-        case 'chats' : return 'p-user-chats'
-        case 'notifications' : return 'p-user-notifications'
-        case 'reports' : return 'p-user-reports'
-        case 'users' : return 'p-user-users'
-      }
-    },
-    _isActive: function (target){
-      return target === this.active
+    onClickTab(route){
+      this.$router.push({ name:  route })
     },
 
     /* Listeners check ACCESS TOKEN */

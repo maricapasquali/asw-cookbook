@@ -1,66 +1,79 @@
 <template>
   <div>
-    <!-- Public User Information  -->
     <not-found v-if="userNotFound" asset="user" />
-    <user-information v-else ref="user-info" :id="user" @not-found="userNotFound = true"/>
-    <!-- Shared Recipe of one specific user -->
-    <container-collapsable v-if="recipes.length" id="recipes" title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="areRecipesOthers" @load-others="othersRecipes">
-      <template #collapse-content>
-        <b-list-group class="my-3">
-          <b-list-group-item v-for="(recipe, ind) in recipes" :key="ind">
-            <b-row>
-              <b-col class="text-left">
-                <b-row cols="1">
-                  <b-col>
-                    <router-link :to="{name: 'single-recipe', params: {id: user, recipe_id: recipe._id}}">
-                      {{ recipe.name }}
-                    </router-link>
-                  </b-col>
-                  <b-col>  <small>{{recipe.createdAt | dataFormatter}}</small> </b-col>
-                </b-row>
-              </b-col>
-              <b-col class="text-right">
-                <span> {{ recipe.category.text }} </span>
-                <country-image v-model="recipe.country" :id="'recipe-'+ind" />
-              </b-col>
-            </b-row>
-          </b-list-group-item>
-        </b-list-group>
-      </template>
-      <template #load-others>carica altre ...</template>
-    </container-collapsable>
-    <!-- Accepted friend of one specific user -->
-    <container-collapsable v-if="friends.length" id="friends" title="Amici" @collapsed="onCollapsedFriends" :with-loading-others="areFriendsOthers" @load-others="othersFriends">
-      <template #collapse-content>
-        <b-list-group class="my-3">
-          <b-list-group-item v-for="(friend, ind) in friends" :key="ind">
-            <b-row>
-              <b-col class="text-left">
-                <b-row align-v="center" cols="1" cols-sm="2">
-                  <b-col class="pr-3" sm="5"> <avatar v-model="friend.user.img" :user="friend.user._id"/> </b-col>
-                  <b-col class="mt-2">
-                    <router-link @click.native="fetchData(friend)" :to="{name: 'single-user', params: {id: friend.user._id}}">{{friend.user.userID}}</router-link>
-                    <p class="mb-0">{{friend.user.occupation}}</p>
-                  </b-col>
-                </b-row>
-              </b-col>
-              <b-col class="text-right">
-                <country-image v-model="friend.user.country" :id="'friend-'+ind" class="mb-2" width="50" height="40" />
-                <b-friendship :other-user="friend.user"/>
-              </b-col>
-            </b-row>
-          </b-list-group-item>
-        </b-list-group>
-      </template>
-      <template #load-others>carica altre ...</template>
-    </container-collapsable>
+    <b-container v-else >
+      <b-row cols="1" class="p-2">
+        <b-col>
+          <!-- Public User Information  -->
+          <user-information ref="user-info" :id="user" @not-found="userNotFound = true"/>
+        </b-col>
+      </b-row>
+      <b-row cols="1" :cols-lg="allPresent ? 2: 1" class="p-2">
+        <b-col>
+          <!-- Shared Recipe of one specific user -->
+          <container-collapsable v-if="recipes.length" id="recipes" title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="areRecipesOthers" @load-others="othersRecipes">
+            <template #collapse-content>
+              <b-list-group class="my-3">
+                <b-list-group-item v-for="(recipe, ind) in recipes" :key="ind">
+                  <b-row>
+                    <b-col class="text-left">
+                      <b-row cols="1">
+                        <b-col>
+                          <router-link :to="{name: 'single-recipe', params: {id: user, recipe_id: recipe._id}}">
+                            {{ recipe.name }}
+                          </router-link>
+                        </b-col>
+                        <b-col>  <small>{{recipe.createdAt | dataFormatter}}</small> </b-col>
+                      </b-row>
+                    </b-col>
+                    <b-col class="text-right">
+                      <span> {{ recipe.category.text }} </span>
+                      <country-image v-model="recipe.country" :id="'recipe-'+ind" />
+                    </b-col>
+                  </b-row>
+                </b-list-group-item>
+              </b-list-group>
+            </template>
+            <template #load-others>carica altre ...</template>
+          </container-collapsable>
+        </b-col>
+        <b-col>
+          <!-- Accepted friend of one specific user -->
+          <container-collapsable v-if="friends.length" id="friends" title="Amici" @collapsed="onCollapsedFriends" :with-loading-others="areFriendsOthers" @load-others="othersFriends">
+            <template #collapse-content>
+              <b-list-group class="my-3">
+                <b-list-group-item v-for="(friend, ind) in friends" :key="ind">
+                  <b-row>
+                    <b-col class="text-left">
+                      <b-row align-v="center" cols="1" cols-sm="2">
+                        <b-col class="pr-3" sm="5"> <avatar v-model="friend.user.img" :user="friend.user._id"/> </b-col>
+                        <b-col class="mt-2">
+                          <router-link @click.native="fetchData" :to="{name: 'single-user', params: {id: friend.user._id}}">{{friend.user.userID}}</router-link>
+                          <p class="mb-0">{{friend.user.occupation}}</p>
+                        </b-col>
+                      </b-row>
+                    </b-col>
+                    <b-col class="text-right">
+                      <country-image v-model="friend.user.country" :id="'friend-'+ind" class="mb-2" width="50" height="40" />
+                      <b-friendship :other-user="friend.user"/>
+                    </b-col>
+                  </b-row>
+                </b-list-group-item>
+              </b-list-group>
+            </template>
+            <template #load-others>carica altre ...</template>
+          </container-collapsable>
+        </b-col>
+      </b-row>
+    </b-container>
   </div>
 </template>
 
 <script>
 
 import {mapGetters} from "vuex";
-import NotFound from "./404";
+import NotFound from "../404";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "OneUser",
@@ -79,7 +92,11 @@ export default {
     ...mapGetters(['getRecipeCategoryByValue']),
     ...mapGetters({
       userIdentifier: 'session/userIdentifier'
-    })
+    }),
+
+    allPresent(){
+      return this.recipes.length && this.friends.length
+    }
   },
   filters: {
     dataFormatter: function (text){
@@ -89,6 +106,8 @@ export default {
   data(){
     return {
       userNotFound: false,
+
+      pendingRequests: null,
 
       /* User Recipes Section */
       recipesTotal: 0,
@@ -109,11 +128,9 @@ export default {
   },
   methods: {
 
-    fetchData(friend){
+    fetchData(){
       console.log('Fetch User info .')
-      this.$refs['user-info'].getUser(friend.user._id)
-      this.getRecipes()
-      this.getFriends()
+      this.$emit('force-update')
     },
 
     /* User Recipes Section */
@@ -126,11 +143,14 @@ export default {
     },
 
     getRecipes(currentPage, _limit){
+      let idReq = 'recipes-of'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idReq)
+
       const page = currentPage || 1
       const limit = _limit || this.recipePaginationOptions.limit
 
       console.debug('Recipe Pagination = ', {page, limit})
-      this.$store.dispatch('recipes/all-shared-for-user', { ownerID: this.user, pagination: {page, limit} })
+      this.$store.dispatch('recipes/all-shared-for-user', { ownerID: this.user, pagination: {page, limit}, options })
          .then(({data}) =>{
            let _remapData = data.items.map(recipe => this.remappingRecipe(recipe))
 
@@ -142,6 +162,7 @@ export default {
            console.debug('Recipes : ',  this.recipes)
          })
          .catch(err => this.handleRequestErrors.recipes.getRecipe(err))
+         .then(() => this.pendingRequests.remove(idReq))
     },
 
     othersRecipes(){
@@ -156,12 +177,15 @@ export default {
 
     /* User Friends Section */
     getFriends(currentPage, _limit) {
+      let idReq = 'friend-of'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idReq)
+
       const page = currentPage || 1
       const limit = _limit || this.friendsPaginationOptions.limit
       console.debug('Friend Pagination = ', {page, limit})
 
       let state = this.userIdentifier === this.user ? 'accepted': undefined
-      this.$store.dispatch('friendships/of', { userID: this.user, state, pagination: {page, limit} })
+      this.$store.dispatch('friendships/of', { userID: this.user, state, pagination: {page, limit}, options})
          .then(({data}) => {
            if(currentPage) this.friends.push(...data.items)
            else this.friends = data.items
@@ -171,6 +195,7 @@ export default {
            console.debug('Friends : ',  this.friends)
          })
          .catch(this.handleRequestErrors.friends.getFriendOf)
+         .then(() => this.pendingRequests.remove(idReq))
     },
 
     othersFriends(){
@@ -216,6 +241,7 @@ export default {
     }
   },
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('recipe:create', this.fetchRecipe.bind(this))
     this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     this.$bus.$on('recipe:delete', this.fetchRecipe.bind(this))
@@ -229,6 +255,7 @@ export default {
     this.getFriends()
   },
   beforeDestroy() {
+    this.pendingRequests.cancelAll('One user cancel.')
     this.$bus.$off('recipe:create', this.fetchRecipe.bind(this))
     this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     this.$bus.$off('recipe:delete', this.fetchRecipe.bind(this))

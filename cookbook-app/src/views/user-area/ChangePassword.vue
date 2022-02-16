@@ -74,7 +74,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import NotFound from "./404";
+import NotFound from "../404";
 export default {
   name: "ChangePassword",
   components: {NotFound},
@@ -197,7 +197,7 @@ export default {
 
       this.$store.dispatch('users/reset-password/make', { userID:  this.temporaryUserIdentifier || this._id, newPassword: this.hash_password, accessToken: this.temporaryToken || this.accessToken })
               .then(res => {
-                console.warn('response ', res)
+                console.debug('response ', res)
                 if(res?.status === 200){
                   this.$router.replace(this.changeDefaultPassword ? {name:'p-user-account', params: {id: this._id}} : {name: 'login'})
                 } else {

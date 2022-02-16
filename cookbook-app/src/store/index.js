@@ -37,6 +37,8 @@ export default new Vuex.Store({
         _countries: app.Countries,
         _diets: app.Diets,
         _recipeCategories: app.RecipeCategories,
+
+        language: 'it'
     },
     getters,
     actions

@@ -6,14 +6,14 @@ export default {
     ['check-account']({}, query){
       return api.users.checkAccount(query)
     },
-    ['information-of']({rootState}, userID){
-        return api.users.getUser(userID, rootState.session.accessToken)
+    ['information-of']({rootState}, {userID, options}){
+        return api.users.getUser(userID, rootState.session.accessToken, options)
     },
-    ['search-for-username']({rootState}, {search, username}){
-        return api.users.getUsers({ userID: { search , value: username } }, rootState.session.accessToken)
+    ['search-for-username']({rootState}, {search, username, options}){
+        return api.users.getUsers({ userID: { search , value: username } }, rootState.session.accessToken, null, options)
     },
-    search({rootState}, {query, pagination}){
-        return api.users.getUsers(query,  rootState.session.accessToken, pagination)
+    search({rootState}, {query, pagination, options}){
+        return api.users.getUsers(query,  rootState.session.accessToken, pagination, options)
     },
 
     ['update-information']({dispatch, rootState, rootGetters}, newInfo){
@@ -22,10 +22,10 @@ export default {
         return api.users.updateUserInfo(rootState.session.user._id, newInfo, rootState.session.accessToken)
     },
     all({dispatch, rootState, rootGetters}, payload){
-        let {filters, pagination} = payload || {}
+        let {filters, pagination, options} = payload || {}
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.users.getUsers(filters, rootState.session.accessToken, pagination)
+        return api.users.getUsers(filters, rootState.session.accessToken, pagination, options)
     },
     erase({dispatch, rootState, rootGetters}, userID){
         let isLoggedIn = rootGetters['session/isLoggedIn']

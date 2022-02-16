@@ -74,6 +74,7 @@
 
             <!-- Table aliment  -->
             <b-table id="food-table" fixed responsive :stacked="isMobile"
+                     @context-changed="abortRequest"
                      :tbody-tr-class="rowClass"
                      ref="foodTable"
                      :filter="filters"
@@ -93,12 +94,12 @@
 
               <template #empty>
                 <div class="text-center text-primary my-2">
-                  <strong class="ml-2">Non ci sono alimenti...</strong>
+                  <strong class="ml-2">Non ci sono alimenti </strong>
                 </div>
               </template>
               <template #emptyfiltered>
                 <div class="text-center text-primary my-2">
-                  <strong class="ml-2">Non ci sono alimenti {{ (filters.barcode || filters.name) ?  'filtrati' : '' }}</strong>
+                  <strong class="ml-2">Non ci sono alimenti {{ searchIsOn ?  'filtrati' : '' }}</strong>
                 </div>
               </template>
 
@@ -190,6 +191,7 @@
 <script>
 
 import {mapGetters} from "vuex";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "food-section",
@@ -198,6 +200,8 @@ export default {
       skeleton: 6,
       isMobile: false,
 
+      pendingRequests: null,
+      idRequest: 'foods-all',
       /* Shopping list */
       loadingSL: true,
       foodSelected: '',
@@ -249,6 +253,10 @@ export default {
       username: 'session/username',
       shopping_list: 'shopping-list/list'
     }),
+
+    searchIsOn() {
+      return this.filters.barcode || this.filters.name
+    },
 
     classesShoppingList(){
       return {'shopping-list':true, 'align':true, 'scroll': this.isMobile }
@@ -340,14 +348,18 @@ export default {
         details: food,
       }
     },
-
+    abortRequest(){
+      this.pendingRequests.cancel(this.idRequest, 'search food abort.')
+    },
     getFoods(ctx){
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+
       console.debug('ctx = ', ctx);
       let {perPage, currentPage} = ctx || {}
       let forPage = perPage || this.pagination.for_page
       let page = currentPage || this.pagination.currentPage
       this.pagination.isBusy = true
-      return this.$store.dispatch('foods/all', {page: page, limit: forPage, ...({...ctx.filter})})
+      return this.$store.dispatch('foods/all', {query: ctx.filter, pagination: {page: page, limit: forPage}, options})
                 .then(({data}) =>{
                     console.debug('Foods = ',data.items, ', total = ', data.total)
 
@@ -371,6 +383,7 @@ export default {
                 .finally(() =>{
                     this.loadingFood = false
                     this.pagination.isBusy = false
+                    this.pendingRequests.remove(this.idRequest)
                 })
     },
 
@@ -451,6 +464,7 @@ export default {
   },
 
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
     if(this.isSigned) this.getShoppingList()
 
     this.$bus.$on('food:create', this.onCreateFood.bind(this))
@@ -461,6 +475,7 @@ export default {
     this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
+    this.pendingRequests.cancelAll('All Foods cancels.')
     this.$bus.$off('food:create', this.onCreateFood.bind(this))
     this.$bus.$off('food:update', this.onUpdateFood.bind(this))
 

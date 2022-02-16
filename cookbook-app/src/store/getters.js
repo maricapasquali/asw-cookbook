@@ -23,5 +23,7 @@ export default {
 
     getRecipeCategoryByValue: (state) => (value) => {
         return state._recipeCategories.find(rCategory => rCategory.value === value)
-    }
+    },
+
+    language: state => state.language,
 }
