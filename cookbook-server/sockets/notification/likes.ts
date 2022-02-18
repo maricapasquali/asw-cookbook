@@ -1,7 +1,7 @@
 import {create_notification} from "../../controllers/notification";
 import {Notification} from "../../models/schemas/notification";
 import {ILike} from "../../models/schemas/recipe/like";
-import {findConnectedUserBy, getSocketIDs} from "../user";
+import {findConnectedUserBy} from "../users";
 
 export function recipe(socket: any, recipe: any, like: ILike): void {
     const recipeOwner = findConnectedUserBy('_id', recipe.owner._id)
@@ -34,10 +34,7 @@ export function recipe(socket: any, recipe: any, like: ILike): void {
         if(recipeOwner.info) socket.to(recipeOwner.info.socketID).emit('like:recipe', {notification, like})
     }, err => console.error(err))
 
-    const exclude = []
-    if(recipeOwner.info) exclude.push(recipeOwner.info.socketID)
-    const otherConnectedUser = getSocketIDs(exclude)
-    if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('like:recipe', {notification: {otherInfo}, like})
+    socket.broadcast.except(recipeOwner.info?.socketID).emit('like:comment', {notification: {otherInfo}, like})
 }
 
 export function comment(socket: any, comment: any, like: any): void {
@@ -76,9 +73,5 @@ export function comment(socket: any, comment: any, like: any): void {
         }, err => console.error(err))
     }
 
-    const exclude = []
-    if(commentOwner.info) exclude.push(commentOwner.info.socketID)
-    const otherConnectedUser = getSocketIDs(exclude)
-    if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('like:comment', {notification: {otherInfo}, like})
-
+    socket.broadcast.except(commentOwner.info?.socketID).emit('like:comment', {notification: {otherInfo}, like})
 }
