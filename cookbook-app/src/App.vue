@@ -135,7 +135,20 @@ export default {
       this.$socket.on('user:delete', this.$bus.update.deleteUser.bind(this))
     },
 
-    registerChatMessage(){
+    registerUserOnlineOfflineListener(){
+      this.$socket.on('all:users:online', users => this.$store.commit('users/set-onlines', users))
+      this.$socket.on('user:online', _id => this.$store.commit('users/add-online', _id))
+      this.$socket.on('user:offline', (_id, _date) => this.$store.commit('users/remove-online', {_id, _date}))
+    },
+
+    registerCheckAccessTokenListener(){
+      this.$socket.on('operation:not:authorized', ({ expired, message }) => {
+        if(expired) this.unAuthenticatedError = { show: true, message }
+        else this.forbiddenError = { show: true, message }
+      })
+    },
+
+    registerChatMessageListener(){
       this.$socket.on('push-messages', this.$bus.chat.pushMessages.bind(this))
     }
   },
@@ -165,7 +178,9 @@ export default {
     this.registerLikeListener()
     this.registerRecipeListener()
     this.registerUserInfoListener()
-    this.registerChatMessage()
+    this.registerChatMessageListener()
+    this.registerUserOnlineOfflineListener()
+    this.registerCheckAccessTokenListener()
 
     console.debug('Store ', this.$store)
     console.debug('Socket ', this.$socket)

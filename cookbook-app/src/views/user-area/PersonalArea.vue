@@ -45,27 +45,12 @@ export default {
   created(){
     (this.isAdmin ? this.tabsAdmin : this.isSigned ? this.tabsSigned: [])
         .forEach(tab => this.tabs.push(this._mapping(tab)))
-    if(this.accessToken){
 
-      if(this.user === this.userIdentifier){
-
-        this.$socket.on('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
-        this.$socket.on('access-token:errors', this.onAccessTokenError.bind(this))
-        this.$socket.on('check:access-token', this.onAccessTokenOk.bind(this))
-
-        this.$socket.emit('check:access-token', {_id: this.userIdentifier, resourceID: this.user})
-
-      } else {
-        this.handleRequestErrors.session.wrongUserSession()
-        this.loading = true
-      }
-
-    } else this.$router.replace({ name: 'login' });
-  },
-  beforeDestroy() {
-    this.$socket.off('access-token:not-valid', this.onAccessTokenNotOk.bind(this))
-    this.$socket.off('access-token:errors', this.onAccessTokenError.bind(this))
-    this.$socket.off('check:access-token', this.onAccessTokenOk.bind(this))
+    if(!this.accessToken) return this.$router.replace({ name: 'login' });
+    if(this.user !== this.userIdentifier) {
+      this.handleRequestErrors.session.wrongUserSession()
+      this.loading = true
+    }
   },
   computed: {
     ...mapGetters({
@@ -74,11 +59,10 @@ export default {
       isSigned: 'session/isSigned',
       isAdmin: 'session/isAdmin'
     }),
-
     user(){
       return this.$route.params.id
     },
-    active: function (){
+    active(){
       switch (this.$route.name){
         case 'p-user-account' : return 'account'
         case 'p-user-recipes' : return 'recipes'
@@ -95,7 +79,6 @@ export default {
     ...mapActions({
       requestNewAccessToken: 'session/requestNewAccessToken'
     }),
-
     _mapping(id){
       return {
         id,
@@ -117,27 +100,6 @@ export default {
     },
     onClickTab(route){
       this.$router.push({ name:  route })
-    },
-
-    /* Listeners check ACCESS TOKEN */
-    onAccessTokenOk(){
-      this.loading = false
-     // let find = this.tabs.find(o => o.id === this.active)
-    },
-    onAccessTokenNotOk({description}){
-      console.error("Expired access token. Required another.")
-      console.error(description)
-      this.requestNewAccessToken()
-          .then(res => {
-            if(res?.status === 200 || res?.status === 204) this.loading = false
-
-            if(res?.response?.status === 401) this.$router.replace({ name: 'login' })
-          })
-    },
-    onAccessTokenError(description) {
-      console.error(description)
-      this.handleRequestErrors.session.checkAccessToken(description)
-      this.loading = true
     }
   },
 }

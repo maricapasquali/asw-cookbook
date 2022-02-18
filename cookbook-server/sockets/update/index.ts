@@ -1,4 +1,4 @@
-import {findAdminSocketIDs, getSocketIDs} from "../user";
+import {findAdminSocketIDs} from "../users";
 import {SignUp} from "../../models/schemas/user";
 import {User} from "../../models";
 
@@ -17,26 +17,23 @@ export default function (io: any, socket: any): void {
                     const admins = findAdminSocketIDs()
                     if(admins.length) socket.to(admins).emit('user:signup', user)
 
-                    if(SignUp.State.isChecked(_user.signup)) {
-                        const otherConnectedUsers = getSocketIDs(admins)
-                        if(otherConnectedUsers.length) socket.to(otherConnectedUsers).emit('user:checked', user)
-                    }
+                    if(SignUp.State.isChecked(_user.signup)) socket.broadcast.except(admins).emit('user:checked', user)
 
                 } else console.error('User is not found.')
             }, err => console.error(err))
     })
-    socket.on('user:update:info', useInformation => socket.to(getSocketIDs()).emit('user:update:info', useInformation))
-    socket.on('user:delete', _id => socket.to(getSocketIDs()).emit('user:delete', _id))
+    socket.on('user:update:info', useInformation => socket.broadcast.emit('user:update:info', useInformation))
+    socket.on('user:delete', _id => socket.broadcast.emit('user:delete', _id))
 
     //FOOD
-    socket.on('food:update', food => socket.to(getSocketIDs()).emit('food:update', food))
+    socket.on('food:update', food => socket.broadcast.emit('food:update', food))
 
     //LIKE
-    socket.on('unlike:recipe', (recipeID, likeID) => socket.to(getSocketIDs()).emit('unlike:recipe', {recipeID, likeID}))
-    socket.on('unlike:comment', (commentID, likeID) => socket.to(getSocketIDs()).emit('unlike:comment', {commentID, likeID}))
+    socket.on('unlike:recipe', (recipeID, likeID) => socket.broadcast.emit('unlike:recipe', {recipeID, likeID}))
+    socket.on('unlike:comment', (commentID, likeID) => socket.broadcast.emit('unlike:comment', {commentID, likeID}))
 
     //COMMENT
-    socket.on('comment:update', comment => socket.to(getSocketIDs()).emit('comment:update', comment))
-    socket.on('comment:delete', commentID => socket.to(getSocketIDs()).emit('comment:delete', commentID))
-    socket.on('comment:unreport', commentID => socket.to(getSocketIDs()).emit('comment:unreport', commentID))
+    socket.on('comment:update', comment => socket.broadcast.emit('comment:update', comment))
+    socket.on('comment:delete', commentID => socket.broadcast.emit('comment:delete', commentID))
+    socket.on('comment:unreport', commentID => socket.broadcast.emit('comment:unreport', commentID))
 }

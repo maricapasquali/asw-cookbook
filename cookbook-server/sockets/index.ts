@@ -1,4 +1,4 @@
-import registerUserHandlers, {findConnectedUserBy, popConnectedUser, pushIfIsAbsentConnectedUser} from './user'
+import {findConnectedUserBy, popConnectedUser, pushIfIsAbsentConnectedUser} from './users'
 import registerChatHandlers from './chat'
 import registerNotificationHandlers from './notification'
 import registerUpdateHandlers from './update'
@@ -19,22 +19,18 @@ export default function (server: http.Server | https.Server): void {
 
     io.on('connection', socket => {
 
-        const username = (socket.handshake.auth.userinfo ? socket.handshake.auth.userinfo.userID: 'Anonymous')
+        const username = (socket.handshake.auth.userinfo?.userID || 'Anonymous')
         console.log(username + ' is connected');
         pushIfIsAbsentConnectedUser(io, socket)
-        // if(socket.handshake.auth.key) console.debug(username + ' has token = ', socket.handshake.auth.key);
-
-        // CHECK SOMETHING ABOUT USERS
-        registerUserHandlers(io, socket)
-
-        // CHATs
-        registerChatHandlers(io, socket)
 
         //NOTIFICATIONs
         registerNotificationHandlers(io, socket)
 
         //UPDATEs
         registerUpdateHandlers(io, socket)
+
+        // CHATs
+        registerChatHandlers(io, socket)
 
         // DISCONNECT
         socket.on('disconnect', (reason) => {

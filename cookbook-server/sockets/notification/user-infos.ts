@@ -1,6 +1,6 @@
 import {create_notification} from "../../controllers/notification";
 import {Notification} from "../../models/schemas/notification";
-import {findAdminSocketIDs, findConnectedUserBy} from "../user";
+import {findAdminSocketIDs, findConnectedUserBy} from "../users";
 import {Strike} from "../../models/schemas/user";
 import {User} from "../../models";
 

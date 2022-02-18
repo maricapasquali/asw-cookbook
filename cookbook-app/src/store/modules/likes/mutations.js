@@ -1,12 +1,10 @@
-import Vue from "vue";
-
 export default {
     ['anonymous:add:like-comment'](state, commentID){
-        Vue.set(state.anonymousLikeOnComment, 0, commentID)
+        state.anonymousLikeOnComment.push(commentID)
     },
 
     ['anonymous:add:like-recipe'](state, recipeID){
-        Vue.set(state.anonymousLikeOnRecipe, 0, recipeID)
+        state.anonymousLikeOnRecipe.push(recipeID)
     },
 
     ['anonymous:remove:like-comment'](state, commentID){
