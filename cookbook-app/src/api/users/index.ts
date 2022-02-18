@@ -2,8 +2,9 @@ import * as methods from "../methods";
 import  {AxiosResponse} from "axios";
 
 import * as _session from "./session"
-import {Server} from "../index";
+import Server from "../server.info";
 import {getHeaderBearerAuthorization} from "../utils";
+import {OptionsRequestType, PaginationOptions, UserQueryOptions} from "../request-options";
 
 
 function setImageUrl(user: any){
@@ -35,9 +36,10 @@ export function checkAccount(data: object): Promise<AxiosResponse> {
     return methods.put('/users', data)
 }
 
-export function getUser(id: string, token?: string){
+export function getUser(id: string, token?: string, options?: OptionsRequestType){
     return methods.get('/users/:id', {
         headers: getHeaderBearerAuthorization(token),
+        cancelToken: options?.cancelToken,
         urlParams:{
             id: id
         }
@@ -119,10 +121,9 @@ export function getUserFromNickname(nickname: string){
     })
 }
 
-export type UserSearch = { search: 'full' | 'partial', value: string }
-export type UserQueryOptions = { userID?: UserSearch, fullname?: UserSearch }
-export function getUsers(query?: UserQueryOptions, token?: string, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse>{
+export function getUsers(query?: UserQueryOptions, token?: string, paginationOptions?: PaginationOptions, options?: OptionsRequestType): Promise<AxiosResponse>{
     return methods.get('/users', {
+        cancelToken: options?.cancelToken,
         headers: getHeaderBearerAuthorization(token),
         params: {...query, ...paginationOptions}
     })

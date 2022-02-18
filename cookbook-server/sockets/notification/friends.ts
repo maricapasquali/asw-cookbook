@@ -1,4 +1,4 @@
-import {findConnectedUserBy, getSocketIDs} from "../user";
+import {findConnectedUserBy} from "../users";
 import {create_notification} from "../../controllers/notification";
 import {Notification} from "../../models/schemas/notification";
 import {FriendShip, IFriend} from "../../models/schemas/user/friend";
@@ -59,10 +59,7 @@ export function update(socket: any, request: IFriend): void {
         if(user.info) socket.to(user.info.socketID).emit('friendship:update', {notification})
     }, err => console.error(err))
 
-    if(request.state == FriendShip.State.ACCEPTED) {
-        const otherFriends = getSocketIDs()
-        if(otherFriends.length) socket.to(otherFriends).emit('friendship:update', {friendship: request})
-    }
+    if(request.state == FriendShip.State.ACCEPTED) socket.broadcast.emit('friendship:update', {friendship: request})
 }
 
 export function remove(socket: any, otherUser: { _id: string, userID: string }): void {
@@ -92,10 +89,6 @@ export function remove(socket: any, otherUser: { _id: string, userID: string }):
         if(toUser.info) socket.to(toUser.info.socketID).emit('friendship:remove', {notification})
     }, err => console.error(err))
 
-    const otherFriends = getSocketIDs()
-    if(otherFriends.length) {
-        let friendship = { from: { _id: fromUser.info.user._id }, to: { _id: otherUser._id } }
-        socket.to(otherFriends).emit('friendship:remove', {friendship})
-    }
+    let friendship = { from: { _id: fromUser.info.user._id }, to: { _id: otherUser._id } }
+    socket.broadcast.emit('friendship:remove', {friendship})
 }
-

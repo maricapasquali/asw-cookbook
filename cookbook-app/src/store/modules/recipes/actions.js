@@ -1,30 +1,31 @@
 import api from '@api'
 
 export default {
-    ['all-shared']({ rootState }, { pagination }){
-        return api.recipes.allSharedRecipes(rootState.session.accessToken, pagination)
+    ['all-shared']({ rootState }, { pagination, options }){
+        return api.recipes.allSharedRecipes(rootState.session.accessToken, pagination, null, options)
     },
 
-    ['one-shared']({ rootState }, { ownerID, recipeID }){
-        return api.recipes.getRecipe(ownerID, recipeID, 'shared', rootState.session.accessToken)
+    ['one-shared']({ rootState }, { ownerID, recipeID, options }){
+        return api.recipes.getRecipe(ownerID, recipeID, 'shared', rootState.session.accessToken, options)
     },
 
-    ['all-shared-for-user']({ rootState }, { ownerID, pagination }){
-        return api.recipes.getRecipes(ownerID, rootState.session.accessToken, 'shared', pagination)
+    ['all-shared-for-user']({ rootState }, { ownerID, pagination, options }){
+        return api.recipes.getRecipes(ownerID, rootState.session.accessToken, 'shared', pagination, null, options)
     },
 
-    ['number-for-country']({ rootState }){
-        return api.recipes.numberRecipesForCountry(rootState.session.accessToken)
+    ['number-for-country']({ rootState }, payload){
+        let {options} = payload || {}
+        return api.recipes.numberRecipesForCountry(rootState.session.accessToken, options)
     },
 
-    ['search-in-shared']({ rootState }, { pagination, filters }){
-       return api.recipes.allSharedRecipes(rootState.session.accessToken, pagination, filters)
+    ['search-in-shared']({ rootState }, { pagination, filters, options }){
+       return api.recipes.allSharedRecipes(rootState.session.accessToken, pagination, filters, options)
     },
 
-    all({ dispatch, rootState, rootGetters }, { pagination, type }){
+    all({ dispatch, rootState, rootGetters }, { pagination, type, options }){
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.recipes.getRecipes(rootState.session.user._id, rootState.session.accessToken, type, pagination)
+        return api.recipes.getRecipes(rootState.session.user._id, rootState.session.accessToken, type, pagination, null, options)
     },
 
     one({ dispatch, rootState, rootGetters }, recipeID){
@@ -33,10 +34,10 @@ export default {
         return api.recipes.getRecipe(rootState.session.user._id, recipeID, null, rootState.session.accessToken)
     },
 
-    ['search-in-all']({ dispatch, rootState, rootGetters }, { pagination, filters, type }){
+    ['search-in-all']({ dispatch, rootState, rootGetters }, { pagination, filters, type, options }){
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.recipes.getRecipes(rootState.session.user._id, rootState.session.accessToken, type, pagination, filters)
+        return api.recipes.getRecipes(rootState.session.user._id, rootState.session.accessToken, type, pagination, filters, options)
     },
 
     remove({ dispatch, rootState, rootGetters }, recipeID){

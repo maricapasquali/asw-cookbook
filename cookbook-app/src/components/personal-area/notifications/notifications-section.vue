@@ -64,6 +64,7 @@
 <script>
 
 import {mapGetters} from "vuex";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "notifications-section",
@@ -191,9 +192,11 @@ export default {
     },
 
     getNotifications(){
+      let _id = 'notifications-all'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
+
       this.loading = true
-      this.$store
-          .dispatch('notifications/all')
+      this.$store.dispatch('notifications/all', {options})
           .then(({data}) => {
             this.docs = data.items
             this.totals = data.totals
@@ -204,6 +207,7 @@ export default {
            return false
           })
           .then(processEnd => this.loading = !processEnd)
+          .then(() => this.pendingRequests.remove(_id))
     },
 
     clickNotification(event, index){
@@ -255,6 +259,7 @@ export default {
     }
   },
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
     this.getNotifications()
 
     for (const eventName of this.events) {
@@ -262,6 +267,7 @@ export default {
     }
   },
   beforeDestroy() {
+    this.pendingRequests.cancelAll('all notifications cancel')
     for (const eventName of this.events) {
       this.$bus.$off(eventName, this.addNotification.bind(this))
     }

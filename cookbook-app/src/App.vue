@@ -1,12 +1,12 @@
 <template>
   <div>
     <app-navigator v-if="navigatorVisibility"/>
-    <router-view :class="classObject" />
+    <router-view :key="_reRenderRouterView" :class="classObject" />
     <app-footer v-if="footerVisibility" />
 
     <server-error-handler v-model="serverError"/>
     <bad-request-error-handler v-model="badRequestError"/>
-    <unauthenticated-error-handler v-model="unAuthenticatedError"/>
+    <unauthenticated-error-handler v-model="unAuthenticatedError" @force-render-router="forceReloadRoute=true" @close="forceReloadRoute=false"/>
     <forbidden-error-handler v-model="forbiddenError"/>
     <not-found-error-handler v-model="notFoundResource"/>
   </div>
@@ -19,9 +19,9 @@ export default {
   name: 'App',
   data(){
     return {
-      routeWithoutNavigationBar: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat'],
-      routeWithoutFooter: [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat'],
-
+      routeWithoutNavigationBar: [],
+      routeWithoutFooter: [],
+      forceReloadRoute: false,
       serverError: {
         show: false,
         message: ''
@@ -58,6 +58,9 @@ export default {
     footerVisibility: function (){
       return !this.routeWithoutFooter.includes(this.$route.name)
     },
+    _reRenderRouterView() {
+      return this.forceReloadRoute
+    },
     classObject(){
       return {
         'mt-6': this.navigatorVisibility,
@@ -67,14 +70,14 @@ export default {
   },
   watch:{
     accessToken(val){
-      console.warn('CHANGE ACCESS TOKEN ... ',  this.$socket)
+      console.debug('CHANGE ACCESS TOKEN ... ',  this.$socket)
       this.$socket.connectStart({
         key: val,
         userinfo: this.isLoggedIn ? { _id: this.userIdentifier, userID: this.username, isAdmin: this.isAdmin} : undefined
       })
     },
     username(val){
-      console.warn('CHANGE USER ID ... ',  this.$socket)
+      console.debug('CHANGE USER ID ... ',  this.$socket)
       this.$socket.connectStart({
         key: this.accessToken,
         userinfo: this.isLoggedIn ? { _id: this.userIdentifier, userID: val, isAdmin: this.isAdmin} : undefined
@@ -132,12 +135,33 @@ export default {
       this.$socket.on('user:delete', this.$bus.update.deleteUser.bind(this))
     },
 
-    registerChatMessage(){
+    registerUserOnlineOfflineListener(){
+      this.$socket.on('all:users:online', users => this.$store.commit('users/set-onlines', users))
+      this.$socket.on('user:online', _id => this.$store.commit('users/add-online', _id))
+      this.$socket.on('user:offline', (_id, _date) => this.$store.commit('users/remove-online', {_id, _date}))
+    },
+
+    registerCheckAccessTokenListener(){
+      this.$socket.on('operation:not:authorized', ({ expired, message }) => {
+        if(expired) this.unAuthenticatedError = { show: true, message }
+        else this.forbiddenError = { show: true, message }
+      })
+    },
+
+    registerChatMessageListener(){
       this.$socket.on('push-messages', this.$bus.chat.pushMessages.bind(this))
     }
   },
   created() {
     console.log('App created ')
+    let _routeWithout = [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat']
+    this.routeWithoutNavigationBar = clone(_routeWithout)
+    this.routeWithoutFooter = clone(_routeWithout)
+
+    this.$router.beforeEach((to, from, next) => {
+      if(!to.hash) window.scrollTo(0, 0)
+      return next()
+    })
 
     this.updateGUIListener()
 
@@ -154,7 +178,9 @@ export default {
     this.registerLikeListener()
     this.registerRecipeListener()
     this.registerUserInfoListener()
-    this.registerChatMessage()
+    this.registerChatMessageListener()
+    this.registerUserOnlineOfflineListener()
+    this.registerCheckAccessTokenListener()
 
     console.debug('Store ', this.$store)
     console.debug('Socket ', this.$socket)

@@ -1,7 +1,7 @@
 import {IComment} from "../../models/schemas/recipe/comment";
 import {create_notification} from "../../controllers/notification";
 import {Notification} from "../../models/schemas/notification";
-import {findConnectedUserBy, getSocketIDs} from "../user";
+import {findConnectedUserBy} from "../users";
 import {IRecipe} from "../../models/schemas/recipe";
 import {Friend} from "../../models";
 import {FriendShip, IFriend} from "../../models/schemas/user/friend";
@@ -80,8 +80,7 @@ function operationOnRecipe(socket: any, operation: 'update' | 'delete', recipe: 
                 }, err => console.error(err))
             }
 
-            let otherConnectedUser = getSocketIDs()
-            if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('recipe:' + operation, {recipe: _recipe})
+            socket.broadcast.emit('recipe:' + operation, {recipe: _recipe})
         }
         else {
             for (const user of recipe.permission.filter(p => p.user._id != permission.user._id).map(p => p.user)){
@@ -128,10 +127,7 @@ export function comment(socket: any, recipe: any, comment: IComment): void {
         if(onlineOwnerRecipe.info) socket.to(onlineOwnerRecipe.info.socketID).emit('recipe:comment', {notification, comment})
     }, err => console.error(err))
 
-    const exclude = []
-    if(onlineOwnerRecipe.info) exclude.push(onlineOwnerRecipe.info.socketID)
-    let otherConnectedUser = getSocketIDs(exclude)
-    if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('recipe:comment', {comment})
+    socket.broadcast.except(onlineOwnerRecipe.info?.socketID).emit('recipe:comment', {comment})
 }
 
 export function create(socket: any, recipe: IRecipe): void {
@@ -167,8 +163,7 @@ export function create(socket: any, recipe: IRecipe): void {
             }
         }, err => console.error(err))
 
-    let otherConnectedUser = getSocketIDs()
-    if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('recipe:create', {recipe})
+    socket.broadcast.emit('recipe:create', {recipe})
 }
 
 export const update = (socket: any, recipe: IRecipe) => operationOnRecipe(socket, 'update', recipe)

@@ -3,8 +3,9 @@ import {AxiosResponse} from "axios";
 
 import * as _likes from './likes'
 import * as _comments from './comments'
-import {Server} from "../index";
+import Server from "../server.info";
 import {getHeaderBearerAuthorization} from "../utils";
+import {OptionsRequestType, PaginationOptions, RecipeFilters} from "../request-options";
 
 function setUrlPath(recipe: any){
     if(recipe.img) {
@@ -20,10 +21,10 @@ function setUrlPath(recipe: any){
 export const likes = _likes
 export const comments = _comments
 
-type RecipeFilters = {name?: string, countries?: string[], diets?: string[], categories?: string[], ingredients?: string[]}
-export function allSharedRecipes(token?: string, optionsPagination?: {page: number, limit: number}, filters?: RecipeFilters): Promise<AxiosResponse>  {
+export function allSharedRecipes(token?: string, optionsPagination?: PaginationOptions, filters?: RecipeFilters, options?: OptionsRequestType): Promise<AxiosResponse>  {
     return methods.get('/recipes', {
         headers: getHeaderBearerAuthorization(token),
+        cancelToken: options?.cancelToken,
         params: {...optionsPagination, ...filters}
     })
     .then(response => {
@@ -32,8 +33,9 @@ export function allSharedRecipes(token?: string, optionsPagination?: {page: numb
     })
 }
 
-export function numberRecipesForCountry(token?: string): Promise<AxiosResponse>  {
+export function numberRecipesForCountry(token?: string, options?: OptionsRequestType): Promise<AxiosResponse>  {
     return methods.get('/recipes-for-country', {
+        cancelToken: options?.cancelToken,
         headers: getHeaderBearerAuthorization(token),
     })
 }
@@ -54,9 +56,10 @@ export function createRecipe(user: string, data: any, token: string): Promise<Ax
     })
 }
 
-export function getRecipes(user: string, token?: string, type?: string, paginationOptions?: {page: number, limit: number}, filters?: RecipeFilters): Promise<AxiosResponse>  {
+export function getRecipes(user: string, token?: string, type?: string, paginationOptions?: PaginationOptions, filters?: RecipeFilters, options?: OptionsRequestType): Promise<AxiosResponse>  {
     return methods.get('/users/:userID/recipes', {
         headers: getHeaderBearerAuthorization(token),
+        cancelToken: options?.cancelToken,
         params: {
             ...paginationOptions,
             type: type,
@@ -72,9 +75,10 @@ export function getRecipes(user: string, token?: string, type?: string, paginati
     })
 }
 
-export function getRecipe(user: string, id: string, type: string, token?: string): Promise<AxiosResponse>  {
+export function getRecipe(user: string, id: string, type: string, token?: string, options?: OptionsRequestType): Promise<AxiosResponse>  {
     const pathName = user ? '/users/:userID/recipes/:recipeID' : '/recipes/:recipeID'
     return methods.get(pathName, {
+        cancelToken: options?.cancelToken,
         headers: getHeaderBearerAuthorization(token),
         params:{
           type: type

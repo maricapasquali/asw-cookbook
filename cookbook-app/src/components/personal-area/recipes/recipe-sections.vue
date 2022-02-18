@@ -31,7 +31,7 @@
         <p v-else> Vuoi davvero cancellare la ricetta <b><em>{{deleteRecipe.name}}</em></b>?</p>
       </b-modal>
       <!-- SEARCHES -->
-      <b-container fluid class="search-section" v-if="itemsRecipes.length" v-show="!formUpdate.show">
+      <b-container fluid class="search-section" v-if="itemsRecipes.length || searching.on" v-show="!formUpdate.show">
         <search-recipes @reset="stopSearch" @searching="onSearching" :trigger-search="search" :with-history=false :with-all-filters-visible=false :show-results=false />
       </b-container>
 
@@ -68,7 +68,7 @@
         <b-container fluid class="recipes-section" v-show="!formUpdate.show" >
           <strong v-if="searching.on"> Risultati: </strong>
           <b-list-group>
-            <b-list-group-item v-for="(item, index) in itemsRecipes" :key="item.id" >
+            <b-list-group-item v-for="(item, index) in itemsRecipes" :key="item.recipe._id" >
               <b-row class="ml-2" cols="1" cols-md="2">
                 <b-col class="mb-2">
                   <b-row>
@@ -82,7 +82,7 @@
                       </b-row>
                       <b-row v-if="item.recipe.owner"><router-link :to="{name: 'single-user', params:{id: item.recipe.owner._id}}">{{item.recipe.owner.userID}}</router-link></b-row>
                       <b-row><small>{{ item.recipe.createdAt | dateFormat }}</small></b-row>
-                      <b-row class="mt-1"  v-if="item.recipe.shared && item.recipe.likes.length > 0">
+                      <b-row class="mt-1"  v-show="item.recipe.shared && item.recipe.likes.length > 0">
                         <b-col class="pl-0"><b-icon-heart-fill /> <span>{{item.recipe.likes.length}}</span></b-col>
                       </b-row>
                     </b-col>
@@ -90,7 +90,7 @@
                 </b-col>
                 <b-col class="text-right mb-2" >
                   <b-button-group>
-                    <b-button :id="item.recipe._id+'-details'" v-if="item.actions.includes('details')" variant="info" @click="item.showDetails = !item.showDetails"> <b-icon-info-circle/> </b-button>
+                    <b-button :id="item.recipe._id+'-details'" v-if="item.actions.includes('details')" variant="info" v-b-toggle="'details-'+item.recipe._id"> <b-icon-info-circle/> </b-button>
                     <b-button :id="item.recipe._id+'-edit'"  v-if="item.actions.includes('change')" variant="primary" @click="onModify(index)"> <b-icon-pencil-square /> </b-button>
                     <b-button :id="item.recipe._id+'-directly-shared'"  v-if="item.actions.includes('directly-shared')" variant="light" @click="onDirectlyShared(index)"> <b-icon-share /> </b-button>
                     <b-button :id="item.recipe._id+'-delete'" v-if="item.actions.includes('delete')" variant="danger" @click="onErase(index)"> <b-icon-trash-fill /> </b-button>
@@ -104,67 +104,70 @@
                 </b-col>
               </b-row>
               <!-- Details -->
-              <b-card class="mt-3" v-show="item.showDetails">
-                <!-- Tutorial -->
-                <b-row class="tutorial mb-4" align-h="center" v-if="item.recipe.tutorial">
-                  <preview-recipe-tutorial class="col col-6" v-model="item.recipe.tutorial" :poster="item.recipe.img" @onVideoNotFound="tutorialNotFound" />
-                </b-row>
+              <b-collapse :id="'details-'+item.recipe._id" :visible="item.showDetails" @shown="item.showDetails=true" @hidden="item.showDetails=false">
+                <b-card class="mt-3">
+                  <!-- Tutorial -->
+                  <b-row class="tutorial mb-4" align-h="center" v-if="item.recipe.tutorial">
+                    <preview-recipe-tutorial class="col col-6" v-model="item.recipe.tutorial" :poster="item.recipe.img" @onVideoNotFound="tutorialNotFound" />
+                  </b-row>
 
-                <!-- Country, Diet & Category -->
-                <b-row class="country-diet-category" cols="1" cols-sm="3">
-                  <b-col v-if="item.recipe.diet && item.recipe.diet.value">
-                    <b-form-group label-for="r-d-diet" label="Regime alimentare">
-                      <b-form-input id="r-d-diet" :value="item.recipe.diet.text" readonly/>
-                    </b-form-group>
-                  </b-col>
-                  <b-col>
-                    <b-form-group label-for="r-d-category" label="Categoria">
-                      <b-form-input id="r-d-category" :value="item.recipe.category.text" readonly/>
-                    </b-form-group>
-                  </b-col>
-                  <b-col v-if="item.recipe.country" align-self="center" class="text-right">
-                    <country-image v-model="item.recipe.country" width="50" height="50" :id="index" />
-                  </b-col>
-                </b-row>
+                  <!-- Country, Diet & Category -->
+                  <b-row class="country-diet-category" cols="1" cols-sm="3">
+                    <b-col v-if="item.recipe.diet && item.recipe.diet.value">
+                      <b-form-group label-for="r-d-diet" label="Regime alimentare">
+                        <b-form-input id="r-d-diet" :value="item.recipe.diet.text" readonly/>
+                      </b-form-group>
+                    </b-col>
+                    <b-col>
+                      <b-form-group label-for="r-d-category" label="Categoria">
+                        <b-form-input id="r-d-category" :value="item.recipe.category.text" readonly/>
+                      </b-form-group>
+                    </b-col>
+                    <b-col v-if="item.recipe.country" align-self="center" class="text-right">
+                      <country-image v-model="item.recipe.country" width="50" height="50" :id="index" />
+                    </b-col>
+                  </b-row>
 
-                <!-- Ingredients  & Table of Nutrients -->
-                <b-row class="ingredients-nutrients" cols="1" cols-lg="2">
-                  <b-col>
-                    <b-form-group label="Ingredienti" :label-for="'recipe-'+ item.recipe._id + '-ingredients'">
-                      <ingredient-list :id="'recipe-'+item.recipe._id + '-ingredients'" v-model="item.recipe.ingredients"/>
-                    </b-form-group>
-                  </b-col>
-                  <b-col>
-                    <nutrients-table :ingredients="item.recipe.ingredients"/>
-                  </b-col>
-                </b-row>
-                <!-- Preparation & Notes -->
-                <b-row class="preparation-notes" cols="1" :cols-lg="item.recipe.note? 2: 1">
-                  <b-col>
-                    <b-form-group label-for="r-d-preparation" label="Preparazione">
-                      <b-form-textarea id="r-d-preparation" readonly :value="item.recipe.preparation" rows="10" no-resize/>
-                    </b-form-group>
-                  </b-col>
-                  <b-col v-if="item.recipe.note">
-                    <b-form-group label-for="r-d-notes" label="Note">
-                      <b-form-textarea id="r-d-notes" readonly :value="item.recipe.note" rows="10" no-resize />
-                    </b-form-group>
-                  </b-col>
-                </b-row>
+                  <!-- Ingredients  & Table of Nutrients -->
+                  <b-row class="ingredients-nutrients" cols="1" cols-lg="2">
+                    <b-col>
+                      <b-form-group label="Ingredienti" :label-for="'recipe-'+ item.recipe._id + '-ingredients'">
+                        <ingredient-list :id="'recipe-'+item.recipe._id + '-ingredients'" v-model="item.recipe.ingredients"/>
+                      </b-form-group>
+                    </b-col>
+                    <b-col>
+                      <nutrients-table :ingredients="item.recipe.ingredients"/>
+                    </b-col>
+                  </b-row>
+                  <!-- Preparation & Notes -->
+                  <b-row class="preparation-notes" cols="1" :cols-lg="item.recipe.note? 2: 1">
+                    <b-col>
+                      <b-form-group label-for="r-d-preparation" label="Preparazione">
+                        <b-form-textarea id="r-d-preparation" readonly :value="item.recipe.preparation" rows="10" no-resize/>
+                      </b-form-group>
+                    </b-col>
+                    <b-col v-if="item.recipe.note">
+                      <b-form-group label-for="r-d-notes" label="Note">
+                        <b-form-textarea id="r-d-notes" readonly :value="item.recipe.note" rows="10" no-resize />
+                      </b-form-group>
+                    </b-col>
+                  </b-row>
 
-                <b-row v-if="item.recipe.shared && item.recipe.likes.length>0">
-                  <b-col> <!-- TODO: migliorare css on list of liker -->
-                    <strong>Chi ha messo 'Mi piace'</strong>
-                    <liker-list v-model="item.recipe.likes"/>
-                  </b-col>
-                </b-row>
-                <!-- Comments -->
-                <b-row cols="1" class="comments mx-1" v-if="item.recipe.shared && item.recipe.comments.length>0">
-                 <b-col class="px-0"><strong>Commenti</strong></b-col>
-                 <b-col> <comments v-model="item.recipe.comments" :recipe="item.recipe" /></b-col>
-                </b-row>
+                  <b-row v-show="item.recipe.shared && item.recipe.likes.length>0">
+                    <b-col> <!-- TODO: migliorare css on list of liker -->
+                      <strong>Chi ha messo 'Mi piace'</strong>
+                      <liker-list v-model="item.recipe.likes"/>
+                    </b-col>
+                  </b-row>
+                  <!-- Comments -->
+                  <b-row cols="1" class="comments mx-1" v-if="item.recipe.shared && item.recipe.comments.length>0">
+                    <b-col class="px-0"><strong>Commenti</strong></b-col>
+                    <b-col> <comments v-model="item.recipe.comments" :recipe="item.recipe" /></b-col>
+                  </b-row>
 
-              </b-card>
+                </b-card>
+              </b-collapse>
+
             </b-list-group-item>
             <div v-if="!itemsRecipes.length"> Nessuna ricetta trovata. </div>
           </b-list-group>
@@ -178,6 +181,7 @@
     </b-tab>
 
     <b-tab title="Inserisci ricetta" @click="select('add')" :active="isAddRecipeTab" lazy>
+      <b-alert variant="success" class="text-center" :show="addRecipe" dismissible @dismissed="addRecipe=false"> Inserimento ricetta avvenuto correttamente. </b-alert>
       <recipe-form @onShared="onShareRecipe" @onSaved="onSaveRecipe"/>
     </b-tab>
   </b-tabs>
@@ -189,6 +193,7 @@ import {mapGetters} from "vuex";
 
 import Vue from "vue";
 import RecipeForm from './recipe-form';
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "recipe-sections",
@@ -196,6 +201,7 @@ export default {
     return {
       skeletons: 7,
 
+      addRecipe: false,
       deleteRecipe :{
         show: false,
         index: -1,
@@ -217,34 +223,11 @@ export default {
         result: [],
         backupItems: []
       },
-
-      tabs: [
-        {
-          title: 'Condivise',
-          type: 'shared',
-          itemsRecipes: []
-        },
-        {
-          title: 'Salvate',
-          type: 'saved',
-          itemsRecipes: []
-        },
-        {
-          title: 'Preferite',
-          type: 'loved',
-          itemsRecipes: []
-        },
-        {
-          title: 'Condivise in chat', //TODO: da rigurdare quando creato 'chats'
-          type: 'shared-in-chat',
-          itemsRecipes: []
-        }
-      ],
+      tabs: [],
+      processing: true,
       isMobileDevice: false,
 
-      processing: true,
-      total: 0,
-      paginationOptions: {
+      _paginationOptions: {
         page: 1,
         limit: 2 //todo: change pagination limit  from 2 to 10
       }
@@ -257,6 +240,23 @@ export default {
       accessToken: 'session/accessToken',
       userIdentifier: 'session/userIdentifier',
     }),
+
+    total: {
+      get(){
+        let items = this.tabs.find(e => e.type === this.active)
+        return items ? items.total : 0
+      },
+      set(val){
+        let items = this.tabs.find(e => e.type === this.active)
+        if(items) items.total = val
+      }
+    },
+    paginationOptions: {
+      get(){
+        let items = this.tabs.find(e => e.type === this.active)
+        return items ? items.paginationOptions : clone(this.$data._paginationOptions)
+      }
+    },
     itemsRecipes: {
       get(){
         if(this.searching.on){
@@ -295,6 +295,35 @@ export default {
     },
   },
   methods:{
+    setEnv(){
+      let _itemsInfo = {
+        itemsRecipes: [],
+        total: 0,
+        paginationOptions: clone(this.$data._paginationOptions)
+      }
+      let _recipeType = [
+        {
+          title: 'Condivise',
+          type: 'shared',
+        },
+        {
+          title: 'Salvate',
+          type: 'saved',
+        },
+        {
+          title: 'Preferite',
+          type: 'loved',
+        },
+        {
+          title: 'Condivise in chat', //TODO: da rigurdare quando creato 'chats'
+          type: 'shared-in-chat',
+        }
+      ]
+      this.tabs.push(..._recipeType)
+      this.tabs.forEach(tab => Object.assign(tab, clone(_itemsInfo)))
+      console.debug('TABS ', this.tabs)
+    },
+
     tutorialNotFound(e){
       console.error('tutorial ('+e.target.src+') not found')
       e.target.parentNode.parentNode.remove()
@@ -331,13 +360,16 @@ export default {
       return {recipe: recipe, actions: operation, showDetails: _showDetails}
     },
     getDocs(currentPage, _limit){
-      // this.paginationOptions.page = currentPage || 1
+      let active =  (this.active || 'shared')
+      let idReq = active + '-recipe'
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idReq, {message: active + ' recipe abort.'})
+
       const page = currentPage || 1
       const limit = _limit || this.paginationOptions.limit
       console.debug('Pagination = ', {page, limit})
 
-      this.$store.dispatch('recipes/all', { pagination:  {page, limit}, type: this.active })
-         .then(({data}) => {
+      this.$store.dispatch('recipes/all', { pagination:  {page, limit}, type: this.active, options })
+          .then(({data}) => {
             console.log(data)
             this.setDefaultValueOn(data.items)
 
@@ -348,9 +380,10 @@ export default {
             this.total = data.total
             if(!_limit) this.paginationOptions.page = page
             return true
-         })
-         .catch(err => this.handleRequestErrors.recipes.getRecipe(err, {_forbiddenPage: true}))
-         .then(processEnd => this.processing = !processEnd)
+          })
+          .catch(err => this.handleRequestErrors.recipes.getRecipe(err, {_forbiddenPage: true}))
+          .then(processEnd => this.processing = !processEnd)
+          .then(() => this.pendingRequests.remove(idReq))
 
     },
     others(){
@@ -371,8 +404,8 @@ export default {
     },
 
     /* search */
-    search(filters){
-      return this.$store.dispatch('recipes/search-in-all', { filters, type: this.active  })
+    search(filters, options){
+      return this.$store.dispatch('recipes/search-in-all', { filters, type: this.active, options })
     },
     onSearching(data){
       console.debug('SEARCHING Recipes '+ this.active + ' are '+data.total)
@@ -414,27 +447,27 @@ export default {
       switch (this.active){
         case 'shared': {
           // tab shared
-            // new saved
-            // update
-            // new shared
+          // new saved
+          // update
+          // new shared
 
-            //if(cRecipe._id !== old.recipe._id && cRecipe.shared === false) // nothing
+          //if(cRecipe._id !== old.recipe._id && cRecipe.shared === false) // nothing
 
-            if(cRecipe._id === old.recipe._id && cRecipe.shared === old.recipe.shared)
-              this.itemsRecipes[this.formUpdate.index] = Object.assign(old, {recipe: cRecipe})
+          if(cRecipe._id === old.recipe._id && cRecipe.shared === old.recipe.shared)
+            this.itemsRecipes[this.formUpdate.index] = Object.assign(old, {recipe: cRecipe})
 
-            if(cRecipe._id !== old.recipe._id && cRecipe.shared === true)
-              this.itemsRecipes.unshift(this.remapping(cRecipe))
+          if(cRecipe._id !== old.recipe._id && cRecipe.shared === true)
+            this.itemsRecipes.unshift(this.remapping(cRecipe))
         }
-        break
+          break
         case 'saved': {
           //tab saved
-            // update
-            // remove from this.itemsRecipes
+          // update
+          // remove from this.itemsRecipes
           if(old.recipe.shared === cRecipe.shared) this.itemsRecipes[this.formUpdate.index] = Object.assign(old, {recipe: cRecipe})
           else this.itemsRecipes.splice(this.formUpdate.index, 1)
         }
-        break
+          break
       }
 
       this.closeChangeMode()
@@ -495,24 +528,24 @@ export default {
         let like = recipe.likes.find(l => l.user && l.user._id === this.userIdentifier)
         console.debug(like)
         this.$store.dispatch('likes/remove', {ownerID: recipe.owner._id, recipeID:  recipe._id, likeID: like._id})
-           .then(({data}) => {
-             console.log(data)
-             this.itemsRecipes.splice(this.deleteRecipe.index, 1)
-           })
-           .catch(this.handleRequestErrors.likes.makeOrUnmakeLike)
-           .then(this._closeDeleteMode)
+            .then(({data}) => {
+              console.log(data)
+              this.itemsRecipes.splice(this.deleteRecipe.index, 1)
+            })
+            .catch(this.handleRequestErrors.likes.makeOrUnmakeLike)
+            .then(this._closeDeleteMode)
       }
       else
       {
         console.log('DELETE RECIPE')
         this.$store.dispatch('recipes/remove', recipe._id)
-           .then(({data}) => {
-             console.log(data)
-             this.itemsRecipes.splice(this.deleteRecipe.index, 1)
-             this.$socket.emit('recipe:delete', recipe)
-           })
-           .catch(this.handleRequestErrors.recipes.deleteRecipe)
-           .then(this._closeDeleteMode)
+            .then(({data}) => {
+              console.log(data)
+              this.itemsRecipes.splice(this.deleteRecipe.index, 1)
+              this.$socket.emit('recipe:delete', recipe)
+            })
+            .catch(this.handleRequestErrors.recipes.deleteRecipe)
+            .then(this._closeDeleteMode)
       }
     },
     /* END ACTIONS: MODIFY, DELETE, REMOVE ...*/
@@ -521,6 +554,7 @@ export default {
     /* TABS & WINDOW */
 
     select(type = this.active){
+      console.debug('TABS ', this.tabs)
       this.closeChangeMode()
 
       if(this.active !== type) {
@@ -529,7 +563,7 @@ export default {
       }
 
       if(this.itemsRecipes.length === 0 && !this.isAddRecipeTab) {
-     // if(!this.isAddRecipeTab) { this.itemsRecipes = []
+        // if(!this.isAddRecipeTab) { this.itemsRecipes = []
         this.processing = true;
         this.getDocs()
       }
@@ -538,9 +572,11 @@ export default {
     // ON TAB 'ADD'
     onShareRecipe(recipe){
       //AFTER ADD NEW SHARED RECIPE ON SERVER
+      this.addRecipe = true
     },
     onSaveRecipe(recipe){
       //AFTER ADD NEW SAVED RECIPE ON SERVER
+      this.addRecipe = true
     },
 
     /* Listeners notification */
@@ -571,7 +607,7 @@ export default {
               item.recipe.owner.userID = userInfo.userID
 
             item.recipe.likes.filter(like => like.user && like.user._id === userInfo._id && like.user.userID !== userInfo.userID)
-                             .forEach(like => like.user.userID = userInfo.userID)
+                .forEach(like => like.user.userID = userInfo.userID)
           })
         }
       }
@@ -588,7 +624,7 @@ export default {
           item.recipe.likes.filter(like => like.user && like.user._id === id).forEach(like => like.user = null)
         }
       }
-    }
+    },
   },
 
   created() {
@@ -605,8 +641,13 @@ export default {
     //   }
     //   next()
     // })
+    this.pendingRequests = QueuePendingRequests.create()
+    this.setEnv()
+
     let isValidTab = this.tabs.find(t => t.type === this.active) || this.isAddRecipeTab
     if(!isValidTab) this.$router.push({query: { tab: 'shared'}})
+
+    this.select()
 
     window.onpopstate = function (e){
       if(this.formUpdate.show) this.closeChangeMode()
@@ -617,12 +658,9 @@ export default {
 
     this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
     this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
-
-  },
-  mounted() {
-    this.select()
   },
   beforeDestroy() {
+    this.pendingRequests.cancelAll((this.active || 'shared') + ' recipes cancel.')
     this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 

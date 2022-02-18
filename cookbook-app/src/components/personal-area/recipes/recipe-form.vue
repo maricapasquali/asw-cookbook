@@ -447,6 +447,7 @@ export default {
 
       const addOnFormData = (k, v) => {
         if(Array.isArray(v)) formData.append(k, JSON.stringify(v))
+        else if(v instanceof File && v.size === 0) formData.append(k, '')
         else formData.append(k, v)
       }
 

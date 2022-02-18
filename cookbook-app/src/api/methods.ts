@@ -1,7 +1,7 @@
-import axios, {AxiosRequestConfig, AxiosResponse} from 'axios'
+import axios, {AxiosRequestConfig, AxiosResponse, CancelToken} from 'axios'
 import store from '../store'
 
-import {Server} from "./index";
+import Server from "./server.info";
 
 declare module 'axios' {
     interface AxiosRequestConfig {
@@ -10,7 +10,7 @@ declare module 'axios' {
 }
 
 const instance = axios.create({
-    baseURL: process.env.VUE_APP_API_ORIGIN || Server.api.origin,
+    baseURL: Server.api.origin,
     headers: {
         "Content-Type": "application/json",
     },

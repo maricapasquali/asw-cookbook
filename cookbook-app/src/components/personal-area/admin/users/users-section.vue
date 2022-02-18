@@ -15,6 +15,7 @@
     <!-- Table user  -->
     <b-row cols="1" class="mt-3 mb-5 mx-auto">
       <b-table id="user-table" responsive hover :stacked="isMobile" v-resize="onResize"
+               @context-changed="abortRequest"
                ref="userTable"
                :tbody-tr-class="rowClass"
                :busy.sync="pagination.isBusy"
@@ -35,7 +36,7 @@
 
         <template #empty>
           <div class="text-center text-primary my-2">
-            <strong class="ml-2">Non ci sono utenti iscritti...</strong>
+            <strong class="ml-2">Non ci sono utenti iscritti </strong>
           </div>
         </template>
 
@@ -104,11 +105,14 @@
 
 import {mapGetters} from "vuex";
 import {_goToChat} from '@components/chats/utils'
+import {QueuePendingRequests} from "@api/request";
 export default {
   name: "users-section",
   data(){
     return {
       isMobile: false,
+      pendingRequests: null,
+      idRequest: 'users-all',
 
       pagination: {
         isBusy: false,
@@ -221,8 +225,12 @@ export default {
       }
     },
 
-
+    abortRequest(){
+      this.pendingRequests.cancel(this.idRequest, 'search user abort.')
+    },
     getUser(ctx) {
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+
       this.pagination.isBusy = true
       let {currentPage, perPage} = ctx
       console.log('FILTERS ' , ctx.filter)
@@ -235,7 +243,7 @@ export default {
        if(ctx.filter.userID.value) filter = { userID: ctx.filter.userID }
        if(ctx.filter.fullname.value) filter = { fullname: ctx.filter.fullname }
 
-      return this.$store.dispatch('users/all', { filters: filter || {}, pagination: paginationOption })
+      return this.$store.dispatch('users/all', { filters: filter || {}, pagination: paginationOption, options })
                 .then(({data}) => {
                    console.log(data)
                    this.pagination.totals = data.total
@@ -245,7 +253,10 @@ export default {
                  this.handleRequestErrors.users.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
                  return []
                })
-               .finally(() => this.pagination.isBusy = false)
+               .finally(() => {
+                 this.pagination.isBusy = false
+                 this.pendingRequests.remove(this.idRequest)
+               })
     },
 
     /* --- DELETE ACCOUNT OF USER --- */
@@ -296,11 +307,13 @@ export default {
     }
   },
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('user:signup', this.fetchUsers.bind(this))
     this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
     this.$bus.$on('user:delete', this.fetchUsers.bind(this))
   },
   beforeDestroy() {
+    this.pendingRequests.cancelAll('(admin) all users cancel.')
     this.$bus.$off('user:signup', this.fetchUsers.bind(this))
     this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
     this.$bus.$off('user:delete', this.fetchUsers.bind(this))

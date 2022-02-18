@@ -6,7 +6,7 @@
         <b-card>
           <div class="text-center"> <h1 class="text-primary"><em>{{ app_name }}</em></h1></div>
           <b-card-body>
-            <b-alert variant="danger" v-model="onLogin.error.show">{{onLogin.error.msg}}</b-alert>
+            <b-alert :variant="onLogin.error.info? 'info': 'danger'" v-model="onLogin.error.show">{{onLogin.error.msg}}</b-alert>
             <b-form @submit.prevent="onLoginSubmit">
               <b-form-group
                   id="input-group-1"
@@ -132,7 +132,7 @@ export default {
       validationEmail: null,
       onLogin: {
         processing: false,
-        error: {show: false, msg:''}
+        error: {show: false, msg:'', info: false}
       },
       resetPassword:{
         processing: false,
@@ -153,7 +153,7 @@ export default {
       if(val) this.resetPassword.error = { show: false, msg: ''}
     },
     'onLogin.processing'(val){
-      if(val) this.onLogin.error = { show: false, msg: ''}
+      if(val) this.onLogin.error = { show: false, msg: '', info: false }
     }
   },
   methods: {
@@ -226,6 +226,7 @@ export default {
           })
           .catch(err => {
             this.onLogin.error.show = true
+            this.onLogin.error.info = err.response?.status === 409
             this.onLogin.error.msg = this.handleRequestErrors.session.login(err)
           })
           .then(() => this.onLogin.processing = false)

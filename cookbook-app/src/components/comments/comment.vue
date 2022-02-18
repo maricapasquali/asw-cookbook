@@ -102,7 +102,7 @@
 </template>
 <script>
 
-import {Server} from '@api'
+import Server from '@api/server.info'
 import {mapGetters} from "vuex";
 
 export default {

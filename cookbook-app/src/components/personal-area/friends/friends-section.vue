@@ -1,7 +1,7 @@
 <template>
   <b-container v-resize="onResize">
 
-    <b-container class="friend-search-container my-3 p-3">
+    <b-container class="friend-search-container my-3 p-3" v-if="haveFriend">
       <strong> Ricerca </strong>
       <b-row cols="1" cols-sm="2">
         <b-col>
@@ -36,6 +36,7 @@
     </b-container>
 
     <b-table :items="_friends"
+             @context-changed="abortRequest"
              :fields="fields"
              :filter="filter"
              :current-page="pagination.currentPage"
@@ -77,13 +78,13 @@
 
       <template #empty>
         <div class="text-center text-primary my-2">
-          <strong class="ml-2">Non ci sono amici...</strong>
+          <strong class="ml-2">Non ci sono amici </strong>
         </div>
       </template>
 
       <template #emptyfiltered>
         <div class="text-center text-primary my-2">
-          <strong class="ml-2">Non ci sono amici filtrati ...</strong>
+          <strong class="ml-2">Non ci sono amici {{ searchIsOn ? 'filtrati': ''}} </strong>
         </div>
       </template>
 
@@ -96,8 +97,9 @@
 
 <script>
 
-import {Server} from '@api'
+import Server from '@api/server.info'
 import {mapGetters} from "vuex";
+import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "friends-section",
@@ -112,6 +114,10 @@ export default {
       return this.filter.state || this.filter.userID.value
     },
 
+    haveFriend(){
+      return this.pagination.totals > 0
+    },
+
     ...mapGetters({
       userIdentifier: 'session/userIdentifier'
     }),
@@ -119,6 +125,9 @@ export default {
   data(){
     return {
       isMobile: false,
+      pendingRequests: null,
+      idRequest: 'friend-all',
+
       filterOptions: {
         state: [
           { text: 'Seleziona stato della richiesta di amicizia', value: '' },
@@ -168,8 +177,12 @@ export default {
         state: ''
       }
     },
-
+    abortRequest(){
+      this.pendingRequests.cancel(this.idRequest, 'search friend abort.')
+    },
     _friends(ctx){
+      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+
       console.debug('ctx = ', ctx);
       let {perPage, currentPage} = ctx || {}
       let forPage = perPage || this.pagination.for_page
@@ -179,7 +192,7 @@ export default {
       let userID = ctx.filter.userID.value ? ctx.filter.userID : undefined
       let state = ctx.filter.state || undefined
 
-      return this.$store.dispatch('friendships/own',{ userID, state, pagination: { page, limit: forPage } })
+      return this.$store.dispatch('friendships/own',{ userID, state, pagination: { page, limit: forPage }, options})
                 .then(({data}) => {
                   console.debug('Friends = ',data.items, ', total = ', data.total)
                   this.pagination.totals = data.total
@@ -189,7 +202,10 @@ export default {
                   this.handleRequestErrors.friends.getFriendOf(err, {_forbiddenPage: true})
                   return []
                 })
-                .finally(() => this.pagination.isBusy = false)
+                .finally(() => {
+                  this.pagination.isBusy = false
+                  this.pendingRequests.remove(this.idRequest)
+                })
     },
 
     /* Listeners notification */
@@ -217,6 +233,7 @@ export default {
     }
   },
   created() {
+    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
     this.$bus.$on('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
 
@@ -224,6 +241,7 @@ export default {
     this.$bus.$on('user:delete', this.fetchData.bind(this))
   },
   beforeDestroy() {
+    this.pendingRequests.cancelAll('all friends cancel.')
     this.$bus.$off('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
     this.$bus.$off('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
 

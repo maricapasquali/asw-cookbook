@@ -21,16 +21,16 @@ export default {
   },
   computed: {
     _error(){
-      return  { status: 403, show: this.value.show, message: this.message }
+      return  { status: 403, show: this.value.show, message: this._message }
     },
-    message(){
+    _message(){
       switch (this.value.method){
         case 'get': return 'Non sei autorizzata/o ad accedere a questa/e risorsa/e.'
         case 'post': return 'Non sei autorizzata/o a creare questa/e risorsa/e.'
         case 'delete':return 'Non sei autorizzata/o a cancellare questa/e risorsa/e.'
       }
       if(['put', 'patch'].includes(this.method)) return 'Non sei autorizzata/o ad aggiornare questa/e risorsa/e.'
-      return 'Non sei autorizzata/o ad accedere a questa/e area.'
+      return this.value?.message || 'Non sei autorizzata/o ad accedere a questa/e area.'
     },
     method(){
       return this.value.method

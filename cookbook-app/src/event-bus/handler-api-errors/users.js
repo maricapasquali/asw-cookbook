@@ -54,8 +54,7 @@ export default function (bus){
     function getUser(err, info) {
         switch(err.response?.status) {
             case 400:
-                badRequest(err)
-                break
+                return true
             case 401:
                 unAuthenticated(err, info)
                 break

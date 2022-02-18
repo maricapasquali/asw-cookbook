@@ -1,4 +1,4 @@
-import {findAdminSocketIDs, findConnectedUserBy, getSocketIDs} from "../user";
+import {findAdminSocketIDs, findAnonymousSocketIDs, findConnectedUserBy} from "../users";
 import {IFood} from "../../models/schemas/food";
 import {create_notification} from "../../controllers/notification";
 
@@ -34,6 +34,6 @@ export function create(socket: any, food: IFood): void  {
         if(admins.length) socket.to(admins).emit('food:create', notification)
     }, err => console.error(err))
 
-    let otherConnectedUser = getSocketIDs(admins)
-    if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('food:create')
+    let anonymousUserSocketID = findAnonymousSocketIDs()
+    socket.broadcast.except([...admins, ...anonymousUserSocketID]).emit('food:create')
 }

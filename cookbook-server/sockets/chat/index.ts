@@ -1,6 +1,6 @@
 import Rooms from "../rooms";
 import * as _ from 'lodash'
-import {findConnectedUserBy} from "../user";
+import {findConnectedUserBy, checkAuthorization as isAuthorized} from "../users";
 
 type ChatRoomUser = { _id: string | null,  userID: string | 'Anonymous', isAdmin?: boolean }
 type ChatExtraInfo = { _id: string, name?: string, type: string, usersRole: any[] }
@@ -43,7 +43,7 @@ export default function (io: any, socket: any): void {
 
     // REAL TIME SIGNED/ADMIN USER
     const enterOrLeaveChat = ( mode: 'enter' | 'leave', chat: { _id: string, info: { name?: string, type: string , usersRole: any[] }, users: any[] }) => {
-        if(user._id !== null && chat.users.find(u => u._id === user._id)){
+        if(isAuthorized(socket) && user._id !== null && chat.users.find(u => u._id === user._id)){
             console.log(" -------------- " + mode + "-chat -------------- ")
             let room: string = '';
             switch (chat.info.type){
@@ -71,32 +71,36 @@ export default function (io: any, socket: any): void {
     socket.on('chat:leave', chat => enterOrLeaveChat('leave', chat))
 
     socket.on('chat:change:role', (chatID: string, userRole: {user: string, role: string}) => {
-        const openChat = openedChats.find(chat => chat.extra._id === chatID)
-        if(openChat){
-            const index = openChat.extra.usersRole.findIndex(r => r.user === userRole.user)
-            if(index !== -1) {
-                openChat.extra.usersRole.splice(index, 1, userRole)
-                console.debug(`chat ${chatID} => new users role = `, openChat.extra.usersRole)
-                socket.emit('chat:change:role:ok', chatID, userRole)
+        if(isAuthorized(socket)){
+            const openChat = openedChats.find(chat => chat.extra._id === chatID)
+            if(openChat){
+                const index = openChat.extra.usersRole.findIndex(r => r.user === userRole.user)
+                if(index !== -1) {
+                    openChat.extra.usersRole.splice(index, 1, userRole)
+                    console.debug(`chat ${chatID} => new users role = `, openChat.extra.usersRole)
+                    socket.emit('chat:change:role:ok', chatID, userRole)
+                }
             }
         }
     })
 
     socket.on('chat:messages', (room: string, messages: any[] | any): void => {
-        const _messages = Array.isArray(messages) ? messages: [messages]
-        socket.to(room).emit('messages', _messages)
+        if(isAuthorized(socket)){
+            const _messages = Array.isArray(messages) ? messages: [messages]
+            socket.to(room).emit('messages', _messages)
 
 
-        const chat = findSocketIdsInOpenedChat(room)
-        if(chat.sockets && chat.sockets.length) {
-            console.log('-------> Push messages to sockets = ', chat.sockets)
-            socket.to(chat.sockets).emit('push-messages', [{ info: chat.chatInfo, messages: _messages}])
+            const chat = findSocketIdsInOpenedChat(room)
+            if(chat.sockets && chat.sockets.length) {
+                console.log('-------> Push messages to sockets = ', chat.sockets)
+                socket.to(chat.sockets).emit('push-messages', [{ info: chat.chatInfo, messages: _messages}])
+            }
         }
     })
     socket.on('chat:typing', (room: string, data: any): void => {
-        socket.to(room).emit('typing', data)
+        if(isAuthorized(socket)) socket.to(room).emit('typing', data)
     })
     socket.on('chat:read', (room: string, messages: any[]): void => {
-        socket.to(room).emit('read-messages', messages)
+        if(isAuthorized(socket)) socket.to(room).emit('read-messages', messages)
     })
 }

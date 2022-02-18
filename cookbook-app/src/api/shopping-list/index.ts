@@ -1,5 +1,5 @@
 import {AxiosResponse} from "axios";
-import methods from "../methods";
+import * as methods from "../methods";
 
 
 export function createShoppingListPoint(user: string, data: object, token: string): Promise<AxiosResponse>  {
@@ -37,7 +37,7 @@ export function updateShoppingListPoint(user: string, point: string, data: objec
 }
 
 export function deleteShoppingListPoint(user: string, point: string, token: string): Promise<AxiosResponse>  {
-    return methods.delete('/users/:userID/shopping-list/:pointID', {
+    return methods.erase('/users/:userID/shopping-list/:pointID', {
         headers: {
             authorization: 'Bearer ' + token
         },

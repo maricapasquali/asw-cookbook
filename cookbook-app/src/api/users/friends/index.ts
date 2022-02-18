@@ -1,10 +1,12 @@
 import {AxiosResponse} from "axios";
 import * as methods from "../../methods";
 import {getHeaderBearerAuthorization} from "../../utils";
+import {OptionsRequestType, PaginationOptions} from "../../request-options";
 
-export function getFriendOf(user: string, token?: string, queryOptions?: {}, paginationOptions?: {page: number, limit: number}): Promise<AxiosResponse> {
+export function getFriendOf(user: string, token?: string, queryOptions?: {}, paginationOptions?: PaginationOptions, options?: OptionsRequestType): Promise<AxiosResponse> {
     return methods.get('/users/:id/friends', {
         headers: getHeaderBearerAuthorization(token),
+        cancelToken: options?.cancelToken,
         params: {
             ...paginationOptions,
             ...queryOptions

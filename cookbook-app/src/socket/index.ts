@@ -1,6 +1,6 @@
 import io, {Socket} from "socket.io-client";
 
-import {Server} from "../api";
+import Server from "../api/server.info";
 
 type SocketAuthorization = { key: string, userinfo?: { _id: string, userID: string, isAdmin?: boolean }}
 

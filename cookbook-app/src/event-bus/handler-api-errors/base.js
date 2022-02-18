@@ -1,3 +1,5 @@
+import {isAbortError} from "@api/request";
+
 export default function (bus){
 
     function printError(response) {
@@ -43,22 +45,24 @@ export default function (bus){
     }
 
     function serverError(errOfRequest, propagation = true) {
-        console.error(errOfRequest)
-        let error = 'Internal Server Error'
-        if (errOfRequest.response?.status >= 500) printError(errOfRequest.response)
-        else  error = errOfRequest?.response?.data?.description ||
-                        errOfRequest?.response?.statusText ||
-                        errOfRequest?.message ||
-                        'Unknown error'
+        if(!isAbortError(errOfRequest)) {
+            console.error(errOfRequest)
+            let error = 'Internal Server Error'
+            if (errOfRequest.response?.status >= 500) printError(errOfRequest.response)
+            else  error = errOfRequest?.response?.data?.description ||
+                errOfRequest?.response?.statusText ||
+                errOfRequest?.message ||
+                'Unknown error'
 
-        printError({status: 'Error', data: { description: error } } )
-        if(propagation)
-            bus.$emit('show:error:server-internal', {
-                status: errOfRequest?.response?.status,
-                message: error,
-                config: errOfRequest?.config
-            })
-        return error
+            printError({status: 'Error', data: { description: error } } )
+            if(propagation)
+                bus.$emit('show:error:server-internal', {
+                    status: errOfRequest?.response?.status,
+                    message: error,
+                    config: errOfRequest?.config
+                })
+            return error
+        }
     }
 
     return {

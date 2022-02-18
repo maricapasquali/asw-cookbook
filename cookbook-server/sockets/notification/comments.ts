@@ -1,4 +1,4 @@
-import {findAdminSocketIDs, findConnectedUserBy, getSocketIDs} from "../user";
+import {findAdminSocketIDs, findConnectedUserBy} from "../users";
 import {create_notification} from "../../controllers/notification";
 import {Notification} from "../../models/schemas/notification";
 import {RBAC} from "../../modules/rbac";
@@ -39,10 +39,7 @@ export function response(socket: any, comment: any, response: any): void {
         }, err => console.error(err))
     }
 
-    const exclude = []
-    if(toUser.info) exclude.push(toUser.info.socketID)
-    let otherConnectedUser = getSocketIDs(exclude)
-    if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('comment:response', { response: { data: response, comment: comment._id } })
+    socket.broadcast.except(toUser.info?.socketID).emit('comment:response', { response: { data: response, comment: comment._id } })
 }
 
 export function report(socket: any, comment: any, reporter?: {_id: string, userID: String}): void {
@@ -88,9 +85,5 @@ export function report(socket: any, comment: any, reporter?: {_id: string, userI
         if(admins.length) socket.to(admins).emit('comment:report', notification)
     }, err => console.error(err))
 
-    const excludeSocket = admins
-    if(reportedUser.info) excludeSocket.push(reportedUser.info.socketID)
-
-    let otherConnectedUser = getSocketIDs(excludeSocket)
-    if(otherConnectedUser.length) socket.to(otherConnectedUser).emit('comment:report', comment._id)
+    socket.broadcast.except([...admins, reportedUser.info?.socketID]).emit('comment:report', comment._id)
 }

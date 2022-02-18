@@ -2,18 +2,18 @@ import api from "@api"
 import {mapping} from "@api/users/friends/utils";
 
 export default {
-    of({rootState}, {userID, state, pagination}){
-       return api.friends.getFriendOf(userID, rootState.session.accessToken, {state}, pagination)
+    of({rootState}, {userID, state, pagination, options}){
+       return api.friends.getFriendOf(userID, rootState.session.accessToken, {state}, pagination, options)
            .then(response =>{
                response.data.items = response.data.items.map(f => mapping(f, userID))
                return response
            })
     },
     own({ commit, dispatch, rootState, rootGetters}, payload){
-        let { userID, state, pagination } = payload || {}
+        let { userID, state, pagination, options } = payload || {}
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.friends.getFriendOf(rootState.session.user._id, rootState.session.accessToken,{ userID, state }, pagination)
+        return api.friends.getFriendOf(rootState.session.user._id, rootState.session.accessToken,{ userID, state }, pagination, options)
             .then(response =>{
                 commit('set', response.data.items)
                 response.data.items = response.data.items.map(f => mapping(f, rootState.session.user._id))

@@ -3,6 +3,7 @@ import {AxiosResponse} from "axios";
 
 import * as _messages from './messages'
 import * as config from "../../../../env.config";
+import {OptionsRequestType} from "../request-options";
 
 const client_origin = config.client.origin
 
@@ -25,8 +26,9 @@ export function createChat(user: string, data: object, token: string): Promise<A
     })
 }
 
-export function getChats(user: string, token: string, query?: { 'unread-messages': boolean}): Promise<AxiosResponse> {
+export function getChats(user: string, token: string, query?: { 'unread-messages': boolean}, options?: OptionsRequestType): Promise<AxiosResponse> {
     return methods.get('/users/:id/chats', {
+        cancelToken: options?.cancelToken,
         headers: {
             authorization: 'Bearer ' + token
         },

@@ -10,7 +10,8 @@
 
 <script>
 
-import {Server} from "@api";
+import Server from "@api/server.info";
+import {mapGetters} from "vuex";
 
 export default {
   name: "avatar",
@@ -32,7 +33,6 @@ export default {
       _default: '',
       _image: '',
       _badge: false,
-      _onlines: []
     }
   },
   watch: {
@@ -40,10 +40,17 @@ export default {
      this.setImage(vl)
     },
     user(vl){
-      if(vl) this.onCheckUserState(vl)
+      this._setBadge(this._onlines, vl)
+    },
+    _onlines(val, old){
+      this._setBadge(val, this.user)
     }
   },
   computed: {
+    ...mapGetters({
+      _onlines: 'users/online',
+      _offlines: 'users/offline'
+    }),
     avatarId(){
       return 'avatar'+(`-${this.user}` || '')
     }
@@ -54,37 +61,38 @@ export default {
       this.$data._image = ''
       this.$emit('onNotFound')
     },
+
     setImage(vl){
         this.$data._image = vl ? Server.images.path(vl) : ''
     },
-    setOnline(vl){
-      console.debug(`State of \'${vl._id}\' is ${vl.online ? 'online': 'offline'}`)
-      if(vl.online) {
-        pushIfAbsent(this.$data._onlines, vl._id)
-        if(this.$data._onlines.length > 0) this.$emit('online', vl)
-      }
-      else if(vl.offline) {
-        removeIfPresent(this.$data._onlines, vl._id)
-        this.$emit('offline', vl, this.$data._onlines.length === 0)
-      }
-      console.debug('Onlines = ', JSON.stringify(this.$data._onlines))
-      this.$data._badge = this.$data._onlines.length > 0
-    },
 
-    onCheckUserState(vl){
-      if(Array.isArray(vl)) vl.forEach(u => this.onCheckUserState(u))
+    _setBadge(usersOnline, vl){
+      if( Array.isArray(vl) ){
+        let isOnline = vl.some(i => usersOnline.includes(i))
+        let isAllOffline = vl.every(i => !usersOnline.includes(i))
+        this.$data._badge = isOnline
+        vl.forEach(i =>{
+          let online = usersOnline.includes(i)
+          if(online) this.$emit('online', { _id: i })
+          let offline = this._offlines[i]
+          if(offline) this.$emit('offline', { _id: i, offline }, isAllOffline)
+          console.debug(`State of \'${i}\' is ${online ? 'online': 'offline'}`)
+        })
+      }
       else if(vl){
-        this.$socket.emit('check:user:state', vl)
-        this.$socket.on('user:online:' + vl, this.setOnline.bind(this))
-        this.$socket.on('user:offline:' + vl, this.setOnline.bind(this))
-      } else this.setOnline(false)
+        let isOnline = usersOnline.some(s => s === vl)
+        this.$data._badge = isOnline
+        if(isOnline) this.$emit('online', { _id: vl })
+        else if(this._offlines[vl]) this.$emit('offline', { _id: vl, offline: this._offlines[vl] }, true)
+        console.debug(`State of \'${vl}\' is ${isOnline ? 'online': 'offline'}`)
+      }
     }
   },
-  mounted() {
+  created() {
     this.$data._default = this.group ? 'people-fill': ''
     this.setImage(this.value)
-    if(this.user) this.onCheckUserState(this.user)
-  },
+    this._setBadge(this._onlines, this.user)
+  }
 }
 </script>
 

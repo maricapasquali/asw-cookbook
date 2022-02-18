@@ -24,6 +24,11 @@
         <b-navbar-nav class="ml-auto">
           <b-nav-item-dropdown v-if="isLoggedIn" right>
             <template #button-content>
+              <b-avatar badge-left badge-top variant="none"  badge-variant="light">
+                <template #badge>
+                  <span> {{totalNotRead}} <span class="sr-only">notifiche e messaggi non letti</span></span>
+                </template>
+              </b-avatar>
               <em>{{ username }}</em>
             </template>
             <b-dropdown-item :active="isAccountActive" :to="{name: 'p-user-account', params: {id: userIdentifier }}">Account</b-dropdown-item>
@@ -59,7 +64,6 @@
 
           </b-nav-item-dropdown>
           <b-nav-item v-else :to="{name: 'login'}"> Login </b-nav-item>
-
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
@@ -89,6 +93,10 @@ export default {
       unreadChatsMessages: 'chats/unreadChatsMessages',
       unreadNotifications:  'notifications/numberUnreadNotifications'
     }),
+
+    totalNotRead(){
+      return this.unreadNotifications + this.unreadChatsMessages
+    },
 
     isHomePageActive: function (){
       return this.$route.name === 'homepage'
@@ -153,4 +161,14 @@ export default {
 .navigator-bar.navigator-bar-in-logout {
   z-index: 2!important;
 }
+
+.nav-notification {
+  position: relative;
+  & .badge {
+    position: absolute;
+    top: -3px;
+    left: 12px;
+  }
+}
+
 </style>

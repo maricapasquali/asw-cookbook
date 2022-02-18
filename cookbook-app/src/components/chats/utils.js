@@ -1,6 +1,5 @@
 import * as _ from 'lodash'
-import  api from "@api";
-import {Server} from "@api";
+import Server from "@api/server.info";
 
 export function _lastAccess(chatType, users){
     let _lastAccess = '';
@@ -26,15 +25,17 @@ export function _baseInfoUser(chatInfo, users) {
         const otherUser = users.find(r => r.user?._id !== this.userIdentifier)
         if (otherUser) console.debug('Other user: base info = ', JSON.stringify(otherUser.user))
         return otherUser && {_id: otherUser.user?._id, name: otherUser.user.userID, img: otherUser.user.img}
-    } else
+    }
+    else {
         if(chatInfo.type === 'group' && this.isAdmin) {
             const otherUser = users.find(r => r.user.role !== 'admin')
             return otherUser && {_id: otherUser.user?._id, name: otherUser.user?.userID}
         }
         return {
-        _id: users.filter(r => r.user?._id !== this.userIdentifier).map(r => r.user?._id),
-        name: chatInfo.name,
-        img: chatInfo.img
+            _id: users.filter(r => r.user?._id !== this.userIdentifier).map(r => r.user?._id),
+            name: chatInfo.name,
+            img: chatInfo.img
+        }
     }
 }
 
