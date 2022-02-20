@@ -9,9 +9,8 @@ export function recipe(socket: any, recipe: any, like: ILike): void {
 
     const likerName = like.user ? like.user.userID : 'Anonimo'
     const otherInfo = {
-        recipe: recipe._id,
-        owner: recipe.owner._id,
-        liker: like.user ? like.user._id : undefined
+        recipe: { _id: recipe._id, owner: recipe.owner?._id },
+        liker: like.user?._id
     }
 
     if(like.user) {
@@ -45,10 +44,9 @@ export function comment(socket: any, comment: any, like: any): void {
     const likerName = like.user ? like.user.userID : 'Anonimo'
     const commentName = comment.user ? comment.user.userID : 'Anonimo'
     const otherInfo = {
-        recipe: comment.recipe._id,
-        comment: comment._id,
-        owner: comment.user ? comment.user._id : undefined,
-        liker: like.user ? like.user._id : undefined
+        recipe: { _id: comment.recipe._id, owner: comment.recipe.owner?._id },
+        comment: { _id: comment._id, owner: comment.user?._id },
+        liker: like.user?._id
     }
 
     if(like.user) {
