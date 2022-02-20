@@ -140,7 +140,7 @@ export default {
 
         case 'recipe':
           if(doc.otherInfo.recipe.deleted) return ''
-          if (doc.otherInfo.recipe.shared) return {
+          if (doc.otherInfo.recipe.shared || !doc.otherInfo.updaterUser) return {
             name: 'single-recipe',
             params: {id: doc.otherInfo.recipe.owner, recipe_id: doc.otherInfo.recipe._id},
             hash: doc.otherInfo.comment ? '#comment-' + doc.otherInfo.comment._id : undefined
@@ -148,17 +148,22 @@ export default {
           return {name: 'p-user-recipes', query: {tab: (this.userIdentifier === doc.otherInfo.recipe.owner ? 'saved':  'shared-in-chat') }}
 
         case 'comment':
-          return { name: 'single-recipe', params: { id: doc.otherInfo.recipe.owner, recipe_id: doc.otherInfo.recipe._id }, hash: '#comment-'+doc.otherInfo.comment._id }
+          return {
+            name: 'single-recipe',
+            params: { id: doc.otherInfo.recipe.owner._id, recipe_id: doc.otherInfo.recipe._id },
+            hash: '#comment-'+doc.otherInfo.comment._id
+          }
 
         case 'report':
           if(this.isAdmin) return { name: 'p-user-reports' , params: { id: this.userIdentifier } , hash: '#reported-comment-'+doc.otherInfo.comment._id}
           return { name: 'single-recipe', params: { id: doc.otherInfo.recipe.owner, recipe_id: doc.otherInfo.recipe._id }, hash: '#comment-'+doc.otherInfo.comment._id }
 
         case 'like':
-          if(doc.otherInfo.comment || doc.otherInfo.liker === this.userIdentifier) return { name: 'single-recipe',
-                                             params: { id: doc.otherInfo.owner, recipe_id: doc.otherInfo.recipe },
-                                             hash: '#comment-' + doc.otherInfo.comment}
-          else return doc.otherInfo.liker? { name: 'single-user', params: { id: doc.otherInfo.liker } } : ''
+          return {
+            name: doc.otherInfo.recipe.owner ? 'single-recipe' : 'recipe',
+            params: { id: doc.otherInfo.recipe.owner, recipe_id: doc.otherInfo.recipe._id },
+            hash: doc.otherInfo.comment ? '#comment-' + doc.otherInfo.comment._id : ''
+          }
 
         case 'user-info':
           return { name: 'p-user-account' , params: { id: this.userIdentifier } }

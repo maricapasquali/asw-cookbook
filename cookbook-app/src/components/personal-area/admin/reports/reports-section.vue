@@ -68,8 +68,6 @@
 </template>
 
 <script>
-
-import {scrollToRouterHash} from "@router";
 import {QueuePendingRequests} from "@api/request";
 
 export default {
@@ -98,8 +96,6 @@ export default {
     }
   },
   methods: {
-    scrollToRouterHash,
-
     reportId(id){
       return 'reported-comment-' +id
     },
@@ -208,9 +204,6 @@ export default {
     this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
 
     this.getReports()
-  },
-  updated() {
-    this.scrollToRouterHash()
   },
   beforeDestroy() {
     this.pendingRequests.cancelAll('all reported cancel.')

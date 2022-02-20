@@ -158,11 +158,6 @@ export default {
     this.routeWithoutNavigationBar = clone(_routeWithout)
     this.routeWithoutFooter = clone(_routeWithout)
 
-    this.$router.beforeEach((to, from, next) => {
-      if(!to.hash) window.scrollTo(0, 0)
-      return next()
-    })
-
     this.updateGUIListener()
 
     this.initialization()

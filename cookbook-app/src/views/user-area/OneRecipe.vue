@@ -190,7 +190,6 @@
 <script>
 
 import {mapGetters} from "vuex";
-import {scrollToRouterHash} from "@router";
 import NotFound from "../404";
 import Server from "@api/server.info";
 import {QueuePendingRequests} from "@api/request";
@@ -242,8 +241,6 @@ export default {
     }
   },
   methods: {
-    scrollToRouterHash,
-
     nameCategory(text){
       return this.getRecipeCategoryByValue(text)?.text || ''
     },
@@ -338,10 +335,6 @@ export default {
 
     this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
     this.$bus.$off('user:update:info', this.onUpdateUserInfoListeners.bind(this))
-  },
-  updated() {
-    console.log('Update one recipe page....')
-    this.scrollToRouterHash()
   }
 }
 </script>

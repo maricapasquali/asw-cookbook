@@ -40,6 +40,41 @@ export function removeIfPresent(v1: Array<any>, val: any,  predicate?: (v: any) 
     if(isPresent) v1.splice(v1.indexOf(val),1)
 }
 
+export function flatten(vector: Array<object>, field: string): Array<object> {
+   const mapper = (obj: object): Array<object> | object => {
+       if(!obj[field] || !obj[field].length) return obj;
+       return [obj, _.flatMapDeep(obj[field], mapper)];
+   }
+   return _.flatMapDeep(vector, mapper);
+}
+
+type VisitOptions = { flatterField: string, finderField: string, mapperField?: string, includeChild?: boolean }
+export function visitUntil(vector: Array<object>, child: object, options: VisitOptions): Array<object> {
+    const { flatterField, finderField, mapperField, includeChild } = options
+
+    const _visit = (vector1: Array<object>, _child: object, accumulator: Array<object> = []): Array<object> => {
+        let foundParent = vector1.find(v => v[flatterField]?.find(vv => vv[finderField] === _child[finderField]))
+        if(foundParent) {
+            accumulator.unshift(foundParent)
+            return _visit(vector1, foundParent, accumulator)
+        }
+        return accumulator
+    }
+
+    const _flattenVector = flatten(vector, flatterField)
+    if(child && !child[finderField]) {
+        let _copyChild = child
+        child = {}
+        child[finderField] = _copyChild
+    }
+    const _pathResult = _visit(_flattenVector, child || {})
+    if(child && includeChild){
+        const _child = _flattenVector.find(v => v[finderField] === child[finderField])
+        if(_child) _pathResult.push(_child)
+    }
+    return mapperField && _pathResult.some(v => v.hasOwnProperty(mapperField)) ? _pathResult.map(v => v[mapperField]) : _pathResult
+}
+
 export function dateFormat(timestamp: number, lang: string = 'it', seconds?: boolean ): string {
     return new Date(timestamp).toLocaleString([lang], {
         year: 'numeric',
