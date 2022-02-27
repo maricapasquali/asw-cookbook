@@ -584,7 +584,9 @@ export default {
       if(recipe){
         for (const tab of this.tabs){
           let index = tab.itemsRecipes.findIndex(t => t.recipe._id === recipe._id)
-          if(index !== -1) tab.itemsRecipes.splice(index, 1, this.remapping(recipe))
+          if(index !== -1 && !contain(tab.itemsRecipes.map(i => i.recipe), recipe)) {
+            tab.itemsRecipes.splice(index, 1, this.remapping(recipe))
+          }
         }
       }
     },

@@ -21,7 +21,7 @@ export default function (bus){
         }else {
             this.$bvToast.toast(data.content, options)
             this.$store.commit('notifications/add-unread')
-            bus.$emit('comment:report', data)
+            bus.$emit('comment:report', data.otherInfo.comment._id)
         }
     }
 

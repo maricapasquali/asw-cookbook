@@ -31,13 +31,24 @@ export function diff(v1: Array<any>, v2: Array<any> ): Array<any> {
 }
 
 export function pushIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => boolean): void {
-    const isAbsent: boolean = (predicate && !v1.find(predicate)) || (!predicate && !_.includes(v1, val))
+    let index: number =  _.findIndex(v1, predicate || val)
+    let isAbsent: boolean = index === -1
+    console.debug('pushIfAbsent: found ', !isAbsent)
     if(isAbsent) v1.push(val)
 }
 
-export function removeIfPresent(v1: Array<any>, val: any,  predicate?: (v: any) => boolean): void {
-    const isPresent: boolean = (predicate && v1.find(predicate)) || (!predicate && _.includes(v1, val))
-    if(isPresent) v1.splice(v1.indexOf(val),1)
+export function removeIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): void {
+    let index: number =  _.findIndex(v1, predicate)
+    let isPresent: boolean = index !== -1
+    console.debug('removeIfPresent: found ', isPresent)
+    if(isPresent) v1.splice(index,1)
+}
+
+export function contain(v1: Array<any>, val: any): boolean {
+    let index: number =  _.findIndex(v1, val)
+    let isPresent: boolean = index !== -1
+    console.debug('contain: found ', isPresent)
+    return isPresent
 }
 
 export function flatten(vector: Array<object>, field: string): Array<object> {

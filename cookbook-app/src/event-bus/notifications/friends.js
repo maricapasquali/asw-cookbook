@@ -13,7 +13,8 @@ export default function (bus){
                 to: { _id: notification.user },
                 state: "pending"
             })
-        bus.$emit('friendship:request:' + notification.otherInfo.from, notification) /* for b-friendship */
+        if(notification.otherInfo.from) bus.$emit('friendship:request:' + notification.otherInfo.from, notification) /* for b-friendship */
+        if(notification.otherInfo.to) bus.$emit('friendship:request:' + notification.otherInfo.to, notification) /* for b-friendship */
         bus.$emit('friendship:request:' + notification.user, notification) // for friend section
     }
 

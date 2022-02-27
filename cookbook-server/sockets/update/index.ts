@@ -1,6 +1,6 @@
-import {findAdminSocketIDs} from "../users";
 import {SignUp} from "../../models/schemas/user";
 import {User} from "../../models";
+import Rooms from "../rooms";
 
 export default function (io: any, socket: any): void {
     //USER
@@ -9,16 +9,11 @@ export default function (io: any, socket: any): void {
             .where('_id').equals(_id)
             .then(_user => {
                 if(_user){
-
                     const user = { userID: _user.credential.userID, role: _user.credential.role, ...(_user.toObject()) }
                     delete _user.credential
                     delete user.credential
-
-                    const admins = findAdminSocketIDs()
-                    if(admins.length) socket.to(admins).emit('user:signup', user)
-
-                    if(SignUp.State.isChecked(_user.signup)) socket.broadcast.except(admins).emit('user:checked', user)
-
+                    socket.to(Rooms.ADMINS).emit('user:signup', user)
+                    if(SignUp.State.isChecked(_user.signup)) socket.broadcast.except(Rooms.ADMINS).emit('user:checked', user)
                 } else console.error('User is not found.')
             }, err => console.error(err))
     })

@@ -21,7 +21,8 @@ export default {
   watch:{
     value(val, old){
       console.debug(`Like update = ${JSON.stringify(old)} -> ${JSON.stringify(val)}`)
-      this.makeLike = val.length > old.length
+      this._checkLikeOrUnlike()
+      console.debug(`I make like = makeLike`, this.makeLike)
     },
   },
   data(){
@@ -42,12 +43,7 @@ export default {
     }
   },
   mounted() {
-    if(this.userIdentifier) {
-      this.makeLike = this.value.find(l => l.user && l.user._id === this.userIdentifier) !== undefined
-    } else {
-      if(this.comment) this.anonymousJustLikeCommentInSession(this.comment._id).then(val => this.makeLike = val)
-      else this.anonymousJustLikeRecipeInSession(this.recipe._id).then(val => this.makeLike = val)
-    }
+   this._checkLikeOrUnlike()
   },
   methods: {
     ...mapActions({
@@ -95,25 +91,29 @@ export default {
       }
     },
 
+    _checkLikeOrUnlike(){
+      if(this.userIdentifier) {
+        this.makeLike = this.value.find(l => l.user && l.user._id === this.userIdentifier) !== undefined
+      } else {
+        if(this.comment) this.anonymousJustLikeCommentInSession(this.comment._id).then(val => this.makeLike = val)
+        else this.anonymousJustLikeRecipeInSession(this.recipe._id).then(val => this.makeLike = val)
+      }
+    },
+
     /* Listeners notification */
     onLikeRecipeListener(notification, like){
-      if(like && notification.otherInfo.recipe === this.recipe._id) this.value.push(like)
+      if(!this.comment && like && notification.otherInfo.recipe._id === this.recipe._id) pushIfAbsent(this.value, like)
+
     },
     onLikeCommentListener(notification, like){
-      if(like && this.comment && notification.otherInfo.comment === this.comment._id) this.value.push(like)
+      if(this.comment && like && notification.otherInfo.comment._id === this.comment._id) pushIfAbsent(this.value, like)
     },
     /* Listeners update */
     onUnLikeRecipeListener(recipeID, likeID) {
-      if(likeID && recipeID === this.recipe._id) {
-        let index = this.value.findIndex(l => l._id === likeID)
-        if(index !== -1) this.value.splice(index, 1)
-      }
+      if(!this.comment && likeID && recipeID === this.recipe._id) removeIfPresent(this.value, l => l._id === likeID)
     },
     onUnLikeCommentListener(commentID, likeID) {
-      if(this.comment && likeID && commentID === this.comment._id) {
-        let index = this.value.findIndex(l => l._id === likeID)
-        if(index !== -1) this.value.splice(index, 1)
-      }
+      if(this.comment && likeID && commentID === this.comment._id) removeIfPresent(this.value, l => l._id === likeID)
     },
     onDeletedUserListeners(id){
       this.value.filter(like => like.user && like.user._id === id).forEach(like => like.user = null)
