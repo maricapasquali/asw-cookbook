@@ -1,6 +1,7 @@
 import registerChatHandlers from './chat'
 import registerNotificationHandlers from './notification'
 import registerUpdateHandlers from './update'
+import registerUserHandlers from './user'
 
 import {Server} from 'socket.io'
 import * as https from "https";
@@ -29,6 +30,9 @@ export default function (server: http.Server | https.Server): void {
 
         // CHATs
         registerChatHandlers(io, socket)
+
+        // USERs
+        registerUserHandlers(io, socket)
 
         // DISCONNECT
         socket.on('disconnect', (reason) => {

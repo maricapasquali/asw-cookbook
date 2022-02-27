@@ -143,10 +143,7 @@ export default {
     onLogoutSubmit(){
       this.logoutProcessing = true
       this.logout()
-          .then(() => {
-            this.$router.replace({name: 'homepage'})
-            // console.debug('Store state: ', this.$store.state)
-          })
+          .then(() => this.$socket.emit('logout'))
           .catch(this.handleRequestErrors.session.logout)
           .finally(() => this.logoutProcessing = false)
     }
