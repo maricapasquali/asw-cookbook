@@ -1,25 +1,31 @@
 import Rooms from "../rooms";
-import {checkAuthorization as isAuthorized} from "../rooms/user"
+import {checkAuthorization as isAuthorized, userInformation} from "../rooms/user"
 import {
     pushInOpenedChat,
     popFromOpenedChat,
     findUsersInOpenedChat,
     ChatRoomUser,
-    changeUserRoleInChat
+    changeUserRoleInChat,
+    isInChat
 } from "../rooms/chat"
 
 export default function (io: any, socket: any): void {
     const user: ChatRoomUser = socket.handshake.auth.userinfo || { _id: null, userID: 'Anonymous' }
 
+    type ChatInfo = { _id: string, info: { name?: string, type: string , usersRole: any[] }, users: any[] }
+    const roomName = ( chat: ChatInfo ): string => {
+        let room: string = '';
+        switch (chat.info.type){
+            case "one": room = Rooms.CHAT_ONE + '-' + chat.users.map(u => u._id).join('-'); break;
+            case "group" : room = Rooms.CHAT_GROUP + '-' + chat.info.name + '-' + chat.users.map(u => u._id).join('-'); break;
+        }
+        return room
+    }
     // REAL TIME SIGNED/ADMIN USER
-    const enterOrLeaveChat = ( mode: 'enter' | 'leave', chat: { _id: string, info: { name?: string, type: string , usersRole: any[] }, users: any[] }) => {
+    const enterOrLeaveChat = ( mode: 'enter' | 'leave', chat: ChatInfo) => {
         if(isAuthorized(socket) && user._id !== null && chat.users.find(u => u._id === user._id)){
             console.log(" -------------- " + mode + "-chat -------------- ")
-            let room: string = '';
-            switch (chat.info.type){
-                case "one": room = Rooms.CHAT_ONE + '-' + chat.users.map(u => u._id).join('-'); break;
-                case "group" : room = Rooms.CHAT_GROUP + '-' + chat.info.name + '-' + chat.users.map(u => u._id).join('-'); break;
-            }
+            let room: string = roomName(chat)
             switch (mode){
                 case "enter": {
                     socket.join(room);
@@ -38,7 +44,9 @@ export default function (io: any, socket: any): void {
     }
 
     socket.on('chat:enter', chat => enterOrLeaveChat('enter', chat))
-    socket.on('chat:leave', chat => enterOrLeaveChat('leave', chat))
+    socket.on('chat:leave', chat => {
+        if(isInChat(roomName(chat), io, socket.id)) enterOrLeaveChat('leave', chat)
+    })
 
     socket.on('chat:change:role', (chatID: string, userRole: {user: string, role: string}) => {
         if(isAuthorized(socket)){
@@ -63,7 +71,17 @@ export default function (io: any, socket: any): void {
     socket.on('chat:typing', (room: string, data: any): void => {
         if(isAuthorized(socket)) socket.to(room).emit('typing', data)
     })
+
     socket.on('chat:read', (room: string, messages: any[]): void => {
-        if(isAuthorized(socket)) socket.to(room).emit('read-messages', messages)
+        if(isAuthorized(socket)) {
+            socket.to(room).emit('read-messages', messages)
+
+            const {chatInfo} = findUsersInOpenedChat(room, messages.map(u => u.sender._id))
+            let readUser = userInformation(socket)
+            if(readUser.id && chatInfo) {
+                console.log('--> Read messages = ', messages)
+                socket.to(readUser.id).emit('read-messages', [{ info: chatInfo, messages }])
+            }
+        }
     })
 }
