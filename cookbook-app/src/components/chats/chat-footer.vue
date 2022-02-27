@@ -5,7 +5,7 @@
         <attachment-preview v-model="attachmentPreview"/>
       </b-col>
     </b-row>
-    <b-row align-v="center">
+    <b-row align-v="start">
       <b-col cols="2" class="text-center pr-0">
 
         <chat-attachments :items="attachmentsItems" :disabled="disabled" :searchField="attachmentSearchField" @attachment-click="onAttachmentClick">
@@ -20,10 +20,10 @@
       </b-col>
       <b-col class="px-0" cols="8">
               <b-form-group label-for="text-area-sender-mex" label="Mio Messaggio da inviare" label-sr-only class="m-0">
-                <b-form-textarea id="text-area-sender-mex" placeholder="Inserisci testo" rows="3"
+                <b-form-textarea id="text-area-sender-mex" placeholder="Inserisci testo"
                                  v-model="text" @input="typing"
                                  @keydown.13.prevent
-                                 @keydown.enter="sendText" no-resize :disabled="disabled"/>
+                                 @keydown.enter="sendText"  :disabled="disabled"/>
               </b-form-group>
       </b-col>
       <b-col cols="2" class="text-center pl-0" >
@@ -119,4 +119,7 @@ export default {
 </script>
 
 <style scoped>
+#text-area-sender-mex{
+  min-height: 62px;
+}
 </style>

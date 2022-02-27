@@ -15,7 +15,7 @@ import {MongooseValidationError} from "../../modules/custom.errors";
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
 import * as _ from "lodash"
-import {decodeToArray, randomString} from "../../modules/utilities";
+import {decodeToArray, randomString, isTrue} from "../../modules/utilities";
 import * as path from "path";
 
 
@@ -144,10 +144,19 @@ export function create_chat(req, res) {
     }
 }
 
+function remapWithoutMessages(chat: IChat, userID: string): any {
+    let _chat: any = chat.toObject()
+    _chat.unreadMessages = chat.messages.filter(m => m.sender?._id != userID).filter(m => !m.read.find(r => r.user?._id == userID)).length
+    _chat.started = chat.messages.length > 0
+    delete _chat.messages
+    // console.debug('remapped chat = ', _chat)
+    return _chat
+}
+
 export function list_chat(req, res) {
     const {id} = req.params
     let  {page, limit, name} = req.query
-    let unreadMessages = req.query['unread-messages']
+    let noMessages = req.query['no-messages']
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     const user = getRestrictedUser(req, res, { operation: Operation.RETRIEVE, subject: Subject.CHAT, others: decodedToken => decodedToken._id !== id })
     if(user) {
@@ -176,26 +185,19 @@ export function list_chat(req, res) {
         Promise.all([Chat.find(filtersGroup).populate(ChatPopulationPipeline), Chat.find(filtersOne).populate(pipelinePopulatedChat)])
                .then(results => {
                    let [chatGroup, chatOne] = results
-                   const _chatOne = chatOne.filter(c => c.users.some(u => u.user && u.user._id != id))
-                   chatGroup.push(..._chatOne)
-                   chatGroup.sort((c1, c2) => {
+
+                   let _chats: any[] = chatGroup
+                   _chats.push(...(chatOne.filter(c => c.users.some(u => u.user && u.user._id != id))))
+                   _chats.sort((c1, c2) => {
                        const c1LastMessageIndex = c1.messages.length - 1, c2LastMessageIndex = c2.messages.length - 1,
                              c1Message = c1.messages[c1LastMessageIndex], c2Message = c2.messages[c2LastMessageIndex],
                              c1Timestamp = c1Message ? c1Message.timestamp : 0, c2TimeStamp = c2Message ? c2Message.timestamp : 0
                        return c2TimeStamp - c1Timestamp
                    })
 
-                   if(Boolean(unreadMessages) && JSON.parse(unreadMessages)) {
-                       chatGroup = chatGroup.filter(chat => chat.messages.length > 0)
-                                            .map(chat => {
-                                                chat.messages = chat.messages
-                                                                    .filter(m => m.sender?._id != user._id)
-                                                                    .filter(m => !m.read.find(r => r.user?._id == user._id))
-                                               // console.debug('messages uread = ',chat.messages )
-                                               return chat
-                                            })
-                   }
-                   return res.status(200).json(paginationOf(chatGroup, page && limit ? { page: +page, limit: +limit } : undefined))
+                   if(isTrue(noMessages)) _chats = _chats.map(chat => remapWithoutMessages(chat, user._id))
+
+                   return res.status(200).json(paginationOf(_chats, page && limit ? { page: +page, limit: +limit } : undefined))
                }, err => res.status(500).json({ description: err.message}))
     }
 }
@@ -204,6 +206,8 @@ export function chat(req, res) {
     const {id, chatID} = req.params
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
+    let noMessages = req.query['no-messages']
+
     const user = getRestrictedUser(req, res, { operation: Operation.RETRIEVE, subject: Subject.CHAT, others: decodedToken => decodedToken._id !== id })
     if(user) {
         Chat.findOne()
@@ -211,7 +215,7 @@ export function chat(req, res) {
             .where('_id').equals(chatID)
             .then(chat => {
                 if(!chat) return res.status(404).json({description: 'Chat is not found.'})
-                return res.status(200).json(chat)
+                return res.status(200).json(isTrue(noMessages) ? remapWithoutMessages(chat, user._id) : chat )
             }, err => res.status(500).json({ description: err.message }))
     }
 }

@@ -7,6 +7,7 @@ import ObjectId = Types.ObjectId;
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
 import {ChatPopulationPipeline, ChatPopulationPipelineSelect} from "../../../models/schemas/chat";
+import {isTrue} from "../../../modules/utilities";
 
 export function send_message(req, res) {
     const {id, chatID} = req.params
@@ -81,7 +82,22 @@ export function read_messages(req, res) {
     }
 }
 
-export function list_messages(req, res) { res.status(501).json('List of Messages') }
+export function list_messages(req, res) {
+    const {id, chatID} = req.params
+    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+    if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
+
+    const user = getRestrictedUser(req, res, { operation: Operation.RETRIEVE, subject: Subject.MESSAGE, others: decodedToken => decodedToken._id !== id })
+    if(user) {
+        Chat.findOne()
+            .where('users.user').equals(ObjectId(user._id))
+            .where('_id').equals(chatID)
+            .then(chat => {
+                if(!chat) return res.status(404).json({description: 'Chat is not found.'})
+                return res.status(200).json(chat.messages)
+            }, err => res.status(500).json({ description: err.message }))
+    }
+}
 
 export function one_message(req, res) { res.status(501).json('GET Message') }
 export function change_content_message(req, res) { res.status(501).json('Message content has changed') }

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <chat ref="chat" v-model="chat"/>
+    <chat ref="chat" v-model="chat" :from-link="fromLink"/>
     <div v-if="unAuthorized"><not-authorized-area/></div>
     <div v-else-if="notFound"><not-found asset="chat" /></div>
   </div>
@@ -27,11 +27,22 @@ export default {
     ...mapGetters({
       isLoggedIn: 'session/isLoggedIn'
     }),
+    chatID(){
+      return this.$route.params.chat_id
+    },
+    fromLink(){
+      return this.$route.params.chat_id != null
+    }
+  },
+  watch: {
+    value(vl){
+      this.getChat()
+    },
   },
   methods: {
     getChat(){
       if(this.isLoggedIn) {
-        this.$store.dispatch('chats/one', this.$route.params.chat_id)
+        this.$store.dispatch('chats/one', {chatID: this.chatID })
             .then(({data}) => {
               this.chat = data
               console.debug(this.chat)
@@ -44,15 +55,15 @@ export default {
                     this.$store.dispatch('reset')
                     this.$router.replace({ name: 'login' });
                   }
-                  break;
+                    break;
                   case 403: this.unAuthorized = true
                     break;
                   case 404: {
                     this.$refs.chat.$el.remove()
                     this.notFound = true
                   }
-                  break
-                  //TODO: HANDLER ERROR GET CHAT
+                    break
+                    //TODO: HANDLER ERROR GET CHAT
                   default: break
                 }
               }else console.error(err)

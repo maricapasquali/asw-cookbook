@@ -1,5 +1,5 @@
 <template>
-  <b-container class="my-4 px-4">
+  <b-container fluid class="my-4 px-4">
     <b-row class="mb-5" align-h="center" v-if="!isAdmin">
       <b-col class="text-left px-0">
         <b-button id="chat-with-admins" variant="primary" @click="chatWithAdmin"> <b-icon-chat-fill class="mr-1"/> Chatta con amministartori</b-button>
@@ -23,11 +23,40 @@
         <b-tooltip target="new-chat-btn"> Nuova chat </b-tooltip>
       </b-col>
     </b-row>
-    <b-row cols="1" align-h="center">
-      <chat-item v-if="processing" v-for="i in skeletons" :key="i" skeleton/>
-      <chat-item :ref="chatItemRef(chat._id)" class="col" v-for="chat in writeableChats" :key="chat._id"
-                 :value="chat" @remove-chat="openDeleteModal"/>
-      <p v-if="!processing && writeableChats.length===0">Nessuna chat aperta.</p>
+    <b-row cols="1" cols-sm="1" cols-md="2">
+      <b-col v-if="!processing && writeableChats.length===0" cols="12">
+        <p v-if="isSearchModeChat">Nessuna chat trova.</p>
+        <p v-else>Nessuna chat aperta.</p>
+      </b-col>
+
+      <b-col cols="12" sm="12" md="12" lg="4" class="px-0">
+        <b-navbar toggleable="lg" class="w-100 px-0">
+          <b-navbar-toggle ref="btn-chats-navigator" target="chat-items-navigator">
+            <template #default="{ expanded }">
+              <b-icon v-if="expanded" icon="chevron-bar-up"></b-icon>
+              <b-icon v-else icon="chevron-bar-down"></b-icon>
+            </template>
+          </b-navbar-toggle>
+          <b-collapse id="chat-items-navigator" class="chat-items-container" is-nav>
+            <b-navbar-nav class="ml-auto">
+              <b-list-group>
+                <b-list-group-item  v-if="processing" v-for="i in skeletons" :key="i">
+                  <chat-item skeleton/>
+                </b-list-group-item>
+                <b-list-group-item  button v-for="chat in started" :key="chat._id" :active="_iSelectedChat(chat)" @click="_clickItem(chat)">
+                  <chat-item :ref="chatItemRef(chat._id)" class="nav-item" :value="chat" @remove-chat="openDeleteModal" @redirectOtherTab="redirectOtherTab" />
+                </b-list-group-item>
+              </b-list-group>
+            </b-navbar-nav>
+          </b-collapse>
+        </b-navbar>
+      </b-col>
+
+      <b-col v-if="showChatContainer && selectedChat" class="px-0" cols="12" sm="12" md="12" lg="8">
+        <chat v-model="selectedChat" @onReadMessages="onReadMessages" />
+      </b-col>
+      <b-col v-else-if="showChatContainer" class="chat-container"  cols="12" sm="12" md="12" lg="8"/>
+
     </b-row>
 
     <!-- NEW CHAT MODEL -->
@@ -86,6 +115,8 @@ export default {
       pendingRequests: null,
       processing: true,
 
+      selectedChat: null,
+
       searchChat: '',
       chats: [],
       newChat: false,
@@ -100,6 +131,9 @@ export default {
     }
   },
   computed: {
+    showChatContainer(){
+      return !this.isSearchModeChat || (this.isSearchModeChat && this.writeableChats.length)
+    },
     ...mapGetters({
       userIdentifier: 'session/userIdentifier',
       isAdmin: 'session/isAdmin'
@@ -108,19 +142,33 @@ export default {
       return this.searchFriend.trim().length ? this.friends.filter(f => f.user.userID.toLowerCase().startsWith(this.searchFriend.toLowerCase()))
                                              : this.friends
     },
+    isSearchModeChat(){
+      return this.searchChat.trim().length > 0
+    },
     writeableChats(){
       const _writeableChats = this.chats.filter(chat => chat.users.find(r => r.user?._id === this.userIdentifier && r.role !== 'reader'))
       console.debug('writeableChats ', _writeableChats)
-      return this.searchChat.trim().length ?
-          _writeableChats.map(chat => ({name: this._baseInfoUser(chat.info, chat.users).name, chat}))
+      return this.isSearchModeChat ?
+          _writeableChats.filter(chat => chat.started).map(chat => ({name: this._baseInfoUser(chat.info, chat.users).name, chat}))
                          .filter(o => o.name && o.name.toLowerCase().startsWith(this.searchChat.toLowerCase()))
                          .map(o => o.chat)
           : _writeableChats
+    },
+    started(){
+      return this.writeableChats.filter(chat => chat.started)
     }
   },
   methods: {
     chatItemRef(chatID){
       return 'chat-' + chatID
+    },
+    _clickItem(item){
+      this.selectedChat = item
+      let element = this.$refs['btn-chats-navigator']?.$el
+      if(element && !element.classList.contains('collapsed')) element.click()
+    },
+    _iSelectedChat(chat){
+      return this.selectedChat?._id === chat._id
     },
     _isChatOne,
     _isChatGroup,
@@ -131,45 +179,63 @@ export default {
       let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
       if(this.isAdmin){
         this.$store.dispatch('users/all', {options})
-                 .then(({data}) => {
-                   this.friends = data.items.filter(u => u.signup === 'checked')
-                                            .map(user => ({user: {_id: user._id, userID: user.userID, img: user.information.img, country: user.information.country} }))
-                   console.debug('users => ', this.friends)
-                 })
-                //TODO: HANDLER ERROR GET FRIEND IN CHATS SECTION
-                .catch(err => console.error(err))
-                .then(() =>  this.pendingRequests.remove(idRequest))
+            .then(({data}) => {
+              this.friends = data.items.filter(u => u.signup === 'checked')
+                  .map(user => ({user: {_id: user._id, userID: user.userID, img: user.information.img, country: user.information.country} }))
+              console.debug('users => ', this.friends)
+            })
+            //TODO: HANDLER ERROR GET FRIEND IN CHATS SECTION
+            .catch(err => console.error(err))
+            .then(() =>  this.pendingRequests.remove(idRequest))
       }else {
         this.$store.dispatch('friendships/own', { state: 'accepted', options })
-           .then(({data}) => console.debug('friendships/own = ', data.items))
+            .then(({data}) => {
+              this.friends = data.items
+              console.debug('friendships => ', this.friends)
+            })
             //TODO: HANDLER ERROR GET FRIEND IN CHATS SECTION
-           .catch(err => console.error(err))
-           .then(() =>  this.pendingRequests.remove(idRequest))
+            .catch(err => console.error(err))
+            .then(() =>  this.pendingRequests.remove(idRequest))
       }
     },
 
     getChats(){
       let idRequest = 'chats-own'
       let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
-      this.$store.dispatch('chats/own', {options})
-         .then(({data}) => {
+      this.$store.dispatch('chats/own-without-message', {options})
+          .then(({data}) => {
             this.chats = data.items
             console.log('Chats = ', this.chats)
             this.chats.forEach(chat => console.debug(chat.users.map(r => r.user?.role)))
-         })
-         //TODO: HANDLER ERROR GET CHATS
-         .catch(err => console.error(err))
-         .finally(() => {
-           this.processing = false
-           this.pendingRequests.remove(idRequest)
-         })
+          })
+          //TODO: HANDLER ERROR GET CHATS
+          .catch(err => console.error(err))
+          .finally(() => {
+            this.processing = false
+            this.pendingRequests.remove(idRequest)
+          })
     },
 
+    onReadMessages({chatID, readMessages}){
+      let chat = this.chats.find(c => c._id === chatID)
+      if(chat && chat.unreadMessages) {
+        chat.unreadMessages-=readMessages
+      }
+    },
+    redirectOtherTab(chat){
+      console.debug('Redirect in other TAB')
+    },
     /* ADD CHAT */
     _goToChat,
+    _remapNewChat(chat){
+        let _chat = {...chat,  unreadMessage: 0, started: false }
+        delete _chat.messages
+        console.debug('Remapped chat = ', _chat)
+        return _chat
+    },
     addChat(chat){
       console.debug('Add New Chat = ', chat)
-      this.chats.push(chat)
+      this.chats.push(this._remapNewChat(chat))
     },
     chatWithAdmin(){
       console.debug('GO TO CHAT with ADMIN ')
@@ -191,6 +257,7 @@ export default {
           show: true,
           chat: {index: index, _id: chat._id, name: chatItem.name}
         }
+        if(chat._id === this.selectedChat) this.selectedChat = false
       }
     },
     onRemoveChat(){
@@ -211,16 +278,34 @@ export default {
       const index = this.chats.findIndex(chat => chat._id === chatInfo._id)
       if(index !== -1){
         const chat = this.chats[index]
-        chat.messages.push(message)
-        this.chats.unshift(this.chats.splice(index, 1)[0])
+        if(this.selectedChat._id === chat._id){
+          this.$store.commit('chats/remove-unread')
+        } else {
+          chat.unreadMessages += 1
+          this.chats.unshift(this.chats.splice(index, 1)[0])
+        }
       } else {
-        this.$store.dispatch('chat', chatInfo._id)
-           .then(({data}) => {
+        this.$store.dispatch('chats/one-without-messages', {chatID: chatInfo._id})
+            .then(({data}) => {
               this.chats.unshift(data)
               console.debug(data.users.map(r => r.user.role))
            })
            //TODO: HANDLER ERROR GET CHAT chatInfo._id
            .catch(err => console.error(err))
+      }
+    },
+    onListenersReadMessages({messages, info}){
+      console.log('Read messages ', messages ,' of chat ', info)
+      if(this.selectedChat._id !== info._id) {
+        const index = this.chats.findIndex(chat => chat._id === info._id)
+        if(index !== -1){
+          const chat = this.chats[index]
+          messages.forEach(() => {
+            this.$store.commit('chats/remove-unread')
+            chat.unreadMessages -= 1
+            console.log('chat.unreadMessages ', chat.unreadMessages )
+          })
+        }
       }
     },
     onListenerChangeRole(chatID, userRole){
@@ -293,6 +378,7 @@ export default {
     this.getChats()
 
     this.$bus.$on('push-message', this.onListenersPushMessage.bind(this))
+    this.$bus.$on('read-message', this.onListenersReadMessages.bind(this))
     this.$bus.$on('chat:change:role', this.onListenerChangeRole.bind(this))
 
     this.$bus.$on('user:update:info', this.onUpdateUserInChatSection.bind(this))
@@ -303,6 +389,7 @@ export default {
   beforeDestroy() {
     this.pendingRequests.cancelAll('all chats cancel.')
     this.$bus.$off('push-message', this.onListenersPushMessage.bind(this))
+    this.$bus.$off('read-message', this.onListenersReadMessages.bind(this))
     this.$bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))
 
     this.$bus.$off('user:update:info', this.onUpdateUserInChatSection.bind(this))
@@ -314,12 +401,40 @@ export default {
 </script>
 
 <style  lang="scss" scoped>
+
+$height_items_chat: 700px;
+
+.chat-items-container {
+  height: $height_items_chat;
+  overflow-y: auto;
+
+  & .chat-item.selected {
+    background-color: #b8c6ff;
+  }
+}
+
+.chat-container {
+  background-color: $background-color-chat;
+  border-radius: 1.25rem;
+  height: $height_items_chat;
+
+}
+
+#chat-items-navigator {
+   padding: 2px;
+   & > ul {
+    margin: 0!important;
+    flex-direction: column!important;
+    height: 100%;
+    width: 100%;
+  }
+}
 .friends-list {
 
   .friend-item {
     border: 1px solid lightgrey;
     border-radius: 0.25rem;
-    box-shadow: 0px 0px 5px 0px $overlay;
+    box-shadow: 0 0 5px 0 $overlay;
     cursor: pointer;
   }
 }

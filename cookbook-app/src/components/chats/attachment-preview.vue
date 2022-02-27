@@ -25,7 +25,7 @@
           </b-col>
           <b-col :md="item.img ? 6: 12">
             <b-card-body :title="item.title" class="preview-description">
-              <b-card-text v-if="item.description"> {{item.description | length(250) }} </b-card-text>
+              <b-card-text text-tag="div" v-if="item.description"> {{item.description | length(250) }} </b-card-text>
               <div v-else>
                 <span v-if="item.link">{{item.link}}</span>
                 <div v-else>

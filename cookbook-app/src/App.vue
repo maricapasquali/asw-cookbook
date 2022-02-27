@@ -150,6 +150,7 @@ export default {
 
     registerChatMessageListener(){
       this.$socket.on('push-messages', this.$bus.chat.pushMessages.bind(this))
+      this.$socket.on('read-messages', this.$bus.chat.readMessages.bind(this))
     },
 
     registerSessionListener(){

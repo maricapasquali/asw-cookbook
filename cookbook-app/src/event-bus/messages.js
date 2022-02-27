@@ -1,4 +1,10 @@
 export default function (bus){
+    const toastIdMessages = 'push-message'
+
+    const hasInRouteOfChat = (route) => {
+        return ['chat', 'p-user-chats'].includes(route.name)
+    }
+
     /* TODO: RIGUARDARE */
     function pushMessages(chats){ //[{info, messages}]
 
@@ -28,17 +34,31 @@ export default function (bus){
                     const dest = chat.info.type === 'one' || isAdmin ? 'da ' + message.sender.userID :
                         chat.info.type === 'group' ? 'in ' + chat.info.name : ''
 
-                    if(! ['chat', 'p-user-chats'].includes(this.$route.name) ) {
-                        this.$bvToast.toast('Hai ricevuto un nuovo messaggio ' + dest, { title: 'Messaggio', solid: true, variant: 'info', })
-                    }
+                    if(hasInRouteOfChat(this.$route) ) bus.$emit('push-message', chat.info, message)
+                    else this.$bvToast.toast('Hai ricevuto un nuovo messaggio ' + dest, { id: toastIdMessages, title: 'Messaggio', solid: true, variant: 'info', })
+
                     store.commit('chats/add-unread')
-                    bus.$emit('push-message', chat.info, message)
+
                 })
             })
 
     }
 
+    function readMessages(chats){ //[{info, messages}]
+        const store = this.$store
+        console.debug('Read messages ', chats)
+        chats.filter(chat => chat.messages && chat.messages.length > 0)
+             .forEach(chat => {
+                 if(hasInRouteOfChat(this.$route)) bus.$emit('read-message', chat)
+                 else {
+                    this.$bvToast.hide(toastIdMessages)
+                    chat.messages.forEach(() => store.commit('chats/remove-unread'))
+                 }
+             })
+    }
+
     return {
-        pushMessages
+        pushMessages,
+        readMessages
     }
 }

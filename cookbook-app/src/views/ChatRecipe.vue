@@ -16,11 +16,12 @@ export default {
   },
   methods: {
     _getChat(){
-      this.$store.dispatch('chats/one', this.$route.params.chat_id)
+      this.$store.dispatch('chats/one', {chatID: this.$route.params.chat_id})
          .then(({data}) => {
             //console.debug('Users chat => ', data.users.map(r => r.user.userID).join(', '))
             this._getRecipe()
          })
+          //TODO: HANDLER ERROR GET CHAT
          .catch(err => {
            console.error(err.response)
            this.unauthorized = true
@@ -28,8 +29,9 @@ export default {
     },
     _getRecipe(){
       let {recipe_id} = this.$route.params;
-      this.$store.dispatch('recipes/one', recipe_id)
+      this.$store.dispatch('recipes/one', {recipeID: recipe_id})
          .then(({data}) => this.recipe = data)
+          //TODO: HANDLER ERROR GET ONE RECIPE (SHARED-IN-CHAT)
          .catch(err => {
            console.error(err.response)
            this.recipe = null
