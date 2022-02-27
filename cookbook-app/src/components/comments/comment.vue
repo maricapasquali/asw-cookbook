@@ -280,11 +280,11 @@ export default {
     },
 
     /* Listeners notification */
-    renderReportedComment(notification){
-      if(this.comment._id === notification.otherInfo.comment) this.comment.reported = true
+    renderReportedComment(commentID){
+      if(this.comment._id === commentID) this.comment.reported = true
     },
     renderResponseComment(notification, response){
-      if(response && this.comment._id === response.comment) this.comment.responses.push(response.data)
+      if(response && this.comment._id === response.comment) pushIfAbsent(this.comment.responses, response.data)
     },
 
     /* Listeners update */

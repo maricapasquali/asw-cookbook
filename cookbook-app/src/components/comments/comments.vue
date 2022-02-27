@@ -87,7 +87,7 @@ export default {
 
     /* Listeners notification */
     onAddCommentListener(notification, comment){
-      if(comment) this.value.push(comment)
+      if(comment) pushIfAbsent(this.value, comment)
     }
   },
   created() {
