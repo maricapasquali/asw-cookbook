@@ -53,6 +53,7 @@ import ChatTyping from '@components/chats/chat-typing'
 
 import ChatItem from '@components/personal-area/chats/chat-item'
 import ChatsSection from '@components/personal-area/chats/chats-section'
+import ChatFriendItem from '@components/personal-area/chats/chat-friend-item'
 
 import FoodForm from "@components/foods/food-form"
 import FoodFinder from "@components/foods/food-finder"
@@ -129,6 +130,7 @@ const components = {
 
     ChatItem,
     ChatsSection,
+    ChatFriendItem,
 
     PreviewRecipeTutorial,
     PreviewRecipeImage,

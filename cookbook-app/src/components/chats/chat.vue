@@ -2,7 +2,7 @@
   <b-container v-if="isLoggedIn" :fluid="!fromLink">
     <b-row cols="1" :class="classContainer">
       <b-col>
-        <b-row cols="1" class="chat px-0" >
+        <b-row cols="1" class="chat h-100 px-0" >
           <b-col ref="chat-header" class="messages-header text-center px-0">
             <b-col>
               <chat-header v-model="value" @on-user-enter="enterChat" @on-user-leave="leaveChat({leaveUser: $event})"/>
@@ -15,7 +15,7 @@
           <b-col class="messages-container" >
             <b-container id="messages" ref="messages"  @scroll="_scrollListener" :fluid="!fromLink">
               <b-row v-for="mex in messages" :key="mex._id" :class="_classSingleMessage(mex)" cols="1">
-                <b-col cols="12" sm="9" md="6">
+                <b-col cols="12" sm="9" md="8">
                   <chat-message :value="mex" :group="isChatGroup" @resend="resendMessage" :attachment-api="getAttachmentsInfo" />
                 </b-col>
               </b-row>
@@ -71,11 +71,12 @@
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
-import ChatUtils from '@components/chats/utils';
+import ChatMixins from '@components/mixins/chat.mixins'
 import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "chat",
+  mixins: [ChatMixins],
   props: {
     value: Object | Boolean,
     fromLink: Boolean
@@ -102,6 +103,13 @@ export default {
       deep: true,
       handler(val, old){
         if(!old) this.$nextTick(() => this._goToTheBottom())
+
+        if(val?.length === 1){
+          console.log('CHAT IS STARTED')
+          this.value.started = true
+          this.$emit('start')
+        }
+
         if(old && this.amInReading) this._goToTheBottom('smooth')
       }
     },
@@ -131,6 +139,7 @@ export default {
 
     classContainer(){
       return {
+        'h-100': true,
         'align-items-center vh-100': this.fromLink,
       }
     },
@@ -175,6 +184,9 @@ export default {
     isChatGroup(){
       return this.value && this._isChatGroup(this.value.info)
     },
+    isChatOne(){
+      return this.value && this._isChatOne(this.value.info)
+    },
 
     amINotReaderUser(){
       return this.value && this.value.users.find(u => u.user?._id === this.userIdentifier && u.role !== 'reader')
@@ -194,16 +206,19 @@ export default {
 
   methods: {
     _chatInfo(val){
-      return {
-        _id: val._id,
-        info: {
-          type:val.info.type,
-          name: val.info.name,
-          usersRole: (val && this._isChatGroup(val.info) ? val.users.filter(r => r.role !== 'reader'): val.users)
-              .map(u => ({user: u.user._id, role: u.role}))
-        },
-        users: val.users.map(u => u.user)
+      if(val) {
+        return {
+          _id: val._id,
+          info: {
+            type: val.info.type,
+            name: val.info.name,
+            usersRole: ( !this.withAdmin && this._isChatGroup(val.info)  ? val.users.filter(r => r.role !== 'reader') : val.users)
+                        .map(u => ({user: u.user._id, role: u.role}))
+          },
+          users: val.users.map(u => u.user)
+        }
       }
+      return { _id: null, info: {}, users: [] }
     },
 
     _classSingleMessage(message){
@@ -216,7 +231,10 @@ export default {
     _goToTheBottom(behavior = 'auto'){
       console.debug('Go To The Bottom of the messages : behavior = ', behavior)
       const messagesContainer = document.getElementById('messages')//this.$el.querySelector('#messages')
-      if(messagesContainer) messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: behavior});
+      if(messagesContainer) {
+        this.amInReading = messagesContainer.clientHeight >= messagesContainer.scrollHeight //no scrollbar on div messages
+        messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: behavior});
+      }
     },
 
     _clickToBottom(){
@@ -230,33 +248,26 @@ export default {
       console.debug('Scrolling: In Reading ',this.amInReading,', # new messages = ', this.newMessages.length)
     },
 
-    ...ChatUtils,
 
     _changeStateMyMessage(newStateMessage){
-      const myMessages = this.messages.filter(m => m.sender._id === this.userIdentifier)
-      const lastMessage = myMessages[myMessages.length-1]
-      const index = this.messages.indexOf(lastMessage)
-      if(index !== -1) this.messages.splice(index, 1, Object.assign(lastMessage, newStateMessage))
-      console.debug('index = ', index, ', all messages = ', this.messages)
+      const lastMessage = lastOf(this.messages, m => m.sender._id === this.userIdentifier)
+      Object.assign(lastMessage, newStateMessage)
+      console.debug('new lastMessage = ', lastMessage)
+      console.debug('all messages = ', this.messages)
     },
 
     sendTyping(typing = false){
       this.$socket.emit('chat:typing', this.temporaryNameChat, { _id: this.userIdentifier, userID: this.username, typing: typing } )
     },
     receiveTyping(data){
-      const index = this.writeUsers.findIndex(w => w._id === data._id)
-      if (data.typing){
-        if(index ===-1) this.writeUsers.push(data)
-      }else {
-        const index = this.writeUsers.findIndex(w => w._id === data._id)
-        if(index !==-1) this.writeUsers.splice(index, 1)
-      }
-      console.debug('TYPING container height = ',  data)
+      if (data.typing) pushIfAbsent(this.writeUsers, data)
+      else removeIfPresent(this.writeUsers, w => w._id === data._id)
+      console.debug('TYPING = ',  data)
     },
     ...mapMutations({
       removeUnReadMessage: 'chats/remove-unread'
     }),
-    readMessages(messages, init = false){
+    readMessages(messages){
       if(messages.length) {
         let messagesIds = messages.map(m => m._id)
         console.log('Read messages = ', messagesIds)
@@ -266,7 +277,7 @@ export default {
               let _dataEvent = {chatID: this.value._id, readMessages: messages.length}
               if(!response) {
                 this.$emit('onMessagesJustRead', _dataEvent)
-                return console.debug('Message ('+message._id+') has already read.');
+                return console.debug('Message ('+messagesIds+') has already read.');
               }
               const {description, readers} = response.data
               const reader = Object.values(readers)[0].user
@@ -275,15 +286,13 @@ export default {
               console.debug(description, ' from ', reader.userID)
               this.$socket.emit('chat:read', this.temporaryNameChat, messages)
             })
-            //TODO: HANDLER ERRORS MARK LIKE READ MESSAGE
-            .catch(err => console.error(err))
+            .catch(this.handleRequestErrors.messages.readMessages)
       }
     },
     receiveConfirmReadMessages(messages){
       console.log('Conferm read: ', messages)
       for (const message of messages){
-        const index = this.messages.findIndex(m => m._id === message._id)
-        if( index !== -1 ) this.messages.splice(index, 1, message)
+        replaceIfPresent(this.messages, m => m._id === message._id, message)
       }
     },
 
@@ -316,16 +325,13 @@ export default {
             this.$store.dispatch('chats/messages/create', {chatID: this.value._id, data })
                 .then(({data}) => {
                   console.debug('Message has been delivered => ', JSON.stringify(data))
-                  this._changeStateMyMessage({ ...data, delivered: true })
+                  Object.assign(_message, data)
                   this.$socket.emit('chat:messages', this.temporaryNameChat, data)
-
                   this.resetAttachment()
+                  return true
                 })
-                //TODO: HANDLER ERROR CREATE MESSAGE
-                .catch(err => {
-                  this._changeStateMyMessage({ delivered: false })
-                  console.error(err)
-                })
+                .catch(this.handleRequestErrors.messages.createMessage)
+                .then(delivered => this._changeStateMyMessage({ delivered }))
           })
           .catch((e) => { console.error('NO UPDATE PERMISSION ', e); this._changeStateMyMessage({ delivered: false }); })
     },
@@ -348,8 +354,7 @@ export default {
     },
     leaveChat({chatName, leaveUser}){
       if(chatName) console.log('User ', leaveUser, ' leave chat : ', chatName)
-      const index = this.writeUsers.findIndex(w => w._id === leaveUser)
-      if(index !==-1) this.writeUsers.splice(index, 1)
+      removeIfPresent(this.writeUsers, w => w._id === leaveUser)
     },
 
     _initMessages(chatMessages){
@@ -358,17 +363,29 @@ export default {
     },
     _initialization(chat){
       if(chat) {
+        console.debug('Chat ', chat)
         this.$socket.emit('chat:enter', this._actualInfoChat)
+
+        if((this.isChatOne || this.withAdmin) && chat.users.find(u => u.user._id === this.userIdentifier && u.role === 'reader')) {
+          let role = this.withAdmin ? 'admin' : 'writer'
+          this.$store.dispatch('chats/update-role', {chatID: chat._id, role })
+                    .then(({data}) => {
+                      console.log(data.description)
+                      let userRole = { user: this.userIdentifier, role }
+                      this.$socket.on('chat:change:role:ok', () => this.$bus.$emit('chat:change:role', chat._id, userRole))
+                      this.$socket.emit('chat:change:role', chat._id, userRole)
+                    })
+                    .catch(this.handleRequestErrors.chats.updateUserRoleInChat)
+        }
 
         if(chat.messages) this._initMessages(chat.messages)
         else {
           let idRequest = 'chat-messages'
-          console.warn('GET MESSAGES ....')
+          console.debug('GET MESSAGES ....')
           let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest, {message: 'Chat messages abort.'})
           this.$store.dispatch('chats/messages/all', {chatID: chat._id, options})
               .then(({data}) => this._initMessages(data))
-              //TODO: HANDLER ERROR (401) GET MESSAGES OF CHAT
-              .catch(err => console.error(err))
+              .catch(this.handleRequestErrors.messages.listMessages)
               .finally(() => this.pendingRequests.remove(idRequest))
         }
 
@@ -383,7 +400,7 @@ export default {
     /*ATTACHMENTS*/
 
     _linkAttachment(id){
-      return `${window.location}/recipes/${id}`
+      return `${window.origin}/chats/${this.value._id}/recipes/${id}`
     },
 
     getAttachmentsRecipes(){
@@ -392,10 +409,9 @@ export default {
       this.$store.dispatch('recipes/saved', {options})
           .then(({data}) =>{
             this.recipes = data.items;
-            console.warn('Attachments = > ', data.items)
+            console.debug('Attachments = > ', data.items)
           })
-          //TODO: HANDLER ERROR (401) GET RECIPE ATTACHMENT
-          .catch(err => console.error(err))
+          .catch(this.handleRequestErrors.messages.getAttachments)
           .finally(() => this.pendingRequests.remove(idRequest))
     },
 
@@ -440,10 +456,9 @@ export default {
                                               console.log(data)
                                               resolve()
                                            })
-                                          //TODO: HANDLER ERROR (401) PUT PERMISSION ON SAVED RECIPE
                                            .catch(err =>{
-                                              console.error(err)
-                                              reject()
+                                              this.handleRequestErrors.messages.updatePermissionAttachment(err)
+                                              reject(err)
                                            })
       } else {
         console.debug("NO attachment ")
@@ -455,22 +470,23 @@ export default {
       if(link){
         const id = link.split('/').pop()
         if(!id) return new Promise((resolve, reject) => reject({reason: 'Resource id is not valid.', link}))
-        let idRequest = 'attachment-info'
-        let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest, {message: 'Attachment Info abort.'})
-        return this.$store.dispatch('recipes/one', {recipeID: id, options})
+        return this.$store.dispatch('recipes/one', {recipeID: id})
                   .then(({data}) =>{
                     console.debug('Attachments = > ', data)
                     return this.createObjectPreview(data, link)
                   })
-            //TODO: HANDLER ERROR (401) GET RECIPE ATTACHMENT
                   .catch(err => {
-                    console.error(err)
+                    this.handleRequestErrors.messages.getAttachment(err)
                     return {link}
                   })
-                  .then(data => {
-                    this.pendingRequests.remove(idRequest)
-                    return data
-                  })
+      }
+    },
+
+    /*LISTENER UPDATE*/
+    onUpdateUserInfo(userInfo){
+      if(this.value && userInfo) {
+        this._onUpdateUserInOneChat(this.value, userInfo)
+        if(!this.value.messages) this._onUpdateUserInfosInMessages(this.messages, userInfo)
       }
     }
   },
@@ -480,6 +496,8 @@ export default {
     this.$socket.on('read-messages', this.receiveConfirmReadMessages.bind(this))
     this.$socket.on('typing', this.receiveTyping.bind(this))
     this.$socket.on('messages', this.receiveMessages.bind(this))
+
+    this.$bus.$on('user:update:info', this.onUpdateUserInfo.bind(this))
 
     this.pendingRequests = QueuePendingRequests.create()
 
@@ -496,7 +514,9 @@ export default {
     this.$socket.off('typing', this.receiveTyping.bind(this))
     this.$socket.off('messages', this.receiveMessages.bind(this))
 
-    this.$socket.emit('chat:leave', this._actualInfoChat)
+    this.$bus.$off('user:update:info', this.onUpdateUserInfo.bind(this))
+
+    if(this.value) this.$socket.emit('chat:leave', this._actualInfoChat)
   }
 }
 </script>
@@ -507,7 +527,7 @@ export default {
 
   & .messages-header{
     border-radius: 1.25rem 1.25rem 0 0;
-    box-shadow: 0px 3px 12px 0px #0000006e;
+    box-shadow: 0 3px 12px 0 #0000006e;
     background-color: $background-color-chat-header;
     color: white;
   }
@@ -541,7 +561,6 @@ export default {
   }
 
   & .messages-footer {
-    //background-color: white;
     background-color: lightgrey;
     //box-shadow: 0px -3px 12px 0px #0000006e;
     border-radius: 0 0 1.25rem 1.25rem ;

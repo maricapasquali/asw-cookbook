@@ -15,7 +15,7 @@ export default {
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
         return api.friends.getFriendOf(rootState.session.user._id, rootState.session.accessToken,{ userID, state }, pagination, options)
             .then(response =>{
-                commit('set', response.data.items)
+                if(!pagination) commit('set', response.data.items)
                 response.data.items = response.data.items.map(f => mapping(f, rootState.session.user._id))
                 return response
             })

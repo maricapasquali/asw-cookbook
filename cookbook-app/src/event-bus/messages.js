@@ -5,7 +5,6 @@ export default function (bus){
         return ['chat', 'p-user-chats'].includes(route.name)
     }
 
-    /* TODO: RIGUARDARE */
     function pushMessages(chats){ //[{info, messages}]
 
         const store = this.$store
@@ -23,7 +22,7 @@ export default function (bus){
                             this.$socket.on('chat:change:role:ok', () => bus.$emit('chat:change:role', chat.info._id, {user: userIdentifier, role}))
                             this.$socket.emit('chat:change:role', chat.info._id, { user: userIdentifier, role })
                         })
-                        .catch(err => console.error(err))
+                        .catch(this.handleRequestErrors.chats.updateUserRoleInChat)
                 }
                 return chat
             })

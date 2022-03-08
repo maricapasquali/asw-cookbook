@@ -1,41 +1,44 @@
 <template>
-  <not-authorized-area v-if="unauthorized"/>
+  <not-found v-if="notFound.show" :asset="notFound.asset" />
   <one-recipe v-else v-model="recipe" />
 </template>
 
 <script>
 import OneRecipe from './user-area/OneRecipe'
+import NotFound from "./404";
 export default {
   name: "ChatRecipe",
-  components: { 'one-recipe': OneRecipe },
+  components: {
+    'one-recipe': OneRecipe,
+    NotFound
+  },
   data() {
     return {
       recipe: false,
-      unauthorized: null
+      notFound: {
+        show: false,
+        asset: ''
+      }
     }
   },
   methods: {
     _getChat(){
-      this.$store.dispatch('chats/one', {chatID: this.$route.params.chat_id})
-         .then(({data}) => {
-            //console.debug('Users chat => ', data.users.map(r => r.user.userID).join(', '))
-            this._getRecipe()
-         })
-          //TODO: HANDLER ERROR GET CHAT
-         .catch(err => {
-           console.error(err.response)
-           this.unauthorized = true
-         })
+      this.$store.dispatch('chats/one', { chatID: this.$route.params.chat_id })
+          .then(this._getRecipe)
+          .catch(this.handleRequestErrors.chats.getChat)
+          .then(_notFound => this.notFound = { show: _notFound, asset: 'chat' })
     },
     _getRecipe(){
       let {recipe_id} = this.$route.params;
-      this.$store.dispatch('recipes/one', {recipeID: recipe_id})
-         .then(({data}) => this.recipe = data)
-          //TODO: HANDLER ERROR GET ONE RECIPE (SHARED-IN-CHAT)
-         .catch(err => {
-           console.error(err.response)
-           this.recipe = null
+      this.$store.dispatch('recipes/one', { recipeID: recipe_id })
+         .then(({data}) => {
+           this.recipe = data
          })
+         .catch(err => {
+           this.recipe = null
+           this.handleRequestErrors.chats.getRecipeOnChat(err)
+         })
+         .then(_notFound => this.notFound = { show: _notFound, asset: 'recipe' })
     }
   },
   created() {

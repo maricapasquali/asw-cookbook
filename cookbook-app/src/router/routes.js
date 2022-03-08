@@ -70,7 +70,6 @@ export default [
     },
     {
         path: '/users/:id',
-        name: 'single-user',
         component: UserArea,
         children: [
             {

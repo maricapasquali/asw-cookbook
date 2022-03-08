@@ -2,7 +2,7 @@
   <b-container class="py-4">
     <b-row v-if="isPresentAttachmentPreview" class="mb-2" align-h="center">
       <b-col cols="8" class="px-0">
-        <attachment-preview v-model="attachmentPreview"/>
+        <attachment-preview v-model="attachmentPreview" @removeAttachment="removeAttachment" removable/>
       </b-col>
     </b-row>
     <b-row align-v="start">
@@ -56,12 +56,14 @@ export default {
   data(){
     return {
       text: '',
-
-      removeAttachment: null
+      _attachment: ''
     }
   },
   watch: {
     attachment(val, old){
+      this.$data._attachment = val
+    },
+    '$data._attachment'(val, old){
       if(val && !old && this.text.length === 0) this.text = val
       else if(val !== old) this.text = this.text.replace(old, val)
       console.debug('Old attachment = ' + old + ', New attachment = ' + val)
@@ -102,7 +104,7 @@ export default {
       }
       if(this.isValidText){
         //TODO: IF SET encrypted, You encrypt MESSAGE
-        this.$emit('send-text', this.text, this.includeAttachment ? this.attachment : undefined)
+        this.$emit('send-text', this.text, this.includeAttachment ? this.$data._attachment : undefined)
         this.text = ''
       }
     },
@@ -113,6 +115,9 @@ export default {
     /* ATTACHMENTS */
     onAttachmentClick(item){
       this.$emit('attachment-click', item)
+    },
+    removeAttachment(){
+      this.$data._attachment = ''
     }
   }
 }

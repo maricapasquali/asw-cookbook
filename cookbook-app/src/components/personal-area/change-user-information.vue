@@ -163,7 +163,7 @@ export default {
         this.$store.dispatch('users/update-information', formData)
             .then(response => {
               console.debug(response.data)
-              this.$socket.emit('user:update:info', { _id: this.id, information: response.data.info } )
+              this.$socket.emit('user:update:info', { _id: this.user._id, information: response.data.info } )
               this.$emit('save', response.data.info)
             })
             .catch(this.handleRequestErrors.users.updateUser)

@@ -7,7 +7,6 @@ import ObjectId = Types.ObjectId;
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
 import {ChatPopulationPipeline, ChatPopulationPipelineSelect} from "../../../models/schemas/chat";
-import {isTrue} from "../../../modules/utilities";
 
 export function send_message(req, res) {
     const {id, chatID} = req.params

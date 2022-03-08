@@ -66,10 +66,11 @@
 
 import {mapGetters} from "vuex";
 
-import ChatUtils from '@components/chats/utils'
+import ChatMixins from '@components/mixins/chat.mixins'
 
 export default {
   name: "chat-item",
+  mixins: [ChatMixins],
   props: {
     value: Object,
     skeleton: Boolean
@@ -112,7 +113,7 @@ export default {
     },
 
     receiverUserIdentifier(){
-      if(this.isChatOne || this.withAdmin) return this._baseInfoUser(this.value.info, this.value.users)._id
+      if(this.isChatOne || this.withAdmin) return this._baseInfoUser(this.value.info, this.value.users)?._id
     },
 
     image(){
@@ -123,8 +124,6 @@ export default {
     },
   },
   methods: {
-    ...ChatUtils,
-
     redirectOnOtherTab(){
       this.$emit('redirectOtherTab', this.value)
     },

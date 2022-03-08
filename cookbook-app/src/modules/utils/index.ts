@@ -37,11 +37,22 @@ export function pushIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => b
     if(isAbsent) v1.push(val)
 }
 
-export function removeIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): void {
+export function removeIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): any {
     let index: number =  _.findIndex(v1, predicate)
     let isPresent: boolean = index !== -1
     console.debug('removeIfPresent: found ', isPresent)
-    if(isPresent) v1.splice(index,1)
+    if(isPresent) return v1.splice(index,1).pop()
+}
+
+export function replaceIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any, newVal: any): void {
+    let index: number =  _.findIndex(v1, predicate)
+    let isPresent: boolean = index !== -1
+    console.debug('replaceIfPresent: found ', isPresent)
+    if(isPresent) v1.splice(index,1, newVal)
+}
+
+export function lastOf(v1: Array<any>, filter?: (v: any) => boolean | any): any {
+    return _.last(_.filter(v1, filter));
 }
 
 export function contain(v1: Array<any>, val: any): boolean {
@@ -49,6 +60,11 @@ export function contain(v1: Array<any>, val: any): boolean {
     let isPresent: boolean = index !== -1
     console.debug('contain: found ', isPresent)
     return isPresent
+}
+
+export function prependIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): void {
+    let index: number =  _.findIndex(v1, predicate)
+    if(index !== -1) v1.unshift(v1.splice(index, 1)[0])
 }
 
 export function flatten(vector: Array<object>, field: string): Array<object> {

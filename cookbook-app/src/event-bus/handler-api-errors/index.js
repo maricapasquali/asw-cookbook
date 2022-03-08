@@ -7,6 +7,8 @@ import recipes from './recipes'
 import session from './session'
 import shoppingList from './shopping-list'
 import users from './users'
+import chats from './chats'
+import messages from './messages'
 
 export default function (bus) {
     return  {
@@ -18,7 +20,9 @@ export default function (bus) {
         recipes: recipes(bus),
         session: session(bus),
         shoppingList: shoppingList(bus),
-        users: users(bus)
+        users: users(bus),
+        chats: chats(bus),
+        messages: messages(bus),
     }
 }
 

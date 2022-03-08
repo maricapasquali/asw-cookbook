@@ -11,7 +11,7 @@ export default function (bus){
             printError(errOfRequest.response)
             bus.$emit('show:error:bad-request', {
                 status: errOfRequest.response?.status,
-                message: errOfRequest.response.data?.description || errOfRequest.message || 'Unknown error',
+                message: errOfRequest.response.data?.description || errOfRequest?.response?.statusText || errOfRequest.message || 'Unknown error',
                 config: errOfRequest.config
             })
         }
