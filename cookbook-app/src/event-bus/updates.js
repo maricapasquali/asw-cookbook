@@ -33,10 +33,14 @@ export default function (bus) {
 
     function updateInfoUser(user_info){
         bus.$emit('user:update:info', user_info)
+        // if it is my friend
+        this.$store.commit('friendships/update-user-info', user_info)
     }
 
     function deleteUser(id){
         bus.$emit('user:delete', id)
+        // if it is my friend
+        this.$store.commit('friendships/remove', id)
     }
 
 

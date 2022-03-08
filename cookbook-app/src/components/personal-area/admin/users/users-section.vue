@@ -104,10 +104,11 @@
 <script>
 
 import {mapGetters} from "vuex";
-import {_goToChat} from '@components/chats/utils'
+import ChatMixins from '@components/mixins/chat.mixins'
 import {QueuePendingRequests} from "@api/request";
 export default {
   name: "users-section",
+  mixins: [ChatMixins],
   data(){
     return {
       isMobile: false,
@@ -267,9 +268,6 @@ export default {
       console.log('Delete account of ' + this.deleteAccount.user.userID)
       this.$refs.userTable.refresh()
     },
-
-    /* chat */
-    _goToChat,
 
     /* Listeners update */
     fetchUsers(user) {

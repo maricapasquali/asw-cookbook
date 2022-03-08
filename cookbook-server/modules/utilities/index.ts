@@ -26,6 +26,10 @@ export function decodeToArray(encodedString: string): Array<any> {
     return array
 }
 
+export function isTrue(encodedString: string): Boolean {
+    return Boolean(encodedString) && JSON.parse(encodedString)
+}
+
 export function areThereDuplicatesIn(array: Array<any>, mapper?: (value: any) => any): Boolean {
     mapper = mapper || ( (p) => p )
     return new Set(array.map(p => mapper(p))).size < array.length

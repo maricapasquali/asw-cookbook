@@ -19,13 +19,7 @@ export default {
 
     logout({dispatch, state, getters}){
         if(!getters.isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.users
-                  .session
-                  .logout(state.user._id, state.accessToken)
-                  .then(({data}) => {
-                      console.debug("Logout : ", data)
-                      dispatch('reset', null, { root: true })
-                  })
+        return api.users.session.logout(state.user._id, state.accessToken)
     },
 
     requestNewAccessToken({commit, getters, dispatch, state}){

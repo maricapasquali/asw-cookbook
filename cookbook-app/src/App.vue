@@ -150,6 +150,15 @@ export default {
 
     registerChatMessageListener(){
       this.$socket.on('push-messages', this.$bus.chat.pushMessages.bind(this))
+      this.$socket.on('read-messages', this.$bus.chat.readMessages.bind(this))
+    },
+
+    registerSessionListener(){
+      this.$socket.on('logout', () => {
+        console.debug("Logout ok.")
+        this.$store.dispatch('reset')
+        this.$router.replace({name: 'homepage'})
+      })
     }
   },
   created() {
@@ -176,6 +185,7 @@ export default {
     this.registerChatMessageListener()
     this.registerUserOnlineOfflineListener()
     this.registerCheckAccessTokenListener()
+    this.registerSessionListener()
 
     console.debug('Store ', this.$store)
     console.debug('Socket ', this.$socket)

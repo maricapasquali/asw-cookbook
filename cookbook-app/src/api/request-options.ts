@@ -11,3 +11,5 @@ export type RecipeFilters = { name?: string, countries?: string[], diets?: strin
 export type UserSearch = { search: 'full' | 'partial', value: string }
 
 export type UserQueryOptions = { userID?: UserSearch, fullname?: UserSearch }
+
+export type ChatQueryOptions = { 'no-messages' : boolean }

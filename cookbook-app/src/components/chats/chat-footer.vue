@@ -2,10 +2,10 @@
   <b-container class="py-4">
     <b-row v-if="isPresentAttachmentPreview" class="mb-2" align-h="center">
       <b-col cols="8" class="px-0">
-        <attachment-preview v-model="attachmentPreview"/>
+        <attachment-preview v-model="attachmentPreview" @removeAttachment="removeAttachment" removable/>
       </b-col>
     </b-row>
-    <b-row align-v="center">
+    <b-row align-v="start">
       <b-col cols="2" class="text-center pr-0">
 
         <chat-attachments :items="attachmentsItems" :disabled="disabled" :searchField="attachmentSearchField" @attachment-click="onAttachmentClick">
@@ -20,10 +20,10 @@
       </b-col>
       <b-col class="px-0" cols="8">
               <b-form-group label-for="text-area-sender-mex" label="Mio Messaggio da inviare" label-sr-only class="m-0">
-                <b-form-textarea id="text-area-sender-mex" placeholder="Inserisci testo" rows="3"
+                <b-form-textarea id="text-area-sender-mex" placeholder="Inserisci testo"
                                  v-model="text" @input="typing"
                                  @keydown.13.prevent
-                                 @keydown.enter="sendText" no-resize :disabled="disabled"/>
+                                 @keydown.enter="sendText"  :disabled="disabled"/>
               </b-form-group>
       </b-col>
       <b-col cols="2" class="text-center pl-0" >
@@ -56,12 +56,14 @@ export default {
   data(){
     return {
       text: '',
-
-      removeAttachment: null
+      _attachment: ''
     }
   },
   watch: {
     attachment(val, old){
+      this.$data._attachment = val
+    },
+    '$data._attachment'(val, old){
       if(val && !old && this.text.length === 0) this.text = val
       else if(val !== old) this.text = this.text.replace(old, val)
       console.debug('Old attachment = ' + old + ', New attachment = ' + val)
@@ -102,7 +104,7 @@ export default {
       }
       if(this.isValidText){
         //TODO: IF SET encrypted, You encrypt MESSAGE
-        this.$emit('send-text', this.text, this.includeAttachment ? this.attachment : undefined)
+        this.$emit('send-text', this.text, this.includeAttachment ? this.$data._attachment : undefined)
         this.text = ''
       }
     },
@@ -113,10 +115,16 @@ export default {
     /* ATTACHMENTS */
     onAttachmentClick(item){
       this.$emit('attachment-click', item)
+    },
+    removeAttachment(){
+      this.$data._attachment = ''
     }
   }
 }
 </script>
 
 <style scoped>
+#text-area-sender-mex{
+  min-height: 62px;
+}
 </style>

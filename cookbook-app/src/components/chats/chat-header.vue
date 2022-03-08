@@ -32,11 +32,12 @@
 
 import {mapGetters} from "vuex";
 
-import ChatUtils from '@components/chats/utils'
+import ChatMixins from '@components/mixins/chat.mixins'
 import ChatTyping from "./chat-typing";
 
 export default {
   name: "chat-header",
+  mixins: [ChatMixins],
   components: {ChatTyping},
   props: {
     value: Object
@@ -88,7 +89,6 @@ export default {
     },
   },
   methods: {
-    ...ChatUtils,
 
     setLastAccess(val){
       if(val) this.lastAccess = this._lastAccess(this.info.type, this.users)

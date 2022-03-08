@@ -72,7 +72,12 @@ export const ChatSchema: Schema<IChat> = new Schema<IChat>({
         required: false,
         default: []
     },
-})
+}, { toObject: { virtuals: true } })
+
+ChatSchema.virtual('started')
+          .get(function() {
+                return this.messages.length > 0;
+          });
 
 ChatSchema.pre(['findOne'], function() {
     this.populate(ChatPopulationPipeline)

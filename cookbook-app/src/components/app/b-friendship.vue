@@ -25,10 +25,10 @@
 
 <script>
 import {mapGetters} from "vuex";
-import {_goToChat} from '@components/chats/utils'
-
+import ChatMixins from '@components/mixins/chat.mixins'
 export default {
   name: "b-friendship",
+  mixins: [ChatMixins],
   props: {
     otherUser: {
       type: Object,
@@ -137,17 +137,23 @@ export default {
               .forEach(data => { if(data) this._renderFriendShip(data)})
     },
 
-    /* chat */
-    _goToChat,
-
     /* Listeners notification */
     onListenFriendshipRequest(notification){
-      let _id = notification.otherInfo.from
+      let _idFrom = notification.otherInfo.from
+      let _idTo = notification.otherInfo.to
 
-      if(this.otherUser._id === _id) {
+      if(this.otherUser._id === _idFrom) {
         this.requestToUpdate = true
 
         this.requestJustSend = false
+        this.justFollow = false
+        this.requestRejected = false
+        this.isMyFriend = false
+      }
+      else if(this.otherUser._id === _idTo){
+        this.requestJustSend = true
+
+        this.requestToUpdate = false
         this.justFollow = false
         this.requestRejected = false
         this.isMyFriend = false
