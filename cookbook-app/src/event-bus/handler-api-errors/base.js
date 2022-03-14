@@ -44,6 +44,17 @@ export default function (bus){
         }
     }
 
+    function duplicateResource(errOfRequest, message) {
+        if (errOfRequest.response?.status === 409) {
+            printError(errOfRequest.response)
+            bus.$emit('show:error:bad-request', {
+                status: errOfRequest.response?.status,
+                message: message || errOfRequest.response.data?.description || errOfRequest.message || 'Unknown error',
+                config: errOfRequest.config
+            })
+        }
+    }
+
     function serverError(errOfRequest, propagation = true) {
         if(!isAbortError(errOfRequest)) {
             console.error(errOfRequest)
@@ -70,6 +81,7 @@ export default function (bus){
         unAuthenticated,
         forbidden,
         notFound,
+        duplicateResource,
         serverError
     }
 }
