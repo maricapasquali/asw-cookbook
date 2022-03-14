@@ -122,6 +122,7 @@ export default {
     registerRecipeListener(){
       this.$socket.on('recipe:comment', this.$bus.notification.recipeComment.bind(this))
       this.$socket.on('recipe:create', this.$bus.notification.createSharedRecipe.bind(this))
+      this.$socket.on('recipe:create:saved', this.$bus.notification.createSavedRecipe.bind(this))
       this.$socket.on('recipe:update', this.$bus.notification.updateSharedRecipe.bind(this))
       this.$socket.on('recipe:delete', this.$bus.notification.deleteSharedRecipe.bind(this))
     },
