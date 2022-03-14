@@ -159,6 +159,21 @@ export function create(io: any, recipe: IRecipe): void {
 
 }
 
+export function createSaved(io: any, recipe: IRecipe){
+    let ownerId = recipe.owner._id
+    console.log('saved recipe : ', recipe)
+    create_notification({
+        user: ownerId,
+        type: Notification.Type.RECIPE,
+        content: 'Hai salvato la ricetta ' + recipe.name,
+        otherInfo: {
+            recipe: { _id:recipe._id, owner: ownerId, shared: false },
+            updaterUser: ownerId,
+        }
+    })
+        .then(notification => io.to(ownerId).emit('recipe:create:saved', {notification, recipe}), err => console.error(err))
+}
+
 export const update = (io: any,  user: UserInformationType, recipe: IRecipe) => operationOnRecipe(io, user, 'update', recipe)
 
 export const erase = (io: any,  user: UserInformationType, recipe: IRecipe) => operationOnRecipe(io, user, 'delete', recipe)

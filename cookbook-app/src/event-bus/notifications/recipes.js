@@ -22,6 +22,10 @@ export default function (bus){
         _operationOnRecipe.bind(this)('create', notification, recipe)
     }
 
+    function createSavedRecipe({notification, recipe}) {
+        _operationOnRecipe.bind(this)('create:saved', notification, recipe)
+    }
+
     function updateSharedRecipe({notification, recipe}) {
         _operationOnRecipe.bind(this)('update', notification, recipe)
     }
@@ -33,6 +37,7 @@ export default function (bus){
     return {
         recipeComment,
         createSharedRecipe,
+        createSavedRecipe,
         updateSharedRecipe,
         deleteSharedRecipe
     }

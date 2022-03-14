@@ -23,10 +23,15 @@ export default function (io: any, socket: any): void {
         }
     })
 
-    //SHARED RECIPE
+    //CREATE SHARED RECIPE
     socket.on('recipe:create', recipe => {
         if(isAuthorized(socket)) recipesHandler.create(io, recipe)
     })
+    //CREATE SAVED RECIPE
+    socket.on('recipe:create:saved', recipe => {
+        if(isAuthorized(socket)) recipesHandler.createSaved(io, recipe)
+    })
+    // RECIPE
     socket.on('recipe:update', recipe => {
         if(isAuthorized(socket)) recipesHandler.update(io, userInfo, recipe)
     })
