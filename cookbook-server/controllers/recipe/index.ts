@@ -10,7 +10,7 @@ import {
     FileConfigurationImage,
     FileConfigurationVideo,
     fileUploader,
-    getRestrictedUser, getUser,
+    getRestrictedUser, getUser, paginationOf,
 } from '../index'
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 import {RBAC} from "../../modules/rbac";
@@ -152,7 +152,7 @@ export function create_recipe(req, res){
     }
 }
 
-function queryListRecipes(user: string, type: string, filters: object): Query<Document[], Document, {}, Document> {
+function queryListRecipes(user: string, type: string, filters: object): Query<IRecipe[], IRecipe, {}, IRecipe> {
     switch (type) {
         case 'shared':
             return Recipe.find(filters)
@@ -166,6 +166,7 @@ function queryListRecipes(user: string, type: string, filters: object): Query<Do
             return Recipe.find(filters)
                          .where('shared').equals(true)
                          .where('likes.user').equals(Types.ObjectId(user))
+                         .select('-permission')
         case 'shared-in-chat':
             return Recipe.find(filters)
                          .where('permission.user').equals(user)
@@ -179,7 +180,7 @@ function queryListRecipes(user: string, type: string, filters: object): Query<Do
 }
 export function list_recipes(req, res){
     let {id} = req.params
-    let {type, page, limit} = req.query
+    let {type, page, limit, skip} = req.query
     if(!Types.ObjectId.isValid(id))  return res.status(400).json({ description: 'Required a valid \'id\''})
     if(type !== undefined && !RecipeType.includes(type))
         return res.status(400).json({description: 'Required \'type\' include in [' + RecipeType + '] or not set'})
@@ -192,12 +193,27 @@ export function list_recipes(req, res){
 
                 let filters = getFilters(req.query, id)
 
-                pagination(
-                    queryListRecipes(id, type, filters).sort({ createdAt: -1 , _id: -1 }),
-                    page && limit ? {page: +page, limit: +limit}: undefined
-                )
-                .then(paginationResult => res.status(200).json(paginationResult),
-                      err => res.status(500).json({code: err.code || 0, description: err.message}))
+                let paginationOptions = page && limit ? {page: +page, limit: +limit,  skip: +skip}: undefined
+
+                let promise;
+
+                if(type === "loved"){
+                    let timestampMyLike = (recipe: IRecipe) => recipe.likes.find(l => l.user?._id == id)?.timestamp
+
+                    promise = queryListRecipes(id, type, filters)
+                                .then((likesRecipes) => {
+                                    likesRecipes.sort((l1, l2) => timestampMyLike(l2) - timestampMyLike(l1)) // descending sort
+                                    return Promise.resolve(paginationOf(likesRecipes, paginationOptions))
+                                }, err => Promise.reject(err))
+                } else {
+                    promise = pagination(
+                        queryListRecipes(id, type, filters).sort({ updatedAt: -1 }),
+                        paginationOptions
+                    )
+                }
+
+                promise.then(paginationResult => res.status(200).json(paginationResult),
+                    err => res.status(500).json({code: err.code || 0, description: err.message}))
             }
 
             if(type === 'shared') getUser(req, res).then(user => retrieveRecipes(), err => console.error(err))
@@ -215,6 +231,7 @@ export function one_shared_recipe(req, res){
             Recipe.findOne(req.locals && req.locals.filters)
                 .where('_id').equals(recipeID)
                 .where('shared').equals(true)
+                .select('-permission')
                 .then(recipe => {
                     if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
                     return  res.status(200).json(recipe)
@@ -251,6 +268,7 @@ export function one_recipe(req, res){
                                        .where('_id').equals(recipeID)
                                        .where('shared').equals(true)
                                        .where('likes.user').equals(Types.ObjectId(id))
+                                       .select('-permission')
                         break
                     case 'shared-in-chat':
                         query = Recipe.findOne()
@@ -305,11 +323,12 @@ function update_actual_recipe(req, res){
                             updated.updatedAt = Date.now()
                             let newDoc = new Recipe(Object.assign(doc, updated))
                             newDoc.save()
-                                  .then(_doc => sendPopulatedRecipe(_doc, res, 200),
-                                        err => {
-                                            if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
-                                            return res.status(500).json({code: err.code || 0, description: err.message})
-                                        })
+                                .then(_doc => sendPopulatedRecipe(_doc, res, 200),
+                                    err => {
+                                        if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
+                                        if(MongooseDuplicateError.is(err)) return res.status(409).json({ description: "Shared recipe already exists with this name" })
+                                        return res.status(500).json({code: err.code || 0, description: err.message})
+                                    })
                         }, err => res.status(500).json({code: err.code || 0, description: err.message}))
                 }, err => console.error(err))
         }
@@ -429,7 +448,7 @@ export function list_all_recipes(req, res){
 
             let filters = getFilters(req.query)
             pagination(
-                Recipe.find(filters).sort({ createdAt: -1, _id: -1 }),
+                Recipe.find(filters).sort({ updatedAt: -1 }).select('-permission'),
                 page && limit ? {page: +page, limit: +limit, skip: +skip}: undefined,
             )
             .then(recipes => res.status(200).json(recipes),

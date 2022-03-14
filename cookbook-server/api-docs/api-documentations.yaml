@@ -6,7 +6,7 @@ servers:
   - url: https://localhost:3000/api
 
 components:
-  schemas: 
+  schemas:
     user:
       type: object
       properties:
@@ -24,7 +24,7 @@ components:
             tel_number:
               type: string
             birth_date:
-              type: string    
+              type: string
             sex:
               type: string
               enum:
@@ -114,9 +114,9 @@ components:
               quantity:
                 type: number
                 minimum: 0.01
-        
+
         preparation:
-          type: string     
+          type: string
         note:
           type: string
         shared:
@@ -170,7 +170,7 @@ components:
           items:
             $ref: "#/components/schemas/comment"
           default: []
-              
+
       required:
         - owner
         - name
@@ -198,7 +198,7 @@ components:
           properties:
             energy:
               type: number
-            protein: 
+            protein:
               type: number
             fat:
               type: object
@@ -242,7 +242,7 @@ components:
     comment:
       type: object
       properties:
-        user: 
+        user:
           type: string
           default: undefined
           description: user's identifier
@@ -264,7 +264,7 @@ components:
             required:
               - timestamp
           default: []
-        likes: 
+        likes:
           type: array
           items:
             $ref: "#/components/schemas/like"
@@ -348,13 +348,13 @@ components:
             $ref: "#/components/schemas/message"
       required:
         - users
-    
+
     message:
       type: object
       properties:
         sender:
           type: string
-        timestamp: 
+        timestamp:
           type: number
         content:
           type: string
@@ -384,7 +384,7 @@ components:
     notification:
       type: object
       properties:
-        user: 
+        user:
           type: string
         type:
           type: string
@@ -419,9 +419,9 @@ components:
           schema:
             type: object
             properties :
-              code: 
-                type: number        
-              description: 
+              code:
+                type: number
+              description:
                 type: string
     bad_request:
       description: Bad request
@@ -447,24 +447,24 @@ components:
     userIdentifier:
       name: id
       in: path
-      description: user's identifier 
+      description: user's identifier
       required: true
       schema:
-        type: string  
-    chatIdentifier:   
+        type: string
+    chatIdentifier:
       name: chatID
       in: path
       required: true
       description: chat's identifier
       schema:
-        type: string 
-    messageIdentifier:   
+        type: string
+    messageIdentifier:
       name: messageID
       in: path
       required: true
       description: message's identifier
       schema:
-        type: string 
+        type: string
     page:
       name: page
       in: query
@@ -605,7 +605,7 @@ components:
     BearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT  
+      bearerFormat: JWT
 
 tags:
   - name: Users
@@ -624,7 +624,7 @@ tags:
 paths:
 
 #USERS
-  /users:          
+  /users:
     post:
       description: Signing up of a user on the platform
       tags:
@@ -667,7 +667,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  userID: 
+                  userID:
                     description: user's identifier
                     type: string
         400:
@@ -675,7 +675,7 @@ paths:
         409:
           description: Username has been already used
         500:
-          $ref: "#/components/responses/general_error" 
+          $ref: "#/components/responses/general_error"
 
 
     get:
@@ -790,12 +790,12 @@ paths:
           $ref: "#/components/responses/bad_request"
         404:
           description: Link not valid or User not found
-        500:    
+        500:
           $ref: "#/components/responses/general_error"
 
   /users/{id}:
     parameters:
-      - $ref: "#/components/parameters/userIdentifier" 
+      - $ref: "#/components/parameters/userIdentifier"
     get:
       description: ""
       tags:
@@ -822,14 +822,14 @@ paths:
           description: User not found
         500:
           $ref: "#/components/responses/general_error"
-   
+
     patch:
       description: "Change user's informations"
       tags:
         - Users
       security:
         - BearerAuth: []
-      
+
       requestBody:
         required: true
         content:
@@ -890,7 +890,7 @@ paths:
           $ref: "#/components/responses/general_error"
 
   /users/{id}/credentials:
-    patch: 
+    patch:
       description: Change user's credentials
       tags:
         - Users
@@ -1316,6 +1316,8 @@ paths:
           $ref: "#/components/responses/forbidden_post_error"
         404:
           description: User not found
+        409:
+          description: Recipe has been already inserted
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1371,7 +1373,7 @@ paths:
         404:
           description: User not found
         500:
-          $ref: "#/components/responses/general_error" 
+          $ref: "#/components/responses/general_error"
 
   /users/{id}/recipes/{recipesID}:
     parameters:
@@ -1504,6 +1506,8 @@ paths:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
           description: Recipe not found or Users are not found
+        409:
+          description: Shared recipe already exists with this name
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1896,7 +1900,7 @@ paths:
         401:
           $ref: "#/components/responses/unauthorized_error"
         404:
-          description: "Food not found"           
+          description: "Food not found"
         500:
           $ref: "#/components/responses/general_error"
     patch:
@@ -1944,7 +1948,7 @@ paths:
       - BearerAuth: [ ]
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
             schema:
               $ref: "#/components/schemas/shoppingListPoint"
@@ -1966,7 +1970,7 @@ paths:
         409:
           description: Food has been already inserted in the shopping list
         500:
-          $ref: "#/components/responses/general_error" 
+          $ref: "#/components/responses/general_error"
 
     get:
       tags:
@@ -1978,7 +1982,7 @@ paths:
           description: ""
           content:
             application/json:
-              schema: 
+              schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/shoppingListPoint"
@@ -1991,8 +1995,8 @@ paths:
         404:
           description: User not found
         500:
-          $ref: "#/components/responses/general_error" 
-  
+          $ref: "#/components/responses/general_error"
+
   /users/{id}/shopping-list/{pointShoppingListID}:
     parameters:
       - $ref: "#/components/parameters/userIdentifier"
@@ -2029,7 +2033,7 @@ paths:
         404:
           description: Shopping List/Food not found
         500:
-          $ref: "#/components/responses/general_error" 
+          $ref: "#/components/responses/general_error"
 
     delete:
       tags:
@@ -2048,14 +2052,14 @@ paths:
         404:
           description: Shopping List/Food not found
         500:
-          $ref: "#/components/responses/general_error" 
+          $ref: "#/components/responses/general_error"
 
 
 #FRINEDS
   /users/{id}/friends:
     parameters:
-      - $ref: "#/components/parameters/userIdentifier" 
-    
+      - $ref: "#/components/parameters/userIdentifier"
+
     post:
       description: ""
       tags:
@@ -2143,11 +2147,11 @@ paths:
         401:
           $ref: "#/components/responses/unauthorized_error"
         500:
-          $ref: "#/components/responses/general_error"  
-    
-  /users/{id}/friends/{friendID}:    
+          $ref: "#/components/responses/general_error"
+
+  /users/{id}/friends/{friendID}:
     parameters:
-      - $ref: "#/components/parameters/userIdentifier" 
+      - $ref: "#/components/parameters/userIdentifier"
       - name: friendID
         in: query
         description: friend's identifier
@@ -2180,9 +2184,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/friend"
         400:
-          $ref: "#/components/responses/bad_request"  
+          $ref: "#/components/responses/bad_request"
         401:
-          $ref: "#/components/responses/unauthorized_error" 
+          $ref: "#/components/responses/unauthorized_error"
         403:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
@@ -2211,7 +2215,7 @@ paths:
         400:
           $ref: "#/components/responses/bad_request"
         401:
-          $ref: "#/components/responses/unauthorized_error" 
+          $ref: "#/components/responses/unauthorized_error"
         403:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
@@ -2359,9 +2363,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/chat"  
+                $ref: "#/components/schemas/chat"
         400:
-          $ref: "#/components/responses/bad_request"               
+          $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
         403:
@@ -2502,9 +2506,9 @@ paths:
         - BearerAuth: []
       responses:
         200:
-          description: Chat has been deleted    
+          description: Chat has been deleted
         400:
-          $ref: "#/components/responses/bad_request"         
+          $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
         403:
@@ -2550,7 +2554,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/message"
         400:
-          $ref: "#/components/responses/bad_request"               
+          $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
         403:
@@ -2681,7 +2685,7 @@ paths:
             schema:
               type: object
               properties:
-                read: 
+                read:
                   type: boolean
       responses:
         200:
