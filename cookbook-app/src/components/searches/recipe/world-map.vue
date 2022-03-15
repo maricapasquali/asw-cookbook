@@ -93,26 +93,28 @@ export default {
     value(val){
       // console.debug('New value = ', JSON.stringify(val, null, 1))
       // console.debug('Old value = ', JSON.stringify(this._oldValue, null, 1))
-      if(val.length === 0) {
-        // on reset
-        Array.from(this.$refs['world-map'].$el.getElementsByClassName('selected'))
-             .forEach(target => target.classList.remove('selected'))
+      if(val){
+        if(val.length === 0) {
+          // on reset
+          Array.from(this.$refs['world-map'].$el.getElementsByClassName('selected'))
+              .forEach(target => target.classList.remove('selected'))
+        }
+        else if(this._oldValue.length > val.length){
+          // on remove
+          diff(this._oldValue, val).forEach(c => {
+            let found = this.selectableCountries[c];
+            if(found  && found.targets) found.targets.forEach(t => t.classList.remove('selected'))
+          })
+        }
+        else if(this._oldValue.length < val.length){
+          // on add
+          diff(val, this._oldValue).forEach(c => {
+            let found = this.selectableCountries[c];
+            if(found && found.targets) found.targets.forEach(t => t.classList.add('selected'))
+          })
+        }
+        this._oldValue = clone(val)
       }
-      else if(this._oldValue.length > val.length){
-        // on remove
-        diff(this._oldValue, val).forEach(c => {
-          let found = this.selectableCountries[c];
-          if(found  && found.targets) found.targets.forEach(t => t.classList.remove('selected'))
-        })
-      }
-      else if(this._oldValue.length < val.length){
-        // on add
-        diff(val, this._oldValue).forEach(c => {
-          let found = this.selectableCountries[c];
-          if(found && found.targets) found.targets.forEach(t => t.classList.add('selected'))
-        })
-      }
-      this._oldValue = clone(val)
     }
   },
   methods: {

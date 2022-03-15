@@ -16,7 +16,7 @@ export default function (bus) {
                 forbidden(err)
                 break
             case 404:
-                notFound(err, resourceNotFound)
+                if(resourceNotFound) notFound(err, resourceNotFound)
                 break
             default:
                 serverError(err)
@@ -43,7 +43,7 @@ export default function (bus) {
         commonHandler(err, {name: 'Utente', id: err?.response?.config?.urlParams?.userID})
     }
     function getAttachment(err){
-        commonHandler(err, {name: 'Ricetta', id: err?.response?.config?.urlParams?.recipeID})
+        commonHandler(err)
     }
 
     return {

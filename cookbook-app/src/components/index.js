@@ -9,6 +9,7 @@ import SelectWithImage from "@components/select-with-image";
 import WrapLoading from "@components/wrap-loading";
 import ElapsedTime from "@components/elapsedTime";
 import MiniTextEditor from "@components/mini-text-editor"
+import LoadOthers from "@components/load-others"
 
 import ServerErrorHandler from '@components/app/handler-errors/server-error-handler'
 import BadRequestErrorHandler from '@components/app/handler-errors/bad-request-error-handler'
@@ -34,8 +35,13 @@ import ChangeUserInformation from "@components/personal-area/change-user-informa
 import DeleteAccount from "@components/personal-area/delete-account"
 import ChangeUserID from "@components/personal-area/change-userid"
 import ChangePassword from "@components/personal-area/change-password"
-import RecipesSections from "@components/personal-area/recipes/recipe-sections"
-import LikerList from "@components/personal-area/recipes/liker-list"
+import RecipesSection from "@components/personal-area/recipes/recipes-section"
+
+import RecipesTabContent from "@components/personal-area/recipes/tabs/recipes-tab-content";
+import RecipeTabItem from "@components/personal-area/recipes/tabs/recipe-tab-item"
+import AddRecipeTab from "@components/personal-area/recipes/tabs/add-recipe-tab";
+import PermissionList from "@components/personal-area/recipes/tabs/permission-list"
+
 import RecipeForm from "@components/personal-area/recipes/recipe-form"
 import FoodSection from "@components/personal-area/foods/food-section"
 import ReportsSection from "@components/personal-area/admin/reports/reports-section"
@@ -83,6 +89,7 @@ const components = {
     WrapLoading,
     ElapsedTime,
     MiniTextEditor,
+    LoadOthers,
 
     ServerErrorHandler,
     BadRequestErrorHandler,
@@ -108,8 +115,13 @@ const components = {
     DeleteAccount,
     ChangeUserID,
     ChangePassword,
-    RecipesSections,
-    LikerList,
+    RecipesSection,
+
+    RecipesTabContent,
+    RecipeTabItem,
+    AddRecipeTab,
+    PermissionList,
+
     RecipeForm,
     FoodForm,
     FoodFinder,

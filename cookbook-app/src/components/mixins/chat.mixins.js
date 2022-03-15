@@ -1,5 +1,5 @@
 import * as _ from 'lodash'
-import Server from "@api/server.info";
+import UserMixin from "./user.mixin"
 import {mapGetters} from "vuex";
 
 function _lastAccess(chatType, users){
@@ -85,24 +85,19 @@ function _goToChat(user_id, callbackCreateChat) {
 }
 
 /* Listeners updates */
-function _onUpdateUserInfos(user, newInfos){
-    if(user && newInfos){
-        if(newInfos.information) user.img = newInfos.information.img ? Server.images.path(newInfos.information.img) : ''
-        if(newInfos.userID) user.userID = newInfos.userID
-    }
-}
 
 function _onUpdateUserInfosInMessages(messages, userInfo){
-    messages?.filter(m => m.sender?._id === userInfo._id).forEach(m => this._onUpdateUserInfos(m.sender, userInfo))
+    messages?.filter(m => m.sender?._id === userInfo._id).forEach(m => this._updateUserInformation(m.sender, userInfo))
 }
 
 function _onUpdateUserInOneChat(chat, userInfo){
     const foundUserInChat = chat.users.find(r => r.user?._id === userInfo._id)
-    this._onUpdateUserInfos(foundUserInChat && foundUserInChat.user, userInfo)
+    this._updateUserInformation(foundUserInChat && foundUserInChat.user, userInfo)
     this._onUpdateUserInfosInMessages(chat.messages, userInfo)
 }
 
 export default {
+    mixins: [UserMixin],
     computed: {
       ...mapGetters({
           userIdentifier: 'session/userIdentifier',
@@ -119,7 +114,6 @@ export default {
         _amINotReader,
         _goToChat,
 
-        _onUpdateUserInfos,
         _onUpdateUserInfosInMessages,
         _onUpdateUserInOneChat,
     }

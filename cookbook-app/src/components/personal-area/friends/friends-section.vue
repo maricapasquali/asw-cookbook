@@ -97,12 +97,13 @@
 
 <script>
 
-import Server from '@api/server.info'
+import UserMixin from "@components/mixins/user.mixin"
 import {mapGetters} from "vuex";
 import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "friends-section",
+  mixins: [UserMixin],
   computed: {
     cssTable(){
       return {
@@ -115,11 +116,13 @@ export default {
     },
 
     haveFriend(){
-      return this.pagination.totals > 0
+      return this.allMyFriends.length > 0
     },
 
     ...mapGetters({
-      userIdentifier: 'session/userIdentifier'
+
+      userIdentifier: 'session/userIdentifier',
+      allMyFriends: 'friendships/friends'
     }),
   },
   data(){
@@ -163,8 +166,9 @@ export default {
       return 'avatar-'+_id
     },
 
-    onResize({screenWidth}){
-      this.isMobile = screenWidth <= 576
+    onResize({screenWidth, windowWidth}){
+      let maxWidth = 576
+      this.isMobile = screenWidth <= maxWidth || windowWidth <= maxWidth
     },
 
     isAccepted(friendship){
@@ -222,7 +226,7 @@ export default {
         if(index !== -1){
           const friend = this.$refs.friendTable.localItems[index]
           if(userInfo.information){
-            friend.user.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
+            friend.user.img = this._formatUserImage(userInfo.information.img)
             if(userInfo.information.country) friend.user.country = userInfo.information.country
             if(userInfo.information.occupation) friend.user.occupation = userInfo.information.occupation
           }

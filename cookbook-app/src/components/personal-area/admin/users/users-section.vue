@@ -180,8 +180,9 @@ export default {
     }
   },
   methods: {
-    onResize({screenWidth}){
-      this.isMobile = screenWidth < 768
+    onResize({screenWidth, windowWidth}){
+      let maxWidth = 576
+      this.isMobile = screenWidth <= maxWidth || windowWidth <= maxWidth
     },
 
     rowClass(item, type) {

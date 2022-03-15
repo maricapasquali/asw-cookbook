@@ -15,9 +15,7 @@
 
         <b-row class="comment-user" align-v="center">
           <b-col cols="auto" class="px-0">
-            <avatar :value="isThereProfileImg" :size="40" :user="comment.user && comment.user._id" class="mr-2"/>
-            <router-link v-if="comment.user" :to="{name: 'single-user', params: {id: comment.user._id }}">{{ comment.user | name }}</router-link>
-            <span v-else>{{ comment.user | name }}</span>
+            <avatar :value="isThereProfileImg" :size="40" :user="comment.user && comment.user._id" :userID="userID" :user-id-class="{'text-white':  comment.user}" :link="!!comment.user"/>
           </b-col>
         </b-row>
 
@@ -49,7 +47,7 @@
                 <b-col v-if="youCanCommentOrReport" class="text-right pr-1">
                   <b-button-group class="actions" >
                     <b-button title="Mi piace" variant="link">
-                      <like v-model="comment.likes" :recipe="recipe" :comment="comment" :no-like="youNotMakeLike"/>
+                      <like v-model="comment.likes" :recipe="recipe" :comment="comment" :no-like="youNotMakeLike" variant="light"/>
                     </b-button>
                     <b-button title="Segnala commento" variant="link" @click="showReportComment = true" ><b-icon-flag-fill variant="danger" /></b-button>
                     <b-button title="Rispondi al commento" variant="link" :ref="editorCommentId" v-b-toggle="editorCommentId"> <b-icon-reply-fill variant="success" /></b-button>
@@ -57,9 +55,7 @@
                 </b-col>
                 <b-col  v-if="isOwnerComment" class="text-right">
                   <b-button-group >
-                    <b-button variant="link" disabled>
-                      <like v-model="comment.likes" :recipe="recipe" :comment="comment" :no-like="youNotMakeLike"/>
-                    </b-button>
+                    <like v-model="comment.likes" :recipe="recipe" :comment="comment" :no-like="youNotMakeLike" variant="light"/>
                     <b-button v-if="!changeMode" title="Modifica commento" @click="changeMode = true" variant="link">
                       <b-icon-pencil-square variant="primary"/>
                     </b-button>
@@ -98,11 +94,12 @@
 </template>
 <script>
 
-import Server from '@api/server.info'
+import UserMixin from '@components/mixins/user.mixin'
 import {mapGetters} from "vuex";
 
 export default {
   name: "comment",
+  mixins: [UserMixin],
   props: {
     comment: Object,
     recipe: Object,
@@ -138,6 +135,9 @@ export default {
     }
   },
   computed:{
+    userID(){
+      return this.comment.user?.userID || 'Anonimo'
+    },
 
     responsesCommentId(){
       return 'responses-comment-'+ this.comment._id
@@ -294,13 +294,7 @@ export default {
     },
 
     onUpdateInfos(userInfo){
-
-      if(this.comment.user && userInfo && this.comment.user._id === userInfo._id) {
-        if(userInfo.information)
-          this.comment.user.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
-
-        if(userInfo.userID) this.comment.user.userID = userInfo.userID
-      }
+      if(this.comment.user && userInfo && this.comment.user._id === userInfo._id) this._updateUserInformation(this.comment.user, userInfo)
     },
     onDeletedUserListeners(id){
       if(this.comment.user && this.comment.user._id === id) this.comment.user = null

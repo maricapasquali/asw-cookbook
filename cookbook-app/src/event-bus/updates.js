@@ -38,9 +38,15 @@ export default function (bus) {
     }
 
     function deleteUser(id){
-        bus.$emit('user:delete', id)
-        // if it is my friend
-        this.$store.commit('friendships/remove', id)
+        console.debug('deleted user : ', id)
+        if(this.$store.getters["session/userIdentifier"] === id){
+            this.$store.dispatch("reset")
+            this.$router.replace({name: "homepage"})
+        } else {
+            bus.$emit('user:delete', id)
+            // if it is my friend
+            this.$store.commit('friendships/remove', id)
+        }
     }
 
 

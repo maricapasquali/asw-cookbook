@@ -1,11 +1,8 @@
 <template>
   <b-container fluid class="friend-item px-0">
     <b-row align-v="center" class="m-2 p-2" @click="onAddNewChat" cols="2" cols-sm="2" cols-md="3">
-      <b-col cols="3" sm="3" md="3" >
-        <avatar v-model="friend.user.img" :user="friend.user._id" :size="40"/>
-      </b-col>
-      <b-col cols="9" sm="9" md="7" >
-        <span>{{friend.user.userID}}</span>
+      <b-col cols="12" sm="12" md="10" >
+        <avatar v-model="friend.user.img" :user="friend.user._id" :size="40" :userID="friend.user.userID"/>
       </b-col>
       <b-col cols="12" sm="12" md="2" class="text-right">
         <country-image v-model="friend.user.country" :id="friendCountryId"/>

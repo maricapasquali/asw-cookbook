@@ -30,41 +30,55 @@ export function diff(v1: Array<any>, v2: Array<any> ): Array<any> {
     return _.difference(v1, v2)
 }
 
-export function pushIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => boolean): void {
-    let index: number =  _.findIndex(v1, predicate || val)
-    let isAbsent: boolean = index === -1
+export function pushIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => boolean): boolean {
+    let index: number = _.findIndex(v1, predicate || val)
+    let index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(val)
+    let isAbsent: boolean = index === -1 && index1 === -1
     console.debug('pushIfAbsent: found ', !isAbsent)
-    if(isAbsent) v1.push(val)
+    if(isAbsent) return v1.push(val) > 0
+}
+
+export function prependIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => boolean | any): boolean {
+    let index: number =  _.findIndex(v1, predicate || val)
+    let index1: number = isCallable(predicate) ? v1.findIndex(predicate) : v1.indexOf(val)
+    let isAbsent: boolean = index === -1 && index1 === -1
+    console.debug('prependIfAbsent: found ', !isAbsent)
+    if(isAbsent) return v1.unshift(val) > 0
 }
 
 export function removeIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): any {
     let index: number =  _.findIndex(v1, predicate)
-    let isPresent: boolean = index !== -1
+    let index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
+    let isPresent: boolean = index !== -1 || index1 != -1
     console.debug('removeIfPresent: found ', isPresent)
     if(isPresent) return v1.splice(index,1).pop()
 }
 
-export function replaceIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any, newVal: any): void {
+export function replaceIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any, newVal: any): any {
     let index: number =  _.findIndex(v1, predicate)
-    let isPresent: boolean = index !== -1
+    let index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
+    let isPresent: boolean = index !== -1 || index1 !== -1
     console.debug('replaceIfPresent: found ', isPresent)
-    if(isPresent) v1.splice(index,1, newVal)
-}
-
-export function lastOf(v1: Array<any>, filter?: (v: any) => boolean | any): any {
-    return _.last(_.filter(v1, filter));
-}
-
-export function contain(v1: Array<any>, val: any): boolean {
-    let index: number =  _.findIndex(v1, val)
-    let isPresent: boolean = index !== -1
-    console.debug('contain: found ', isPresent)
-    return isPresent
+    if(isPresent) return v1.splice(index,1, newVal).pop()
 }
 
 export function prependIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): void {
     let index: number =  _.findIndex(v1, predicate)
-    if(index !== -1) v1.unshift(v1.splice(index, 1)[0])
+    let index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
+    let isPresent: boolean = index !== -1 || index1 !== -1
+    console.debug('prependIfPresent: found ', isPresent)
+    if(isPresent) prepend(v1, index)
+}
+
+export function prepend(v1: Array<any>, index: number): void {
+    if(index >= 0 && index < v1.length) {
+        let val = v1.splice(index, 1).pop()
+        if(val) v1.unshift(val)
+    }
+}
+
+export function lastOf(v1: Array<any>, filter?: (v: any) => boolean | any): any {
+    return _.last(_.filter(v1, filter));
 }
 
 export function flatten(vector: Array<object>, field: string): Array<object> {

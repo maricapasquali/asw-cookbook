@@ -51,6 +51,8 @@ export default {
       this.handleRequestErrors.session.wrongUserSession()
       this.loading = true
     }
+
+    window.onpopstate = this._selectActive.bind(this)
   },
   computed: {
     ...mapGetters({
@@ -97,6 +99,10 @@ export default {
         case 'reports' : return { title: 'Segnalazioni', route: 'p-user-reports' }
         case 'users' : return { title: 'Utenti', route:  'p-user-users' }
       }
+    },
+    _selectActive(){
+      let item = this.tabs.find(i => this.active === i.id)
+      if(item) item.selected = true
     },
     onClickTab(route){
       this.$router.push({ name:  route })
