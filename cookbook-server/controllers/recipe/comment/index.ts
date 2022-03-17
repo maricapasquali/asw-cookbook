@@ -1,5 +1,5 @@
 import {Comment, Recipe, Report, User} from "../../../models";
-import {accessManager, checkRequestHeaders, getUser, getRestrictedUser} from "../../index";
+import {accessManager, checkRequestHeaders, getUser, getRestrictedUser} from "../../utils.controller";
 import {RBAC} from "../../../modules/rbac";
 import {MongooseValidationError} from "../../../modules/custom.errors";
 import {Types} from "mongoose";

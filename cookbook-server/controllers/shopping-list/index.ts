@@ -3,7 +3,7 @@ import {MongooseDuplicateError, MongooseValidationError} from "../../modules/cus
 import {Types} from "mongoose";
 import {RBAC} from "../../modules/rbac";
 
-import {accessManager, existById, getRestrictedUser} from "../index";
+import {accessManager, existById, getRestrictedUser} from "../utils.controller";
 import Subject = RBAC.Subject;
 import Operation = RBAC.Operation;
 import {IShoppingList} from "../../models/schemas/shopping-list";

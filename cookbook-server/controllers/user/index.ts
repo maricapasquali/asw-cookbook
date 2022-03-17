@@ -15,7 +15,7 @@ import {
     getUser,
     pagination,
     tokensManager
-} from "../index";
+} from "../utils.controller";
 
 import {EraseUserEmail, ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
 import * as path from "path";

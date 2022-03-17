@@ -11,7 +11,7 @@ import {
     FileConfigurationVideo,
     fileUploader,
     getRestrictedUser, getUser, paginationOf,
-} from '../index'
+} from '../utils.controller'
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 import {RBAC} from "../../modules/rbac";
 
@@ -20,7 +20,7 @@ import Operation = RBAC.Operation;
 import {IPermission} from "../../models/schemas/recipe/permission";
 import GrantedType = IPermission.GrantedType;
 
-import {pagination} from "../index"
+import {pagination} from "../utils.controller"
 import {DecodedTokenType} from "../../modules/jwt.token";
 import {IRecipe, RecipePopulationPipeline} from "../../models/schemas/recipe";
 

@@ -1,4 +1,4 @@
-import {getRestrictedUser} from "../../index";
+import {getRestrictedUser} from "../../utils.controller";
 import {Chat, Message} from "../../../models";
 import {Types} from "mongoose";
 import {RBAC} from "../../../modules/rbac";

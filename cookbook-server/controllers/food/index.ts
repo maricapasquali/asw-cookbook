@@ -2,7 +2,7 @@ import {Food} from '../../models'
 import {Types} from "mongoose";
 
 import {RBAC} from "../../modules/rbac";
-import {getRestrictedUser, getUser, pagination} from "../index";
+import {getRestrictedUser, getUser, pagination} from "../utils.controller";
 import {DecodedTokenType} from "../../modules/jwt.token";
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 import Operation = RBAC.Operation;
