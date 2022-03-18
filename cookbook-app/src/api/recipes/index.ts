@@ -136,4 +136,8 @@ export function updatePermission(user: string, recipeID: string, permission: Arr
             recipeID
         }
     })
+    .then(response => {
+        setUrlPath(response.data?.updatedRecipe)
+        return response
+    })
 }

@@ -1,4 +1,9 @@
 export default function (bus) {
+
+    function addRecipePermission({recipe}){
+        bus.$emit('recipe:add:permission', recipe)
+    }
+
     function unlikeRecipe({recipeID, likeID}){
         bus.$emit('unlike:recipe', recipeID, likeID)
     }
@@ -51,6 +56,7 @@ export default function (bus) {
 
 
     return {
+        addRecipePermission,
         unlikeRecipe,
         unlikeComment,
         updateFood,

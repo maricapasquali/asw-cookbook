@@ -12,6 +12,32 @@ export default {
       })
     },
     methods: {
+
+        _findRecipe(id){
+            let finder = i => i.recipe._id === id
+            return (this.$data._recipes.find(finder) || this.searching.result.find(finder))?.recipe
+        },
+
+        onAddRecipePermission(recipe){
+            if(recipe){
+                if(recipe.owner?._id === this.userIdentifier) {
+                    this._updateRecipeListener(recipe.shared ? "shared": "saved", recipe)
+                }
+                else if(recipe.permission?.find(p => p.user?._id === this.userIdentifier)){
+                    if(this.isActive) {
+                        if(this._findRecipe(recipe._id)) {
+                            this._updateRecipe(recipe)
+                            this._updateRecipeInSearchMode(recipe)
+                        }
+                        else {
+                            this._prependRecipe(recipe)
+                            this._prependRecipeInSearchMode(recipe)
+                        }
+                    }
+                    else this.$emit("onShareInChat", recipe)
+                }
+            }
+        },
         onMyLikeRecipeListeners(notification, like){
             let {recipe} = notification.otherInfo
             console.warn('Like ', like,' recipe ', recipe)
@@ -20,7 +46,10 @@ export default {
                 this.$store.dispatch("recipes/one-shared", { ownerID: recipe.owner, recipeID: recipe._id })
                     .then(({data}) => {
                         this.setDefaultValueOn(data)
-                        if(this.isActive) this._prependRecipe(data)
+                        if(this.isActive) {
+                            this._prependRecipe(data)
+                            this._prependRecipeInSearchMode(data)
+                        }
                         else this.$emit("onLikeRecipe", data)
                     })
                     .catch(err => this.handleRequestErrors.recipes.getRecipe(err, {_forbiddenPage: true}))
@@ -28,9 +57,8 @@ export default {
         },
         onMyUnLikeRecipeListeners(recipeID, likeID){
             if(this.isActive) {
-                let recipe = this.$data._recipes.find(item => item.recipe._id === recipeID)?.recipe
-                let myLike = recipe && recipe.likes.find(l => l._id === likeID && l.user?._id === this.userIdentifier)
-                if(myLike) this._removeRecipe(recipeID)
+                this._removeRecipe(recipeID)
+                this._removeRecipeInSearchMode(recipeID)
             }
             else this.$emit("onUnLikeRecipe", recipeID, likeID)
         },
@@ -68,8 +96,7 @@ export default {
 
                 //shared and saved
                 if(isMyRecipe && recipe.shared === true){
-                    let finder = i => i.recipe._id === recipe._id
-                    let old = (this.$data._recipes.find(finder) || this.searching.result.find(finder))?.recipe
+                    let old = this._findRecipe(recipe._id)
                     if(old) {
                         if(old.shared === false) this._deleteRecipeInTab('saved', old._id)
                         else this._updateRecipeListener("shared", recipe)
@@ -120,7 +147,7 @@ export default {
         },
     },
     created(){
-        //TODO: LISTENER WHEN A RECIPE WAS SHARED IN CHAT (WHEN UPDATE PERMISSION ON A RECIPE)
+        this.$bus.$on('recipe:add:permission', this.onAddRecipePermission.bind(this))
 
         if(this.isLovedTab){
             this.$bus.$on('like:recipe', this.onMyLikeRecipeListeners.bind(this))
@@ -136,6 +163,8 @@ export default {
         this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
     },
     beforeDestroy() {
+        this.$bus.$off('recipe:add:permission', this.onAddRecipePermission.bind(this))
+
         if(this.isLovedTab){
             this.$bus.$off('like:recipe', this.onMyLikeRecipeListeners.bind(this))
             this.$bus.$off('unlike:recipe', this.onMyUnLikeRecipeListeners.bind(this))
