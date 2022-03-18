@@ -25,7 +25,7 @@ export default {
   },
   methods:{
     elapsed(){
-      // this.elapsedTimeStamp = Utils.toElapsedTimeFromNow(this.value, this.language)
+
       let SEPARATOR = ' ', NOW, HOURS, MIN, DAYS
       switch (this.language){
         case 'it':
@@ -55,7 +55,7 @@ export default {
       let day = Math.floor(hour / 24)
       if (day >= 1 && day < 7) return this.elapsedTimeStamp = day + SEPARATOR + DAYS
 
-      this.elapsedTimeStamp = new Date(this.value).toLocaleDateString()
+      this.elapsedTimeStamp = dateFormat(this.value)
     }
   },
   mounted() {

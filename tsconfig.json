@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es5",
+    "target": "es6",
     "sourceMap": true,
   },
-  "include": ["modules/**/*", "cookbook-server/**/*", "cookbook-app/src/services/**/*"],
+  "include": ["modules/**/*",
+              "cookbook-server/**/*",
+              "cookbook-app/src/modules/**/*", "cookbook-app/src/api/**/*", "cookbook-app/src/socket/**/*"],
   "exclude": ["node_modules"]
 }

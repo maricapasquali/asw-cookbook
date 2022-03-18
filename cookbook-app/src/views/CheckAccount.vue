@@ -1,5 +1,6 @@
 <template>
   <b-container fluid>
+    <loading v-model="loading" />
     <modal-alert variant="danger" v-model="error.show">
       <template v-slot:msg>
         <p>{{error.msg}}</p>
@@ -15,11 +16,12 @@
 </template>
 
 <script>
-import api from '@api'
+
 export default {
-  name: "CheckAccound",
+  name: "CheckAccount",
   data: function (){
     return {
+      loading: true,
       error:{
         show: false,
         msg: '',
@@ -31,12 +33,16 @@ export default {
     }
   },
   created() {
-    api.users.checkAccount(this.$route.query).then((response) =>{
-        this.success.show = true
-    }, err => {
-      this.error.show = true
-      this.error.msg = api.users.HandlerErrors.checkAccount(err)
-    })
+    this.$store.dispatch('users/check-account', this.$route.query)
+       .then(({data}) => {
+          this.success.show = true
+          this.$socket.emit('user:signup', data._id)
+       })
+       .catch(err => {
+         this.error.show = true
+         this.error.msg = this.handleRequestErrors.users.checkAccount(err)
+       })
+       .finally(() => this.loading = false)
   }
 }
 </script>

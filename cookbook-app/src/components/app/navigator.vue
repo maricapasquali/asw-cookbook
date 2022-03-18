@@ -1,15 +1,20 @@
 <template>
   <div id="navigator-app">
+    <loading v-model="logoutProcessing" fixed/>
     <!-- NAV BAR -->
-    <b-navbar ref="navigator" toggleable="lg" type="dark" class="navigator-bar">
-      <b-navbar-brand href="#">{{ app_name }}</b-navbar-brand>
+    <b-navbar ref="navigator" toggleable="sm" type="dark" :class="classNavigator" fixed="top">
+      <b-navbar-brand :to="{name: 'homepage'}" :active="isHomePageActive">{{ app_name }}</b-navbar-brand>
 
-      <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+      <b-navbar-toggle target="nav-collapse">
+        <template #default="{ expanded }">
+          <font-awesome-icon v-if="expanded" icon="times" />
+          <font-awesome-icon v-else icon="bars" />
+        </template>
+      </b-navbar-toggle>
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-          <b-nav-item :active="isHomePageActive" :to="{name: 'homepage'}" > HomePage </b-nav-item>
-          <b-nav-item-dropdown text="Ricerca" right>
+          <b-nav-item-dropdown text="Ricerca" v-if="isGuestOrSigned" right>
             <b-dropdown-item :active="isSearchRecipesActive" :to="{name:'search', params: {what: 'recipes'}}">ricette</b-dropdown-item>
             <b-dropdown-item :active="isSearchUsersActive" :to="{name:'search', params: {what: 'users'}}">utenti</b-dropdown-item>
           </b-nav-item-dropdown>
@@ -19,74 +24,78 @@
         <b-navbar-nav class="ml-auto">
           <b-nav-item-dropdown v-if="isLoggedIn" right>
             <template #button-content>
-              <em>{{ userInfo.userID }}</em>
+              <b-avatar badge-left badge-top variant="none"  badge-variant="light">
+                <template #badge>
+                  <span> {{totalNotRead}} <span class="sr-only">notifiche e messaggi non letti</span></span>
+                </template>
+              </b-avatar>
+              <em>{{ username }}</em>
             </template>
-            <b-dropdown-item :active="isAccountActive" :to="{name: 'p-user-account', params: {id: userInfo._id}}">Account</b-dropdown-item>
+            <b-dropdown-item :active="isAccountActive" :to="{name: 'p-user-account', params: {id: userIdentifier }}">Account</b-dropdown-item>
 
-            <b-dropdown-item v-if="userInfo.isSigned" :active="isRecipesActive" :to="{name: 'p-user-recipes', params: {id: userInfo._id}}">Ricette</b-dropdown-item>
-            <b-dropdown-item v-if="userInfo.isSigned" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userInfo._id}}">Lista della spesa</b-dropdown-item>
+            <b-dropdown-item v-if="isSigned" :active="isRecipesActive" :to="{name: 'p-user-recipes', params: {id: userIdentifier}, query: {tab: 'shared'}}">Ricette</b-dropdown-item>
+            <b-dropdown-item v-if="isSigned" :active="isFoodsActive" :to="{name: 'p-user-foods', hash: '#shopping-list', params: {id: userIdentifier}}">Lista della spesa</b-dropdown-item>
+            <b-dropdown-item v-if="isSigned" :active="isFriendsActive" :to="{name: 'p-user-friends', params: {id: userIdentifier}}">Amici</b-dropdown-item>
+            <b-dropdown-item v-if="isAdmin" :active="isReportsActive" :to="{name: 'p-user-reports', params: {id: userIdentifier}}">Segnalazioni</b-dropdown-item>
+            <b-dropdown-item v-if="isAdmin" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userIdentifier}}">Alimenti</b-dropdown-item>
+            <b-dropdown-item v-if="isAdmin" :active="isUsersActive" :to="{name: 'p-user-users', params: {id: userIdentifier}}">Utenti</b-dropdown-item>
 
-            <b-dropdown-item v-if="userInfo.isAdmin" :active="isReportsActive" :to="{name: 'p-user-reports', params: {id: userInfo._id}}">Segnalazioni</b-dropdown-item>
-            <b-dropdown-item v-if="userInfo.isAdmin" :active="isFoodsActive" :to="{name: 'p-user-foods', params: {id: userInfo._id}}">Alimenti</b-dropdown-item>
-            <b-dropdown-item v-if="userInfo.isAdmin" :active="isUsersActive" :to="{name: 'p-user-users', params: {id: userInfo._id}}">Utenti</b-dropdown-item>
-
-            <b-dropdown-item :active="isNotificationsActive" :to="{name: 'p-user-notifications', params: {id: userInfo._id}}">Notifiche</b-dropdown-item>
-            <b-dropdown-item :active="isChatsActive" :to="{name: 'p-user-chats', params: {id: userInfo._id}}">Chats</b-dropdown-item>
-            <b-dropdown-item @click="logout">Sign Out</b-dropdown-item>
+            <b-dropdown-item :active="isNotificationsActive" :to="{name: 'p-user-notifications', params: {id: userIdentifier}}">
+             <b-row>
+               <b-col cols="6">
+                 <span>Notifiche</span>
+               </b-col>
+               <b-col class="text-right px-1"  cols="6">
+                 <h5><b-badge :variant="isNotificationsActive ? 'light': 'primary'"  v-if="unreadNotifications>0">{{unreadNotifications}}<span class="sr-only">notifiche non lette</span></b-badge></h5>
+               </b-col>
+             </b-row>
+            </b-dropdown-item>
+            <b-dropdown-item :active="isChatsActive" :to="{name: 'p-user-chats', params: {id: userIdentifier}}">
+              <b-row>
+                <b-col cols="6">
+                  <span>Chats</span>
+                </b-col>
+                <b-col class="text-right px-1"  cols="6">
+                  <h5><b-badge :variant="isChatsActive ? 'light': 'primary'"  v-if="unreadChatsMessages>0">{{unreadChatsMessages}}<span class="sr-only">messaggi non letti</span></b-badge></h5>
+                </b-col>
+              </b-row>
+            </b-dropdown-item>
+            <b-dropdown-item @click="onLogoutSubmit">Sign Out</b-dropdown-item>
 
           </b-nav-item-dropdown>
           <b-nav-item v-else :to="{name: 'login'}"> Login </b-nav-item>
-
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
-    <!-- LOADING OVERLAY -->
-    <loading v-model="processing" /> <!-- FIXME: loading nav bar -->
-    <!-- ERRORS MODAL -->
-    <modal-alert v-model="error.show" variant="danger">
-      <template v-slot:msg>
-        {{error.message}}
-      </template>
-    </modal-alert>
   </div>
 </template>
 
 <script>
 
-import api from '@api'
-import {Session} from "@services/session";
-import {bus} from "@/main";
+import {mapActions, mapGetters} from 'vuex'
 
 export default {
   name: "app-navigator",
   data: function (){
     return {
-      app_name : require("@app/app.config.json").app_name,
-      userInfo:  {
-        _id: null,
-        userID: null,
-        isSigned: null,
-        isAdmin: null
-      },
-      access_token: null,
-      processing: false,
-      error: {
-        show: false,
-        message: ''
-      }
+      logoutProcessing: false
     }
-  },
-  created() {
-    this.userInfo = Session.userInfo()
-    this.access_token = Session.accessToken()
-    bus.$on('userID', this.userId.bind(this))
-    bus.$on('session-start', this.startSession.bind(this))
-    bus.$on('session-end', this.endSession.bind(this))
   },
 
   computed:{
-    isLoggedIn: function (){
-      return this.access_token !== null && this.userInfo.userID !== null
+    ...mapGetters({
+      isLoggedIn: 'session/isLoggedIn',
+      userIdentifier: 'session/userIdentifier',
+      username: 'session/username',
+      isAdmin: 'session/isAdmin',
+      isSigned: 'session/isSigned',
+      isGuestOrSigned: 'session/isGuestOrSigned',
+      unreadChatsMessages: 'chats/unreadChatsMessages',
+      unreadNotifications:  'notifications/numberUnreadNotifications'
+    }),
+
+    totalNotRead(){
+      return this.unreadNotifications + this.unreadChatsMessages
     },
 
     isHomePageActive: function (){
@@ -107,6 +116,9 @@ export default {
     isFoodsActive: function (){
       return this.$route.name === 'p-user-foods'
     },
+    isFriendsActive: function (){
+      return this.$route.name === 'p-user-friends'
+    },
     isReportsActive: function (){
       return this.$route.name === 'p-user-reports'
     },
@@ -120,48 +132,20 @@ export default {
       return this.$route.name === 'p-user-chats'
     },
 
+    classNavigator(){
+      return { 'navigator-bar': true, 'navigator-bar-in-logout': this.logoutProcessing }
+    }
   },
   methods:{
-    userId: function (userID){
-      console.debug('change UserID (nav bar): ', userID)
-      // this.userInfo.userID = userID
-      Session.changeUserID(userID)
-    },
-    startSession: function (session){
-      console.debug('session start (nav bar) : ', session)
-      this.access_token = session.token
-      // this.userInfo.userID = session.userID
-    },
-    endSession: function (){
-      Session.end()
-      this.access_token = null
-      this.userInfo = {
-        _id: null,
-        userID: null,
-        isSigned: null,
-        isAdmin: null
-      }
-      console.debug("LOGOUT OK.")
-    },
-
-    logout: function (){
-      this.processing = true
-      console.log(this.userInfo._id)
-      api.users.logout(this.userInfo._id, Session.accessToken())
-               .then(response => {
-                 this.endSession()
-                 if(this.$route.name === 'homepage') this.$router.go()
-                 else this.$router.replace({name: 'homepage'})
-               })
-               .catch(err => {
-                 this.error.message = api.users.HandlerErrors.logout(err)
-                 if(err.response.status === 409){
-                   this.endSession()
-                 }else{
-                   this.error.show = true
-                 }
-               })
-               .then(() => this.processing = false)
+    ...mapActions({
+      logout: 'session/logout'
+    }),
+    onLogoutSubmit(){
+      this.logoutProcessing = true
+      this.logout()
+          .then(() => this.$socket.emit('logout'))
+          .catch(this.handleRequestErrors.session.logout)
+          .finally(() => this.logoutProcessing = false)
     }
   }
 }
@@ -171,4 +155,17 @@ export default {
 .navigator-bar{
   background-color: $nav-color;
 }
+.navigator-bar.navigator-bar-in-logout {
+  z-index: 2!important;
+}
+
+.nav-notification {
+  position: relative;
+  & .badge {
+    position: absolute;
+    top: -3px;
+    left: 12px;
+  }
+}
+
 </style>

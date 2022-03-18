@@ -1,6 +1,9 @@
 import Vue from 'vue'
-import App from '@/App'
 import router from '@router'
+import store from '@store'
+
+import App from '@/App'
+
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 // Import Bootstrap an BootstrapVue CSS files (order is important)
 import 'bootstrap/dist/css/bootstrap.css'
@@ -11,12 +14,50 @@ Vue.use(BootstrapVue)
 // Optionally install the BootstrapVue icon components plugin
 Vue.use(IconsPlugin)
 
-import components from "@components"
-Object.values(components).forEach(comp => Vue.component(comp.name, comp))
+// Import Fort Awesome
+import { library } from '@fortawesome/fontawesome-svg-core'
+import {
+    faBarcode,
+    faMinus,
+    faPlusCircle,
+    faTimesCircle,
+    faSearch,
+    faSearchMinus,
+    faSearchPlus,
+    faTimes,
+    faBars,
+    faUsers,
+    faUndo,
+    faBan
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+library.add(faBarcode, faMinus, faPlusCircle, faTimesCircle, faSearch,
+            faSearchMinus, faSearchPlus,faTimes, faBars, faUsers, faUndo, faBan)
+Vue.component('font-awesome-icon', FontAwesomeIcon)
+Vue.config.productionTip = false
 
-export const bus = new Vue();
+// Import Vue Zommer component
+import VueZoomer from 'vue-zoomer'
+Vue.use(VueZoomer)
+
+// Import my components
+import Components from "@components"
+Vue.use(Components)
+
+// Import my event bus
+import EventBusPlugin from '@event-bus'
+Vue.use(EventBusPlugin)
+
+// Import my socket.io
+import SocketPlugin from '@socket'
+Vue.use(SocketPlugin)
+
+// Import my utils
+import AppPlugins from '@/plugins'
+Vue.use(AppPlugins)
 
 new Vue({
     router,
+    store,
     render: h => h(App),
 }).$mount('#app')

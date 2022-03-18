@@ -1,28 +1,5 @@
-import {IUser} from "../../models/schemas/user";
-
 import * as crypto from 'crypto'
-
-type AuthorizationValue = {userID: string, password: string} | {access_token: string}
-
-export function extractAuthorization(headers): AuthorizationValue | any {
-    if(!headers.authorization) return {access_token: undefined}
-    const [type, value] = headers.authorization.split(' ')
-    switch (type){
-        case 'Basic': {
-            let buff = Buffer.from(value, 'base64');
-            let [userID, password] = buff.toString('utf-8').split(':');
-            return {userID: userID, password: password}
-        }
-        case 'Bearer': {
-            return {access_token: value}
-        }
-        default: throw new Error(type + ' not implemented')
-    }
-}
-
-export function isAlreadyLoggedOut(user: IUser): boolean {
-    return !user.credential.tokens || typeof user.credential.tokens === 'number'
-}
+import * as _ from "lodash";
 
 export function unixTimestampToString(ts: number, get: string = 'date_time', locals: string = 'it-IT', options: object = {}): string {
     let date = new Date(ts)
@@ -41,4 +18,23 @@ export function randomString(size: number = 20) {
 
 export function futureDateFromNow(minutes: number): number{
     return new Date(Date.now() + minutes*60000).getTime()
+}
+
+export function decodeToArray(encodedString: string): Array<any> {
+    let array = JSON.parse(encodedString)
+    if(!Array.isArray(array)) throw new Error("it's not array.")
+    return array
+}
+
+export function isTrue(encodedString: string): Boolean {
+    return Boolean(encodedString) && JSON.parse(encodedString)
+}
+
+export function areThereDuplicatesIn(array: Array<any>, mapper?: (value: any) => any): Boolean {
+    mapper = mapper || ( (p) => p )
+    return new Set(array.map(p => mapper(p))).size < array.length
+}
+
+export function hasKey(obj: object, key: string[] | string): boolean {
+    return _.hasIn(obj, key)
 }

@@ -1,8 +1,11 @@
-import {Schema, Document} from "mongoose";
+import {Document, Schema} from "mongoose";
 import {EmailValidator} from "../../../../modules/validator";
+import {RBAC} from "../../../modules/rbac";
+import Role = RBAC.Role;
 
 export interface IUser extends Document{
     signup: string,
+    createdAt: number,
     information: {
         img?:string
         firstname:string
@@ -17,15 +20,44 @@ export interface IUser extends Document{
     credential:{
         userID:string
         hash_password: string
-        role: string
-        tokens: {access: string, refresh: string} | number | any
+        role: string,
+        lastAccess: number
     }
-    friends: [{
-        user: IUser['_id']
-        timestamp: number
-        state: string ,
-    }]
     strike?:number
+}
+export namespace IUser {
+    export function isAlreadyLoggedOut(user: IUser): boolean {
+        return user.credential.lastAccess && user.credential.lastAccess !== 0
+    }
+}
+
+export namespace SignUp {
+    export enum State {
+        PENDING = 'pending', CHECKED = 'checked'
+    }
+    export namespace State {
+        export function values(): Array<State> {
+            return [State.PENDING, State.CHECKED]
+        }
+        export function _default(role: string){
+            return role as Role === Role.ADMIN ? State.CHECKED : State.PENDING
+        }
+
+        export function isChecked(state: string){
+            return state as State === State.CHECKED
+        }
+
+        export function isPending(state: string){
+            return state as State === State.PENDING
+        }
+    }
+}
+
+export namespace Strike {
+    export const MAX: number = 3
+    export function isBlocked(strike: number): boolean{
+        return strike >= Strike.MAX
+    }
 }
 
 export const UserSchema: Schema<IUser> = new Schema<IUser>({
@@ -33,10 +65,11 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
       type: String,
       required: false,
       default: function (){
-          return this.credential.role === 'admin' ? 'checked' : 'pending'
+          return SignUp.State._default(this.credential.role)
       },
-      enum: ['pending', 'checked'],
+      enum: SignUp.State.values(),
     },
+    createdAt:{ type: Number, required: false, default: Date.now() },
     information: {
         img: {
             type: String,
@@ -91,22 +124,18 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         role: {
             type: String,
             required: false,
-            default: 'signed',
-            enum: ['admin', 'signed'],
+            default: Role.SIGNED,
+            enum: Role.value(),
         },
-        tokens: {
-            type: Schema.Types.Mixed, //number | {access: string, refresh: string}
-            required: false
-        }
+        lastAccess: { type: Number, required: false, default: undefined },
     },
-    friends: {
-        type: [{
-            user: { type: Schema.Types.ObjectId, required: true },
-            timestamp:{ type: Number, required: false, default: Date.now() },
-            state: { type: String, required: true, default: 'pending', enum: ['pending', 'accepted', 'rejected']} ,
-        }],
+    strike: {
+        type: Number,
         required: false,
-        default: []
-    },
-    strike: { type: Number, required: false, default: 0, minimum: 0, maximum: 3 }
+        default: function (){
+          return this.credential.role as Role === Role.SIGNED ?  0 : undefined
+        },
+        minimum: 0,
+        maximum: Strike.MAX
+    }
 });

@@ -1,64 +1,98 @@
 <template>
-  <div class="select-with-image" v-click-outside="closeDropdown" >
-    <div class="selected-input" >
-       <img v-if="selected.value" width="20" height="20" v-on:error="errorIcon" :src="selected.src" :alt="selected.text"/>
-       <b-form-input
-           readonly
-           :id="id"
-           :type="type"
-           :placeholder="placeholder"
-           v-model="selected.text"
-           v-on:click="toggleDropdown"
-           :class="{'with-image': selected.value !== undefined && selected.text !== undefined}"
-       ></b-form-input>
-      <b-icon class="caret-up" font-scale="0.5" icon="caret-up-fill"></b-icon>
-      <b-icon class="caret-down" font-scale="0.5" icon="caret-down-fill"></b-icon>
-    </div>
-    <div class="select-dropdown scroll rounded-bottom" v-if="showDropdown">
-      <div class="disabled">
-        <span class="options-text">{{placeholder}}</span>
-      </div>
-      <div v-for="opt in options" @click="select(opt)" :class="{'options-select': true, 'hover': opt.value === selected.value}" >
-        <div class="options">
+  <div tabindex="0"
+       class="custom-select"
+       v-outside="closeDropdown"
+       @click="showDropdown = true"
+       @keyup.up.prevent="prevOpt"
+       @keyup.down.prevent="nextOpt"
+       @keyup.left.passive="prevOpt"
+       @keyup.right.prevent="nextOpt"
+       @keyup.enter="closeDropdown"
+  >
+    <b-row class="selected-input">
+      <b-col v-if="selected.value" cols="1">
+        <img  width="20" height="20" v-on:error="errorIcon" :src="selected.src" :alt="selected.text"/>
+      </b-col>
+      <b-col class="text-selected "> <span> {{selected.text}} </span> </b-col>
+    </b-row>
+    <b-container fluid v-if="showDropdown" class="select-dropdown" >
+      <b-row v-if="placeholder" :class="classObjOptions()" class="options-select disabled">
+        <b-col>{{placeholder}}</b-col>
+      </b-row>
+      <b-row v-for="opt in options" @click="select(opt)" :key="opt.value" :class="classObjOptions(opt)" >
+        <b-col v-if="opt.src" cols="1">
           <img width="20" height="20" :src="opt.src" :alt="opt.value" v-on:error="errorIcon"/>
+        </b-col>
+        <b-col>
           <span class="options-text">{{opt.text}}</span>
-        </div>
-      </div>
-    </div>
+        </b-col>
+      </b-row>
+    </b-container>
   </div>
 </template>
 
 <script>
-import click_outside from '@components/directives/click-outside' // CLICK FUORI
 export default {
   name: "select-with-image",
-  directives:{
-    ClickOutside: click_outside
-  },
   props:{
     id: String,
     options: Array,
     type: String,
     placeholder: String,
-    value: String
+    value: String,
+    tabindex: String
   },
   data: function (){
     return {
-      selected: {
-        text: undefined,
-        value: undefined
-      },
-      showDropdown: false
+      indexSelected: 0,
+      showDropdown: false,
+      selected: null
+    }
+  },
+  watch:{
+    value(val, old){
+      this.setValueText(val)
     }
   },
   created() {
-    let i = this.options.findIndex(v => v.value === this.value)
-    if(i!==-1) this.selected = this.options[i]
+    this.setValueText()
+    document.addEventListener('scroll', this.closeDropdown.bind(this))
+  },
+  beforeDestroy() {
+    document.removeEventListener('scroll', this.closeDropdown.bind(this))
+  },
+  computed: {
+    defaultValue() {
+      if(this.placeholder){
+        this.indexSelected = -1
+        return { text: this.placeholder, value: '' }
+      }else{
+        this.indexSelected = 0
+        return this.options[this.indexSelected]
+      }
+    }
   },
   methods:{
-    toggleDropdown: function (){
-      this.showDropdown = !this.showDropdown
+    classObjOptions: function (opt = this.defaultValue){
+      return {
+        'options-select': true,
+        'hover': opt.value === this.selected.value
+      }
     },
+
+    nextOpt(){
+      if(this.indexSelected < this.options.length - 1){
+        this.selected = this.options[++this.indexSelected]
+        console.debug('down key: select ', this.indexSelected)
+      }
+    },
+    prevOpt(){
+      if(this.indexSelected > 0){
+        this.selected = this.options[--this.indexSelected]
+        console.debug('up key: select ', this.indexSelected)
+      }
+    },
+
 
     closeDropdown: function () {
       this.showDropdown = false
@@ -68,10 +102,18 @@ export default {
       e.target.remove()
     },
 
-    select: function (opt){
-      this.selected = opt
-      this.showDropdown = false
-      this.$emit('select', this.selected)
+    setValueText(val = this.value){
+      this.indexSelected = this.options.findIndex(v => v.value === val)
+      if(this.indexSelected === -1) this.selected = this.defaultValue
+      else this.selected = this.options[this.indexSelected]
+
+      console.debug('Selected = ', this.selected, ', Index selected = ', this.indexSelected)
+    },
+
+    select: function (opt = this.defaultValue){
+      console.debug('Select = ', opt)
+      this.$emit('input', opt.value)
+      this.closeDropdown();
     }
   }
 }
@@ -80,88 +122,62 @@ export default {
 
 <style lang="scss" scoped>
 
-.caret-down{
-  position: absolute;
-  top: 18px;
-  right: 13px;
+.custom-select:focus-visible{
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
 }
-
-.caret-up{
-  position: absolute;
-  top: 12px;
-  right: 13px;
+.focus{
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
 }
-
-.select-with-image{
+.custom-select {
   position: relative;
-}
+  > * {
+    cursor: default;
+  }
 
-.selected-input{
-  position: relative;
-  img{
+  .select-dropdown {
+    max-height: 440px;
+    overflow-y: auto;
+
+    border-radius: 10px;
+
+    border: 1px solid #a8a8a8;
+    box-shadow: 0 4px 4px grey;
     position: absolute;
-    top: 10px;
-    left: 10px;
-  }
-  input{
-    cursor: default;
-    background-color: white;
-  }
-  input:focus{
-    box-shadow: none;
-  }
-}
+    top: 37px;
+    right: 0;
+    left: 0;
+    z-index: 3;
 
-.select-dropdown {
-  position: absolute;
-  width: 100%;
-  z-index: 99
-}
-
-input:after {
-  position: absolute;
-  content: "";
-  top: 14px;
-  right: 10px;
-  width: 0;
-  height: 0;
-}
-
-.options-select{
-  background-color: white;
-  &:hover, &.hover{
-    background-color: #398DFAED;
-    cursor: default;
+    .options-select{
+      background-color: white;
+      &:hover:not(.disabled), &.hover{
+        //background-color: #98D2ECFF; /*mobile*/
+        background-color: $component-color; /*desktop*/
+        color: white;
+        cursor: default;
+      }
+      &.disabled.hover{
+        background-color: lightgray;
+        color: white;
+      }
+      &.disabled{
+        color: #b9b9b9;
+      }
+    }
   }
 }
 
-.options{
-  padding: 0.375rem 0.75rem
-}
-
-.options-text{
-  padding: 0.375rem 0.75rem
-}
-
-.rounded-bottom{
-  border-bottom-right-radius: 0.25rem;
-  border-bottom-left-radius: 0.25rem;
-}
-
-.scroll {
-  height: 150px;
-  overflow-y: auto;
-}
-
-.disabled{
-  background-color: lightgray;
-  span{
-    color: gray;
+@media  (max-width: 768px){
+  .options-select{
+    padding: 0.35rem 0;
+    &:hover:not(.disabled), &.hover {
+      background-color: #98D2ECFF!important; /*mobile*/
+    }
   }
-}
-
-.with-image{
-  padding-left: 36px;
 }
 
 </style>
