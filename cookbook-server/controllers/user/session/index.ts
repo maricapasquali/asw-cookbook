@@ -46,7 +46,7 @@ export function login(req, res){
                     .then(u => {
                         locker.resetAttempts(ip)
 
-                        tokensManager.tokens(u._id).append(token)
+                        tokensManager.tokens(u._id.toString()).append(token)
 
                         res.status(200).json({
                             token,
@@ -89,7 +89,7 @@ export function logout(req, res){
                 user.save().then(() => {
 
                     let {access_token} = extractAuthorization(req.headers)
-                    if(access_token) tokensManager.tokens(user._id).revoke({access: access_token})
+                    if(access_token) tokensManager.tokens(decoded_token._id).revoke({access: access_token})
 
                     return res.status(200).json({logout: true})
                 }, err => res.status(500).send({description: err.message}))
@@ -127,7 +127,7 @@ export function update_access_token(req, res){
             if(!user) return res.status(404).json({description: 'User not found'})
 
             let token = tokensManager.createToken(payloadToken(user, req.id))
-            tokensManager.tokens(user._id).refresh({access: access_token, refresh: refresh_token}, {access: token, refresh: refresh_token})
+            tokensManager.tokens(id).refresh({access: access_token, refresh: refresh_token}, {access: token, refresh: refresh_token})
 
             console.debug("Create new access = ", token)
 
