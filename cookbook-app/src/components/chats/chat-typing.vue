@@ -1,7 +1,7 @@
 <template>
   <div class="ml-1">
     <span v-for="(user, index) in users" :key="user._id" v-if="user.typing">
-      <strong v-if="group">{{ user.userID | name }}</strong>
+      <strong>{{ user.userID | name }}</strong>
       <span> sta scrivendo </span>
       <b-icon-three-dots animation="cylon" class="pt-2" />
       <span v-if="index < users.length - 1">, </span>

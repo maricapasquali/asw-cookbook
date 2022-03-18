@@ -1,87 +1,69 @@
 <template>
-  <li :id="commentId">
+  <div :id="commentId">
     <wrap-loading v-model="updatingOrDeleting.process">
-      <div>
-        <!-- Modal for reporting-->
-        <b-modal v-model="showReportComment" title="Segnala commento"  @ok="report" centered ok-only>
-          <p>Vuoi segnalare il commento di <strong>{{ comment.user | name }}</strong>?</p>
-        </b-modal>
+      <!-- Modal for reporting-->
+      <b-modal v-model="showReportComment" title="Segnala commento"  @ok="report" centered ok-only>
+        <p>Vuoi segnalare il commento di <strong>{{ comment.user | name }}</strong>?</p>
+      </b-modal>
 
-        <!-- Modal for reporting-->
-        <b-modal v-model="showDeleteComment" title="Cancella commento"  @ok="removeComment" centered ok-only>
-          <p>Vuoi cancellare il tuo commento ?</p>
-        </b-modal>
+      <!-- Modal for reporting-->
+      <b-modal v-model="showDeleteComment" title="Cancella commento"  @ok="removeComment" centered ok-only>
+        <p>Vuoi cancellare il tuo commento ?</p>
+      </b-modal>
 
-        <b-row v-if="isDeletedComment" class="deleted-comment">
-          <b-col class="text-center"><b-icon-exclamation-triangle-fill/> <span>Commento cancellato.</span> </b-col>
-        </b-row>
-        <b-row v-else-if="isReportedComment" class="reported-comment" cols="1" cols-sm="1">
-          <b-col class="text-center"><b-icon-exclamation-triangle-fill/> <span>Commento segnalato.</span> </b-col>
-          <b-col class="text-center"><b-button variant="link" @click="showReportedComment">Visualizza comunque</b-button></b-col>
-        </b-row>
-        <b-row v-else class="comment-container" cols="1">
-          <b-col class="comment-header pl-0">
-            <b-row>
-              <b-col>
-                <b-row cols="1" align-v="center" class="avatar-userID-container ml-1">
-                  <b-col class="text-center avatar mt-4 px-0">
-                    <avatar :value="isThereProfileImg(comment.user)" :user="comment.user && comment.user._id"/>
-                  </b-col>
-                  <b-col class="text-center userID px-0">
-                    <router-link v-if="comment.user" :to="{name: 'single-user', params: {id: comment.user._id }}">{{ comment.user | name }}</router-link>
-                    <span v-else>{{ comment.user | name }}</span>
-                  </b-col>
-                </b-row>
-              </b-col>
-              <b-col cols="3" class="text-right mt-3 mr-2">
-                <div class="right">
-                  <b-button-group>
-                    <b-button :id="changeCommentId" v-if="isOwnerComment" @click="toggleChangeMode(comment.content)" variant="primary">
-                      <b-icon-x-square-fill v-if="changeMode.show"/>
-                      <b-icon-pencil-square v-else/>
-                    </b-button>
-                    <b-tooltip :target="changeCommentId">Modifica commento</b-tooltip>
-                    <b-button :id="deleteCommentId" v-if="isOwnerComment" @click="showDeleteComment = true" variant="danger"><b-icon-trash-fill /></b-button>
-                    <b-tooltip :target="deleteCommentId">Cancella commento</b-tooltip>
-                  </b-button-group>
-                </div>
-              </b-col>
-            </b-row>
+      <b-container :class="classComment">
+
+        <b-row class="comment-user" align-v="center">
+          <b-col cols="auto" class="px-0">
+            <avatar :value="isThereProfileImg" :size="40" :user="comment.user && comment.user._id" :userID="userID" :user-id-class="{'text-white':  comment.user}" :link="!!comment.user"/>
           </b-col>
-          <b-col class="comment-content">
-            <div v-if="changeMode.show">
-              <b-form>
-                <b-form-row cols="1">
-                  <b-col cols="12">
-                    <b-form-group :label-for="changeFormCommentId">
-                      <b-form-textarea :id="changeFormCommentId" v-model="changeMode.content" rows="5" />
-                    </b-form-group>
-                  </b-col>
-                  <b-col cols="12" class="text-right mt-1">
-                    <b-button-group v-if="changeMode.content.length">
-                      <b-button variant="primary" @click="changeComment">Salva</b-button>
-                    </b-button-group>
-                  </b-col>
-                </b-form-row>
-              </b-form>
-            </div>
-            <span v-else>{{ comment.content }}</span>
+        </b-row>
 
-          </b-col>
-          <b-col class="comment-footer">
-            <b-container fluid class="footer d-flex justify-content-between mt-2">
-              <b-container fluid class="px-0 py-3">
-                <b-row cols="2" align-h="between">
-                  <b-col cols="8"><span class="timestamp">{{ comment.timestamp, language | dateFormat }}</span> </b-col>
-                  <b-col cols="3" class="text-right"><like v-model="comment.likes" :recipe="recipe" :comment="comment" :no-like="youNotMakeLike"/> </b-col>
-                </b-row>
-              </b-container>
-              <b-button-group class="actions">
-                <b-button variant="link" @click="showReportComment = true" v-if="youCanCommentOrReport">Segnala</b-button>
-                <b-button variant="link" :ref="editorCommentId" v-if="youCanCommentOrReport"  v-b-toggle="editorCommentId">Rispondi</b-button>
-              </b-button-group>
+        <b-row class="comment-popover" cols="1">
+          <b-col class="comment-content mt-1">
+            <mini-text-editor v-model="changeMode" :content="comment.content" @end-edit="changeComment">
+              <template #edit>Salva</template>
+            </mini-text-editor>
+            <b-container v-if="!changeMode" fluid class="px-0">
+              <b-row v-if="isDeletedComment" class="mb-2">
+                <b-col><font-awesome-icon icon="ban"/> <span>Commento cancellato.</span></b-col>
+              </b-row>
+              <b-row v-else-if="isReportedComment" class="mb-2" cols="1" align-v="center">
+                <b-col><b-icon-exclamation-triangle-fill/> <span>Commento segnalato.</span> </b-col>
+                <b-col class="text-left pl-1"><b-button variant="link" @click="showReportedComment">Visualizza comunque</b-button></b-col>
+              </b-row>
+              <b-row v-else>
+                <b-col><span >{{ comment.content }}</span></b-col>
+              </b-row>
             </b-container>
+          </b-col>
 
+          <b-col v-if="!isDeletedComment && !isReportedComment" class="comment-footer px-0">
+            <b-container fluid class="my-2">
+              <b-row cols="1" cols-sm="2" align-v="center">
+                <b-col class="text-left pr-0">
+                  <small class="timestamp">{{ comment.timestamp | dateFormat(language) }}</small>
+                </b-col>
+                <b-col v-if="youCanCommentOrReport" class="text-right pr-1">
+                  <b-button-group class="actions" >
+                    <b-button title="Mi piace" variant="link">
+                      <like v-model="comment.likes" :recipe="recipe" :comment="comment" :no-like="youNotMakeLike" variant="light"/>
+                    </b-button>
+                    <b-button title="Segnala commento" variant="link" @click="showReportComment = true" ><b-icon-flag-fill variant="danger" /></b-button>
+                    <b-button title="Rispondi al commento" variant="link" :ref="editorCommentId" v-b-toggle="editorCommentId"> <b-icon-reply-fill variant="success" /></b-button>
+                  </b-button-group>
+                </b-col>
+                <b-col  v-if="isOwnerComment" class="text-right">
+                  <b-button-group >
+                    <like v-model="comment.likes" :recipe="recipe" :comment="comment" :no-like="youNotMakeLike" variant="light"/>
+                    <b-button v-if="!changeMode" title="Modifica commento" @click="changeMode = true" variant="link">
+                      <b-icon-pencil-square variant="primary"/>
+                    </b-button>
+                    <b-button title="Cancella commento" @click="showDeleteComment = true" variant="link"><b-icon-trash-fill variant="danger" /></b-button>
+                  </b-button-group>
+                </b-col>
+              </b-row>
+            </b-container>
             <b-collapse class="col" :id="editorCommentId"  v-if="youCanCommentOrReport">
               <wrap-loading v-model="responding.process">
                 <mini-text-editor :reset-content="responding.success" @end-edit="addResponse" @close="closeEditorResponse">
@@ -91,36 +73,48 @@
             </b-collapse>
           </b-col>
         </b-row>
-      </div>
+
+        <b-row cols="1" v-if="hasResponses">
+          <b-col class="text-right px-0">
+            <b-button class="toggle-conversation" variant="link" v-b-toggle="responsesCommentId"> {{showConversation ? 'Nascondi': 'Visualizza'}} conversazione </b-button>
+          </b-col>
+        </b-row>
+      </b-container>
     </wrap-loading>
 
-    <ul v-if="comment.responses && comment.responses.length">
-      <comment v-for="response in comment.responses" :key="response._id"
-                    :comment="response" :recipe="recipe" :language="language" />
-    </ul>
-  </li>
+    <b-collapse :id="responsesCommentId" v-model="showConversation">
+      <div class="responses" v-if="hasResponses">
+        <comment v-for="response in comment.responses" :key="response._id"
+                 :comment="response" :recipe="recipe" :language="language"
+                 :path-hash-comment="pathHashComment"/>
+      </div>
+    </b-collapse>
+
+  </div>
 </template>
 <script>
 
-import Server from '@api/server.info'
+import UserMixin from '@components/mixins/user.mixin'
 import {mapGetters} from "vuex";
 
 export default {
   name: "comment",
+  mixins: [UserMixin],
   props: {
     comment: Object,
     recipe: Object,
-    language: String
+    language: String,
+
+    pathHashComment: Array,
   },
   data(){
     return {
       showReportComment: false,
       showDeleteComment: false,
 
-      changeMode: {
-        show: false,
-        content: ''
-      },
+      showConversation: false,
+
+      changeMode: false,
 
       responding: {
         process: false,
@@ -136,25 +130,29 @@ export default {
     name(user){
       return user ? user.userID : "Anonimo"
     },
-    dateFormat: function (text){
-      return dateFormat(text)
+    dateFormat: function (text, lang){
+      return dateFormat(text, lang)
     }
   },
   computed:{
+    userID(){
+      return this.comment.user?.userID || 'Anonimo'
+    },
+
+    responsesCommentId(){
+      return 'responses-comment-'+ this.comment._id
+    },
+    hasResponses(){
+      return this.comment.responses && this.comment.responses.length
+    },
     commentId(){
       return 'comment-'+ this.comment._id
     },
     editorCommentId(){
       return 'editor-' + this.comment._id
     },
-    changeCommentId(){
-      return 'change-' + this.comment._id
-    },
-    changeFormCommentId(){
-      return 'change-content-input-' + this.comment._id
-    },
-    deleteCommentId(){
-      return 'delete-' + this.comment._id
+    isThereProfileImg(){
+      return this.comment.user && this.comment.user.img
     },
 
     isOwnerComment: function (){
@@ -181,13 +179,18 @@ export default {
       username: 'session/username',
       isAdmin: 'session/isAdmin',
       isLoggedIn: 'session/isLoggedIn'
-    })
+    }),
+
+    classComment(){
+      return {
+        'comment': true,
+        'deleted-comment': this.isDeletedComment,
+        'reported-comment': this.isReportedComment,
+      }
+    }
+
   },
   methods:{
-    isThereProfileImg(user){
-      return user && user.img
-    },
-
     /* REPORT */
     showReportedComment(){
       this.comment.reported = false
@@ -222,6 +225,7 @@ export default {
            this.comment.responses.push(data)
            console.debug('You answered.')
            this.$emit('add-response', data)
+           this.showConversation = true
 
            const _comment = clone(this.comment)
            this.$socket.emit('comment:response', Object.assign(_comment,
@@ -233,35 +237,26 @@ export default {
     },
 
     /*CHANGE CONTENT COMMENT*/
-    toggleChangeMode(content){
-      this.changeMode = {
-        show: !this.changeMode.show,
-        content: content
-      }
-    },
-    changeComment(e){
-      e.preventDefault()
-
-      if(this.comment.content !== this.changeMode.content) {
+    changeComment(newContent){
+      if(this.comment.content !== newContent) {
         this.updatingOrDeleting.process = true
         this.$store.dispatch('comments/update', {
-              ownerID: this.recipe.owner._id,
-              recipeID: this.recipe._id,
-              commentID: this.comment._id,
-              content: this.changeMode.content
-            })
-           .then(({data}) => {
-             console.debug('Update comment = ', data)
-             this.comment.content = this.changeMode.content
+          ownerID: this.recipe.owner._id,
+          recipeID: this.recipe._id,
+          commentID: this.comment._id,
+          content: newContent
+        })
+        .then(({data}) => {
+          console.debug('Update comment = ', data)
+          this.comment.content = newContent
 
-             this.$socket.emit('comment:update', this.comment)
-             this.toggleChangeMode('')
-             return true
-           })
-           .catch(this.handleRequestErrors.comments.updateComment)
-           .then(success => this.updatingOrDeleting = {process: false, success})
+          this.$socket.emit('comment:update', this.comment)
+          this.changeMode = false
+          return true
+        })
+        .catch(this.handleRequestErrors.comments.updateComment)
+        .then(success => this.updatingOrDeleting = {process: false, success})
       }
-
     },
 
     /* REMOVE COMMENT*/
@@ -289,7 +284,7 @@ export default {
 
     /* Listeners update */
     renderUpdateComment(_comment){
-      if(_comment && _comment._id === this.comment._id) this.comment = _comment
+      if(_comment && _comment._id === this.comment._id) this.comment.content = _comment.content
     },
     renderDeleteComment(commentID){
       if(commentID === this.comment._id) this.comment.content = ''
@@ -299,13 +294,7 @@ export default {
     },
 
     onUpdateInfos(userInfo){
-
-      if(this.comment.user && userInfo && this.comment.user._id === userInfo._id) {
-        if(userInfo.information)
-          this.comment.user.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
-
-        if(userInfo.userID) this.comment.user.userID = userInfo.userID
-      }
+      if(this.comment.user && userInfo && this.comment.user._id === userInfo._id) this._updateUserInformation(this.comment.user, userInfo)
     },
     onDeletedUserListeners(id){
       if(this.comment.user && this.comment.user._id === id) this.comment.user = null
@@ -321,6 +310,9 @@ export default {
 
     this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
     this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
+
+    this.showConversation = !!this.pathHashComment.find(c => c === this.comment._id)
+    console.debug('comment ', this.comment._id, ' showConversation ', this.showConversation)
   },
   beforeDestroy() {
     this.$bus.$off('comment:report', this.renderReportedComment.bind(this))
@@ -337,42 +329,86 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-li {
-  list-style-type: none;
+.responses{
+  border: 1px solid lightgrey;
+  border-radius: 1.25rem;
+  padding: 1%;
 }
 
-.reported-comment{
-    padding: 10px 0;
-    border-radius: 10px;
-    background-color: $comment-bg-color;
-    margin: 10px -1%;
-    color: black;
-}
-.deleted-comment{
-  padding: 10px 0;
-  border-radius: 10px;
-  background-color: $comment-bg-color;
-  margin: 5% 1% 5% -1%;
-  color: black;
-}
+.comment{
+  margin-top: 1.25rem;
 
-
-.comment-container{
-  background-color: white;
-  border-radius: 10px;
-  margin: 2% 0;
-
-  & .comment-header {
+  & .comment-user {
     position: relative;
-
-     & .avatar-userID-container {
-      width: fit-content;
+    padding-left: 13px;
+    & > div {
+      & > a {
+        color: white;
+      }
     }
-
+    &:after{
+      border: 1em solid transparent;
+      border-top-color: $comment-bg-color;
+      content: '';
+      margin-left: 5em;
+      position: absolute;
+      top: 44%;
+      left: -63px;
+      width: 0;
+      height: 0;
+      transform: rotate(180deg);
+    }
   }
 
-  & .comment-content {
-    margin-top: 10px;
+  & .comment-popover {
+    border: 1px solid lightgrey;
+    border-radius: 10px;
+    margin-top: 7px;
+    background-color: $comment-bg-color;
+    color: black;
+
+    & .footer{
+      margin-top: 10px;
+      border-radius: 10px;
+      & .timestamp{
+        float: left;
+        padding-right: 10px;
+      }
+      & .actions {
+        & button {
+          padding-left: 0;
+        }
+      }
+    }
+  }
+
+  button.toggle-conversation{
+    color: white;
+  }
+}
+
+.reported-comment {
+  & .comment-user {
+    &:after{
+      border-top-color: $comment-reported-bg-color!important;
+
+    }
+  }
+  & .comment-popover {
+    background-color: $comment-reported-bg-color!important;
+    border-color: $comment-reported-bg-color!important;
+  }
+}
+
+.deleted-comment {
+  & .comment-user {
+    &:after{
+      border-top-color: $comment-deleted-bg-color!important;
+    }
+  }
+  & .comment-popover {
+    background-color: $comment-deleted-bg-color!important;
+    border-color: $comment-deleted-bg-color!important;
   }
 }
 

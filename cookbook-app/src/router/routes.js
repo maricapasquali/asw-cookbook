@@ -18,7 +18,7 @@ import OneRecipe from "@views/user-area/OneRecipe";
 // BOTH
 import UserInformation from "@components/personal-area/user-information"
 // SIGNED
-import RecipeSection from "@components/personal-area/recipes/recipe-sections"
+import RecipesSection from "@components/personal-area/recipes/recipes-section"
 // BOTH
 import FoodSection from "@components/personal-area/foods/food-section"
 // ADMIN
@@ -70,7 +70,6 @@ export default [
     },
     {
         path: '/users/:id',
-        name: 'single-user',
         component: UserArea,
         children: [
             {
@@ -96,7 +95,7 @@ export default [
                     {
                         path: 'recipes',
                         name: 'p-user-recipes',
-                        component: RecipeSection
+                        component: RecipesSection
                     },
                     {
                         path: 'foods',

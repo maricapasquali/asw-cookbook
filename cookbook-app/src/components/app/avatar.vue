@@ -1,23 +1,32 @@
 <template>
-  <b-avatar :id="avatarId"
-            :variant="variant"
-            :src="$data._image"
-            :icon="$data._default"
-            :size="size"
-            @img-error="imageError"
-            :badge="$data._badge" badge-variant="success" />
+  <div>
+    <b-avatar :id="avatarId"
+              :variant="variant"
+              :src="$data._image"
+              :icon="$data._default"
+              :size="size"
+              @img-error="imageError"
+              :badge="$data._badge" badge-variant="success" class="mr-2"/>
+
+    <router-link v-if="userID && link" :class="userIdClass" :to="{name: 'single-user', params: {id: user}}"> <strong> <em> {{ userID }}</em></strong> </router-link>
+    <span v-else-if="userID" :class="userIdClass"> <em> {{ userID }}</em></span>
+  </div>
 </template>
 
 <script>
 
-import Server from "@api/server.info";
 import {mapGetters} from "vuex";
+import UserMixin from "@components/mixins/user.mixin"
 
 export default {
   name: "avatar",
+  mixins:[UserMixin],
   props: {
-    value: String,
-    user: String | Array,
+    value: String, //image
+    user: String | Array, //user _id or array of _id
+    userID: String,
+    link: Boolean,
+    userIdClass: String | Object,
     size: {
       type: Number,
       default: 70
@@ -63,7 +72,7 @@ export default {
     },
 
     setImage(vl){
-        this.$data._image = vl ? Server.images.path(vl) : ''
+        this.$data._image = this._formatUserImage(vl)
     },
 
     _setBadge(usersOnline, vl){

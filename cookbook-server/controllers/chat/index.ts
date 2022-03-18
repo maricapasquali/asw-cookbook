@@ -15,8 +15,10 @@ import {MongooseValidationError} from "../../modules/custom.errors";
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
 import * as _ from "lodash"
-import {decodeToArray, randomString} from "../../modules/utilities";
+import {decodeToArray, randomString, isTrue} from "../../modules/utilities";
 import * as path from "path";
+import Role = RBAC.Role;
+import {DecodedTokenType} from "../../modules/jwt.token";
 
 
 export function uploadChatImage(){
@@ -144,10 +146,20 @@ export function create_chat(req, res) {
     }
 }
 
+function remapWithoutMessages(chat: IChat, userID: string): any {
+    let _chat: any = chat.toObject()
+    _chat.unreadMessages = chat.messages.filter(m => m.sender?._id != userID)
+                                        .filter(m => !m.read.find(r => r.user?._id == userID))
+                                        .length
+    delete _chat.messages
+    console.debug('remapped chat = ', _chat)
+    return _chat
+}
+
 export function list_chat(req, res) {
     const {id} = req.params
     let  {page, limit, name} = req.query
-    let unreadMessages = req.query['unread-messages']
+    let noMessages = req.query['no-messages']
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     const user = getRestrictedUser(req, res, { operation: Operation.RETRIEVE, subject: Subject.CHAT, others: decodedToken => decodedToken._id !== id })
     if(user) {
@@ -176,26 +188,19 @@ export function list_chat(req, res) {
         Promise.all([Chat.find(filtersGroup).populate(ChatPopulationPipeline), Chat.find(filtersOne).populate(pipelinePopulatedChat)])
                .then(results => {
                    let [chatGroup, chatOne] = results
-                   const _chatOne = chatOne.filter(c => c.users.some(u => u.user && u.user._id != id))
-                   chatGroup.push(..._chatOne)
-                   chatGroup.sort((c1, c2) => {
+
+                   let _chats: any[] = chatGroup
+                   _chats.push(...(chatOne.filter(c => c.users.some(u => u.user && u.user._id != id))))
+                   _chats.sort((c1, c2) => {
                        const c1LastMessageIndex = c1.messages.length - 1, c2LastMessageIndex = c2.messages.length - 1,
                              c1Message = c1.messages[c1LastMessageIndex], c2Message = c2.messages[c2LastMessageIndex],
                              c1Timestamp = c1Message ? c1Message.timestamp : 0, c2TimeStamp = c2Message ? c2Message.timestamp : 0
                        return c2TimeStamp - c1Timestamp
                    })
 
-                   if(Boolean(unreadMessages) && JSON.parse(unreadMessages)) {
-                       chatGroup = chatGroup.filter(chat => chat.messages.length > 0)
-                                            .map(chat => {
-                                                chat.messages = chat.messages
-                                                                    .filter(m => m.sender?._id != user._id)
-                                                                    .filter(m => !m.read.find(r => r.user?._id == user._id))
-                                               // console.debug('messages uread = ',chat.messages )
-                                               return chat
-                                            })
-                   }
-                   return res.status(200).json(paginationOf(chatGroup, page && limit ? { page: +page, limit: +limit } : undefined))
+                   if(isTrue(noMessages)) _chats = _chats.map(chat => remapWithoutMessages(chat, user._id))
+
+                   return res.status(200).json(paginationOf(_chats, page && limit ? { page: +page, limit: +limit } : undefined))
                }, err => res.status(500).json({ description: err.message}))
     }
 }
@@ -204,6 +209,8 @@ export function chat(req, res) {
     const {id, chatID} = req.params
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
+    let noMessages = req.query['no-messages']
+
     const user = getRestrictedUser(req, res, { operation: Operation.RETRIEVE, subject: Subject.CHAT, others: decodedToken => decodedToken._id !== id })
     if(user) {
         Chat.findOne()
@@ -211,7 +218,7 @@ export function chat(req, res) {
             .where('_id').equals(chatID)
             .then(chat => {
                 if(!chat) return res.status(404).json({description: 'Chat is not found.'})
-                return res.status(200).json(chat)
+                return res.status(200).json(isTrue(noMessages) ? remapWithoutMessages(chat, user._id) : chat )
             }, err => res.status(500).json({ description: err.message }))
     }
 }
@@ -284,8 +291,12 @@ export function update_chat(req, res, err) {
                     break;
                     case IChat.Type.GROUP: //TODO: DA RIGUARDARE MEGLIO
                     {
-                        const _user = chat.users.find(u => u.user._id == user._id && IChat.Role.isAdmin(u.role))
-                        if(!_user) return res.status(403).json({description: 'User is unauthorized to update name of chat.'})
+
+                        const checkAuthorization = (user: DecodedTokenType) => {
+                            const _user = chat.users.find(u => u.user._id == user._id && IChat.Role.isAdmin(u.role))
+                            if(!_user) return res.status(403).json({description: 'User is unauthorized to update name of chat.'})
+                            return true
+                        }
 
                         const saveUpdatedChatUsers = (chat: IChat, response: {res: any, message: string}) => {
                             chat.save()
@@ -300,70 +311,85 @@ export function update_chat(req, res, err) {
 
                         switch (action as ChatUpdateAction){
                             case ChatUpdateAction.UPDATE_CHAT_NAME: {
-                                if(!body.name) return res.status(400).json({ description: 'Body must be of the form: { name: string } ' })
+                                if(checkAuthorization(user)) {
+                                    if(!body.name) return res.status(400).json({ description: 'Body must be of the form: { name: string } ' })
 
-                                chat.info.name = body.name
-                                chat.save().then(_chat => res.status(200).json({ description: 'Update name of chat.'}), err => res.status(500).json({ description: err.message }))
+                                    chat.info.name = body.name
+                                    chat.save().then(_chat => res.status(200).json({ description: 'Update name of chat.'}), err => res.status(500).json({ description: err.message }))
+                                }
                             }
                             break;
                             case ChatUpdateAction.UPDATE_USER_ROLE: {
+                                areAllUserAdmin(chat, user)
+                                    .then(allAdmin => {
+                                        console.debug('Chat with all admin : ', allAdmin)
+                                        if(allAdmin){
+                                            const _user = chat.users.find(u => u.user._id == user._id)
+                                            _user.role = body.role
+                                            chat.save()
+                                                .then(_chat => res.status(200).json({description: 'Update my role in chat with administrators.'}),
+                                                      err => res.status(500).json({description: err.message}))
+                                        } else {
+                                           if(checkAuthorization(user)){
+                                               const bodyUsers = _.uniqBy(body.users, 'user')
+                                               if(!bodyUsers.length || !bodyUsers.every(u => u.user && u.role))
+                                                   return res.status(400).json({ description: 'Body must be of the form: [{ user: string, role: string }, ....] with \'role\' in [' + IChat.Role.values() + ']'})
 
-                                const bodyUsers = _.uniqBy(body.users, 'user')
-                                if(!bodyUsers.length || !bodyUsers.every(u => u.user && u.role))
-                                    return res.status(400).json({ description: 'Body must be of the form: [{ user: string, role: string }, ....] with \'role\' in [' + IChat.Role.values() + ']'})
+                                               existById(User, bodyUsers.map(u => u.user))
+                                                   .then(() => {
 
-                                existById(User, bodyUsers.map(u => u.user))
-                                    .then(() => {
+                                                       const _users = chat.users.map(u => u.user._id.toString())
+                                                       const diff = bodyUsers.filter(u => !_users.includes(u.user))
+                                                       if(diff.length) return res.status(404).json({ description: 'Users '+JSON.stringify(diff)+' are not in chat'})
+                                                       console.log('Body users unique = ', bodyUsers, ', now present users: ',_users, ', diff = ', diff)
 
-                                        const _users = chat.users.map(u => u.user._id.toString())
-                                        const diff = bodyUsers.filter(u => !_users.includes(u.user))
-                                        if(diff.length) return res.status(404).json({ description: 'Users '+JSON.stringify(diff)+' are not in chat'})
-                                        console.log('Body users unique = ', bodyUsers, ', now present users: ',_users, ', diff = ', diff)
-
-                                        //- role READER to WRITER/ADMIN   -> ri aggiunge utente
-                                        //- role WRITER to ADMIN          -> rende un utente amministratore
-                                        //- role WRITER to READER         -> rimuove utente
-                                        bodyUsers.forEach(uu => {
-                                            const _user = chat.users.find(_uu => _uu.user._id == uu.user)
-                                            const oldRole = _user.role
-                                            _user.role = uu.role;
-                                            console.log('old role = ', oldRole, ', new role = ', _user.role)
-                                            if(IChat.Role.isReader(uu.role)) _user.exitedAt = Date.now();
-                                            if(IChat.Role.isReader(oldRole) && !IChat.Role.isReader(uu.role)) {
-                                                _user.exitedAt = undefined
-                                                _user.enteredAt = Date.now()
-                                            }
-                                        })
-                                        saveUpdatedChatUsers(chat, { res, message: 'Update users role on chat.'})
+                                                       //- role READER to WRITER/ADMIN   -> ri aggiunge utente
+                                                       //- role WRITER to ADMIN          -> rende un utente amministratore
+                                                       //- role WRITER to READER         -> rimuove utente
+                                                       bodyUsers.forEach(uu => {
+                                                           const _user = chat.users.find(_uu => _uu.user._id == uu.user)
+                                                           const oldRole = _user.role
+                                                           _user.role = uu.role;
+                                                           console.log('old role = ', oldRole, ', new role = ', _user.role)
+                                                           if(IChat.Role.isReader(uu.role)) _user.exitedAt = Date.now();
+                                                           if(IChat.Role.isReader(oldRole) && !IChat.Role.isReader(uu.role)) {
+                                                               _user.exitedAt = undefined
+                                                               _user.enteredAt = Date.now()
+                                                           }
+                                                       })
+                                                       saveUpdatedChatUsers(chat, { res, message: 'Update users role on chat.'})
 
 
-                                    }, ids => res.status(404).json({description: 'Users ['+ids+'] are not found.'}))
-
+                                                   }, ids => res.status(404).json({description: 'Users ['+ids+'] are not found.'}))
+                                           }
+                                        }
+                                    }, err => res.status(500).json({description: err.message}))
                             }
                             break;
                             case ChatUpdateAction.ADD_USERS: {
-                                const bodyUsers = _.uniqBy(body.users, 'user')
-                                if(!bodyUsers.length || !bodyUsers.every(u => u.user))
-                                    return res.status(400).json({ description: 'Body must be of the form: [{ user: string, role?: string }, ....] with \'role\' in [' + IChat.Role.values() + ']'})
+                                if(checkAuthorization(user)){
+                                    const bodyUsers = _.uniqBy(body.users, 'user')
+                                    if(!bodyUsers.length || !bodyUsers.every(u => u.user))
+                                        return res.status(400).json({ description: 'Body must be of the form: [{ user: string, role?: string }, ....] with \'role\' in [' + IChat.Role.values() + ']'})
 
-                                existById(User, bodyUsers.map(u => u.user))
-                                    .then(() => {
+                                    existById(User, bodyUsers.map(u => u.user))
+                                        .then(() => {
 
-                                        const _users = chat.users.map(u => u.user._id.toString())
-                                        const diff = bodyUsers.filter(u => _users.includes(u.user))
+                                            const _users = chat.users.map(u => u.user._id.toString())
+                                            const diff = bodyUsers.filter(u => _users.includes(u.user))
 
-                                        if(diff.length) return res.status(409).json({ description: 'Users '+JSON.stringify(diff)+' are already in chat'})
-                                        console.log('Body users unique = ', bodyUsers, ', now present users: ',_users, ', diff = ', diff)
+                                            if(diff.length) return res.status(409).json({ description: 'Users '+JSON.stringify(diff)+' are already in chat'})
+                                            console.log('Body users unique = ', bodyUsers, ', now present users: ',_users, ', diff = ', diff)
 
-                                        chat.users.push(...bodyUsers)
-                                        saveUpdatedChatUsers(chat, { res, message: 'Add users on chat.'})
+                                            chat.users.push(...bodyUsers)
+                                            saveUpdatedChatUsers(chat, { res, message: 'Add users on chat.'})
 
-                                    }, ids => res.status(404).json({description: 'Users ['+ids+'] are not found.'}))
-
+                                        }, ids => res.status(404).json({description: 'Users ['+ids+'] are not found.'}))
+                                }
                             }
                             break;
                             case ChatUpdateAction.UPDATE_CHAT_IMAGE: {
-                                if(checkRequestHeaders(req, res, {'content-type': 'multipart/form-data'})){
+                                if(checkAuthorization(user) && checkRequestHeaders(req, res, {'content-type': 'multipart/form-data'})){
                                     uploadChatImage()(req, res, function (err) {
                                         if(err) return res.status(400).json({ description: err.message })
                                         if(!req.file || !req.file.filename) return res.status(400).json({ description: 'Body must be multipart/form-data with \'image\' file.' })
@@ -382,4 +408,12 @@ export function update_chat(req, res, err) {
             }, err => res.status(500).json({ description: err.message }))
     }
 
+}
+
+function areAllUserAdmin(chat: IChat, user: DecodedTokenType): Promise<boolean>{
+    return User.find()
+               .where('credential.role').equals(Role.ADMIN)
+               .select('_id')
+               .then(admins => Promise.resolve( chat.users.filter(u => u.user._id != user._id).every(u => _.findIndex(admins, {_id: u.user._id}) != -1)),
+                     err => Promise.reject(err))
 }

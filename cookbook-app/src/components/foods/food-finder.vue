@@ -15,7 +15,9 @@
             </b-input-group>
             <div v-show="!hideDropdown && startWith.length>0">
               <b-list-group class="find-foods" v-if="atLeastResult">
-                <b-list-group-item v-for="food in foods" :key="food._id" @click="onSelectFood(food)" v-html="_boldStartWith(food.name)" />
+                <b-list-group-item v-for="food in foods" :key="food._id" @click="onSelectFood(food)">
+                  <span> <strong>{{food.name | limit(startWith.length)}}</strong>{{food.name | startFrom(startWith.length)}} </span>
+                </b-list-group-item>
               </b-list-group>
               <b-list-group class="find-foods" v-else><b-list-group-item><strong>Nessun risultato ...</strong></b-list-group-item></b-list-group>
             </div>
@@ -64,6 +66,14 @@ export default {
       foods: []
     }
   },
+  filters: {
+    limit(text, len){
+      return text.substr(0, len)
+    },
+    startFrom(text, ind){
+      return text.substr(ind)
+    }
+  },
   computed: {
     atLeastResult(){
       return this.foods.length > 0
@@ -75,10 +85,6 @@ export default {
     }
   },
   methods: {
-    _boldStartWith(text){
-      let len = this.startWith.length
-      return `<b>${text.substring(0, len)}</b>${text.substring(len, text.length)}`
-    },
     _showDropdown(){
       this.hideDropdown = this.startWith.length === 0
     },

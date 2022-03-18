@@ -1,29 +1,26 @@
 <template>
   <b-card class="card-comments">
+   <b-container fluid class="px-0">
+     <!-- Commenting -->
+     <b-row class="add-comment" v-if="couldComment">
+       <b-col class="text-right pr-1">
+         <b-button ref="btn-comment" variant="link" v-b-toggle="editorAddComment">Commenta</b-button>
+         <b-collapse :id="editorAddComment"  class="px-2">
+           <wrap-loading v-model="commenting.process">
+             <mini-text-editor :reset-content="commenting.success" @end-edit="addComments" @close="closeEditorComment" >
+               <template #edit>Commenta</template>
+             </mini-text-editor>
+           </wrap-loading>
+         </b-collapse>
+       </b-col>
+     </b-row>
 
-    <!-- Commenting -->
-    <div class="add-comment" v-if="couldComment">
-      <b-row>
-        <b-col>
-          <div class="d-flex justify-content-end">
-            <b-button ref="btn-comment" variant="link" v-b-toggle="editorAddComment">Commenta</b-button>
-          </div>
-          <b-collapse :id="editorAddComment">
-            <wrap-loading v-model="commenting.process">
-              <mini-text-editor :reset-content="commenting.success" @end-edit="addComments" @close="closeEditorComment">
-                <template #edit>Commenta</template>
-              </mini-text-editor>
-            </wrap-loading>
-          </b-collapse>
-        </b-col>
-      </b-row>
-    </div>
-
-    <!-- LIST  COMMENTS -->
-    <b-row v-for="comment in value" :key="comment._id" class="comment-text" align-h="center" cols="1" cols-sm="1">
-      <b-col> <comment :comment="comment" :recipe="recipe" :language="language" /> </b-col>
-    </b-row>
-    <b-row v-if="value.length === 0"> <span class="no-comments"> Nessun commento. </span> </b-row>
+     <!-- LIST  COMMENTS -->
+     <b-row v-for="comment in value" :key="comment._id" class="comment-text" align-h="center" cols="1" cols-sm="1">
+       <b-col class="px-0 mb-2"> <comment :comment="comment" :recipe="recipe" :language="language" :path-hash-comment="pathHashComment"/> </b-col>
+     </b-row>
+     <b-row v-if="value.length === 0"> <b-col> <span class="no-comments"> Nessun commento. </span> </b-col> </b-row>
+   </b-container>
   </b-card>
 
 </template>
@@ -59,7 +56,18 @@ export default {
     }),
     couldComment(){
       return !this.isAdmin && this.recipe.owner
-    }
+    },
+
+    pathHashComment(){
+      let commentId =  this.$route.hash.split('#')[1]?.split('-')[1]
+      console.debug('Go to comment: ', commentId)
+      return visitUntil(this.value, commentId,  {
+        flatterField: 'responses',
+        finderField: '_id',
+        mapperField: '_id',
+        includeChild: true
+      })
+    },
   },
 
   methods: {

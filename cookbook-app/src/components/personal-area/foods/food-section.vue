@@ -276,8 +276,9 @@ export default {
       if (!item || type !== 'row') return ''
       if (item._showDetails) return 'table-primary'
     },
-    onResize({screenWidth}){
-      this.isMobile = screenWidth < 768
+    onResize({screenWidth, windowWidth}){
+      let maxWidth = 768
+      this.isMobile =  screenWidth < maxWidth || windowWidth < maxWidth
     },
 
     isItMine(owner){

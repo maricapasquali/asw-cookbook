@@ -1,5 +1,6 @@
 interface IReader{
     read(file: File, onLoad: (event) => void, onError?: (event) => void): void
+    toFile(url: string): Promise<File>
 }
 
 export class ReaderStream implements IReader {
@@ -20,6 +21,16 @@ export class ReaderStream implements IReader {
             fileReader.readAsDataURL(file);
             fileReader.addEventListener("load", onLoad);
         } else onError(new Error('File not valid'))
+    }
+
+    toFile(url: string): Promise<File> {
+        if(!url) return Promise.reject('Url not valid')
+        return fetch(url)
+                .then(res => res.blob())
+                .then(blob => {
+                    let file = new File([blob], url?.split('/').pop() || 'file', {type: blob.type})
+                    return this.isValid(file) ? Promise.resolve(file) : Promise.reject('File not valid')
+                })
     }
 }
 export namespace ReaderStream {

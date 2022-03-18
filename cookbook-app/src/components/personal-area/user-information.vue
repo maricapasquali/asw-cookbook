@@ -213,7 +213,7 @@ export default {
 
     /* Listeners update */
     onUpdateInfos(userInfo){
-      if(!this.personalArea && userInfo && this.id === userInfo._id) {
+      if(userInfo && this.id === userInfo._id) {
         if(userInfo.information) this.user.information = userInfo.information
         if(userInfo.userID) this.user.userID = userInfo.userID
       }

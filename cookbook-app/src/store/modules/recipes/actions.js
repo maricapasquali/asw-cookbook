@@ -28,10 +28,10 @@ export default {
         return api.recipes.getRecipes(rootState.session.user._id, rootState.session.accessToken, type, pagination, null, options)
     },
 
-    one({ dispatch, rootState, rootGetters }, recipeID){
+    one({ dispatch, rootState, rootGetters }, {recipeID, options}){
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.recipes.getRecipe(rootState.session.user._id, recipeID, null, rootState.session.accessToken)
+        return api.recipes.getRecipe(rootState.session.user._id, recipeID, null, rootState.session.accessToken, options)
     },
 
     ['search-in-all']({ dispatch, rootState, rootGetters }, { pagination, filters, type, options }){
@@ -58,10 +58,11 @@ export default {
         return api.recipes.updateRecipe(rootState.session.user._id, _id, body, rootState.session.accessToken)
     },
 
-    saved({ dispatch, rootState, rootGetters }){
+    saved({ dispatch, rootState, rootGetters }, payload){
+        let { options } = payload || {}
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.recipes.getRecipes(rootState.session.user._id, rootState.session.accessToken, 'saved')
+        return api.recipes.getRecipes(rootState.session.user._id, rootState.session.accessToken, 'saved', null, null, options)
     },
 
     ['update-permission']({dispatch, rootState, rootGetters}, {recipeID, permission}){

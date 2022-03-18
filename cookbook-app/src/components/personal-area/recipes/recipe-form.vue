@@ -140,26 +140,23 @@
           <b-col cols="9" v-if="isChangeMode && value.shared">
             <b-row v-if="validateRecipe">
               <b-col class="px-0" >
-                <b-button :class="centerButtonClass" id="save-private" variant="success" @click="saved" tabindex="-1"> Salva </b-button>
-                <b-tooltip target="save-private" triggers="hover"><p> Crea una nuova ricetta PRIVATA </p></b-tooltip>
+                <b-button title="Crea una nuova ricetta PRIVATA" :class="centerButtonClass" id="save-private" variant="success" @click="saved" tabindex="-1"> Ri-Salva </b-button>
               </b-col>
               <b-col class="px-0" >
-                <b-button :class="centerButtonClass" id="save-shared" variant="info" @click="savedChanging" tabindex="-1"> Ri-Salva </b-button>
-                <b-tooltip target="save-shared" triggers="hover"><p> Salva le modifiche </p></b-tooltip>
+                <b-button title="Salva le modifiche" :class="centerButtonClass" id="save-shared" variant="info" @click="savedChanging" tabindex="-1"> Salva </b-button>
               </b-col>
               <b-col class="px-0" >
-                <b-button :class="sharedButtonClass" id="only-shared" variant="primary" @click="shared" tabindex="-1"> Ri-Condividi</b-button>
-                <b-tooltip target="only-shared" triggers="hover"><p> Crea una nuova ricetta PUBBLICA </p></b-tooltip>
+                <b-button title="Crea una nuova ricetta PUBBLICA" :class="sharedButtonClass" id="only-shared" variant="primary" @click="shared" tabindex="-1"> Ri-Condividi</b-button>
               </b-col>
             </b-row>
           </b-col>
           <b-col v-else>
             <b-row v-if="validateRecipe">
               <b-col class="px-0" >
-                <b-button :class="centerButtonClass" variant="success" @click="saved">Salva</b-button>
+                <b-button :title="isChangeMode ? 'Salva le modifiche': 'Crea una nuova ricetta PRIVATA'" :class="centerButtonClass" :variant="isChangeMode ? 'info': 'success'" @click="saved">Salva</b-button>
               </b-col>
               <b-col class="px-0" >
-                <b-button :class="sharedButtonClass"  variant="primary" @click="shared">Condividi</b-button>
+                <b-button :title="isChangeMode ? 'Condividi ricetta' : 'Crea una nuova ricetta PUBBLICA e condividila'" :class="sharedButtonClass"  variant="primary" @click="shared">Condividi</b-button>
               </b-col>
             </b-row>
           </b-col>
@@ -228,16 +225,17 @@ export default {
     },
 
     equalsRecipes(){
-     return this.value.country === this.recipe.country &&
-             this.value.diet.value === this.recipe.diet &&
-             this.value.category.value === this.recipe.category &&
-             this.value.img === this.recipe.img
-      && this.recipe.name === this.value.name &&
-         this.recipe.preparation === this.value.preparation &&
-         this.recipe.note === this.value.note &&
-         this.recipe.tutorial === this.value.tutorial &&
-         this.recipe.shared === this.value.shared &&
-         equals(this.recipe.ingredients, this.value.ingredients)
+      if(this.value)
+       return this.value.country === this.recipe.country &&
+               this.value.diet.value === this.recipe.diet &&
+               this.value.category.value === this.recipe.category &&
+               this.value.img === this.recipe.img
+        && this.recipe.name === this.value.name &&
+           this.recipe.preparation === this.value.preparation &&
+           this.recipe.note === this.value.note &&
+           this.recipe.tutorial === this.value.tutorial &&
+           this.recipe.shared === this.value.shared &&
+           equals(this.recipe.ingredients, this.value.ingredients)
     },
     validateRecipe(){
       // const formValid = Object.values(this.validation).every(p => (Array.isArray(p) && p.every(pp => pp === true)) || p === true)
@@ -265,8 +263,8 @@ export default {
       deep: false
     },
     value(val){
-      console.debug('Val = ' , val)
-      this.recipe = val
+      console.debug('New Value (v-model) = ' , val)
+      this.resetFormRecipe()
     }
   },
   methods: {
@@ -400,49 +398,68 @@ export default {
     _newRecipe(eventType, options = {shared: undefined, new: false}){
       console.debug('OPT = ', options, ', changeMode = ', this.isChangeMode !== undefined)
 
-      let request = null
+      // const formData = this._formData(options)
+      this._formData(options)
+          .then(formData => {
+            console.log('Ready form data ')
+            let request
+            this.processing = true
 
-      const formData = this._formData(options)
-
-      this.processing = true
-
-      if(options.new === false){
-        console.log('Changed recipe ')
-        // console.debug(this.recipe)
-        request = this.$store.dispatch('recipes/update', {_id: this.value._id, body: formData})
-      }
-      else{
-        console.log('New recipe ')
-        // console.debug(this.recipe)
-        request = this.$store.dispatch('recipes/create', formData)
-      }
-
-      request
-          .then(({data}) => {
-
-            if(this.isChangeMode) {
-              this._setOptionSelection(data, false)
-              this.$emit('onChanged', data)
-
-              this.$socket.emit('recipe:update', data)
-              if(this.value.shared === false && data.shared === true) {
-                console.log('Share a saved recipe.')
-                this.$socket.emit('recipe:create', data)
-              }
-            } else {
-              this.$emit(eventType, data)
-              this.resetFormRecipe()
-              if(data.shared) this.$socket.emit('recipe:create', data)
+            if(options.new === false){
+              console.log('Changed recipe ')
+              // console.debug(this.recipe)
+              request = this.$store.dispatch('recipes/update', {_id: this.value._id, body: formData})
             }
+            else{
+              console.log('New recipe ')
+              // console.debug(this.recipe)
+              request = this.$store.dispatch('recipes/create', formData)
+            }
+
+            request
+                .then(({data}) => {
+
+                  if(this.isChangeMode) {
+                    this._setOptionSelection(data, false)
+                    this.$emit('onChanged', data)
+
+                    if(options.new){
+                      let event
+                      if(data.shared === false) {
+                        event = 'recipe:create:saved'
+                        console.log('Saved a private copy of a shared recipe.')
+                      }
+                      if(data.shared === true){
+                        event = 'recipe:create'
+                        console.log('Create a new shared recipe from a old shared recipe.')
+                      }
+                      if(event) this.$socket.emit(event, data)
+                    } else {
+                      console.log('Update a ' + (data.shared ? 'shared' : 'saved') + ' recipe.')
+                      this.$socket.emit('recipe:update', data)
+                      if(this.value.shared === false && data.shared === true) {
+                        console.log('Share and/or update a saved recipe.')
+                        this.$socket.emit('recipe:create', data)
+                      }
+                    }
+
+                  } else {
+                    this.$emit(eventType, data)
+                    this.resetFormRecipe()
+                    this.$socket.emit(data.shared ? 'recipe:create' : 'recipe:create:saved', data)
+                  }
+
+                })
+                .catch(err => {
+                  if(options.new === false) this.handleRequestErrors.recipes.updateRecipe(err)
+                  else this.handleRequestErrors.recipes.createRecipe(err)
+                })
+                .finally(() => this.processing = false)
           })
-          .catch(err => {
-            if(options.new === false) this.handleRequestErrors.recipes.updateRecipe(err)
-            else this.handleRequestErrors.recipes.createRecipe(err)
-          })
-          .finally(() => this.processing = false)
+
     },
 
-    _formData(options = {shared: undefined, new: false}){
+    async _formData(options = {shared: undefined, new: false}){
       const formData = new FormData()
 
       const addOnFormData = (k, v) => {
@@ -455,11 +472,26 @@ export default {
       copyRecipe.ingredients.forEach(i => i.food = i.food._id)
       if(!copyRecipe.diet) copyRecipe.diet = ''
       if(isBoolean(options.shared)) copyRecipe.shared = options.shared
+
+      if(options.new){
+        try {
+          copyRecipe.img =  await ReaderStreamImage.toFile(copyRecipe.img)
+        }catch (e){
+          /*ignored*/
+          console.error('Image: ',e)
+        }
+        try {
+          copyRecipe.tutorial = await ReaderStreamVideo.toFile(copyRecipe.tutorial)
+        }catch (e){
+          /*ignored*/
+          console.error('Tutorial: ', e)
+        }
+      }
       if(!(copyRecipe.img instanceof File)) delete copyRecipe.img
       if(!(copyRecipe.tutorial instanceof File)) delete copyRecipe.tutorial
 
       Object.entries(copyRecipe).forEach(([k, v]) => addOnFormData(k, v))
-      //for(const i of formData.entries()) console.log(i)
+      for(const i of formData.entries()) console.log(i)
 
       console.log(options.new ? 'Create ...': 'Update ...')
       return formData;

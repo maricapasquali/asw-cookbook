@@ -11,8 +11,10 @@
       <b-row cols="1" class="mx-3">
         <slot name="collapse-content"></slot>
       </b-row>
-      <b-row v-if="withLoadingOthers" cols="1" align-v="center" align-h="center">
-        <b-button class="load-others" variant="link" @click="loadingOthers"> <slot name="load-others">Carica ...</slot> </b-button>
+      <b-row>
+        <load-others :trigger-others="loadingOthers" :in-processing="othersInProgress" :are-others="withLoadingOthers" link-variant="light" spinner-variant="light">
+          <template #btn-content><slot name="load-others"></slot></template>
+        </load-others>
       </b-row>
     </b-collapse>
   </b-container>
@@ -22,12 +24,16 @@
 export default {
   name: "container-collapsable",
   props: {
-    id: String,
+    id: {
+      type:String,
+      require:true
+    },
     title: String,
     withLoadingOthers: {
       type: Boolean,
       default: false
-    }
+    },
+    othersInProgress: Boolean
   },
   data(){
     return {
@@ -75,13 +81,6 @@ export default {
 
   & > div.element-collapse {
     color: black;
-
-    & .load-others{
-      color: white;
-      &:hover {
-        color: lightgray;
-      }
-    }
   }
 }
 </style>

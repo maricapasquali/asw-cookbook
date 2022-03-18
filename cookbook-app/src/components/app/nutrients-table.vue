@@ -83,8 +83,9 @@ export default {
   },
 
   methods:{
-    onResize({screenWidth}){
-      this.isMobile = screenWidth <= 576
+    onResize({screenWidth, windowWidth}){
+      let maxWidth = 576
+      this.isMobile = screenWidth <= maxWidth || windowWidth <= maxWidth
     },
     convertObjToArray(nObj){
       if(!nObj) return this.emptyNutritionalTable()
