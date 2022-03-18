@@ -125,6 +125,8 @@ export default {
       this.$socket.on('recipe:create:saved', this.$bus.notification.createSavedRecipe.bind(this))
       this.$socket.on('recipe:update', this.$bus.notification.updateSharedRecipe.bind(this))
       this.$socket.on('recipe:delete', this.$bus.notification.deleteSharedRecipe.bind(this))
+
+      this.$socket.on('recipe:add:permission', this.$bus.update.addRecipePermission.bind(this))
     },
     registerUserInfoListener(){
       this.$socket.on('user:update:password', this.$bus.notification.afterUpdatePassword.bind(this))

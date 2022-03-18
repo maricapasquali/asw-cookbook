@@ -18,6 +18,7 @@
           @onUnLikeRecipe="onUnLikeRecipe"
           @onDeleteRecipe="onDeleteRecipe"
           @onUpdateRecipe="onUpdateRecipe"
+          @onShareInChat="onShareInChat"
       />
 
     </b-tab>
@@ -211,6 +212,11 @@ export default {
       let recipe = this._getRecipeInTab('loved', recipeID)
       let isMyLike = recipe?.likes?.find(l => l._id === likeID && l.user?._id === this.userIdentifier)
       if(isMyLike) this._removeRecipeInTab('loved', recipeID)
+    },
+    onShareInChat(recipe){
+      let _oldRecipe = this._getRecipeInTab('shared-in-chat', recipe._id)
+      if(_oldRecipe) this._updateAndPrependRecipeInTab('shared-in-chat', recipe)
+      else this._addRecipeInTab('shared-in-chat', recipe)
     },
 
     onDeleteRecipe(tabName, recipeID){

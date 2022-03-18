@@ -104,11 +104,11 @@
 <script>
 
 import {mapGetters} from "vuex";
-import ChatMixins from '@components/mixins/chat.mixins'
+import ChatMixin from '@components/mixins/chat.mixin'
 import {QueuePendingRequests} from "@api/request";
 export default {
   name: "users-section",
-  mixins: [ChatMixins],
+  mixins: [ChatMixin],
   data(){
     return {
       isMobile: false,
