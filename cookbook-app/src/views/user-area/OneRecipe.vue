@@ -122,7 +122,7 @@
                       </b-row>
                     </b-col>
                     <b-col v-if="doc.shared" cols="4" class="text-right">
-                      <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike"/>
+                      <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike" variant="secondary"/>
                     </b-col>
                   </b-row>
                   <b-row class="m-3" cols="2"  align-h="start">
@@ -148,11 +148,11 @@
                       <div>
                         <b-col>
                           <strong>Preparazione</strong>
-                          <p> {{ doc.preparation }} </p>
+                          <p class="text-break"> {{ doc.preparation }} </p>
                         </b-col>
                         <b-col v-if="doc.note" class="mt-2">
                           <strong>Note</strong>
-                          <p> {{ doc.note }} </p>
+                          <p class="text-break"> {{ doc.note }} </p>
                         </b-col>
                       </div>
                     </b-col>
@@ -190,13 +190,12 @@
 <script>
 
 import {mapGetters} from "vuex";
-import {scrollToRouterHash} from "@router";
 import NotFound from "../404";
-import Server from "@api/server.info";
 import {QueuePendingRequests} from "@api/request";
-
+import UserMixin from "@components/mixins/user.mixin"
 export default {
   name: "OneRecipe",
+  mixins: [UserMixin],
   props: {
     value: Object | Boolean
   },
@@ -242,8 +241,6 @@ export default {
     }
   },
   methods: {
-    scrollToRouterHash,
-
     nameCategory(text){
       return this.getRecipeCategoryByValue(text)?.text || ''
     },
@@ -293,26 +290,22 @@ export default {
         if(this.$route.name !== 'recipe') this.$router.replace({ name: 'recipe', params: { recipe_id: this.doc._id }})
       }
     },
-    _onUpdateUserInfos(user, newInfos){
-      if(newInfos.information) user.img = newInfos.information.img ? Server.images.path(newInfos.information.img) : ''
-      if(newInfos.userID) user.userID = newInfos.userID
-    },
     onUpdateUserInfoListeners(userInfo){
       if(userInfo){
         if(this.doc.owner && this.doc.owner._id === userInfo._id) {
-          this._onUpdateUserInfos(this.doc.owner, userInfo)
+          this._updateUserInformation(this.doc.owner, userInfo)
           this.itemsBreadcrumb[0].text = userInfo.userID
         }
         /* NOTE: the update of this.doc.permission, this.doc.ingredients has no effect on GUI:  */
         if(this.doc.permission.length) {
           const foundUserPermission = this.doc.permission.find(p => p.user && p.user._id === userInfo._id)
-          this._onUpdateUserInfos(foundUserPermission && foundUserPermission.user, userInfo)
+          this._updateUserInformation(foundUserPermission && foundUserPermission.user, userInfo)
         }
         if(this.doc.ingredients.length) {
           this.doc
               .ingredients
               .filter(i => i.food.owner && i.food.owner._id === userInfo._id)
-              .forEach(i => this._onUpdateUserInfos(i.food.owner, userInfo))
+              .forEach(i => this._updateUserInformation(i.food.owner, userInfo))
         }
       }
     }
@@ -338,10 +331,6 @@ export default {
 
     this.$bus.$off('user:delete', this.onDeletedUserListeners.bind(this))
     this.$bus.$off('user:update:info', this.onUpdateUserInfoListeners.bind(this))
-  },
-  updated() {
-    console.log('Update one recipe page....')
-    this.scrollToRouterHash()
   }
 }
 </script>

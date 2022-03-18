@@ -13,7 +13,7 @@ export default {
   props: {
     value: {
       show: Boolean,
-      resource: String
+      resource: Object | String
     }
   },
   computed: {

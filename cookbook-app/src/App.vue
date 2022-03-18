@@ -151,6 +151,7 @@ export default {
 
     registerChatMessageListener(){
       this.$socket.on('push-messages', this.$bus.chat.pushMessages.bind(this))
+      this.$socket.on('read-messages', this.$bus.chat.readMessages.bind(this))
     },
 
     registerSessionListener(){
@@ -166,11 +167,6 @@ export default {
     let _routeWithout = [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat']
     this.routeWithoutNavigationBar = clone(_routeWithout)
     this.routeWithoutFooter = clone(_routeWithout)
-
-    this.$router.beforeEach((to, from, next) => {
-      if(!to.hash) window.scrollTo(0, 0)
-      return next()
-    })
 
     this.updateGUIListener()
 

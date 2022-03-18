@@ -348,7 +348,21 @@ components:
             $ref: "#/components/schemas/message"
       required:
         - users
-    
+
+    chat_without_messages:
+      type: object
+      properties:
+        info:
+          $ref: "#/components/schemas/chat/properties/info"
+        users:
+          $ref: "#/components/schemas/chat/properties/users"
+        unreadMessages:
+          type: number
+          description: number of unread message for a chat
+        started:
+          type: boolean
+          description: if it is true some messages have been sent, otherwise there are no messages
+
     message:
       type: object
       properties:
@@ -596,6 +610,20 @@ components:
               - partial
           value:
             type: string
+    noMessages:
+#      name: unread-messages
+      name: no-messages
+      in: query
+#      description: filter chats with unread messages
+      description: >
+        it excludes messages, but includes other information about messages:
+
+        - _unreadMessages_ : number of unread messages
+
+        - _started_ : it indicates if there are any messages in the chat
+      required: false
+      schema:
+        type: boolean
 
   securitySchemes:
     BasicAuth:
@@ -1316,6 +1344,8 @@ paths:
           $ref: "#/components/responses/forbidden_post_error"
         404:
           description: User not found
+        409:
+          description: Recipe has been already inserted
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1504,6 +1534,8 @@ paths:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
           description: Recipe not found or Users are not found
+        409:
+          description: Shared recipe already exists with this name
         500:
           $ref: "#/components/responses/general_error"
 
@@ -2300,12 +2332,7 @@ paths:
                   - partial
               value:
                type: string
-        - name: unread-messages
-          in: query
-          description: filter chats with unread messages
-          required: false
-          schema:
-            type: boolean
+        - $ref: "#/components/parameters/noMessages"
 
       responses:
         200:
@@ -2319,7 +2346,10 @@ paths:
                     type: array
                     required: true
                     items:
-                      $ref: "#/components/schemas/chat"
+                      oneOf:
+                        - $ref: "#/components/schemas/chat"
+                        - $ref: "#/components/schemas/chat_without_messages"
+
                   total:
                     type: number
                     description: Number of chats
@@ -2353,13 +2383,17 @@ paths:
         - Chats
       security:
         - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/noMessages"
       responses:
         200:
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/chat"  
+                oneOf:
+                  - $ref: "#/components/schemas/chat"
+                  - $ref: "#/components/schemas/chat_without_messages"
         400:
           $ref: "#/components/responses/bad_request"               
         401:
@@ -2502,7 +2536,7 @@ paths:
         - BearerAuth: []
       responses:
         200:
-          description: Chat has been deleted    
+          description: Chat has been deleted
         400:
           $ref: "#/components/responses/bad_request"         
         401:
@@ -2559,7 +2593,32 @@ paths:
           description: Chat not found
         500:
           $ref: "#/components/responses/general_error"
-
+    get:
+      description: ""
+      tags:
+        - Messages
+        - Chats
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/message"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Chat not found
+        500:
+          $ref: "#/components/responses/general_error"
     put:
       description: "Read messages."
       tags:

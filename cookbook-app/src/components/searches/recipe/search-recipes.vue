@@ -45,8 +45,7 @@
                                 <b-row align-v="center">
                                   <b-col>{{ingredient.name}} </b-col>
                                   <b-col class="text-right">
-                                    <b-button :id="ingredient._id" variant="danger" @click="onRemoveIngredient(index)"><b-icon-trash-fill/></b-button>
-                                    <b-tooltip :target="ingredient._id">Rimuovi</b-tooltip>
+                                    <b-button title="Rimuovi" variant="danger" @click="onRemoveIngredient(index)"><b-icon-trash-fill/></b-button>
                                   </b-col>
                                 </b-row>
                               </b-list-group-item>
@@ -76,7 +75,7 @@
           </b-col>
         </b-row>
       </b-col>
-      <b-col cols="12" sm="12" lg="7" xl="8" v-if="isDesktop">
+      <b-col cols="12" sm="12" lg="7" xl="8" v-if="isDesktop && withMap">
         <world-map v-model="filters.countries" :countries="countries" :visibility="showMap"/>
       </b-col>
     </b-row>
@@ -111,7 +110,7 @@
         </b-container>
         <div v-else>Nessun filtro.</div>
       </b-col>
-      <b-col class="mt-4"> <p><strong>Risultati: </strong></p> </b-col>
+      <b-col id="searching-result" class="mt-4"> <p><strong>Risultati: </strong></p> </b-col>
       <b-col class="search-result-body mt-2">
         <b-container fluid v-if="docs.length" >
           <b-row cols="1" cols-sm="2" cols-md="2" cols-lg="3" cols-xl="4">
@@ -151,11 +150,13 @@
 
 <script>
 
+import UserMixin from '@components/mixins/user.mixin'
 import {mapGetters} from "vuex";
 import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "search-recipes",
+  mixins: [UserMixin],
   props: {
     withMap: {
       type: Boolean,
@@ -241,7 +242,7 @@ export default {
       if(query.countries && isString(query.countries)) query.countries = [query.countries]
       if(query.categories && isString(query.categories)) query.categories = [query.categories]
       if(query.ingredients && isString(query.ingredients)) query.ingredients = [query.ingredients]
-      // console.debug('Route query = ', query)
+      console.debug('---> Route query = ', query)
       return {...this.filters, ...query}
     },
   },
@@ -288,12 +289,36 @@ export default {
            this.countries = data.filter(cn => this.getCountryByValue(cn.country))
                .map(cn => ({...this.getCountryByValue(cn.country), ...{recipes: cn.number}}))
 
+            console.warn( this.countries[0].recipes , ' ti ', typeof (this.countries[0].recipes +1))
+
            if(this.withHistory) this._setFiltersFromRoute()
            console.debug('this.countries = ', this.countries)
            return true
          })
          .catch(err => this.handleRequestErrors.recipes.getNumberRecipesForCountry(err))
          .then(() => this.pendingRequests.remove(_id))
+    },
+
+    isFiltered(recipe, onlyShared = true){
+      let {name, countries, diets, categories, ingredients} = this.filters
+
+      let ingredientsId = ingredients.map(ingredient => ingredient._id)
+
+      let _name = name.length === 0 || recipe.name.search(`^${name}`) !==-1
+      let _country = countries.length === 0 || countries.includes(recipe.country?.value || recipe.country)
+      let _diet = diets.length === 0 || diets.includes(recipe.diet?.value || recipe.diet)
+      let _category = categories.length === 0 || categories.includes(recipe.category?.value || recipe.category)
+      let _ingrentients = ingredients.length === 0 || recipe.ingredients.map(ingredient => ingredient.food._id).every(i => ingredientsId.includes(i))
+
+      const _isFiltered = _name && _country && _diet && _category && _ingrentients
+      //console.debug('_name => ', _name)
+      //console.debug('_country => ', _country)
+      // console.debug('_diet => ', _diet)
+      //console.debug('_category => ', _category)
+      //console.debug('_ingrentients => ', _ingrentients)
+      console.debug('Recipe is filtered: ', ((onlyShared && recipe.shared && _isFiltered) || (!onlyShared && _isFiltered)))
+
+      return (onlyShared && recipe.shared && _isFiltered) || (!onlyShared && _isFiltered)
     },
 
     onAddIngredient(food){
@@ -313,8 +338,8 @@ export default {
         const ingredients = []
         for (const id of this.filters.ingredients) {
           let food = await this.$refs['food-finder'].getFood(id)
-          // console.debug('food ', food)
-          if(!food._id) ingredients.push(food)
+          console.debug('food ', food)
+          if(food?._id) ingredients.push(food)
         }
         this.filters.ingredients = ingredients
       }
@@ -388,7 +413,6 @@ export default {
             this.docs = data.items
             this.total = data.total
             if(!this.searchingMode) this.searchingMode = true
-            this._hideFilters()
 
             this.$emit('searching', data)
             return true
@@ -396,6 +420,17 @@ export default {
          .catch(err => this.handleRequestErrors.recipes.getRecipe(err, { _forbiddenPage: typeof this.triggerSearch !== 'undefined' }))
          .then(processEnd => this.processingSearch = !processEnd)
          .then(() => this.pendingRequests.remove(_id))
+         .then(() => this._goToResults() )
+    },
+
+    _goToResults() {
+      let navigationBar = document.querySelector('.navbar')
+      let element = document.getElementById('searching-result')
+      if(element)
+        window.scrollTo({
+          behavior: 'smooth',
+          top: element.getBoundingClientRect().top - (navigationBar?.clientHeight || 0),
+        })
     },
 
     removeFilter(type, index = -1){
@@ -410,6 +445,56 @@ export default {
       this.$data._showMap = true
       this._showFilters()
     },
+
+    _addNumberRecipePerCountry(countryVal){
+      console.warn('COUNTRY NEW ', countryVal)
+      let country = this.getCountryByValue(countryVal)
+      if(country) {
+        let index = this.countries.findIndex(i => i.value === countryVal)
+        if(index === -1) this.countries.push({...country, ...{ recipes: 1 }})
+        else this.countries[index].recipes+=1
+      }
+    },
+    _removeNumberRecipePerCountry(countryVal){
+      let country = this.getCountryByValue(countryVal)
+      if(country) {
+        let index = this.countries.findIndex(i => i.value === countryVal)
+        if(index !== -1){
+          if((this.countries[index].recipe - 1) === 0) this.countries.splice(index, 1)
+          else this.countries[index].recipes-=1
+        }
+      }
+    },
+
+    onNewRecipeListeners(_, recipe){
+      if(this.isFiltered(recipe, true)){
+        this.docs.unshift(recipe)
+        this.total+=1
+        this._addNumberRecipePerCountry(recipe.country)
+      }
+    },
+    onUpdatedRecipeListeners(_, recipe){
+      let oldRecipe = replaceIfPresent(this.docs, rec => rec._id === recipe._id, recipe)
+      if(oldRecipe && oldRecipe.country !== recipe.country){
+        this._removeNumberRecipePerCountry(oldRecipe.country)
+        this._addNumberRecipePerCountry(recipe.country)
+      }
+    },
+    onDeletedRecipeListeners(_, recipeID){
+      let deletedRecipe = removeIfPresent(this.docs, rec => rec._id === recipeID)
+      if(deletedRecipe) {
+        this.total-=1
+        this._removeNumberRecipePerCountry(deletedRecipe.country)
+      }
+    },
+    onUpdateUserInfos(userInfo){
+      if(userInfo && (userInfo.information || userInfo.userID))
+        this.docs.filter(recipe => recipe.owner?._id === userInfo._id).forEach(recipe => this._updateUserInformation(recipe.owner, userInfo))
+    },
+    onDeleteUser(id){
+      console.debug('on delete user => _id = ', id)
+      this.docs.filter(recipe => recipe.owner?._id === id).forEach(recipe => recipe.owner = null)
+    }
   },
   created() {
     this.pendingRequests = QueuePendingRequests.create()
@@ -426,9 +511,28 @@ export default {
       this.countries = this.$store.getters.countries
       this.loading = false
     }
+
+    if(this.showResults) {
+      this.$bus.$on('recipe:create', this.onNewRecipeListeners.bind(this))
+      this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+      this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+      this.$bus.$on('user:update:info', this.onUpdateUserInfos.bind(this))
+      this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
+    }
   },
   beforeDestroy() {
     this.pendingRequests.cancelAll('Search recipes cancel operation.')
+
+    if(this.showResults) {
+      this.$bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
+      this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+      this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
+
+      this.$bus.$off('user:update:info', this.onUpdateUserInfos.bind(this))
+      this.$bus.$off('user:delete', this.onDeleteUser.bind(this))
+    }
+
   }
 }
 </script>

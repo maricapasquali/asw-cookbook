@@ -1,4 +1,4 @@
-import {tokensManager} from "../../../controllers";
+import {tokensManager} from "../../../controllers/utils.controller";
 
 export type UserInformationType = {
     id?: string,
@@ -16,11 +16,11 @@ export function userInformation(socket: any): UserInformationType {
 }
 
 export function checkAuthorization(socket: any): void | boolean {
-    const {accessToken} = userInformation(socket)
+    const {accessToken, id} = userInformation(socket)
     let isAuthorized = tokensManager.checkValidityOfToken(accessToken)
     if(isAuthorized === false) {
         let message = 'You are not authorized to perform this operation.'
-        let expired = accessToken && !tokensManager.isInRevokeList(accessToken)
+        let expired = accessToken && !tokensManager.tokens(id).isRevoked({access: accessToken})
         console.debug('Message = ', message, ', expired = ', expired)
         socket.emit('operation:not:authorized', { message, expired })
     }

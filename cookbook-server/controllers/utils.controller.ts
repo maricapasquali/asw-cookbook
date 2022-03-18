@@ -1,7 +1,7 @@
 import {IRbac, RBAC} from "../modules/rbac";
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
-import {DecodedTokenType, IJwtToken, JwtToken} from "../modules/jwt.token";
+import {DecodedTokenType, IJwtTokensManager, JwtTokensManager} from "../modules/jwt.token";
 import {FileUploader, IFileUploader, UploaderConfiguration} from "../modules/uploader";
 import FileType = FileUploader.FileType;
 import * as path from "path";
@@ -11,7 +11,7 @@ import * as config from "../../env.config"
 const server_api_origin = config.server["sub-domain"].api
 const client_origin = config.client.origin
 
-export const tokensManager: IJwtToken = new JwtToken(client_origin, server_api_origin)
+export const tokensManager: IJwtTokensManager = new JwtTokensManager(client_origin, server_api_origin)
 export const accessManager: IRbac = new RBAC()
 
 type AuthorizationValue = {userID: string, password: string} | {access_token: string}

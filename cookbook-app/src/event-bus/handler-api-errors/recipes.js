@@ -1,6 +1,6 @@
 import handlerErrorBase from './base'
 export default function (bus){
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated} = handlerErrorBase(bus)
+    const {badRequest, forbidden, notFound, serverError, unAuthenticated, duplicateResource} = handlerErrorBase(bus)
 
     function similarHandlerError(err, notFoundResource) {
         switch (err.response?.status) {
@@ -15,6 +15,9 @@ export default function (bus){
                 break
             case 404:
                 notFound(err, notFoundResource || { name: 'Ricetta', id: err.response.config?.urlParams?.recipeID })
+                break
+            case 409: // not in delete recipe
+                duplicateResource(err, "Esiste già una ricetta con questo nome.")
                 break
             default:
                 serverError(err)

@@ -1,5 +1,5 @@
 import {Comment, Recipe, Report, User} from "../../../models";
-import {accessManager, checkRequestHeaders, getUser, getRestrictedUser} from "../../index";
+import {accessManager, checkRequestHeaders, getUser, getRestrictedUser} from "../../utils.controller";
 import {RBAC} from "../../../modules/rbac";
 import {MongooseValidationError} from "../../../modules/custom.errors";
 import {Types} from "mongoose";
@@ -8,6 +8,8 @@ import {DecodedTokenType} from "../../../modules/jwt.token";
 import Operation = RBAC.Operation;
 import Subject = RBAC.Subject;
 import {IRecipe} from "../../../models/schemas/recipe";
+
+const PopulationSelectUserComment = { userID: '$credential.userID', img: '$information.img' }
 
 function _getUser(req: any, res: any, options: {operation: Operation, subject?: Subject, others?: (decodedToken: DecodedTokenType) => boolean}): Promise<string | undefined>{
     return getUser(req, res, { operation: options.operation, subject: options.subject || Subject.COMMENT, others: options.others})
@@ -51,7 +53,7 @@ function addCommentOn(doc: IComment | IRecipe, options: {body: any, user_id: str
 
                 doc.save()
                     .then(doc => {
-                            _doc.populate({path: 'user', select: { userID: '$credential.userID' }},function (err, populateComment){
+                            _doc.populate({ path: 'user', select: PopulationSelectUserComment },function (err, populateComment){
                                 if(err) return res.status(500).json({description: err.message})
                                 return res.status(201).json(populateComment)
                             })
@@ -212,7 +214,7 @@ export function list_reported_comments(req, res){
                .where('reported').ne([])
                .populate([
                    { path: 'recipe' },
-                   { path: 'reported.user', select: { userID: '$credential.userID', img: '$information.img' } }
+                   { path: 'reported.user', select: PopulationSelectUserComment }
                ])
                .then(comments => {
                     return res.status(200).json(

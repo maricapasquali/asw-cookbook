@@ -63,7 +63,7 @@
                       <b-container fluid>
                         <b-row cols="1">
                           <b-col>
-                            <router-link :to="{name: 'single-user', params: {id: user._id}}"> {{user.userID}} </router-link>
+                            <router-link :to="{name: 'single-user', params: {id: user._id}}"> <strong><em>{{user.userID}}</em></strong> </router-link>
                           </b-col>
                           <b-col v-if="user.information.occupation">
                             <span>{{user.information.occupation}}</span>
@@ -84,10 +84,10 @@
             </b-col>
           </b-row>
 
-          <b-row v-if="!search.mode && areOthers" class="mt-2">
-            <b-col class="text-center">
-              <b-button variant="link" @click="others"> Altri </b-button>
-            </b-col>
+          <b-row v-if="!search.mode" class="mt-2">
+            <load-others :trigger-others="others" :are-others="areOthers" :in-processing="processingOthers">
+              <template #btn-content>Altri ...</template>
+            </load-others>
           </b-row>
         </b-container>
       </wrap-loading>
@@ -97,11 +97,12 @@
 
 <script>
 
-import Server from '@api/server.info'
+import UserMixin from "@components/mixins/user.mixin"
 import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "search-users",
+  mixins: [UserMixin],
   data(){
     return {
       skeleton: 6,
@@ -120,6 +121,7 @@ export default {
         page: 1,
         limit: 4 //TODO: CHANGE
       },
+      processingOthers: false
 
     }
   },
@@ -203,10 +205,12 @@ export default {
          .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
          .finally(() => {
            this.processing = false
+           this.processingOthers = false
            this.pendingRequests.remove(_id)
          })
     },
     others(){
+      this.processingOthers = true
       this.getUsers(this.pagination.page + 1)
     },
     //FRIENDSHIP
@@ -227,7 +231,7 @@ export default {
           const user = this.users[index]
           if(userInfo.userID) user.userID = userInfo.userID
           if(userInfo.information) {
-            user.information.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
+            user.information.img = this._formatUserImage(userInfo.information.img)
             if(userInfo.information.occupation) user.information.occupation = userInfo.information.occupation
             if(userInfo.information.country) user.information.country = userInfo.information.country
           }

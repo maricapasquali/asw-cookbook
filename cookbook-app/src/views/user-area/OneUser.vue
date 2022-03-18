@@ -11,7 +11,7 @@
       <b-row cols="1" :cols-lg="allPresent ? 2: 1" class="p-2">
         <b-col>
           <!-- Shared Recipe of one specific user -->
-          <container-collapsable v-if="recipes.length" id="recipes" title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="areRecipesOthers" @load-others="othersRecipes">
+          <container-collapsable v-if="recipes.length" id="recipes" title="Ricette" @collapsed="onCollapsedRecipes" :with-loading-others="areRecipesOthers" :others-in-progress="recipesProcessing" @load-others="othersRecipes">
             <template #collapse-content>
               <b-list-group class="my-3">
                 <b-list-group-item v-for="(recipe, ind) in recipes" :key="ind">
@@ -34,12 +34,11 @@
                 </b-list-group-item>
               </b-list-group>
             </template>
-            <template #load-others>carica altre ...</template>
           </container-collapsable>
         </b-col>
         <b-col>
           <!-- Accepted friend of one specific user -->
-          <container-collapsable v-if="friends.length" id="friends" title="Amici" @collapsed="onCollapsedFriends" :with-loading-others="areFriendsOthers" @load-others="othersFriends">
+          <container-collapsable v-if="friends.length" id="friends" title="Amici" @collapsed="onCollapsedFriends" :with-loading-others="areFriendsOthers" :others-in-progress="friendsProcessing" @load-others="othersFriends">
             <template #collapse-content>
               <b-list-group class="my-3">
                 <b-list-group-item v-for="(friend, ind) in friends" :key="ind">
@@ -61,7 +60,6 @@
                 </b-list-group-item>
               </b-list-group>
             </template>
-            <template #load-others>carica altre ...</template>
           </container-collapsable>
         </b-col>
       </b-row>
@@ -74,9 +72,11 @@
 import {mapGetters} from "vuex";
 import NotFound from "../404";
 import {QueuePendingRequests} from "@api/request";
+import UserMixin from '@components/mixins/user.mixin'
 
 export default {
   name: "OneUser",
+  mixins: [UserMixin],
   components: {NotFound},
   computed: {
     user(){
@@ -116,6 +116,7 @@ export default {
         page: 1,
         limit: 1 //todo: change pagination limit from 1 to 10
       },
+      recipesProcessing: false,
 
       /* User Friends Section */
       friendsTotal: 0,
@@ -123,7 +124,8 @@ export default {
       friendsPaginationOptions: {
         page: 1,
         limit: 1 //todo: change pagination limit from 1 to 10
-      }
+      },
+      friendsProcessing: false,
     }
   },
   methods: {
@@ -162,11 +164,15 @@ export default {
            console.debug('Recipes : ',  this.recipes)
          })
          .catch(err => this.handleRequestErrors.recipes.getRecipe(err))
-         .then(() => this.pendingRequests.remove(idReq))
+         .then(() => {
+           this.pendingRequests.remove(idReq)
+           this.recipesProcessing = false
+         })
     },
 
     othersRecipes(){
       console.debug('Press \'other\' recipes button ...')
+      this.recipesProcessing = true
       this.getRecipes(this.recipePaginationOptions.page + 1)
     },
 
@@ -195,11 +201,15 @@ export default {
            console.debug('Friends : ',  this.friends)
          })
          .catch(this.handleRequestErrors.friends.getFriendOf)
-         .then(() => this.pendingRequests.remove(idReq))
+         .then(() => {
+           this.pendingRequests.remove(idReq)
+           this.friendsProcessing = false
+         })
     },
 
     othersFriends(){
       console.debug('Press \'other\' friends button ...')
+      this.friendsProcessing = true
       this.getFriends(this.friendsPaginationOptions.page + 1)
     },
 
@@ -230,6 +240,9 @@ export default {
     },
 
     /* Listeners update */
+    onUpdateUserInfoListeners(userInfo){
+      if(userInfo) this.friends.filter(f => f.user?._id === userInfo._id).forEach(f => this._updateUserInformation(f.user, userInfo))
+    },
     onDeleteUser(id){
       if(id === this.user) {
         this.userNotFound = true
@@ -249,6 +262,7 @@ export default {
     this.$bus.$on('friend:add', this.fetchFriend.bind(this))
     this.$bus.$on('friend:remove', this.fetchFriend.bind(this))
 
+    this.$bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))
     this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
 
     this.getRecipes()
@@ -263,6 +277,7 @@ export default {
     this.$bus.$off('friend:add', this.fetchFriend.bind(this))
     this.$bus.$off('friend:remove', this.fetchFriend.bind(this))
 
+    this.$bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))
     this.$bus.$off('user:delete', this.onDeleteUser.bind(this))
   }
 }

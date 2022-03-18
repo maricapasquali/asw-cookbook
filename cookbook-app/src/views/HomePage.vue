@@ -43,14 +43,7 @@
               <template #header>
                 <b-row align-h="between" align-v="center">
                   <b-col v-if="doc.owner" >
-                    <b-row cols="1" cols-sm="1" cols-md="2">
-                      <b-col md="3"> <avatar v-model="doc.owner.img" :user="doc.owner._id"  variant="light" :size=30 /> </b-col>
-                      <b-col md="9">
-                        <router-link :to="{name: 'single-user', params: {id: doc.owner._id }}">
-                          <strong> <em> {{ doc.owner.userID }}</em></strong>
-                        </router-link>
-                      </b-col>
-                    </b-row>
+                    <avatar v-model="doc.owner.img" :userID="doc.owner.userID" :user="doc.owner._id" variant="light" :size=30 user-id-class="text-white" link/>
                   </b-col>
                   <b-col class="text-right">
                     <elapsed-time v-model="doc.createdAt" :language="language" />
@@ -97,13 +90,10 @@
             </b-card>
           </b-col>
         </b-row>
-        <b-row class="mt-3" align-h="center" v-if="!loadOther && areOthers">
-          <b-button variant="link" @click="others">Altri ...</b-button>
-        </b-row>
-        <b-row class="load-others mt-3" align-h="center" v-show="loadOther">
-          <b-col class="text-center">
-            <b-spinner variant="primary" label="Altri ..."></b-spinner>
-          </b-col>
+        <b-row>
+          <load-others :are-others="areOthers" :in-processing="loadOther" :trigger-others="others">
+            <template #btn-content>Altri ...</template>
+          </load-others>
         </b-row>
       </b-container>
     </b-skeleton-wrapper>
@@ -113,12 +103,13 @@
 
 <script>
 
-import Server from '@api/server.info'
+import UserMixin from "@components/mixins/user.mixin"
 import {mapGetters} from "vuex";
 import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "HomePage",
+  mixins: [UserMixin],
   data: function (){
     return {
       skeletons: 5,
@@ -249,10 +240,7 @@ export default {
     onUpdateInfos(userInfo) {
       if(userInfo && (userInfo.information || userInfo.userID)) {
         this.docs.filter(recipe => recipe.owner && recipe.owner._id === userInfo._id)
-                 .forEach(recipe => {
-                    if(userInfo.information) recipe.owner.img = userInfo.information.img ? Server.images.path(userInfo.information.img) : ''
-                    if(userInfo.userID) recipe.owner.userID = userInfo.userID
-                 })
+                 .forEach(recipe => this._updateUserInformation(recipe.owner, userInfo))
       }
     },
     onDeletedUserListeners(id){
@@ -298,9 +286,6 @@ export default {
       box-shadow: 0 0 19px 5px #00000096;
       font-size: 15pt;
     }
-  }
-  .load-others {
-    position: sticky;
   }
 }
 

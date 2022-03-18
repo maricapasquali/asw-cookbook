@@ -17,28 +17,35 @@
       </b-row>
     </template>
 
-    <a :href="item.link" target="_blank">
-      <b-card no-body img-left>
-        <b-row>
-          <b-col ref="image-attachment" md="6">
-            <b-card-img class="rounded-0" :src="item.img" img-alt="Attachment image" @error="onImageError"/>
-          </b-col>
-          <b-col :md="item.img ? 6: 12">
-            <b-card-body :title="item.title" class="preview-description">
-              <b-card-text v-if="item.description"> {{item.description | length(250) }} </b-card-text>
-              <div v-else>
-                <span v-if="item.link">{{item.link}}</span>
-                <div v-else>
-                  <b-skeleton class="not-found-description" animation="null" width="85%"></b-skeleton>
-                  <b-skeleton class="not-found-description" animation="null" width="55%"></b-skeleton>
-                  <b-skeleton class="not-found-description" animation="null" width="70%"></b-skeleton>
-                </div>
-              </div>
-            </b-card-body>
+    <b-card no-body img-left>
+      <b-container fluid class="px-0">
+        <b-row v-if="removable" class="mt-2 mr-1">
+          <b-col class="text-right">
+            <font-awesome-icon class="icon" icon="times" @click="remove" />
           </b-col>
         </b-row>
-      </b-card>
-    </a>
+        <b-link :href="item.link" target="_blank">
+          <b-row no-gutters>
+            <b-col v-show="item.img" ref="image-attachment" md="6">
+              <b-card-img class="rounded-0 h-100" :src="item.img" img-alt="Attachment image" @error="onImageError"/>
+            </b-col>
+            <b-col :md="item.img ? 6: 12">
+              <b-card-body :title="item.title" class="preview-description">
+                <b-card-text text-tag="div" v-if="item.description"> {{item.description | length(250) }} </b-card-text>
+                <div v-else>
+                  <span v-if="item.link">{{item.link}}</span>
+                  <div v-else>
+                    <b-skeleton class="not-found-description" animation="null" width="85%"></b-skeleton>
+                    <b-skeleton class="not-found-description" animation="null" width="55%"></b-skeleton>
+                    <b-skeleton class="not-found-description" animation="null" width="70%"></b-skeleton>
+                  </div>
+                </div>
+              </b-card-body>
+            </b-col>
+          </b-row>
+        </b-link>
+      </b-container>
+    </b-card>
   </b-skeleton-wrapper>
 </template>
 
@@ -54,7 +61,8 @@ export default {
       title: {type: String, required: true},
       description: {type: String, required: true},
       link: String
-    }
+    },
+    removable: Boolean
   },
   data(){
     return {
@@ -110,6 +118,10 @@ export default {
                                 console.debug('End processing .....');
                                 this.processing = false
                               })
+    },
+
+    remove(){
+      if(this.removable) this.$emit('removeAttachment')
     }
   },
   created() {

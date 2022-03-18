@@ -1,7 +1,7 @@
 import * as utils from '~/utils'
 import filesystem from '~/filesystem'
 
-import * as config from '@root-project/env.config.js'
+import * as config from '@root-project/env.config'
 import validators from '@root-project/modules/validator'
 
 export default function installAppPlugins(Vue, options){
