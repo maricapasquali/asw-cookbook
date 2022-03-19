@@ -15,7 +15,7 @@
                         <b-form-select-option value="" disabled> Seleziona un opzione di ricerca </b-form-select-option>
                       </template>
                       <template #default>
-                        <b-form-select-option v-for="type in notificationTypes" :value="type.value"> {{type.text}} </b-form-select-option>
+                        <b-form-select-option v-for="type in notificationTypes" :key="type.value" :value="type.value"> {{type.text}} </b-form-select-option>
                       </template>
                     </b-form-select>
                   </b-input-group>
