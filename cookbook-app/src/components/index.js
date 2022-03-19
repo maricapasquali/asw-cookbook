@@ -10,6 +10,7 @@ import WrapLoading from "@components/wrap-loading";
 import ElapsedTime from "@components/elapsedTime";
 import MiniTextEditor from "@components/mini-text-editor"
 import LoadOthers from "@components/load-others"
+import WindowWithResize from "@components/window-with-resize"
 
 import ServerErrorHandler from '@components/app/handler-errors/server-error-handler'
 import BadRequestErrorHandler from '@components/app/handler-errors/bad-request-error-handler'
@@ -90,6 +91,7 @@ const components = {
     ElapsedTime,
     MiniTextEditor,
     LoadOthers,
+    WindowWithResize,
 
     ServerErrorHandler,
     BadRequestErrorHandler,

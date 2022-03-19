@@ -1,32 +1,30 @@
 <template>
-<div>
-  <b-tabs card :vertical="!isMobileDevice" :pills="!isMobileDevice" v-resize="onResize" >
-    <b-tab v-for="tab in tabs" :key="tab.type" :title="tab.title" :active="active === tab.type" @click="select(tab.type)">
-
-      <recipes-tab-content
-          :is-active="active === tab.type"
-          :selectedType="tab.type"
-          :recipes="tab.itemsRecipes"
-          :total="tab.total"
-          :paginationOptions="tab.paginationOptions"
-          :processing="{first: processing, other: loadOther}"
-          @others="others"
-          @onChangingRecipes="onChangingEvent(tab, $event)"
-          @onClickReSaved="onClickReSaved"
-          @onClickShared="onClickShared"
-          @onLikeRecipe="onLikeRecipe"
-          @onUnLikeRecipe="onUnLikeRecipe"
-          @onDeleteRecipe="onDeleteRecipe"
-          @onUpdateRecipe="onUpdateRecipe"
-          @onShareInChat="onShareInChat"
-      />
-
-    </b-tab>
-    <b-tab title="Inserisci ricetta" @click="select('add')" :active="isAddRecipeTab" lazy>
-      <add-recipe-tab @onShareRecipe="onShareRecipe" @onSaveRecipe="onSaveRecipe" />
-    </b-tab>
-  </b-tabs>
-</div>
+  <window-with-resize size="md" @in-bound="$data._vertical=$event">
+    <b-tabs card :vertical="!$data._vertical" :pills="!$data._vertical" >
+      <b-tab v-for="tab in tabs" :key="tab.type" :title="tab.title" :active="active === tab.type" @click="select(tab.type)">
+        <recipes-tab-content
+            :is-active="active === tab.type"
+            :selectedType="tab.type"
+            :recipes="tab.itemsRecipes"
+            :total="tab.total"
+            :paginationOptions="tab.paginationOptions"
+            :processing="{first: processing, other: loadOther}"
+            @others="others"
+            @onChangingRecipes="onChangingEvent(tab, $event)"
+            @onClickReSaved="onClickReSaved"
+            @onClickShared="onClickShared"
+            @onLikeRecipe="onLikeRecipe"
+            @onUnLikeRecipe="onUnLikeRecipe"
+            @onDeleteRecipe="onDeleteRecipe"
+            @onUpdateRecipe="onUpdateRecipe"
+            @onShareInChat="onShareInChat"
+        />
+      </b-tab>
+      <b-tab title="Inserisci ricetta" @click="select('add')" :active="isAddRecipeTab" lazy>
+        <add-recipe-tab @onShareRecipe="onShareRecipe" @onSaveRecipe="onSaveRecipe" />
+      </b-tab>
+    </b-tabs>
+  </window-with-resize>
 </template>
 
 <script>
@@ -40,7 +38,7 @@ export default {
   mixins: [RecipeMixin],
   data(){
     return {
-      isMobileDevice: false,
+      _vertical: false,
 
       tabs: [],
 
@@ -85,10 +83,6 @@ export default {
   },
 
   methods: {
-    onResize({screenWidth, windowWidth}){
-      let maxWidth = 768
-      this.isMobileDevice = screenWidth <  maxWidth || windowWidth < maxWidth
-    },
 
     /* TABS & WINDOW */
     setRecipeTabs(){

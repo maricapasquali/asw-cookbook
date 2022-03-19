@@ -1,5 +1,5 @@
 <template>
-  <b-container v-resize="onResize">
+  <b-container>
 
     <b-container class="friend-search-container my-3 p-3" v-if="haveFriend">
       <strong> Ricerca </strong>
@@ -35,60 +35,62 @@
       </b-row>
     </b-container>
 
-    <b-table :items="_friends"
-             @context-changed="abortRequest"
-             :fields="fields"
-             :filter="filter"
-             :current-page="pagination.currentPage"
-             :per-page="pagination.for_page"
-             :busy.sync="pagination.isBusy"
-             :stacked="isMobile"
-             :style="cssTable"
-             ref="friendTable"
-             show-empty>
+    <window-with-resize size="sm" @in-bound="$data._stacked=$event">
+      <b-table :items="_friends"
+               @context-changed="abortRequest"
+               :fields="fields"
+               :filter="filter"
+               :current-page="pagination.currentPage"
+               :per-page="pagination.for_page"
+               :busy.sync="pagination.isBusy"
+               :stacked="$data._stacked"
+               :style="cssTable"
+               ref="friendTable"
+               show-empty>
 
-      <template #cell(user)="row">
-        <b-row class="pl-4">
-          <b-col class="pr-0 mt-2">
-            <avatar v-model="row.item.user.img" :user="row.item.user._id" :size="40"/>
-          </b-col>
-          <b-col cols="9" class="pl-0">
-            <b-row cols="1">
-              <b-col> {{ row.item.user.userID }} </b-col>
-              <b-col>
-                <country-image v-model="row.item.user.country" :id="row.index" />
-              </b-col>
-            </b-row>
-          </b-col>
-        </b-row>
-      </template>
+        <template #cell(user)="row">
+          <b-row class="pl-4">
+            <b-col class="pr-0 mt-2">
+              <avatar v-model="row.item.user.img" :user="row.item.user._id" :size="40"/>
+            </b-col>
+            <b-col cols="9" class="pl-0">
+              <b-row cols="1">
+                <b-col> {{ row.item.user.userID }} </b-col>
+                <b-col>
+                  <country-image v-model="row.item.user.country" :id="row.index" />
+                </b-col>
+              </b-row>
+            </b-col>
+          </b-row>
+        </template>
 
-      <template #cell(state)="row" >
-        <b-button-group class="pl-4" vertical>
-          <b-friendship :other-user="row.item.user" with-chat @add-friend="fetchData" @remove-friend="fetchData" no-follow-button/>
-        </b-button-group>
-      </template>
+        <template #cell(state)="row" >
+          <b-button-group class="pl-4" vertical>
+            <b-friendship :other-user="row.item.user" with-chat @add-friend="fetchData" @remove-friend="fetchData" no-follow-button/>
+          </b-button-group>
+        </template>
 
-      <template #table-busy>
-        <div  class="text-center text-primary my-2">
-          <b-spinner class="align-middle"></b-spinner>
-          <strong class="ml-2">Caricamento...</strong>
-        </div>
-      </template>
+        <template #table-busy>
+          <div  class="text-center text-primary my-2">
+            <b-spinner class="align-middle"></b-spinner>
+            <strong class="ml-2">Caricamento...</strong>
+          </div>
+        </template>
 
-      <template #empty>
-        <div class="text-center text-primary my-2">
-          <strong class="ml-2">Non ci sono amici </strong>
-        </div>
-      </template>
+        <template #empty>
+          <div class="text-center text-primary my-2">
+            <strong class="ml-2">Non ci sono amici </strong>
+          </div>
+        </template>
 
-      <template #emptyfiltered>
-        <div class="text-center text-primary my-2">
-          <strong class="ml-2">Non ci sono amici {{ searchIsOn ? 'filtrati': ''}} </strong>
-        </div>
-      </template>
+        <template #emptyfiltered>
+          <div class="text-center text-primary my-2">
+            <strong class="ml-2">Non ci sono amici {{ searchIsOn ? 'filtrati': ''}} </strong>
+          </div>
+        </template>
 
-    </b-table>
+      </b-table>
+    </window-with-resize>
     <b-pagination  v-model="pagination.currentPage"
                   :total-rows="pagination.totals"
                   :per-page="pagination.for_page" align="fill" aria-controls="friend-table"  />
@@ -107,7 +109,7 @@ export default {
   computed: {
     cssTable(){
       return {
-        '--cell-align': this.isMobile ? 'start' :'end'
+        '--cell-align': this.$data._stacked ? 'start' :'end'
       }
     },
 
@@ -127,7 +129,7 @@ export default {
   },
   data(){
     return {
-      isMobile: false,
+      _stacked: false,
       pendingRequests: null,
       idRequest: 'friend-all',
 
@@ -164,11 +166,6 @@ export default {
   methods: {
     friendsId(_id){
       return 'avatar-'+_id
-    },
-
-    onResize({screenWidth, windowWidth}){
-      let maxWidth = 576
-      this.isMobile = screenWidth <= maxWidth || windowWidth <= maxWidth
     },
 
     isAccepted(friendship){
