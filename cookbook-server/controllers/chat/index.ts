@@ -8,7 +8,7 @@ import {
     fileUploader,
     getRestrictedUser,
     paginationOf
-} from "../index";
+} from "../utils.controller";
 import {RBAC} from "../../modules/rbac";
 import ObjectId = Types.ObjectId;
 import {MongooseValidationError} from "../../modules/custom.errors";

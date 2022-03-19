@@ -25,10 +25,10 @@
 
 <script>
 import {mapGetters} from "vuex";
-import ChatMixins from '@components/mixins/chat.mixins'
+import ChatMixin from '@components/mixins/chat.mixin'
 export default {
   name: "b-friendship",
-  mixins: [ChatMixins],
+  mixins: [ChatMixin],
   props: {
     otherUser: {
       type: Object,

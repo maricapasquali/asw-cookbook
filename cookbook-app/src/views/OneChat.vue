@@ -14,11 +14,11 @@
 import {mapGetters} from "vuex";
 import NotFound from "./404";
 
-import ChatMixins from '@components/mixins/chat.mixins'
+import ChatMixin from '@components/mixins/chat.mixin'
 
 export default {
   name: "OneChat",
-  mixins: [ChatMixins],
+  mixins: [ChatMixin],
   components: {NotFound},
   data() {
     return {

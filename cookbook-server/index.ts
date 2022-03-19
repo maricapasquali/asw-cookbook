@@ -11,11 +11,12 @@ import {Hosting} from "../modules/hosting"
 import * as database from './database'
 import routes from './routes'
 import socket from './sockets'
+import {requestId} from './modules/middleware'
 
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: config.client.origin })) //used to enable HTTPS requests from a different source
-
+app.use(requestId)
 /**
  * DATABASE CONNECTION
  */
@@ -41,6 +42,9 @@ app.use(function (req, res, next) {
     if(req.originalUrl === '/') return next()
     res.status(404).json({ error: { description: req.originalUrl + " not found" } });
 });
+/**
+ * MAIN ROUTE
+ */
 app.use(function (req, res) {
     res.status(200).send(`<p>Server is running ...</p><p><a href="${apiDocsRouteName}">Documentation api</a></p>`)
 });

@@ -1,4 +1,4 @@
-import {getUser} from "../../index";
+import {getUser} from "../../utils.controller";
 import {RBAC} from "../../../modules/rbac";
 import {Like, Recipe} from "../../../models";
 import {Types} from "mongoose";

@@ -1,5 +1,5 @@
 import {Notification, User} from "../../models";
-import {accessManager, getRestrictedUser, pagination} from "../index";
+import {accessManager, getRestrictedUser, pagination} from "../utils.controller";
 import {RBAC} from "../../modules/rbac";
 import {Types} from "mongoose";
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";

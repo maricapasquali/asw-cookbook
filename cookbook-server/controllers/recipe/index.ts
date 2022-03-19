@@ -1,7 +1,7 @@
 import * as path from "path";
 import {FileUploader} from "../../modules/uploader";
 import {decodeToArray, randomString} from "../../modules/utilities";
-import {Document, Query, Types} from "mongoose";
+import {Query, Types} from "mongoose";
 import {Food, Recipe, User} from "../../models";
 
 import {
@@ -11,7 +11,7 @@ import {
     FileConfigurationVideo,
     fileUploader,
     getRestrictedUser, getUser, paginationOf,
-} from '../index'
+} from '../utils.controller'
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 import {RBAC} from "../../modules/rbac";
 
@@ -20,7 +20,7 @@ import Operation = RBAC.Operation;
 import {IPermission} from "../../models/schemas/recipe/permission";
 import GrantedType = IPermission.GrantedType;
 
-import {pagination} from "../index"
+import {pagination} from "../utils.controller"
 import {DecodedTokenType} from "../../modules/jwt.token";
 import {IRecipe, RecipePopulationPipeline} from "../../models/schemas/recipe";
 
@@ -388,12 +388,18 @@ function update_permission_recipe(req, res){
 
                             if(_unChanged.length === _update.length && _unRevoked.length === _revoke.length) return res.status(204).send()
 
+                            recipe.updatedAt = Date.now()
                             recipe.save()
-                                  .then(_doc => res.status(200).json({ description: 'Permission has been updated', updatedPermission: _doc.permission}),
-                                        err => {
-                                            if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
-                                            return res.status(500).json({ code: err.code || 0, description: err.message })
-                                        })
+                                  .then(_doc => {
+                                          _doc.populate(RecipePopulationPipeline, function (err, populateRecipe) {
+                                              if(err) return res.status(500).json({description: err.message})
+                                              res.status(200).json({ description: 'Permission has been updated', updatedRecipe: populateRecipe })
+                                          })
+                                      },
+                                      err => {
+                                        if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
+                                        return res.status(500).json({ code: err.code || 0, description: err.message })
+                                      })
 
                         }, err => res.status(500).json({code: err.code || 0, description: err.message}))
                 }

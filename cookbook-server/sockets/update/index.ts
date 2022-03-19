@@ -20,6 +20,9 @@ export default function (io: any, socket: any): void {
     socket.on('user:update:info', useInformation => socket.broadcast.emit('user:update:info', useInformation))
     socket.on('user:delete', _id => socket.broadcast.emit('user:delete', _id))
 
+    //RECIPE PERMISSION
+    socket.on('recipe:add:permission', recipe => io.to(recipe?.permission?.map(p => p.user._id)).emit('recipe:add:permission', {recipe}))
+
     //FOOD
     socket.on('food:update', food => socket.broadcast.emit('food:update', food))
 

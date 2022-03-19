@@ -1,4 +1,4 @@
-import {existById, getRestrictedUser, getUser, paginationOf} from "../../index";
+import {existById, getRestrictedUser, getUser, paginationOf} from "../../utils.controller";
 import {Chat, Friend, User} from "../../../models";
 import {Types} from "mongoose";
 import {DecodedTokenType} from "../../../modules/jwt.token";
@@ -126,7 +126,7 @@ export function list_friends(req, res){
                       }
                       mapperItems = mapperItems.map(friend => friend.toObject())
                                                .sort((f1, f2) => fieldToSort(f1).localeCompare(fieldToSort(f2))) as Array<IFriend>
-                      
+
                       return res.status(200).json(paginationOf(mapperItems, page && limit ? { page: +page, limit: +limit } : undefined))
 
                   }, err => res.status(500).json({code: err.code || 0, description: err.message}))
