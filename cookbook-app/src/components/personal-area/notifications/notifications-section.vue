@@ -1,64 +1,110 @@
 <template>
-  <b-skeleton-wrapper :loading="loading">
-    <template #loading>
-      <b-container>
-        <b-row cols="1" class="my-3">
-          <b-alert  v-for="i in skeleton" :key="i" class="skeleton-notification my-0" variant="light" show>
-            <b-row>
-              <b-col>
-                <b-row>
-                  <b-col>
-                    <b-skeleton width="100%" />
-                  </b-col>
-                </b-row>
-              </b-col>
-              <b-col cols="2" class="text-right">
-                <font-awesome-icon icon="times"/>
-              </b-col>
-            </b-row>
-            <b-row>
-              <b-col class="text-right mt-3">
-                <small><b-skeleton width="40%" /></small>
-              </b-col>
-            </b-row>
-          </b-alert>
-        </b-row>
-      </b-container>
-    </template>
     <b-container>
       <b-row cols="1" class="my-3">
-        <b-alert
-            v-for="(doc, index) in docs" :key="index"
-            :class="classAlert(doc)" show
-            @click.native="clickNotification($event, index)">
-          <b-row >
-            <b-col>
-              <b-row>
-                <b-col cols="1" class="mt-2" v-if="!doc.read">
-                  <div class="read-badge" />
-                </b-col>
-                <b-col>
-                  <span> {{ doc.content }} </span>
-                </b-col>
-              </b-row>
-            </b-col>
-            <b-col cols="2" class="text-right">
-              <button :ref="deleteNotificationId(doc._id)" :id="deleteNotificationId(doc._id)" type="button" aria-label="Close" class="close">
-                <font-awesome-icon icon="times" size="xs"/>
-              </button>
-              <b-tooltip :target="deleteNotificationId(doc._id)">Rimuovi</b-tooltip>
-            </b-col>
-          </b-row>
-          <b-row>
-            <b-col class="text-right mt-3">
-              <small>{{doc.timestamp | dateFormat}}</small>
-            </b-col>
-          </b-row>
-        </b-alert>
-        <span v-if="docs.length===0">Non ci sono notifiche.</span>
+        <b-col v-if="haveNotifications" class="px-0">
+          <b-container>
+            <b-row class="mt-5">
+              <b-col class="px-0" :cols="searchingMode ? 10: 12">
+                <b-form-group label-for="type-search" aria-label="Tipo di notifica">
+                  <b-input-group>
+                    <b-input-group-prepend>
+                      <b-input-group-text> <b-icon-search /> </b-input-group-text>
+                    </b-input-group-prepend>
+                    <b-form-select id="type-search" v-model="filter.type" :disabled="pagination.isBusy" >
+                      <template #first>
+                        <b-form-select-option value="" disabled> Seleziona un opzione di ricerca </b-form-select-option>
+                      </template>
+                      <template #default>
+                        <b-form-select-option v-for="type in notificationTypes" :value="type.value"> {{type.text}} </b-form-select-option>
+                      </template>
+                    </b-form-select>
+                  </b-input-group>
+                </b-form-group>
+              </b-col>
+              <b-col class="text-right px-0" v-if="searchingMode" :cols="searchingMode ? 2: 0">
+                <b-button title="Reset filtri" variant="secondary" @click="filter.type=''">
+                  <font-awesome-icon icon="undo" />
+                </b-button>
+              </b-col>
+            </b-row>
+          </b-container>
+        </b-col>
+        <b-col class="px-0">
+          <b-table id="notifications-table"
+                   :items="docs"
+                   :fields="fields"
+                   :per-page="pagination.limit"
+                   :current-page="pagination.currentPage"
+                   :busy.sync="pagination.isBusy"
+                   :filter="filter"
+                   :filter-function="filterNotification"
+                   @filtered="onFiltered"
+                   @row-clicked="clickNotification"
+                   show-empty
+                   borderless>
+
+            <template #head(_id)="data">
+              <div>
+                <span class="sr-only"> Notifica </span>
+                <strong v-if="searchingMode">Risultati di "{{ textTypeFilter(filter.type) }}" : </strong>
+              </div>
+            </template>
+
+            <template #cell(_id)="row">
+              <b-alert :class="classAlert(row.item)" show>
+                <b-container>
+                  <b-row>
+                    <b-col>
+                      <b-row>
+                        <b-col cols="1" class="mt-2" v-if="!row.item.read">
+                          <div class="read-badge" />
+                        </b-col>
+                        <b-col>
+                          <span> {{ row.item.content }} </span>
+                        </b-col>
+                      </b-row>
+                    </b-col>
+                    <b-col cols="2" class="text-right">
+                      <button title="Rimuovi" @click="deleteNotification(row.index)" type="button" aria-label="Close" class="close">
+                        <font-awesome-icon icon="times" size="xs"/>
+                      </button>
+                    </b-col>
+                  </b-row>
+                  <b-row>
+                    <b-col class="text-right mt-3">
+                      <small>{{row.item.timestamp | dateFormat}}</small>
+                    </b-col>
+                  </b-row>
+                </b-container>
+              </b-alert>
+            </template>
+
+            <template #empty>
+              <span>Non ci sono notifiche.</span>
+            </template>
+
+            <template #emptyfiltered>
+              <span>Non ci sono notifiche.</span>
+            </template>
+
+            <template #table-busy>
+              <div class="text-center text-primary my-2">
+                <b-spinner class="align-middle"></b-spinner>
+                <strong class="ml-2">Caricamento...</strong>
+              </div>
+            </template>
+
+          </b-table>
+        </b-col>
+        <b-col class="px-0" v-show="pagination.totalRows">
+          <b-pagination v-model="pagination.currentPage"
+                        :total-rows="pagination.totalRows"
+                        :per-page="pagination.limit"
+                        aria-controls="notifications-table"
+                        align="fill"/>
+        </b-col>
       </b-row>
     </b-container>
-  </b-skeleton-wrapper>
 </template>
 
 <script>
@@ -70,14 +116,20 @@ export default {
   name: "notifications-section",
   data(){
     return {
-      skeleton: 5,
-      loading: false,
       docs: [],
-      totals: 0,
+      fields: [{ key: '_id' }],
+
       pagination: {
         currentPage: 1,
-        limit: 3,
-        isBusy: false
+        limit: 10,
+        isBusy: false,
+        totalRows: 0
+      },
+
+      notificationTypes: [],
+
+      filter: {
+        type: ''
       },
 
       events: [
@@ -106,8 +158,17 @@ export default {
   computed: {
     ...mapGetters({
       userIdentifier: 'session/userIdentifier',
-      isAdmin: 'session/isAdmin'
+      isAdmin: 'session/isAdmin',
+      isSigned: 'session/isSigned'
     }),
+
+    haveNotifications(){
+      return this.docs.length > 0
+    },
+
+    searchingMode(){
+      return this.filter.type.length > 0
+    }
   },
   filters: {
     dateFormat: function (text){
@@ -115,8 +176,17 @@ export default {
     }
   },
   methods: {
-    deleteNotificationId(id){
-      return 'close-' + id
+    filterNotification(notification){
+      return !this.searchingMode || notification.type === this.filter.type
+    },
+
+    onFiltered(filteredItems){
+      this.pagination.totalRows = filteredItems.length
+      this.pagination.currentPage = 1
+    },
+
+    textTypeFilter(filterType){
+      return this.notificationTypes.find(t => t.value === filterType)?.text
     },
 
     classAlert(doc){
@@ -200,36 +270,26 @@ export default {
       let _id = 'notifications-all'
       let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
 
-      this.loading = true
+      this.pagination.isBusy = true
       this.$store.dispatch('notifications/all', {options})
           .then(({data}) => {
             this.docs = data.items
-            this.totals = data.totals
+            this.pagination.totalRows = data.total
             return true
           })
           .catch(err => {
            this.handleRequestErrors.notifications.getNotifications(err)
            return false
           })
-          .then(processEnd => this.loading = !processEnd)
+          .then(processEnd => this.pagination.isBusy = !processEnd)
           .then(() => this.pendingRequests.remove(_id))
     },
 
-    clickNotification(event, index){
-      const target = event.target
-      const document = this.docs[index]
-      const id = this.deleteNotificationId(document._id)
-      const removeBtn = this.$refs[id][0]
-
-      if(removeBtn === target || removeBtn.contains(target)) {
-        this.deleteNotification(index)
-      }
-      else {
-        if(!document.read) this.updateNotification(document)
-        if(this.isClickableNotification(document.type)) {
-          let route = this.route(document);
-          if (route) this.$router.push(route)
-        }
+    clickNotification(document){
+      if(!document.read) this.updateNotification(document)
+      if(this.isClickableNotification(document.type)) {
+        let route = this.route(document);
+        if (route) this.$router.push(route)
       }
     },
 
@@ -261,10 +321,28 @@ export default {
     addNotification(notification){
       console.debug('Add notification: ', notification)
       if(notification) this.docs.unshift(notification)
+    },
+
+    setNotificationsType(){
+      this.notificationTypes = [
+        { text: "Cibo", value: "food" },
+        { text: "Segnalazioni", value: "report" },
+        { text: "Informazioni utente", value: "user-info" },
+      ]
+      if(this.isSigned){
+        this.notificationTypes.push({ text: "Amicizia", value: "friendship" })
+        this.notificationTypes.push({ text: "Ricette", value: "recipe" })
+        this.notificationTypes.push({ text: "Likes", value: "like" })
+        this.notificationTypes.push({ text: "Commenti", value: "comment" })
+        this.notificationTypes.push({ text: "Strike", value: "strike" })
+      }
     }
   },
   created() {
     this.pendingRequests = QueuePendingRequests.create()
+
+    this.setNotificationsType()
+
     this.getNotifications()
 
     for (const eventName of this.events) {
@@ -281,6 +359,15 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+::v-deep .table thead th {
+  padding-left: 0!important;
+}
+
+::v-deep .table tbody td {
+  padding: 0!important;
+}
+
 .read-badge {
   background-color: $component-color;
   border-radius: 30px;
@@ -290,10 +377,6 @@ export default {
 
 .notification{
   cursor: pointer;
-}
-
-.skeleton-notification {
-  border: 1px  solid lightgray;
 }
 
 </style>
