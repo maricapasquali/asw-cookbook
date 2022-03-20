@@ -65,9 +65,7 @@
                       </b-row>
                     </b-col>
                     <b-col cols="2" class="text-right">
-                      <button title="Rimuovi" @click="deleteNotification(row.index)" type="button" aria-label="Close" class="close">
-                        <font-awesome-icon icon="times" size="xs"/>
-                      </button>
+                      <b-button-close title="Rimuovi" @click="deleteNotification(row.index)"></b-button-close>
                     </b-col>
                   </b-row>
                   <b-row>

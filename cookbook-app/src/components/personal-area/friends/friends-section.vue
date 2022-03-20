@@ -27,10 +27,9 @@
       </b-row>
       <b-row>
        <b-col>
-         <b-button id="reset-friend" variant="secondary" @click="resetFilters" v-if="searchIsOn">
+         <b-button title="Reset filtri" variant="secondary" @click="resetFilters" v-if="searchIsOn">
            <font-awesome-icon icon="undo" />
          </b-button>
-         <b-tooltip target="reset-friend" v-if="searchIsOn">Reset filtri</b-tooltip>
        </b-col>
       </b-row>
     </b-container>

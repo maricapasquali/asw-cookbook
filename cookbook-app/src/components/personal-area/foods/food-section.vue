@@ -5,13 +5,14 @@
       <!-- Foods -->
       <b-col class="my-5">
         <b-row class="align" align-h="between" align-v="center">
-          <b-col class="px-0"><h2 id="foods">Alimenti</h2></b-col>
+          <b-col class="px-0">
+            <h2 id="foods">Alimenti</h2>
+          </b-col>
           <b-col class="text-right mb-2">
             <b-button-group>
-              <b-button id="food-form-btn" @click="toggleFoodForm" :variant="showFormFood? 'danger': 'primary'" pill>
+              <b-button :title="showFormFood ? 'Chiudi' : 'Aggiungi alimento'" @click="toggleFoodForm" :variant="showFormFood? 'danger': 'primary'" pill>
                 <font-awesome-icon :icon="showFormFood ? 'times-circle': 'plus-circle'" class="icon"/>
               </b-button>
-              <b-tooltip target="food-form-btn"> {{showFormFood ? 'Chiudi' : 'Aggiungi alimento'}}</b-tooltip>
             </b-button-group>
           </b-col>
         </b-row>
@@ -64,10 +65,9 @@
                   </b-form-group>
                 </b-col>
                 <b-col class="text-left">
-                  <b-button id="reset-search-food" variant="secondary" @click="onResetSearch" v-if="thereIsFilters">
+                  <b-button title="Reset ricerca" variant="secondary" @click="onResetSearch" v-if="thereIsFilters">
                     <font-awesome-icon icon="undo" />
                   </b-button>
-                  <b-tooltip target="reset-search-food" v-if="thereIsFilters" >Reset ricerca</b-tooltip>
                 </b-col>
               </b-row>
             </b-container>
@@ -125,11 +125,9 @@
                     </b-col>
                     <b-col v-if="isItMine(row.item.details.owner) || isAdmin" class="text-right px-0">
                       <b-button-group >
-                        <b-button :id="'change-food-'+row.index" v-if="row.item.actions.includes('change')" variant="primary" @click="openChangeModeFood(row)"> <b-icon-pencil-square /></b-button>
-                        <b-tooltip :target="'change-food-'+row.index" v-if="row.item.actions.includes('change')"> Modifica <i>{{row.item.aliment}}</i></b-tooltip>
+                        <b-button :title="'Modifica '+row.item.aliment" v-if="row.item.actions.includes('change')" variant="primary" @click="openChangeModeFood(row)"> <b-icon-pencil-square /></b-button>
                         <!-- use modal to remove food -->
-                        <b-button :id="'remove-food-'+row.index" v-if="row.item.actions.includes('remove')" variant="danger" @click="removeFood(row)"> <b-icon-trash-fill /></b-button>
-                        <b-tooltip :target="'remove-food-'+row.index" v-if="row.item.actions.includes('remove')"> Cancella <i>{{row.item.aliment}}</i></b-tooltip>
+                        <b-button :title="'Cancella '+row.item.aliment" v-if="row.item.actions.includes('remove')" variant="danger" @click="removeFood(row)"> <b-icon-trash-fill /></b-button>
                       </b-button-group>
                     </b-col>
                   </b-row>
@@ -176,8 +174,7 @@
                   <span>{{point.food.name}}</span>
                 </b-col>
                 <b-col cols="3" cols-sm="1" class="text-right">
-                  <b-button :id="'remove-food-' + index" variant="danger" @click="removeFromShoppingList(index)"><b-icon-trash-fill/></b-button>
-                  <b-tooltip :target="'remove-food-' + index">Rimuovi alimento <br/> dalla lista della spesa</b-tooltip>
+                  <b-button title="Rimuovi dalla lista" variant="danger" @click="removeFromShoppingList(index)"><b-icon-trash-fill/></b-button>
                 </b-col>
               </b-row>
             </b-list-group-item>

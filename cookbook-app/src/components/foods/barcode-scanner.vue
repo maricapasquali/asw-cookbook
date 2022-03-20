@@ -16,10 +16,9 @@
       </b-row>
     </b-modal>
 
-    <b-button variant="primary" id="barcode-scan" @click="$data._show = true" v-if="show">
+    <b-button variant="primary" title="Scansiona barcode" @click="$data._show = true" v-if="show">
       <font-awesome-icon :size="iconSize" :class="'icon ' + iconClass" icon="barcode" />
     </b-button>
-    <b-tooltip target="barcode-scan">Scansiona barcode</b-tooltip>
   </div>
 </template>
 

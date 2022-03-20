@@ -1,9 +1,6 @@
 <template>
   <div v-if="selected">
-    <b-img :id="imgId" :width="width" :height="height" class="country-image" :src="selected.src"></b-img>
-    <b-tooltip :target="imgId" triggers="hover">
-      <p>{{selected.text}}</p>
-    </b-tooltip>
+    <b-img :id="imgId" :title="selected.text" :width="width" :height="height" class="country-image" :src="selected.src"></b-img>
   </div>
 </template>
 

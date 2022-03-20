@@ -17,8 +17,7 @@
                         </template>
                         <b-form-input id="search-recipe-input" type="search" v-model="filters.name" @keypress.enter="search" placeholder="Inserisci nome ricetta completo o parziale" />
                         <b-input-group-append>
-                          <b-button id="filters-form" variant="info" v-b-toggle.search-filters> <b-icon-filter scale="2x" /></b-button>
-                          <b-tooltip target="filters-form">Filtri</b-tooltip>
+                          <b-button title="Filtri" variant="info" v-b-toggle.search-filters> <b-icon-filter scale="2x" /></b-button>
                         </b-input-group-append>
                       </b-input-group>
                     </b-form-group>

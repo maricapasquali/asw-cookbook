@@ -63,23 +63,20 @@
             <b-button-group>
               <b-button v-if="row.item.actions.includes('chat')"
                         variant="primary" @click="_goToChat(row.item.details._id)"
-                        :id="chatWith(row.item)">
+                        title="Chat">
                 <b-icon-chat-fill  />
               </b-button>
-              <b-tooltip v-if="row.item.actions.includes('chat')" :target="chatWith(row.item)">Chat</b-tooltip>
 
               <b-button v-if="row.item.actions.includes('delete')"
                         variant="danger"
-                        :id="deleteUser(row.item)"
+                        title="Cancella utente"
                         @click="openDeleteModal(row.item.details)">
                 <b-icon-trash-fill />
               </b-button>
-              <b-tooltip v-if="row.item.actions.includes('delete')" :target="deleteUser(row.item)">Cancella utente</b-tooltip>
             </b-button-group>
           </template>
 
           <template #row-details="row">
-            <!--        {{row.item.details}}-->
             <ul style="list-style: none">
               <li v-if="row.item.details.information.email"><strong>Email:</strong> <em>{{row.item.details.information.email}}</em></li>
               <li v-if="row.item.details.information.tel_number"><strong>Numero di telefono:</strong> <em>{{row.item.details.information.tel_number}}</em></li>
@@ -200,14 +197,6 @@ export default {
           this.isChecked(user.signup) && user.strike >= 3 ||
           this.isPending(user.signup) && user.createdAt + (86400000) < Date.now()
       )
-    },
-
-    chatWith(user){
-      return 'chat-with-'+user.userID
-    },
-
-    deleteUser(user){
-      return 'delete-user-'+user.userID
     },
 
     remapping(user){
