@@ -106,6 +106,11 @@ export default {
       this.$socket.on('food:create', this.$bus.notification.foodCreate.bind(this))
       this.$socket.on('food:update', this.$bus.update.updateFood.bind(this))
     },
+    registerShoppingListListener(){
+      this.$socket.on('shopping-list:add', this.$bus.update.addInShoppingList.bind(this))
+      this.$socket.on('shopping-list:update', this.$bus.update.updatePointInShoppingList.bind(this))
+      this.$socket.on('shopping-list:remove', this.$bus.update.removePointInShoppingList.bind(this))
+    },
     registerCommentListener(){
       this.$socket.on('comment:response', this.$bus.notification.commentResponse.bind(this))
       this.$socket.on('comment:report', this.$bus.notification.commentReport.bind(this))
@@ -181,6 +186,7 @@ export default {
 
     this.registerFriendShipListener()
     this.registerFoodListener()
+    this.registerShoppingListListener()
     this.registerCommentListener()
     this.registerLikeListener()
     this.registerRecipeListener()
