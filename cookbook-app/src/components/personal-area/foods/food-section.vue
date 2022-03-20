@@ -291,6 +291,7 @@ export default {
               console.debug('New point = ', data)
               console.debug('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
               console.debug(this.shopping_list)
+              this.$socket.emit('shopping-list:add', data)
            })
            .catch(this.handleRequestErrors.shoppingList.createShoppingListPoint)
            .then(duplicate => {
@@ -307,6 +308,7 @@ export default {
          .then(({data}) => {
            console.debug(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(point))
            console.debug(this.shopping_list)
+           this.$socket.emit('shopping-list:update', point)
          })
          .catch(this.handleRequestErrors.shoppingList.updateShoppingListPoint)
     },
@@ -316,6 +318,7 @@ export default {
          .then(({data}) => {
             console.debug('Remove from shopping list : ', JSON.stringify(point))
             console.debug(this.shopping_list)
+            this.$socket.emit('shopping-list:remove', point._id)
          })
          .catch(this.handleRequestErrors.shoppingList.deleteShoppingListPoint)
     },

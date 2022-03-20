@@ -1,6 +1,7 @@
 import {SignUp} from "../../models/schemas/user";
 import {User} from "../../models";
 import Rooms from "../rooms";
+import {userInformation} from "../rooms/user";
 
 export default function (io: any, socket: any): void {
     //USER
@@ -34,4 +35,18 @@ export default function (io: any, socket: any): void {
     socket.on('comment:update', comment => socket.broadcast.emit('comment:update', comment))
     socket.on('comment:delete', commentID => socket.broadcast.emit('comment:delete', commentID))
     socket.on('comment:unreport', commentID => socket.broadcast.emit('comment:unreport', commentID))
+
+    //SHOPPING LIST
+    socket.on('shopping-list:add', point => {
+        let {id} = userInformation(socket)
+        socket.to(id).emit('shopping-list:add', point)
+    })
+    socket.on('shopping-list:update', point => {
+        let {id} = userInformation(socket)
+        socket.to(id).emit('shopping-list:update', point)
+    })
+    socket.on('shopping-list:remove', pointID => {
+        let {id} = userInformation(socket)
+        socket.to(id).emit('shopping-list:remove', pointID)
+    })
 }
