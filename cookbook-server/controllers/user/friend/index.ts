@@ -85,7 +85,7 @@ export function list_friends(req, res){
             return res.status(400).json({ description: `Parameter \'userID.search\' must be in ${searchAvailableValue}.` })
     }
 
-    getUser(req, res, { operation: Operation.RETRIEVE, subject: Subject.FRIEND })
+    getUser(req, res, { operation: Operation.RETRIEVE, subject: Subject.FRIEND, others: decodedToken => (decodedToken.role as RBAC.Role === RBAC.Role.ADMIN) && decodedToken._id != id })
         .then((decodedToken) => {
 
             const filters = { $or: [ { from: { $eq: id } }, { to: { $eq: id } } ], state : FriendShip.State.ACCEPTED }

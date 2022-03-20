@@ -110,9 +110,12 @@
                   <!-- CHANGE USERID-->
                   <change-userid v-model="changeUserID" :id="user._id" :old_userID="user.userID" @onChangeUserID="onChangeUserID"/>
                 </b-col>
-                <b-col v-else-if="isLoggedIn && isOtherUser && !user.isAdmin" align-self="end" class="d-flex justify-content-end px-0">
+                <b-col v-else-if="isLoggedIn && isOtherUser" align-self="end" class="d-flex justify-content-end px-0">
                   <b-button-group vertical>
-                    <b-friendship :other-user="user" with-chat/>
+                    <b-button v-if="user.isAdmin || this.isAdmin" :title="'Chat con '+user.userID" variant="secondary" @click="_goToChat(user._id)">
+                      <b-icon-chat-fill/>
+                    </b-button>
+                    <b-friendship v-else :other-user="user" with-chat/>
                   </b-button-group>
                 </b-col>
               </b-row>
@@ -127,9 +130,10 @@
 
 import {mapGetters, mapMutations} from "vuex";
 import {QueuePendingRequests} from "@api/request";
-
+import ChatMixin from '@components/mixins/chat.mixin'
 export default {
   name: "user-information",
+  mixins:[ChatMixin],
   props:{
     id: String,
     personalArea: {

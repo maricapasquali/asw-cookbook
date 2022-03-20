@@ -76,12 +76,12 @@ import UserMixin from '@components/mixins/user.mixin'
 
 export default {
   name: "OneUser",
+  props: {
+    user: String
+  },
   mixins: [UserMixin],
   components: {NotFound},
   computed: {
-    user(){
-      return this.$route.params.id
-    },
     areRecipesOthers(){
       return this.recipes.length >0 && this.recipes.length < this.recipesTotal
     },

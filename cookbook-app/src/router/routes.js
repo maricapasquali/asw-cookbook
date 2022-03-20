@@ -75,7 +75,8 @@ export default [
             {
                 path: '',
                 name: 'single-user',
-                component: OneUser
+                component: OneUser,
+                props: route => ({ user: route.params.id })
             },
             {
                 path: 'recipes/:recipe_id',

@@ -46,6 +46,7 @@ export class RBAC implements IRbac {
 
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.CREATE, subject: RBAC.Subject.FRIEND },
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.FRIEND },
+            { roles: [RBAC.Role.ADMIN], operation: RBAC.Operation.RETRIEVE, subject: RBAC.Subject.FRIEND, others: true },
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.UPDATE, subject: RBAC.Subject.FRIEND },
             { roles: [RBAC.Role.SIGNED], operation: RBAC.Operation.DELETE, subject: RBAC.Subject.FRIEND },
 
