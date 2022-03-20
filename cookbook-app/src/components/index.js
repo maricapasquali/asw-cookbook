@@ -20,7 +20,6 @@ import NotFoundErrorHandler from '@components/app/handler-errors/not-found-error
 
 import InputPassword from "@components/app/input-password";
 import ModalAlert from "@components/app/modal-alert"
-import NotAuthorizedArea from "@components/app/not-authorized-area"
 import Navigator from "@components/app/navigator"
 import Footer from "@components/app/footer"
 import NutrientsTable from "@components/app/nutrients-table"
@@ -101,7 +100,6 @@ const components = {
 
     InputPassword,
     ModalAlert,
-    NotAuthorizedArea,
     Navigator,
     Footer,
     NutrientsTable,
