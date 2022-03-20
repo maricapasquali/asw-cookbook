@@ -1,5 +1,15 @@
 export default function (bus) {
 
+    function addInShoppingList(point){
+        this.$store.commit("shopping-list/add", point)
+    }
+    function updatePointInShoppingList(point){
+        this.$store.commit("shopping-list/update", {pointID: point._id, checked: point.checked})
+    }
+    function removePointInShoppingList(pointID){
+        this.$store.commit("shopping-list/remove", pointID)
+    }
+
     function addRecipePermission({recipe}){
         bus.$emit('recipe:add:permission', recipe)
     }
@@ -56,6 +66,10 @@ export default function (bus) {
 
 
     return {
+        addInShoppingList,
+        updatePointInShoppingList,
+        removePointInShoppingList,
+
         addRecipePermission,
         unlikeRecipe,
         unlikeComment,

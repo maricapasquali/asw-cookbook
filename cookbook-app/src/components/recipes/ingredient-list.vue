@@ -11,25 +11,23 @@
       </b-list-group>
     </template>
     <b-list-group class="accordion" role="tablist">
-      <b-list-group-item v-for="(ingredient, ind) in value" :key="ingredient._id" v-b-toggle="ingredientId(ind)" role="tab">
-        <b-row align-h="between">
-          <b-col><p>{{ingredient.food.name}}</p></b-col>
-          <b-col class="text-right">
+      <b-list-group-item v-for="(ingredient, ind) in value" :key="ingredient._id"  role="tab">
+        <b-row align-h="between" align-v="center">
+          <b-col :cols="isSigned ? 9: 12" :sm="isSigned ? 10: 12" v-b-toggle="ingredientId(ind)">
             <b-container>
               <b-row>
-                <b-col class="px-0 text-right">
-                  <p>{{ingredient.quantity}} g</p>
-                </b-col>
-                <b-col class="px-0 text-right" v-if="isSigned">
-                  <b-button v-if="isIncludedInShoppingList(ingredient.food)" variant="danger" title="Rimuovi alla lista della spesa" @click="removeAlimentFromShoppingList(ingredient.food._id)">
-                    <font-awesome-icon icon="minus" />
-                  </b-button>
-                  <b-button v-else variant="primary" title="Aggiungi alla lista della spesa" @click="addOrUpdateInShoppingList(ingredient.food._id)">
-                    <font-awesome-icon icon="plus" />
-                  </b-button>
-                </b-col>
+                <b-col> <span>{{ingredient.food.name}}</span> </b-col>
+                <b-col class="px-0 text-right"> <span>{{ingredient.quantity}} g</span> </b-col>
               </b-row>
             </b-container>
+          </b-col>
+          <b-col cols="3" sm="2" class="text-right" v-if="isSigned" >
+            <b-button v-if="isIncludedInShoppingList(ingredient.food)" variant="danger" title="Rimuovi alla lista della spesa" @click="removeAlimentFromShoppingList(ingredient.food._id)">
+              <font-awesome-icon icon="minus" />
+            </b-button>
+            <b-button v-else variant="primary" title="Aggiungi alla lista della spesa" @click="addOrUpdateInShoppingList(ingredient.food._id)">
+              <font-awesome-icon icon="plus" />
+            </b-button>
           </b-col>
         </b-row>
         <b-collapse :id="ingredientId(ind)" :ref="collapsedIngredientId(ind)" role="tabpanel" accordion="my-accordion" @show="getIngredientNutritionalValues(ind)">
@@ -76,12 +74,12 @@ export default {
 
     addOrUpdateInShoppingList(alimentID){
       let pointID = this.findCheckedPointShoppingList(alimentID)?._id
-      console.warn('UPDATE: Point id ', pointID)
       if(pointID) {
         this.updatePointShoppingList({pointID, checked: false})
             .then(({data}) => {
               console.debug("Unchecked item of shopping list", JSON.stringify(data))
               console.debug(this.$store.getters["shopping-list/list"])
+              this.$socket.emit('shopping-list:update', {_id: pointID, checked: false})
             })
             .catch(this.handleRequestErrors.shoppingList.updateShoppingListPoint)
       }
@@ -91,18 +89,19 @@ export default {
               console.debug('New point = ', data)
               console.debug('Add on shopping list: ', JSON.stringify(this.$store.getters["shopping-list/list"][0]))
               console.debug(this.$store.getters["shopping-list/list"])
+              this.$socket.emit('shopping-list:add', data)
             })
             .catch(this.handleRequestErrors.shoppingList.createShoppingListPoint)
       }
     },
     removeAlimentFromShoppingList(alimentID){
       let pointID = this.findUnCheckedPointShoppingList(alimentID)?._id
-      console.warn('REMOVE Point id ', pointID)
       if(pointID) {
         this.removeFromShoppingList(pointID)
             .then(({data}) => {
               console.debug('Remove from shopping list : ', pointID)
               console.debug(this.$store.getters["shopping-list/list"])
+              this.$socket.emit('shopping-list:remove', pointID)
             })
             .catch(this.handleRequestErrors.shoppingList.deleteShoppingListPoint)
       }
