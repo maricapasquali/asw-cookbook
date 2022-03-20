@@ -5,7 +5,7 @@
       <b-row cols="1" class="p-2">
         <b-col>
           <!-- Public User Information  -->
-          <user-information ref="user-info" :id="user" @not-found="userNotFound = true"/>
+          <user-information ref="user-info" :id="user" @not-found="userNotFound = true" @is-user-admin="$data._userIsSigned=!$event"/>
         </b-col>
       </b-row>
       <b-row cols="1" :cols-lg="allPresent ? 2: 1" class="p-2">
@@ -106,6 +106,7 @@ export default {
   data(){
     return {
       userNotFound: false,
+      _userIsSigned: null,
 
       pendingRequests: null,
 
@@ -126,6 +127,17 @@ export default {
         limit: 1 //todo: change pagination limit from 1 to 10
       },
       friendsProcessing: false,
+    }
+  },
+  watch: {
+    '$data._userIsSigned'(val){
+      if(val){
+        this.getRecipes()
+        this.getFriends()
+        this.setListenersForUserSigned()
+      } else {
+        this.unsetListenersForUserSigned()
+      }
     }
   },
   methods: {
@@ -218,6 +230,25 @@ export default {
       // if(show && this.recipes.length === 0) this.getRecipes()
     },
 
+
+    setListenersForUserSigned(){
+      this.$bus.$on('recipe:create', this.fetchRecipe.bind(this))
+      this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+      this.$bus.$on('recipe:delete', this.fetchRecipe.bind(this))
+
+      this.$bus.$on('friend:add', this.fetchFriend.bind(this))
+      this.$bus.$on('friend:remove', this.fetchFriend.bind(this))
+    },
+
+    unsetListenersForUserSigned(){
+      this.$bus.$off('recipe:create', this.fetchRecipe.bind(this))
+      this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
+      this.$bus.$off('recipe:delete', this.fetchRecipe.bind(this))
+
+      this.$bus.$off('friend:add', this.fetchFriend.bind(this))
+      this.$bus.$off('friend:remove', this.fetchFriend.bind(this))
+    },
+
     /*Listener notification*/
     onUpdatedRecipeListeners(_, recipe){
       if(recipe) {
@@ -255,27 +286,13 @@ export default {
   },
   created() {
     this.pendingRequests = QueuePendingRequests.create()
-    this.$bus.$on('recipe:create', this.fetchRecipe.bind(this))
-    this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    this.$bus.$on('recipe:delete', this.fetchRecipe.bind(this))
-
-    this.$bus.$on('friend:add', this.fetchFriend.bind(this))
-    this.$bus.$on('friend:remove', this.fetchFriend.bind(this))
 
     this.$bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))
     this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
-
-    this.getRecipes()
-    this.getFriends()
   },
   beforeDestroy() {
     this.pendingRequests.cancelAll('One user cancel.')
-    this.$bus.$off('recipe:create', this.fetchRecipe.bind(this))
-    this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
-    this.$bus.$off('recipe:delete', this.fetchRecipe.bind(this))
-
-    this.$bus.$off('friend:add', this.fetchFriend.bind(this))
-    this.$bus.$off('friend:remove', this.fetchFriend.bind(this))
+    if(this.$data._userIsSigned) this.unsetListenersForUserSigned()
 
     this.$bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))
     this.$bus.$off('user:delete', this.onDeleteUser.bind(this))

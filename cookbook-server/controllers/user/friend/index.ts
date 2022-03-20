@@ -41,14 +41,13 @@ export function request_friendship(req, res){
                 others: (decodedToken => decodedToken._id === id)
             })
     if(decodedToken) {
-        // Friend.exists({from: id, to: decodedToken._id})
         Friend.findOne()
               .where('from').equals(id)
               .where('to').equals(decodedToken._id)
               .then((result) => {
                   if(result) return res.status(409).json({description: 'Request has already been exist. ', actualState: result.state})
 
-                  existById(User, [id, decodedToken._id])
+                  existById(User, [id, decodedToken._id], { "credential.role" : RBAC.Role.SIGNED })
                       .then(() => {
 
                           new Friend({ from: decodedToken._id, to: id })
