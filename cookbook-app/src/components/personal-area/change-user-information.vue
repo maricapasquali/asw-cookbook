@@ -3,8 +3,7 @@
     <b-container>
       <b-row>
         <b-col class="text-right">
-          <b-button id="close-change-mode" variant="danger" @click="cancel"><font-awesome-icon icon="times" /></b-button>
-          <b-tooltip target="close-change-mode"> Chiudi </b-tooltip>
+          <b-button title="Chiudi" variant="danger" @click="cancel"><font-awesome-icon icon="times" /></b-button>
         </b-col>
       </b-row>
       <b-row>

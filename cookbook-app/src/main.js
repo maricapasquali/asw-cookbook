@@ -28,11 +28,12 @@ import {
     faBars,
     faUsers,
     faUndo,
-    faBan
+    faBan,
+    faPlus
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faBarcode, faMinus, faPlusCircle, faTimesCircle, faSearch,
-            faSearchMinus, faSearchPlus,faTimes, faBars, faUsers, faUndo, faBan)
+            faSearchMinus, faSearchPlus,faTimes, faBars, faUsers, faUndo, faBan, faPlus)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.config.productionTip = false
 

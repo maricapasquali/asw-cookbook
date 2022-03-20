@@ -42,6 +42,12 @@ export default {
       tabsAdmin: ['account', 'foods',  'reports', 'users','chats', 'notifications' ]
     }
   },
+  watch: {
+    '$route'(val){
+      console.warn('change route ...', val)
+      this._selectActive()
+    }
+  },
   created(){
     (this.isAdmin ? this.tabsAdmin : this.isSigned ? this.tabsSigned: [])
         .forEach(tab => this.tabs.push(this._mapping(tab)))
@@ -51,8 +57,6 @@ export default {
       this.handleRequestErrors.session.wrongUserSession()
       this.loading = true
     }
-
-    window.onpopstate = this._selectActive.bind(this)
   },
   computed: {
     ...mapGetters({
@@ -102,7 +106,10 @@ export default {
     },
     _selectActive(){
       let item = this.tabs.find(i => this.active === i.id)
-      if(item) item.selected = true
+      if(item) {
+        item.selected = true
+        this.tabs.filter(i => i.id !== this.active).forEach(i => i.selected = false)
+      }
     },
     onClickTab(route){
       this.$router.push({ name:  route })

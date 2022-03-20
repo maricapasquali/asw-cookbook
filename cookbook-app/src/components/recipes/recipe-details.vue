@@ -1,7 +1,6 @@
 <template>
   <div>
-    <b-button :id="recipeInfoId(recipe._id)" variant="info" @click="showDetails"><b-icon-info-circle/></b-button>
-    <b-tooltip :target="recipeInfoId(recipe._id)">Dettagli</b-tooltip>
+    <b-button title="Dettagli" variant="info" @click="showDetails"><b-icon-info-circle/></b-button>
     <b-modal v-model="show" title="Dettagli" centered hide-footer @hide="hideDetails">
       <template #modal-title>
         <em>{{recipe.name}}</em>
@@ -96,9 +95,6 @@ export default {
     }
   },
   methods:{
-    recipeInfoId(id){
-      return 'recipe-details-'+id
-    },
     showDetails(){
       this.show = true
     },

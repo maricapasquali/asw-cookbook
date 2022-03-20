@@ -1,18 +1,20 @@
 <template>
   <div>
-    <b-table
-        :id="id" v-resize="onResize" class="text-center"
-        :items="permissions" :fields="fields"
-        striped :stacked="isMobileDevice"
-        :per-page="pagination.per" :current-page="pagination.current">
-      <template #cell(user)="row">
-        <span v-if="userIdentifier === row.value._id" > io </span>
-        <router-link v-else :to="route(row.value)"> {{row.value.userID}}</router-link>
-      </template>
-      <template #cell(granted)="row">
-        <span> {{ row.value | permission }} </span>
-      </template>
-    </b-table>
+    <window-with-resize size="sm" @in-bound="$data._stacked=$event">
+      <b-table
+          :id="id" class="text-center"
+          :items="permissions" :fields="fields"
+          striped :stacked="$data._stacked"
+          :per-page="pagination.per" :current-page="pagination.current">
+        <template #cell(user)="row">
+          <span v-if="userIdentifier === row.value._id" > io </span>
+          <router-link v-else :to="route(row.value)"> {{row.value.userID}}</router-link>
+        </template>
+        <template #cell(granted)="row">
+          <span> {{ row.value | permission }} </span>
+        </template>
+      </b-table>
+    </window-with-resize>
     <b-pagination v-if="showPagination" :aria-controls="id" v-model="pagination.current" :per-page="pagination.per" :total-rows="permissions.length" align="fill"/>
   </div>
 </template>
@@ -39,7 +41,7 @@ export default {
   },
   data(){
     return {
-      isMobileDevice: false,
+      _stacked: false,
       fields: [
         {
           key: 'user',
@@ -77,11 +79,6 @@ export default {
     },
   },
   methods:{
-    onResize({screenWidth, windowWidth}){
-      let maxWidth = 576
-      this.isMobileDevice = screenWidth <= maxWidth || windowWidth <= maxWidth
-    },
-
     route(user){
       return { name: 'single-user', params: { id: user?._id } }
     },
