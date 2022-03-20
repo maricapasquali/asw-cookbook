@@ -29,10 +29,8 @@
                   </div>
                 </div>
                 <div class="d-flex justify-content-between">
-                  <b-button :id="cancelCommentId(index)" variant="secondary" @click="unreported(index)"> <font-awesome-icon icon="undo" /></b-button>
-                  <b-tooltip :target="cancelCommentId(index)">Annulla segnalazione</b-tooltip>
-                  <b-button :id="deleteCommentId(index)" variant="danger" @click="deleteComment(index)"><b-icon-trash-fill /></b-button>
-                  <b-tooltip :target="deleteCommentId(index)">Cancella</b-tooltip>
+                  <b-button title="Annulla segnalazione" variant="secondary" @click="unreported(index)"> <font-awesome-icon icon="undo" /></b-button>
+                  <b-button title="Cancella" variant="danger" @click="deleteComment(index)"><b-icon-trash-fill /></b-button>
                 </div>
               </b-card>
             </b-col>
@@ -98,12 +96,6 @@ export default {
   methods: {
     reportId(id){
       return 'reported-comment-' +id
-    },
-    deleteCommentId(index){
-      return 'delete-comment-'+index
-    },
-    cancelCommentId(index){
-      return 'cancel-comment-'+index
     },
 
     getReports: function (){

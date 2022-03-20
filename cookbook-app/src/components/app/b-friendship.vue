@@ -15,10 +15,9 @@
         <b-button variant="success" v-else-if="!noFollowButton" @click="sendRequestFriendShip">Segui</b-button>
       </b-button-group>
 
-      <b-button :id="chatId" v-if="withChat && isMyFriend" variant="secondary" @click="_goToChat(otherUser._id)">
+      <b-button :title="'Chat con '+otherUser.userID" v-if="withChat && isMyFriend" variant="secondary" @click="_goToChat(otherUser._id)">
         <b-icon-chat-fill/>
       </b-button>
-      <b-tooltip v-if="withChat && isMyFriend" :target="chatId"> Chat con <strong>{{otherUser.userID}}</strong></b-tooltip>
     </b-button-group>
   </div>
 </template>
@@ -56,10 +55,6 @@ export default {
       isSigned: 'session/isSigned',
       friends: 'friendships/friends'
     }),
-
-    chatId(){
-      return 'btn-chat-' + this.otherUser._id
-    },
 
     isNotMe(){
       return this.otherUser._id !== this.userIdentifier

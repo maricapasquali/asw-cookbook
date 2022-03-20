@@ -25,10 +25,9 @@
         </b-form-group>
       </b-col>
       <b-col cols="2" sm="1" class="text-center pl-0 pr-3 mt-3" v-if="foodAdder">
-        <b-button id="btn-add-food" @click="addFood.show = true" variant="primary" pill>
+        <b-button title="Aggiungi alimento" @click="addFood.show = true" variant="primary" pill>
           <font-awesome-icon icon="plus-circle" class="icon" />
         </b-button>
-       <b-tooltip target="btn-add-food">Aggiungi alimento</b-tooltip>
       </b-col>
     </b-row>
   </div>

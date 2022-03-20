@@ -3,7 +3,9 @@
     <template #loading>
       <b-skeleton-table :rows="7" :columns="2" :table-props="{ bordered: true, striped: true }"/>
     </template>
-    <b-table class="nutritional-table" v-resize="onResize" striped :items="getItems" :fields="fields" :stacked="isMobile"></b-table>
+    <window-with-resize size="sm" @in-bound="$data._stacked=$event">
+      <b-table class="nutritional-table" striped :items="getItems" :fields="fields" :stacked="$data._stacked"></b-table>
+    </window-with-resize>
   </b-skeleton-wrapper>
 </template>
 
@@ -47,7 +49,7 @@ export default {
   },
   data(){
     return {
-      isMobile: false,
+      _stacked: false,
       nutrients: [
         { value: 'energy', text: 'Energia (kcal)' },
         { value: 'protein', text: 'Proteine (g)' },
@@ -83,10 +85,6 @@ export default {
   },
 
   methods:{
-    onResize({screenWidth, windowWidth}){
-      let maxWidth = 576
-      this.isMobile = screenWidth <= maxWidth || windowWidth <= maxWidth
-    },
     convertObjToArray(nObj){
       if(!nObj) return this.emptyNutritionalTable()
       let array = []
