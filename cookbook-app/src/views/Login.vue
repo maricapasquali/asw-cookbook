@@ -219,9 +219,10 @@ export default {
     onLoginSubmit(){
       this.onLogin.processing = true
       this.login(this.credential)
-          .then(location => {
+          .then(({location, session}) => {
             console.log('LOCATION ', location)
             this.$router.replace(location)
+            this.$broadcastChannel.postMessage({login: session})
             console.debug('Store state: ', this.$store.state)
           })
           .catch(err => {

@@ -162,6 +162,15 @@ export default {
     },
 
     registerSessionListener(){
+      this.$broadcastChannel.onmessage = event => {
+        const {login} = event.data
+        if(login){
+          this.$store.dispatch("initialization", login)
+              .then(() => this.$router.go(0))
+              .catch(err => console.error('Broadcast login error: ', err))
+        }
+      }
+
       this.$socket.on('logout', () => {
         console.debug("Logout ok.")
         this.$store.dispatch('reset')
