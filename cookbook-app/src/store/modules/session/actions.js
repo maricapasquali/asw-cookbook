@@ -11,8 +11,11 @@ export default {
                           .then(() => console.log('initialization on login ...') )
                           .catch(err => console.error('initialization error ', err))
                       return {
-                          name: data.firstLogin ? 'change-password' : 'p-user-account',
-                          params: { id: userInfo._id, firstLogin: data.firstLogin ? true : undefined},
+                          location: {
+                              name: data.firstLogin ? 'change-password' : 'p-user-account',
+                              params: { id: userInfo._id, firstLogin: data.firstLogin ? true : undefined},
+                          },
+                          session: {...token, user: userInfo}
                       }
                   })
     },
