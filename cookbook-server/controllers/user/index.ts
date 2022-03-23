@@ -6,7 +6,6 @@ import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
 import {IMailer, Mailer} from "../../modules/mailer";
 import {IUser, SignUp} from "../../models/schemas/user";
-import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
 import {
     accessManager,
     FileConfigurationImage,
@@ -19,21 +18,22 @@ import {
 
 import {EraseUserEmail, ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
 import * as path from "path";
-import Role = RBAC.Role;
-import Operation = RBAC.Operation;
-import Subject = RBAC.Subject;
 import {Types} from "mongoose";
-import ObjectId = Types.ObjectId
 import {EmailValidator} from "../../../modules/validator";
 import {IChat} from "../../models/schemas/chat";
 
 import * as config from "../../../env.config"
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
+import {newUser} from "./utils.user.controller";
+import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
+import Operation = RBAC.Operation;
+import Subject = RBAC.Subject;
+import ObjectId = Types.ObjectId;
+import Role = RBAC.Role;
 
-const app_name = config.appName
 const client_origin = config.client.origin
 
-const mailer: IMailer = new Mailer(`no-reply@${app_name.toLowerCase()}.com`);
+import {mailer, app_name} from "./utils.user.controller";
 
 const send_email_signup = function (user) {
     let randomKey: string = randomString()
@@ -81,17 +81,8 @@ export function uploadProfileImage(){
 }
 
 export function create_user(req, res){
-    let userBody = {
-        credential: { userID: req.body.userID, hash_password: req.body.hash_password },
-        information: {}
-    }
-    delete req.body.userID
-    delete req.body.hash_password
-    userBody.information = req.body
-    if(req.file) userBody.information['img'] = req.file.filename
-
-    const new_user = new User(userBody)
-    new_user.save()
+    newUser(req, {role: Role.SIGNED})
+        .save()
         .then(user => {
             res.status(201).json({ userID: user._id })
             if(accessManager.isSignedUser(user.credential)) send_email_signup(user)

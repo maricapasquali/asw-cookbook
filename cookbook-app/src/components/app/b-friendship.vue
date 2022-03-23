@@ -181,7 +181,7 @@ export default {
     }
   },
   created() {
-    if(this.isLoggedIn){
+    if(this.isLoggedIn && this.isSigned){
       if(this.friends.length === 0) {
         this.$store.dispatch('friendships/own')
             .then(({data}) => this._setFriendShip())
