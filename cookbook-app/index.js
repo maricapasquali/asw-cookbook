@@ -6,6 +6,10 @@ const serveStatic = require('serve-static');
 const {Hosting} = require('../modules/hosting')
 const config = require('../env.config')
 
+const history = require('connect-history-api-fallback');
+
+app.use(history())
+
 app.use(serveStatic(path.join(__dirname , "dist")));
 
 app.use(function (req, res) {
