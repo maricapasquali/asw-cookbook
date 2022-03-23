@@ -262,9 +262,13 @@ export default {
 
     setRecipes(val) {
       if (Array.isArray(val)) {
-        this.$data._recipes.push(
-           ... diff(val, this.$data._recipes.map(i => i.recipe)).map(recipe => this._remapping(recipe))
-        )
+        let _diff = diff(val, this.$data._recipes.map(i => i.recipe)).map(recipe => this._remapping(recipe))
+        if(_diff.length){
+          let itemLastOfDiff = lastOf(_diff)
+          let firstItem = this.$data._recipes[0]
+          if(firstItem && itemLastOfDiff.recipe.updatedAt > firstItem.recipe.updatedAt) this.$data._recipes.unshift(... _diff)
+          else this.$data._recipes.push(..._diff)
+        }
       }
     },
     setTotal(val) {

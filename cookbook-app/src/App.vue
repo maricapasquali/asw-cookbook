@@ -106,6 +106,11 @@ export default {
       this.$socket.on('food:create', this.$bus.notification.foodCreate.bind(this))
       this.$socket.on('food:update', this.$bus.update.updateFood.bind(this))
     },
+    registerShoppingListListener(){
+      this.$socket.on('shopping-list:add', this.$bus.update.addInShoppingList.bind(this))
+      this.$socket.on('shopping-list:update', this.$bus.update.updatePointInShoppingList.bind(this))
+      this.$socket.on('shopping-list:remove', this.$bus.update.removePointInShoppingList.bind(this))
+    },
     registerCommentListener(){
       this.$socket.on('comment:response', this.$bus.notification.commentResponse.bind(this))
       this.$socket.on('comment:report', this.$bus.notification.commentReport.bind(this))
@@ -125,6 +130,8 @@ export default {
       this.$socket.on('recipe:create:saved', this.$bus.notification.createSavedRecipe.bind(this))
       this.$socket.on('recipe:update', this.$bus.notification.updateSharedRecipe.bind(this))
       this.$socket.on('recipe:delete', this.$bus.notification.deleteSharedRecipe.bind(this))
+
+      this.$socket.on('recipe:add:permission', this.$bus.update.addRecipePermission.bind(this))
     },
     registerUserInfoListener(){
       this.$socket.on('user:update:password', this.$bus.notification.afterUpdatePassword.bind(this))
@@ -155,6 +162,15 @@ export default {
     },
 
     registerSessionListener(){
+      this.$broadcastChannel.onmessage = event => {
+        const {login} = event.data
+        if(login){
+          this.$store.dispatch("initialization", login)
+              .then(() => this.$router.go(0))
+              .catch(err => console.error('Broadcast login error: ', err))
+        }
+      }
+
       this.$socket.on('logout', () => {
         console.debug("Logout ok.")
         this.$store.dispatch('reset')
@@ -179,6 +195,7 @@ export default {
 
     this.registerFriendShipListener()
     this.registerFoodListener()
+    this.registerShoppingListListener()
     this.registerCommentListener()
     this.registerLikeListener()
     this.registerRecipeListener()
@@ -191,6 +208,19 @@ export default {
     console.debug('Store ', this.$store)
     console.debug('Socket ', this.$socket)
     console.debug('Bus ', this.$bus)
+
+    const isRedirectedToPersonalArea = (route) => {
+      return this.isLoggedIn && (
+          (this.isAdmin && route.name === 'homepage') ||
+          (route.name === 'single-user' && route.params.id === this.userIdentifier)
+      )
+    }
+
+    this.$router.beforeEach((to, from, next) => {
+      if(isRedirectedToPersonalArea(to)) return next({ name: 'p-user-account', params: {id: this.userIdentifier} } )
+      return next()
+    })
+    if(isRedirectedToPersonalArea(this.$route)) this.$router.replace({ name: 'p-user-account', params: {id: this.userIdentifier} })
   },
   beforeDestroy() {
       this.$socket.disconnect()

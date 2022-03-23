@@ -91,9 +91,7 @@
           </b-col>
         </b-row>
         <b-row>
-          <load-others :are-others="areOthers" :in-processing="loadOther" :trigger-others="others">
-            <template #btn-content>Altri ...</template>
-          </load-others>
+          <load-others :are-others="areOthers" :in-processing="loadOther" :trigger-others="others" />
         </b-row>
       </b-container>
     </b-skeleton-wrapper>
@@ -200,7 +198,7 @@ export default {
 
     onScrollWindow({toBottom, toTop}){
       if(toTop) this.newArrivals.toRead = 0
-      // if(toBottom && this.loadOther === false) this.others()
+      if(toBottom && this.loadOther === false) this.others()
     },
 
     goToNewRecipes() {

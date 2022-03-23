@@ -3,89 +3,88 @@
     <b-row class="mt-5">
       <b-col>
         <b-form-group label-for="input-search-userID">
-         <b-input-group>
-           <template #prepend>
-             <b-input-group-text><b-icon-search /></b-input-group-text>
-           </template>
-           <b-form-input id="input-search-userID" v-model="filters.userID.value" type="search" placeholder="Inserisci username completo o parziale" />
-         </b-input-group>
+          <b-input-group>
+            <template #prepend>
+              <b-input-group-text><b-icon-search /></b-input-group-text>
+            </template>
+            <b-form-input id="input-search-userID" v-model="filters.userID.value" type="search" placeholder="Inserisci username completo o parziale" />
+          </b-input-group>
         </b-form-group>
       </b-col>
     </b-row>
     <!-- Table user  -->
     <b-row cols="1" class="mt-3 mb-5 mx-auto">
-      <b-table id="user-table" responsive hover :stacked="isMobile" v-resize="onResize"
-               @context-changed="abortRequest"
-               ref="userTable"
-               :tbody-tr-class="rowClass"
-               :busy.sync="pagination.isBusy"
-               :filter="filters"
-               :fields="fieldsUsersTable"
-               :items="getUser"
-               :current-page="pagination.currentPage"
-               :per-page="pagination.for_page"
-               @row-clicked="item => $set(item, '_showDetails', !item._showDetails)"
-               show-empty>
+      <window-with-resize size="sm" @in-bound="$data._stacked=$event">
+        <b-table id="user-table" responsive hover :stacked="$data._stacked"
+                 @context-changed="abortRequest"
+                 ref="userTable"
+                 :tbody-tr-class="rowClass"
+                 :busy.sync="pagination.isBusy"
+                 :filter="filters"
+                 :fields="fieldsUsersTable"
+                 :items="getUser"
+                 :current-page="pagination.currentPage"
+                 :per-page="pagination.for_page"
+                 @row-clicked="item => $set(item, '_showDetails', !item._showDetails)"
+                 show-empty>
 
-        <template #table-busy>
-          <div  class="text-center text-primary my-2">
-            <b-spinner class="align-middle"></b-spinner>
-            <strong class="ml-2">Caricamento...</strong>
-          </div>
-        </template>
+          <template #table-busy>
+            <div  class="text-center text-primary my-2">
+              <b-spinner class="align-middle"></b-spinner>
+              <strong class="ml-2">Caricamento...</strong>
+            </div>
+          </template>
 
-        <template #empty>
-          <div class="text-center text-primary my-2">
-            <strong class="ml-2">Non ci sono utenti iscritti </strong>
-          </div>
-        </template>
+          <template #empty>
+            <div class="text-center text-primary my-2">
+              <strong class="ml-2">Non ci sono utenti iscritti </strong>
+            </div>
+          </template>
 
-        <template #emptyfiltered >
-          <div class="text-center text-primary my-2">
-            <strong class="ml-2">Nessun utente </strong>
-          </div>
-        </template>
+          <template #emptyfiltered >
+            <div class="text-center text-primary my-2">
+              <strong class="ml-2">Nessun utente </strong>
+            </div>
+          </template>
 
-        <template #cell(state)="row">
-          <div class="user-state ">
-            <p v-if="isChecked(row.value)" class="user-checked">Verificato</p>
-            <p v-else-if="isPending(row.value)" class="user-pending" >In Attesa</p>
-            <p v-else class="user-unknown">Stato sconosciuto</p>
-          </div>
-        </template>
+          <template #cell(state)="row">
+            <div class="user-state ">
+              <p v-if="isChecked(row.value)" class="user-checked">Verificato</p>
+              <p v-else-if="isPending(row.value)" class="user-pending" >In Attesa</p>
+              <p v-else class="user-unknown">Stato sconosciuto</p>
+            </div>
+          </template>
 
-        <template #cell(strike)="row">
-          <b-icon-x-square-fill class="strikes-user mr-1" font-scale="2pt" variant="danger" v-for="i in row.value" :key="i" />
-        </template>
+          <template #cell(strike)="row">
+            <b-icon-x-square-fill class="strikes-user mr-1" font-scale="2pt" variant="danger" v-for="i in row.value" :key="i" />
+          </template>
 
-        <template #cell(actions)="row">
-          <b-button-group>
-            <b-button v-if="row.item.actions.includes('chat')"
-                      variant="primary" @click="_goToChat(row.item.details._id)"
-                      :id="chatWith(row.item)">
-              <b-icon-chat-fill  />
-            </b-button>
-            <b-tooltip v-if="row.item.actions.includes('chat')" :target="chatWith(row.item)">Chat</b-tooltip>
+          <template #cell(actions)="row">
+            <b-button-group>
+              <b-button v-if="row.item.actions.includes('chat')"
+                        variant="primary" @click="_goToChat(row.item.details._id)"
+                        title="Chat">
+                <b-icon-chat-fill  />
+              </b-button>
 
-            <b-button v-if="row.item.actions.includes('delete')"
-                      variant="danger"
-                      :id="deleteUser(row.item)"
-                      @click="openDeleteModal(row.item.details)">
-              <b-icon-trash-fill />
-            </b-button>
-            <b-tooltip v-if="row.item.actions.includes('delete')" :target="deleteUser(row.item)">Cancella utente</b-tooltip>
-          </b-button-group>
-        </template>
+              <b-button v-if="row.item.actions.includes('delete')"
+                        variant="danger"
+                        title="Cancella utente"
+                        @click="openDeleteModal(row.item.details)">
+                <b-icon-trash-fill />
+              </b-button>
+            </b-button-group>
+          </template>
 
-        <template #row-details="row">
-          <!--        {{row.item.details}}-->
-          <ul style="list-style: none">
-            <li v-if="row.item.details.information.email"><strong>Email:</strong> <em>{{row.item.details.information.email}}</em></li>
-            <li v-if="row.item.details.information.tel_number"><strong>Numero di telefono:</strong> <em>{{row.item.details.information.tel_number}}</em></li>
-          </ul>
-        </template>
+          <template #row-details="row">
+            <ul style="list-style: none">
+              <li v-if="row.item.details.information.email"><strong>Email:</strong> <em>{{row.item.details.information.email}}</em></li>
+              <li v-if="row.item.details.information.tel_number"><strong>Numero di telefono:</strong> <em>{{row.item.details.information.tel_number}}</em></li>
+            </ul>
+          </template>
 
-      </b-table>
+        </b-table>
+      </window-with-resize>
       <b-pagination v-model="pagination.currentPage" v-show="showPagination"
                     :total-rows="pagination.totals" :per-page="pagination.for_page"
                     align="fill" aria-controls="user-table" />
@@ -98,20 +97,19 @@
     </delete-account>
 
   </b-container>
-
 </template>
 
 <script>
 
 import {mapGetters} from "vuex";
-import ChatMixins from '@components/mixins/chat.mixins'
+import ChatMixin from '@components/mixins/chat.mixin'
 import {QueuePendingRequests} from "@api/request";
 export default {
   name: "users-section",
-  mixins: [ChatMixins],
+  mixins: [ChatMixin],
   data(){
     return {
-      isMobile: false,
+      _stacked: false,
       pendingRequests: null,
       idRequest: 'users-all',
 
@@ -180,10 +178,6 @@ export default {
     }
   },
   methods: {
-    onResize({screenWidth, windowWidth}){
-      let maxWidth = 576
-      this.isMobile = screenWidth <= maxWidth || windowWidth <= maxWidth
-    },
 
     rowClass(item, type) {
       if (!item || type !== 'row') return ''
@@ -203,14 +197,6 @@ export default {
           this.isChecked(user.signup) && user.strike >= 3 ||
           this.isPending(user.signup) && user.createdAt + (86400000) < Date.now()
       )
-    },
-
-    chatWith(user){
-      return 'chat-with-'+user.userID
-    },
-
-    deleteUser(user){
-      return 'delete-user-'+user.userID
     },
 
     remapping(user){

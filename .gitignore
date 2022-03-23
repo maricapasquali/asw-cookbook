@@ -13,6 +13,8 @@ cookbook-server/**/*.js.map
 cookbook-server/images
 cookbook-server/videos
 
+!cookbook-server/views/js/*.js
+
 cookbook-app/src/api/**/*.js
 cookbook-app/src/api/**/*.js.map
 

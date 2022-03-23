@@ -3,12 +3,9 @@
     <b-row class="map-container mx-1 p-0" cols="1">
       <b-col class="map-container-header">
         <b-button-group>
-          <b-button id="reset-zoom" @click="resetZoom">  <font-awesome-icon icon="undo" /></b-button>
-          <b-button id="zoom-in" @click="zoomIn" :disabled="noZoomIn"><b-icon-zoom-in /></b-button>
-          <b-button id="zoom-out" @click="zoomOut" :disabled="noZoomOut"><b-icon-zoom-out /></b-button>
-          <b-tooltip target="reset-zoom">Reset zoom</b-tooltip>
-          <b-tooltip target="zoom-in">Zoom +</b-tooltip>
-          <b-tooltip target="zoom-out">Zoom -</b-tooltip>
+          <b-button title="Reset zoom" @click="resetZoom">  <font-awesome-icon icon="undo" /></b-button>
+          <b-button title="Zoom +" @click="zoomIn" :disabled="noZoomIn"><b-icon-zoom-in /></b-button>
+          <b-button title="Zoom -" @click="zoomOut" :disabled="noZoomOut"><b-icon-zoom-out /></b-button>
         </b-button-group>
         <b-row v-if="hoverCountry" class="country-label-hover px-0 " cols="1" align-h="center" align-v="center">
           <b-col class="text-center px-0" v-if="hoverCountry.value && hoverCountry.text">

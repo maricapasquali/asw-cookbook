@@ -15,20 +15,19 @@
         <b-button variant="success" v-else-if="!noFollowButton" @click="sendRequestFriendShip">Segui</b-button>
       </b-button-group>
 
-      <b-button :id="chatId" v-if="withChat && isMyFriend" variant="secondary" @click="_goToChat(otherUser._id)">
+      <b-button :title="'Chat con '+otherUser.userID" v-if="withChat && isMyFriend" variant="secondary" @click="_goToChat(otherUser._id)">
         <b-icon-chat-fill/>
       </b-button>
-      <b-tooltip v-if="withChat && isMyFriend" :target="chatId"> Chat con <strong>{{otherUser.userID}}</strong></b-tooltip>
     </b-button-group>
   </div>
 </template>
 
 <script>
 import {mapGetters} from "vuex";
-import ChatMixins from '@components/mixins/chat.mixins'
+import ChatMixin from '@components/mixins/chat.mixin'
 export default {
   name: "b-friendship",
-  mixins: [ChatMixins],
+  mixins: [ChatMixin],
   props: {
     otherUser: {
       type: Object,
@@ -56,10 +55,6 @@ export default {
       isSigned: 'session/isSigned',
       friends: 'friendships/friends'
     }),
-
-    chatId(){
-      return 'btn-chat-' + this.otherUser._id
-    },
 
     isNotMe(){
       return this.otherUser._id !== this.userIdentifier
@@ -186,7 +181,7 @@ export default {
     }
   },
   created() {
-    if(this.isLoggedIn){
+    if(this.isLoggedIn && this.isSigned){
       if(this.friends.length === 0) {
         this.$store.dispatch('friendships/own')
             .then(({data}) => this._setFriendShip())

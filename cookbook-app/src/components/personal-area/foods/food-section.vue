@@ -1,17 +1,18 @@
 <template>
-  <b-container :fluid="isSigned" v-resize="onResize">
+  <b-container :fluid="isSigned">
     <b-row cols="1" cols-sm="1" cols-md="1" :cols-lg="isSigned? 2: 1" class="mx-auto">
 
       <!-- Foods -->
       <b-col class="my-5">
         <b-row class="align" align-h="between" align-v="center">
-          <b-col class="px-0"><h2 id="foods">Alimenti</h2></b-col>
+          <b-col class="px-0">
+            <h2 id="foods">Alimenti</h2>
+          </b-col>
           <b-col class="text-right mb-2">
             <b-button-group>
-              <b-button id="food-form-btn" @click="toggleFoodForm" :variant="showFormFood? 'danger': 'primary'" pill>
+              <b-button :title="showFormFood ? 'Chiudi' : 'Aggiungi alimento'" @click="toggleFoodForm" :variant="showFormFood? 'danger': 'primary'" pill>
                 <font-awesome-icon :icon="showFormFood ? 'times-circle': 'plus-circle'" class="icon"/>
               </b-button>
-              <b-tooltip target="food-form-btn"> {{showFormFood ? 'Chiudi' : 'Aggiungi alimento'}}</b-tooltip>
             </b-button-group>
           </b-col>
         </b-row>
@@ -64,78 +65,77 @@
                   </b-form-group>
                 </b-col>
                 <b-col class="text-left">
-                  <b-button id="reset-search-food" variant="secondary" @click="onResetSearch" v-if="thereIsFilters">
+                  <b-button title="Reset ricerca" variant="secondary" @click="onResetSearch" v-if="thereIsFilters">
                     <font-awesome-icon icon="undo" />
                   </b-button>
-                  <b-tooltip target="reset-search-food" v-if="thereIsFilters" >Reset ricerca</b-tooltip>
                 </b-col>
               </b-row>
             </b-container>
 
             <!-- Table aliment  -->
-            <b-table id="food-table" fixed responsive :stacked="isMobile"
-                     @context-changed="abortRequest"
-                     :tbody-tr-class="rowClass"
-                     ref="foodTable"
-                     :filter="filters"
-                     :current-page="pagination.currentPage"
-                     :per-page="pagination.for_page"
-                     :busy.sync="pagination.isBusy"
-                     :fields="fieldsFoodsTable"
-                     :items="getFoods"
-                     @row-clicked="item => $set(item, '_showDetails', !item._showDetails)" show-empty>
+            <window-with-resize size="md" @in-bound="$data._stacked=$event">
+              <b-table id="food-table" fixed responsive :stacked="$data._stacked"
+                       @context-changed="abortRequest"
+                       :tbody-tr-class="rowClass"
+                       ref="foodTable"
+                       :filter="filters"
+                       :current-page="pagination.currentPage"
+                       :per-page="pagination.for_page"
+                       :busy.sync="pagination.isBusy"
+                       :fields="fieldsFoodsTable"
+                       :items="getFoods"
+                       @row-clicked="item => $set(item, '_showDetails', !item._showDetails)" show-empty>
 
-              <template #table-busy>
-                <div  class="text-center text-primary my-2">
-                  <b-spinner class="align-middle"></b-spinner>
-                  <strong class="ml-2">Caricamento...</strong>
-                </div>
-              </template>
+                <template #table-busy>
+                  <div  class="text-center text-primary my-2">
+                    <b-spinner class="align-middle"></b-spinner>
+                    <strong class="ml-2">Caricamento...</strong>
+                  </div>
+                </template>
 
-              <template #empty>
-                <div class="text-center text-primary my-2">
-                  <strong class="ml-2">Non ci sono alimenti </strong>
-                </div>
-              </template>
-              <template #emptyfiltered>
-                <div class="text-center text-primary my-2">
-                  <strong class="ml-2">Non ci sono alimenti {{ searchIsOn ?  'filtrati' : '' }}</strong>
-                </div>
-              </template>
+                <template #empty>
+                  <div class="text-center text-primary my-2">
+                    <strong class="ml-2">Non ci sono alimenti </strong>
+                  </div>
+                </template>
+                <template #emptyfiltered>
+                  <div class="text-center text-primary my-2">
+                    <strong class="ml-2">Non ci sono alimenti {{ searchIsOn ?  'filtrati' : '' }}</strong>
+                  </div>
+                </template>
 
-              <template #cell(owner)="row">
-                <span v-if="!row.item.details.owner"> Utente cancellato </span>
-                <span v-else-if="isItMine(row.item.details.owner)">{{ row.value }}</span>
-                <router-link v-else :to="{name: 'single-user', params:{id: row.item.details.owner._id}}">{{ row.value  }}</router-link>
-              </template>
+                <template #cell(owner)="row">
+                  <span v-if="!row.item.details.owner"> Utente cancellato </span>
+                  <span v-else-if="isItMine(row.item.details.owner)">{{ row.value }}</span>
+                  <router-link v-else :to="{name: 'single-user', params:{id: row.item.details.owner._id}}">{{ row.value  }}</router-link>
+                </template>
 
-              <template #row-details="row">
+                <template #row-details="row">
 
-                <b-modal v-model="modifyFood[row.index].edit" title="Modifica ingrediente"  hide-footer>
-                  <food-form v-model="modifyFood[row.index].food" @onSave="onChangeFood($event, row)" mode="update"/>
-                </b-modal>
+                  <b-modal v-model="modifyFood[row.index].edit" title="Modifica ingrediente"  hide-footer>
+                    <food-form v-model="modifyFood[row.index].food" @onSave="onChangeFood($event, row)" mode="update"/>
+                  </b-modal>
 
-                <b-row class="mb-3 mx-1" align-v="center">
-                  <b-col class="px-0" v-if="row.item.details.barcode">
-                    <b-row cols="1" align-h="start">
-                      <b-col class="text-left"> <strong>Codice a barre</strong> </b-col>
-                      <b-col class="text-left"> {{row.item.details.barcode}}  </b-col>
-                    </b-row>
-                  </b-col>
-                  <b-col v-if="isItMine(row.item.details.owner) || isAdmin" class="text-right px-0">
-                    <b-button-group >
-                      <b-button :id="'change-food-'+row.index" v-if="row.item.actions.includes('change')" variant="primary" @click="openChangeModeFood(row)"> <b-icon-pencil-square /></b-button>
-                      <b-tooltip :target="'change-food-'+row.index" v-if="row.item.actions.includes('change')"> Modifica <i>{{row.item.aliment}}</i></b-tooltip>
-                      <!-- use modal to remove food -->
-                      <b-button :id="'remove-food-'+row.index" v-if="row.item.actions.includes('remove')" variant="danger" @click="removeFood(row)"> <b-icon-trash-fill /></b-button>
-                      <b-tooltip :target="'remove-food-'+row.index" v-if="row.item.actions.includes('remove')"> Cancella <i>{{row.item.aliment}}</i></b-tooltip>
-                    </b-button-group>
-                  </b-col>
-                </b-row>
-                <nutrients-table v-model="row.item.details.nutritional_values"/>
-              </template>
+                  <b-row class="mb-3 mx-1" align-v="center">
+                    <b-col class="px-0" v-if="row.item.details.barcode">
+                      <b-row cols="1" align-h="start">
+                        <b-col class="text-left"> <strong>Codice a barre</strong> </b-col>
+                        <b-col class="text-left"> {{row.item.details.barcode}}  </b-col>
+                      </b-row>
+                    </b-col>
+                    <b-col v-if="isItMine(row.item.details.owner) || isAdmin" class="text-right px-0">
+                      <b-button-group >
+                        <b-button :title="'Modifica '+row.item.aliment" v-if="row.item.actions.includes('change')" variant="primary" @click="openChangeModeFood(row)"> <b-icon-pencil-square /></b-button>
+                        <!-- use modal to remove food -->
+                        <b-button :title="'Cancella '+row.item.aliment" v-if="row.item.actions.includes('remove')" variant="danger" @click="removeFood(row)"> <b-icon-trash-fill /></b-button>
+                      </b-button-group>
+                    </b-col>
+                  </b-row>
+                  <nutrients-table v-model="row.item.details.nutritional_values"/>
+                </template>
 
-            </b-table>
+              </b-table>
+            </window-with-resize>
             <b-pagination v-model="pagination.currentPage"
                           :total-rows="pagination.totals"
                           :per-page="pagination.for_page"
@@ -174,8 +174,7 @@
                   <span>{{point.food.name}}</span>
                 </b-col>
                 <b-col cols="3" cols-sm="1" class="text-right">
-                  <b-button :id="'remove-food-' + index" variant="danger" @click="removeFromShoppingList(index)"><b-icon-trash-fill/></b-button>
-                  <b-tooltip :target="'remove-food-' + index">Rimuovi alimento <br/> dalla lista della spesa</b-tooltip>
+                  <b-button title="Rimuovi dalla lista" variant="danger" @click="removeFromShoppingList(index)"><b-icon-trash-fill/></b-button>
                 </b-col>
               </b-row>
             </b-list-group-item>
@@ -198,7 +197,7 @@ export default {
   data(){
     return {
       skeleton: 6,
-      isMobile: false,
+      _stacked: false,
 
       pendingRequests: null,
       idRequest: 'foods-all',
@@ -228,7 +227,7 @@ export default {
         {
           key: 'owner',
           label: 'Creatore',
-          formatter: (value, key, item) => value === this.username ? 'io': value
+          formatter: (value, key, item) => value === this.username ? 'io' : (item.details.owner?.role === 'admin' ? value + ' (Amministratore)' : value)
         },
         {
           key: 'creationDate',
@@ -259,7 +258,7 @@ export default {
     },
 
     classesShoppingList(){
-      return {'shopping-list':true, 'align':true, 'scroll': this.isMobile }
+      return {'shopping-list':true, 'align':true, 'scroll': this.$data._stacked }
     },
 
     thereIsFilters(){
@@ -275,10 +274,6 @@ export default {
     rowClass(item, type) {
       if (!item || type !== 'row') return ''
       if (item._showDetails) return 'table-primary'
-    },
-    onResize({screenWidth, windowWidth}){
-      let maxWidth = 768
-      this.isMobile =  screenWidth < maxWidth || windowWidth < maxWidth
     },
 
     isItMine(owner){
@@ -296,6 +291,7 @@ export default {
               console.debug('New point = ', data)
               console.debug('Add on shopping list: ', JSON.stringify(this.shopping_list[0]))
               console.debug(this.shopping_list)
+              this.$socket.emit('shopping-list:add', data)
            })
            .catch(this.handleRequestErrors.shoppingList.createShoppingListPoint)
            .then(duplicate => {
@@ -312,6 +308,7 @@ export default {
          .then(({data}) => {
            console.debug(`${checked ? 'Checked': 'Unchecked'} item of shopping list:`, JSON.stringify(point))
            console.debug(this.shopping_list)
+           this.$socket.emit('shopping-list:update', point)
          })
          .catch(this.handleRequestErrors.shoppingList.updateShoppingListPoint)
     },
@@ -321,6 +318,7 @@ export default {
          .then(({data}) => {
             console.debug('Remove from shopping list : ', JSON.stringify(point))
             console.debug(this.shopping_list)
+            this.$socket.emit('shopping-list:remove', point._id)
          })
          .catch(this.handleRequestErrors.shoppingList.deleteShoppingListPoint)
     },

@@ -32,12 +32,12 @@
 
 import {mapGetters} from "vuex";
 
-import ChatMixins from '@components/mixins/chat.mixins'
+import ChatMixin from '@components/mixins/chat.mixin'
 import ChatTyping from "./chat-typing";
 
 export default {
   name: "chat-header",
-  mixins: [ChatMixins],
+  mixins: [ChatMixin],
   components: {ChatTyping},
   props: {
     value: Object

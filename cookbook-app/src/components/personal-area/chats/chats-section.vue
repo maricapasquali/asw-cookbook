@@ -19,8 +19,7 @@
         </b-form-group>
       </b-col>
       <b-col cols="2" class="text-right pl-0 pr-1" v-if="friends.length">
-       <b-button id="new-chat-btn" @click="newChat=true"> <b-icon-pencil-square /> </b-button>
-        <b-tooltip target="new-chat-btn"> Nuova chat </b-tooltip>
+       <b-button title="Nuova chat" @click="newChat=true"> <b-icon-pencil-square /> </b-button>
       </b-col>
     </b-row>
     <b-row cols="1" cols-sm="1" cols-md="2">
@@ -104,12 +103,12 @@
 
 <script>
 import {mapGetters} from "vuex";
-import ChatMixins from '@components/mixins/chat.mixins'
+import ChatMixin from '@components/mixins/chat.mixin'
 import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "chats-section",
-  mixins: [ChatMixins],
+  mixins: [ChatMixin],
   data(){
     return {
       skeletons: 3,

@@ -12,12 +12,9 @@
    </b-row>
    <b-row class="mt-1">
      <b-button-group class="mx-auto">
-       <b-button v-if="isCancellable" :id="cancelChangesId" @click="cancelChanges" variant="secondary"><font-awesome-icon icon="undo" /></b-button>
-       <b-tooltip v-if="isCancellable" :target="cancelChangesId">Annulla modifiche</b-tooltip>
-       <b-button @click="clickLoad" :id="uploadImageId" variant="primary"><b-icon-upload /></b-button>
-       <b-tooltip :target="uploadImageId">Carica</b-tooltip>
-       <b-button v-if="isRemovable" :id="removeImageId" @click="removeImage" variant="danger"><b-icon-trash-fill /></b-button>
-       <b-tooltip v-if="isRemovable" :target="removeImageId">Cancella immagine</b-tooltip>
+       <b-button v-if="isCancellable" title="Annulla modifiche" @click="cancelChanges" variant="secondary"><font-awesome-icon icon="undo" /></b-button>
+       <b-button @click="clickLoad" title="Carica" variant="primary"><b-icon-upload /></b-button>
+       <b-button v-if="isRemovable" title="Cancella immagine" @click="removeImage" variant="danger"><b-icon-trash-fill /></b-button>
      </b-button-group>
    </b-row>
  </b-container>
@@ -59,16 +56,6 @@ export default {
     }
   },
   computed: {
-    cancelChangesId(){
-      return 'cancel-changes-'+ this.id
-    },
-    uploadImageId(){
-      return 'upload-image-'+ this.id
-    },
-    removeImageId(){
-      return 'remove-image'+ this.id
-    },
-
 
     imageType(){
       return this.avatar || this.fileType === 'image'

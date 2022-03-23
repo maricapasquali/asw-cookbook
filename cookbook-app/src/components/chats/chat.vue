@@ -71,12 +71,13 @@
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
-import ChatMixins from '@components/mixins/chat.mixins'
+import ChatMixin from '@components/mixins/chat.mixin'
+import RecipeMixin from '@components/mixins/recipe.mixin'
 import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "chat",
-  mixins: [ChatMixins],
+  mixins: [ChatMixin, RecipeMixin],
   props: {
     value: Object | Boolean,
     fromLink: Boolean
@@ -453,7 +454,9 @@ export default {
 
         executor = (resolve, reject) => this.$store.dispatch('recipes/update-permission', {recipeID: this.attachment.id, permission})
                                            .then(({data}) => {
-                                              console.log(data)
+                                              this.setDefaultValueOn(data.updatedRecipe)
+                                              console.log('Update permission: ', data)
+                                              this.$socket.emit("recipe:add:permission", data.updatedRecipe)
                                               resolve()
                                            })
                                            .catch(err =>{
