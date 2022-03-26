@@ -205,6 +205,8 @@ export default {
     this.registerCheckAccessTokenListener()
     this.registerSessionListener()
 
+    console.debug('Vue ', this)
+    console.debug('Api ', this.$api)
     console.debug('Store ', this.$store)
     console.debug('Socket ', this.$socket)
     console.debug('Bus ', this.$bus)

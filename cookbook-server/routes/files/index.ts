@@ -1,14 +1,9 @@
 import * as path from "path";
-import * as config from "../../../env.config"
+import * as config from "../../../environment/env.config"
 import * as YAML from "yamljs"
 import * as swaggerUi from 'swagger-ui-express'
 
 export default function (app){
-
-    const rootDir = "cookbook-server"
-    const imagesDir = path.join(rootDir,"images")
-    const videosDir = path.join(rootDir,"videos")
-    const apiDocsDir = path.join(rootDir,"api-docs")
 
     const app_name = config.appName
 
@@ -17,18 +12,18 @@ export default function (app){
         signupAdmins: '/admins/signup'
     }
 
-    app.get('/images/:filename', (req, res) => res.status(200).sendFile(path.resolve(imagesDir, req.params.filename)))
+    app.get('/images/:filename', (req, res) => res.status(200).sendFile(path.resolve("images", req.params.filename)))
 
-    app.get('/videos/:filename', (req, res) => res.status(200).sendFile(path.resolve(videosDir, req.params.filename)))
+    app.get('/videos/:filename', (req, res) => res.status(200).sendFile(path.resolve("videos", req.params.filename)))
 
     app.get(routes.signupAdmins, (req, res) => res.status(200).render("signup-admin", { app_name }))
 
     /**
      * SHOW REST API DOCUMENTATIONS
      */
-    const swaggerCookbookAPI = YAML.load(path.resolve(apiDocsDir,'api-documentations.yaml'));
+    const swaggerCookbookAPI = YAML.load(path.resolve("api-docs",'api-documentations.yaml'));
     swaggerCookbookAPI.servers = []
-    swaggerCookbookAPI.servers.push({ url: config.server['sub-domain'].api })
+    swaggerCookbookAPI.servers.push({ url: config.server['sub-domain'].api.origin })
     swaggerCookbookAPI.paths['/admins'].post.responses['201'].headers['Access-Control-Allow-Origin'].schema.example = config.server.origin
     app.use(routes.apiDocs, swaggerUi.serveFiles(swaggerCookbookAPI, {}), swaggerUi.setup(swaggerCookbookAPI));
 

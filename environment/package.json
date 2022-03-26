@@ -1,0 +1,13 @@
+{
+  "name": "environment",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {},
+  "author": "Marica Pasquali",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "dotenv-expand": "^8.0.3",
+    "yamljs": "^0.3.0"
+  }
+}

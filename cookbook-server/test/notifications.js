@@ -1,8 +1,8 @@
 const assert = require('assert');
 
-const {connect, disconnect} = require('../cookbook-server/database')
-const {create_notification} = require("../cookbook-server/controllers/notification")
-const {Notification} = require("../cookbook-server/models/schemas/notification")
+const {connect, disconnect} = require('../database')
+const {create_notification} = require("../controllers/notification")
+const {Notification} = require("../models/schemas/notification")
 
 describe('Notification', function (){
     before(connect)

@@ -1,5 +1,5 @@
 import {Document, Schema} from "mongoose";
-import {EmailValidator} from "../../../../modules/validator";
+import {EmailValidator} from "../../../../commons/modules/validator";
 import {RBAC} from "../../../modules/rbac";
 import Role = RBAC.Role;
 

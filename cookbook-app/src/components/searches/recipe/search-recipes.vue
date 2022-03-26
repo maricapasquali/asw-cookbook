@@ -288,8 +288,6 @@ export default {
            this.countries = data.filter(cn => this.getCountryByValue(cn.country))
                .map(cn => ({...this.getCountryByValue(cn.country), ...{recipes: cn.number}}))
 
-            console.warn( this.countries[0].recipes , ' ti ', typeof (this.countries[0].recipes +1))
-
            if(this.withHistory) this._setFiltersFromRoute()
            console.debug('this.countries = ', this.countries)
            return true
