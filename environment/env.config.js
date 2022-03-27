@@ -14,36 +14,20 @@ let port_server
 let protocol_client
 let hostname_client
 let port_client
-let databaseURI;
-
 
 if(process.env.DOCKER_CONTAINER_ENV) {
 
-    let isDevMode = process.env.NODE_ENV === 'development'
-    let isProdMode = process.env.NODE_ENV === 'production'
+    let isDevMode = process.env.NODE_ENV === "development"
+    const _dev = isDevMode ? "-dev" : ''
 
-    let _dockerConfigFile = isDevMode ? 'docker-compose.dev.yml' : isProdMode ? 'docker-compose.yml' : undefined
-    if(!_dockerConfigFile) throw new Error("Docker File Configuration not exist for mode = " + process.env.NODE_ENV)
+    protocol_server = process.env.SERVER_PROTOCOL || "https"
+    hostname_server = process.env.SERVER_HOSTNAME || ("server-app" + _dev)
+    port_server = parseInt(process.env.SERVER_PORT) || 3000
 
-    const YAML = require("yamljs")
-    const environment = YAML.load(path.join("..", _dockerConfigFile))
-    if(!environment) throw new Error("docker-compose.yml NOT load.")
+    protocol_client = process.env.CLIENT_PROTOCOL || "https"
+    hostname_client = process.env.CLIENT_HOSTNAME || ("client-app" + _dev)
+    port_client = parseInt(process.env.CLIENT_PORT) || 5000
 
-    const _dev = isDevMode ? '-dev': ''
-
-    const serverService = environment.services[`server-app${_dev}`]
-    const clientService = environment.services[`client-app${_dev}`]
-    const databaseService = environment.services.mongo
-
-    protocol_server = "https"
-    hostname_server = serverService.container_name || "localhost"
-    port_server = parseInt(serverService.ports[0].split(":")[0]) || 3000
-
-    protocol_client = "https"
-    hostname_client = clientService.container_name || "localhost"
-    port_client = parseInt(clientService.ports[0].split(":")[0]) || 5000
-
-    databaseURI = `mongodb://${databaseService.container_name}/cookbook`
 } else {
 
     protocol_server = process.env.COOKBOOK_SERVER_PROTOCOL || process.env.VUE_APP_COOKBOOK_SERVER_PROTOCOL || "https"
@@ -52,10 +36,10 @@ if(process.env.DOCKER_CONTAINER_ENV) {
 
     protocol_client = process.env.COOKBOOK_CLIENT_PROTOCOL || process.env.VUE_APP_COOKBOOK_CLIENT_PROTOCOL || "https"
     hostname_client = process.env.COOKBOOK_CLIENT_HOSTNAME || process.env.VUE_APP_COOKBOOK_CLIENT_HOSTNAME || "localhost"
-    port_client = parseInt(process.env.COOKBOOK_CLIENT_PORT || process.env.VUE_APP_COOKBOOK_CLIENT_PORT)  || 5000
-
-    databaseURI = process.env.DB_CONNECTION || "mongodb://localhost:27017/cookbook"
+    port_client = parseInt(process.env.COOKBOOK_CLIENT_PORT || process.env.VUE_APP_COOKBOOK_CLIENT_PORT) || 5000
 }
+
+databaseURI = process.env.DATABASE_URI || "mongodb://localhost:27017/cookbook"
 
 const server_origin = `${protocol_server}://${hostname_server}:${port_server}`
 const api_pathname = "/api"

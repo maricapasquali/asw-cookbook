@@ -13,6 +13,8 @@ services:
       - "4001:4001"
     volumes:
       - ./:/app
+    env_file:
+      - docker.dev.env
     networks:
       - cookbook-dev
     depends_on:
@@ -30,6 +32,10 @@ services:
     volumes:
       - ./:/app
       - /app/cookbook-server/node_modules/bcrypt
+    environment:
+      - DATABASE_URI=mongodb://db-container/cookbook
+    env_file:
+     - docker.dev.env
     networks:
       - cookbook-dev
     links:
@@ -41,7 +47,7 @@ services:
     volumes:
       - ./data/db:/data/db
     ports:
-      - "27017:27017"
+      - "27018:27017"
     networks:
       - cookbook-dev
 

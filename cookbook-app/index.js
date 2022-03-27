@@ -21,7 +21,6 @@ app.use(/^\/(api|images|videos|socket.io)\/.*$/, proxyMiddleware);
 
 app.use(history())
 app.use(serveStatic(path.join(__dirname , "dist")));
-app.use(express.static(path.join(__dirname , "..")));
 
 new Hosting(app)
     .setHttpsOptions(() => {

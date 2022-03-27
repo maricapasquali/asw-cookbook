@@ -3,9 +3,6 @@ ENV DOCKER_CONTAINER_ENV true
 
 FROM base as production
 
-WORKDIR /app
-COPY ./docker-compose.yml .
-
 WORKDIR /app/environment
 COPY ./environment/package*.json .
 RUN npm install

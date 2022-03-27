@@ -8,7 +8,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
 
 # Using Docker 
 **Note: In this case database is hosted in _a container_.**
-## Create Image and Build Container
+## Build _Image_
 - _production_ mode
     ````
         docker-compose build .
@@ -18,7 +18,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
         docker-compose -f ./docker-compose.dev.yml build
     ````
 
-## Run Containers
+## Create and Run _Containers_
 - _production_ mode
     ````
        docker-compose up -d
@@ -34,7 +34,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
    docker-compose logs <name-of-service> -f
 ````
 
-## Stop and Destroy Containers
+## Stop and Destroy _Containers_
 - _production_ mode
     ````
        docker-compose down
@@ -45,7 +45,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
        docker-compose -f ./docker-compose.dev.yml down
     ````
 
-# Using Node and NPM
+# Using NPM
 **Note: In this case database is hosted in _localhost_.**
 ## Installation
 ````
