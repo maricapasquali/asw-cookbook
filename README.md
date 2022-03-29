@@ -30,7 +30,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
   ```
      docker-compose -f ./docker-compose.dev.yml up -d
   ```
-  - To populate database, look at the [_**Database Population (Example)**_](<#Database-Population-(Example)>)
+  - To populate database, look at the [_**Database Population (Example)**_](#database-population-example)
 
 ## Inspects
 
@@ -53,7 +53,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
 
 # Using NPM
 
-**Note**: In this case database is hosted in _localhost_. After installation and building to populate database, look at the [_**Database Population (Example)**_](<#Database-Population-(Example)>).
+**Note**: In this case database is hosted in _localhost_. After installation and building to populate database, look at the [_**Database Population (Example)**_](#database-population-example).
 
 ## Installation
 
