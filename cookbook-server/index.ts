@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as cors from 'cors';
 
-import * as config from "../env.config"
-import {Hosting} from "../modules/hosting"
+import * as config from "../environment/env.config"
+import {Hosting} from "../commons/modules/hosting"
 import * as database from './database'
 import routes from './routes'
 import socket from './sockets'
@@ -20,7 +20,7 @@ app.set('view engine', 'ejs');
 app.set('views', views)
 
 app.use(express.static(views))
-app.use('/libs', express.static(path.resolve('node_modules')))
+app.use('/libs', express.static(path.join(__dirname, 'node_modules')))
 
 /**
  * DATABASE CONNECTION

@@ -4,7 +4,6 @@ import {Chat, EmailLink, Friend, Notification, ShoppingList, User} from '../../m
 
 import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
-import {IMailer, Mailer} from "../../modules/mailer";
 import {IUser, SignUp} from "../../models/schemas/user";
 import {
     accessManager,
@@ -19,10 +18,10 @@ import {
 import {EraseUserEmail, ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
 import * as path from "path";
 import {Types} from "mongoose";
-import {EmailValidator} from "../../../modules/validator";
+import {EmailValidator} from "../../../commons/modules/validator";
 import {IChat} from "../../models/schemas/chat";
 
-import * as config from "../../../env.config"
+import * as config from "../../../environment/env.config"
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 import {newUser} from "./utils.user.controller";
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;

@@ -7,14 +7,16 @@ import {Server} from 'socket.io'
 import * as https from "https";
 import * as http from "http";
 
-import * as config from "../../env.config"
+import * as config from "../../environment/env.config"
 import {onConnect, onDisconnect} from "./rooms";
 
 export default function (server: http.Server | https.Server): void {
 
     const io = new Server(server, {
         cors: {
-          origin: config.client.origin
+          origin: config.client.origin,
+          methods: ["GET", "POST"],
+          credentials: true
         }
     })
 

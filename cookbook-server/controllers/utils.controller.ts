@@ -7,8 +7,8 @@ import FileType = FileUploader.FileType;
 import * as path from "path";
 import {Document, Model, Query} from "mongoose";
 
-import * as config from "../../env.config"
-const server_api_origin = config.server["sub-domain"].api
+import * as config from "../../environment/env.config"
+const server_api_origin = config.server["sub-domain"].api.origin
 const client_origin = config.client.origin
 
 export const tokensManager: IJwtTokensManager = new JwtTokensManager(client_origin, server_api_origin)
@@ -97,12 +97,12 @@ export const fileUploader: IFileUploader = new FileUploader()
 
 export const FileConfigurationImage: UploaderConfiguration = {
     type: FileType.IMAGE,
-    dest: path.resolve('cookbook-server/images'),
+    dest: path.resolve('images'),
 }
 
 export const FileConfigurationVideo: UploaderConfiguration = {
     type: FileType.VIDEO,
-    dest: path.resolve('cookbook-server/videos'),
+    dest: path.resolve('videos'),
 }
 
 export type PaginationOptions = { page: number, limit: number, skip?: number }

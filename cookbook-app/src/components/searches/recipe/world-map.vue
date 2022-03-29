@@ -196,6 +196,9 @@ export default {
       this.$refs.zoom.zoomOut()
       this.checkScale()
     },
+  },
+  updated() {
+    console.log('map world components = ', this.$refs['world-map'])
   }
 }
 </script>

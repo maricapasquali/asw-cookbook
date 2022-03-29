@@ -1,4 +1,3 @@
-import Server from '@api/server.info'
 export default {
     methods: {
         _updateUserInformation(userToUpdate, userInfo){
@@ -9,7 +8,7 @@ export default {
             }
         },
         _formatUserImage(image){
-            return image ? Server.images.path(image) : ''
+            return image ? this.$api.images.path(image) : ''
         }
     }
 }

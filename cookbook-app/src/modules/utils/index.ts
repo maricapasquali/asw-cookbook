@@ -1,13 +1,11 @@
 import * as _ from 'lodash'
-import * as cloneDeep from 'lodash.clonedeep'
-import * as isEqual from 'lodash.isequal'
 
 export function clone(from: object){
-    return cloneDeep(from)
+    return _.cloneDeep(from)
 }
 
 export function equals(o: object, o1: object): boolean {
-    return isEqual(o, o1)
+    return _.isEqual(o, o1)
 }
 
 export function isEmpty(v: any): boolean {

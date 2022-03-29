@@ -10,18 +10,13 @@ import {mapGetters} from "vuex";
 
 export default {
   name: "app-footer",
-  data(){
-    return {
-      isMobileDevice: window.navigator.userAgent.toLowerCase().includes("mobi")
-    }
-  },
   computed: {
     ...mapGetters({
       isAdmin: 'session/isAdmin'
-    })
-  },
-  created() {
-    this.administratorEmail = `administrator@${this.app_name.toLowerCase()}.com`
+    }),
+    administratorEmail(){
+      return `administrator@${this.app_name.toLowerCase()}.com`
+    }
   }
 }
 </script>

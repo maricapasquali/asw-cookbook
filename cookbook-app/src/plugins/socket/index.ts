@@ -1,15 +1,9 @@
 import io, {Socket} from "socket.io-client";
 
-import Server from "../api/server.info";
-
 type SocketAuthorization = { key: string, userinfo?: { _id: string, userID: string, isAdmin?: boolean }}
 
-export const socket: Socket = io(Server.origin , {
-    autoConnect: false
-})
-
-export default function installSocket(Vue, options) {
-    Vue.prototype.$socket = socket
+export default function installSocket(Vue) {
+    let socket: Socket = io({ autoConnect: false, withCredentials: true })
 
     socket.on('disconnect', (reason) => {
         console.log('SOCKET disconnect. Reason: ', reason);
@@ -22,6 +16,8 @@ export default function installSocket(Vue, options) {
     socket.on('error', (e) => {
         console.error('Error socket ', e)
     })
+
+    Vue.prototype.$socket = socket
 
     Vue.prototype.$socket.connectStart = function (socketAuthorization: SocketAuthorization){
         if(socket.connected) socket.disconnect()
