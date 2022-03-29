@@ -10,7 +10,7 @@ services:
       dockerfile: client.Dockerfile
       target: development
     ports:
-      - "4001:4001"
+      - "5001:5001"
     volumes:
       - ./:/app
     env_file:
@@ -28,7 +28,7 @@ services:
       dockerfile: server.Dockerfile
       target: development
     ports:
-      - "4000:4000"
+      - "3001:3001"
     volumes:
       - ./:/app
       - /app/cookbook-server/node_modules/bcrypt

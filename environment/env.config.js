@@ -21,12 +21,12 @@ if(process.env.DOCKER_CONTAINER_ENV) {
     const _dev = isDevMode ? "-dev" : ''
 
     protocol_server = process.env.SERVER_PROTOCOL || "https"
-    hostname_server = process.env.SERVER_HOSTNAME || ("server-app" + _dev)
-    port_server = parseInt(process.env.SERVER_PORT) || 3000
+    hostname_server = "server-app" + _dev
+    port_server = isDevMode ? 3001 : 3000
 
     protocol_client = process.env.CLIENT_PROTOCOL || "https"
-    hostname_client = process.env.CLIENT_HOSTNAME || ("client-app" + _dev)
-    port_client = parseInt(process.env.CLIENT_PORT) || 5000
+    hostname_client = "client-app" + _dev
+    port_client = isDevMode ? 5001 : 5000
 
 } else {
 
