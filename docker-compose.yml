@@ -28,7 +28,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URI=mongodb://db-container/cookbook
+      - DATABASE_URI=mongodb://database-app/cookbook
     env_file:
       - docker.prod.env
     networks:
@@ -37,10 +37,12 @@ services:
       - mongo
 
   mongo:
-    container_name: db-container
-    image: mongo
-    volumes:
-      - ./data/db:/data/db
+    container_name: database-app
+    image: marica/web-app-database
+    build:
+      context: .
+      dockerfile: database.Dockerfile
+      target: production
     ports:
       - "27018:27017"
     networks:

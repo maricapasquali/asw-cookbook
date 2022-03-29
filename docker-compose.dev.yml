@@ -33,7 +33,7 @@ services:
       - ./:/app
       - /app/cookbook-server/node_modules/bcrypt
     environment:
-      - DATABASE_URI=mongodb://db-container/cookbook
+      - DATABASE_URI=mongodb://database-app-dev/cookbook
     env_file:
      - docker.dev.env
     networks:
@@ -42,7 +42,7 @@ services:
       - mongo
 
   mongo:
-    container_name: db-container
+    container_name: database-app-dev
     image: mongo
     volumes:
       - ./data/db:/data/db

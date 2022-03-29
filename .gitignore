@@ -1,4 +1,6 @@
 .idea
 design
 *.env
-data
+
+data/*
+!data/cookbook.archive
