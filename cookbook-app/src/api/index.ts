@@ -1,17 +1,25 @@
-import * as users from './users'
-import * as friends from './users/friends'
-import * as foods from './foods'
-import * as recipes from './recipes'
-import * as shoppingList from './shopping-list'
-import * as notifications from './notifications'
-import * as chats from './chats'
+import users from './users'
+import friends from './users/friends'
+import foods from './foods'
+import recipes from './recipes'
+import shoppingList from './shopping-list'
+import notifications from './notifications'
+import chats from './chats'
 
-export default {
-    users,
-    friends,
-    foods,
-    recipes,
-    shoppingList,
-    notifications,
-    chats
+import methods, {MethodsAxios} from './methods'
+
+export default function (serverConfiguration){
+    let _methods: MethodsAxios = methods(serverConfiguration)
+
+    return {
+        ..._methods.info,
+
+        users: users(_methods),
+        friends: friends(_methods),
+        foods: foods(_methods),
+        recipes: recipes(_methods),
+        shoppingList: shoppingList(_methods),
+        notifications: notifications(_methods),
+        chats: chats(_methods)
+    }
 }

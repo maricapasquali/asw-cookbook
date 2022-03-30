@@ -205,9 +205,25 @@ export default {
     this.registerCheckAccessTokenListener()
     this.registerSessionListener()
 
+    console.debug('Vue ', this)
+    console.debug('Api ', this.$api)
     console.debug('Store ', this.$store)
     console.debug('Socket ', this.$socket)
     console.debug('Bus ', this.$bus)
+    console.debug('window ', window)
+
+    const isRedirectedToPersonalArea = (route) => {
+      return this.isLoggedIn && (
+          (this.isAdmin && route.name === 'homepage') ||
+          (route.name === 'single-user' && route.params.id === this.userIdentifier)
+      )
+    }
+
+    this.$router.beforeEach((to, from, next) => {
+      if(isRedirectedToPersonalArea(to)) return next({ name: 'p-user-account', params: {id: this.userIdentifier} } )
+      return next()
+    })
+    if(isRedirectedToPersonalArea(this.$route)) this.$router.replace({ name: 'p-user-account', params: {id: this.userIdentifier} })
   },
   beforeDestroy() {
       this.$socket.disconnect()

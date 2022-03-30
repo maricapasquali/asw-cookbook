@@ -17,7 +17,7 @@
 <script>
 
 import {mapActions, mapGetters} from "vuex";
-import UserMixin from '@components/mixins/user.mixin'
+import UserMixin from '@mixins/user.mixin'
 export default {
   name: "like",
   mixins: [UserMixin],

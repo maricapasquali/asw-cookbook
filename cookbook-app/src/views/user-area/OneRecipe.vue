@@ -192,7 +192,7 @@
 import {mapGetters} from "vuex";
 import NotFound from "../404";
 import {QueuePendingRequests} from "@api/request";
-import UserMixin from "@components/mixins/user.mixin"
+import UserMixin from "@mixins/user.mixin"
 export default {
   name: "OneRecipe",
   mixins: [UserMixin],

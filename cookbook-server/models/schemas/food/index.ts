@@ -48,6 +48,6 @@ export const FoodSchema: Schema<IFood> = new Schema<IFood>({
 FoodSchema.pre(['find', 'findOne'], function() {
     this.populate({
         path: 'owner',
-        select: { 'userID' : '$credential.userID' }
+        select: { 'userID' : '$credential.userID', 'role': '$credential.role' }
     })
 });

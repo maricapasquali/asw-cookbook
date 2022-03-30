@@ -30,7 +30,7 @@
 <script>
 
 import {QueuePendingRequests} from "@api/request";
-import RecipeMixin from "@components/mixins/recipe.mixin"
+import RecipeMixin from "@mixins/recipe.mixin"
 import {mapGetters} from "vuex";
 
 export default {

@@ -1,0 +1,11 @@
+node_modules
+videos
+images
+
+*.env
+
+**/*.js
+**/*.js.map
+
+!test/*.js
+!views/js/*.js

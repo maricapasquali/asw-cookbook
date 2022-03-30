@@ -3,11 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as cors from 'cors';
 
-import * as YAML from "yamljs"
-import * as swaggerUi from 'swagger-ui-express'
-
-import * as config from "../env.config"
-import {Hosting} from "../modules/hosting"
+import * as config from "../environment/env.config"
+import {Hosting} from "../commons/modules/hosting"
 import * as database from './database'
 import routes from './routes'
 import socket from './sockets'
@@ -17,6 +14,14 @@ const app = express();
 app.use(express.json());
 app.use(cors({ origin: config.client.origin })) //used to enable HTTPS requests from a different source
 app.use(requestId)
+
+const views = path.join(__dirname ,'views')
+app.set('view engine', 'ejs');
+app.set('views', views)
+
+app.use(express.static(views))
+app.use('/libs', express.static(path.join(__dirname, 'node_modules')))
+
 /**
  * DATABASE CONNECTION
  */
@@ -26,28 +31,6 @@ database.connect()
  * ROUTES
  */
 routes(app)
-
-/**
- * SHOW REST API DOCUMENTATIONS
- */
-
-const swaggerCookbookAPI = YAML.load(path.join(__dirname, 'api-docs', 'api-documentations.yaml'));
-const apiDocsRouteName = "/api-docs"
-app.use(apiDocsRouteName, swaggerUi.serveFiles(swaggerCookbookAPI, {}), swaggerUi.setup(swaggerCookbookAPI));
-
-/**
- * ROUTE NOT FOUND
- */
-app.use(function (req, res, next) {
-    if(req.originalUrl === '/') return next()
-    res.status(404).json({ error: { description: req.originalUrl + " not found" } });
-});
-/**
- * MAIN ROUTE
- */
-app.use(function (req, res) {
-    res.status(200).send(`<p>Server is running ...</p><p><a href="${apiDocsRouteName}">Documentation api</a></p>`)
-});
 
 /**
  * SERVER INIT

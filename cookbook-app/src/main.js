@@ -1,8 +1,9 @@
 import Vue from 'vue'
 import router from '@router'
 import store from '@store'
-
 import App from '@/App'
+
+import * as envConfig from "@environment/env.config";
 
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 // Import Bootstrap an BootstrapVue CSS files (order is important)
@@ -45,17 +46,9 @@ Vue.use(VueZoomer)
 import Components from "@components"
 Vue.use(Components)
 
-// Import my event bus
-import EventBusPlugin from '@event-bus'
-Vue.use(EventBusPlugin)
-
-// Import my socket.io
-import SocketPlugin from '@socket'
-Vue.use(SocketPlugin)
-
-// Import my utils
-import AppPlugins from '@/plugins'
-Vue.use(AppPlugins)
+// Import my Plugins
+import AppPlugins from '@plugins'
+Vue.use(AppPlugins, envConfig)
 
 new Vue({
     router,

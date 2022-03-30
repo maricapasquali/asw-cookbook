@@ -24,7 +24,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import ChatMixin from '@components/mixins/chat.mixin'
+import ChatMixin from '@mixins/chat.mixin'
 export default {
   name: "b-friendship",
   mixins: [ChatMixin],
@@ -181,7 +181,7 @@ export default {
     }
   },
   created() {
-    if(this.isLoggedIn){
+    if(this.isLoggedIn && this.isSigned){
       if(this.friends.length === 0) {
         this.$store.dispatch('friendships/own')
             .then(({data}) => this._setFriendShip())

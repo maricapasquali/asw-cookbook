@@ -1,8 +1,8 @@
-import api from '@api'
+
 
 export default {
     login({dispatch, commit}, credential){
-        return api.users
+        return this._vm.$api.users
                   .session
                   .login(credential)
                   .then(({data}) => {
@@ -22,12 +22,12 @@ export default {
 
     logout({dispatch, state, getters}){
         if(!getters.isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.users.session.logout(state.user._id, state.accessToken)
+        return this._vm.$api.users.session.logout(state.user._id, state.accessToken)
     },
 
     requestNewAccessToken({commit, getters, dispatch, state}){
         if(!getters.isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return api.users
+        return this._vm.$api.users
                   .session
                   .newAccessToken(state.user._id, { refresh_token: state.refreshToken }, state.accessToken)
                   .then(response => {

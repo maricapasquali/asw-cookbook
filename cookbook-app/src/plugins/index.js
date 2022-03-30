@@ -1,13 +1,16 @@
-import * as utils from '~/utils'
-import filesystem from '~/filesystem'
+import EventBusPlugin from './event-bus'
+import SocketPlugin from './socket'
+import ApiPlugin from './api'
 
-import * as config from '@root-project/env.config'
-import validators from '@root-project/modules/validator'
+import * as utils from '@utils/'
+import filesystem from '@utils/filesystem'
 
-export default function installAppPlugins(Vue, options){
-    Vue.prototype.app_name = config.appName
+import validators from '@commons/validator'
 
-    let channel = new BroadcastChannel(config.appName)
+export default function installAppPlugins(Vue, configurationEnvironment){
+    Vue.prototype.app_name = configurationEnvironment.appName
+
+    let channel = new BroadcastChannel(configurationEnvironment.appName)
     channel.onmessage = event => {
         console.error("[Broadcast channel] => Error: ", event)
     }
@@ -18,4 +21,10 @@ export default function installAppPlugins(Vue, options){
     Object.assign(window, validators)
 
     console.log('Install plugin App Utilities ...')
+
+    Vue.use(EventBusPlugin)
+
+    Vue.use(SocketPlugin)
+
+    Vue.use(ApiPlugin, { serverConfiguration: configurationEnvironment.server })
 }

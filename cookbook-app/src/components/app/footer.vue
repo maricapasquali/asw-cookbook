@@ -1,20 +1,22 @@
 <template>
   <!--TODO: FOOTER APP -->
   <footer class="text-center">
-    <a class="mt-2" :href="`mailto:${administratorEmail}`"> Email amministratore </a>
+    <b-link v-if="!isAdmin" class="mt-2" :href="`mailto:${administratorEmail}`"> Email amministratore </b-link>
   </footer>
 </template>
 
 <script>
+import {mapGetters} from "vuex";
+
 export default {
   name: "app-footer",
-  data(){
-    return {
-      isMobileDevice: window.navigator.userAgent.toLowerCase().includes("mobi")
+  computed: {
+    ...mapGetters({
+      isAdmin: 'session/isAdmin'
+    }),
+    administratorEmail(){
+      return `administrator@${this.app_name.toLowerCase()}.com`
     }
-  },
-  created() {
-    this.administratorEmail = `administrator@${this.app_name.toLowerCase()}.com`
   }
 }
 </script>

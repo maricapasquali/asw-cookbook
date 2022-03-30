@@ -72,7 +72,7 @@
 
               <!-- Likes and Comments -->
               <template #footer>
-                <b-row align-h="between">
+                <b-row align-h="between" align-v=center>
                   <b-col>
                     <!-- Like of a RECIPE -->
                     <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike(ind)"/>
@@ -101,7 +101,7 @@
 
 <script>
 
-import UserMixin from "@components/mixins/user.mixin"
+import UserMixin from "@mixins/user.mixin"
 import {mapGetters} from "vuex";
 import {QueuePendingRequests} from "@api/request";
 

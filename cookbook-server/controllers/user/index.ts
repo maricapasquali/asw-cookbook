@@ -4,9 +4,7 @@ import {Chat, EmailLink, Friend, Notification, ShoppingList, User} from '../../m
 
 import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
-import {IMailer, Mailer} from "../../modules/mailer";
 import {IUser, SignUp} from "../../models/schemas/user";
-import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
 import {
     accessManager,
     FileConfigurationImage,
@@ -19,30 +17,31 @@ import {
 
 import {EraseUserEmail, ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
 import * as path from "path";
-import Role = RBAC.Role;
-import Operation = RBAC.Operation;
-import Subject = RBAC.Subject;
 import {Types} from "mongoose";
-import ObjectId = Types.ObjectId
-import {EmailValidator} from "../../../modules/validator";
+import {EmailValidator} from "../../../commons/modules/validator";
 import {IChat} from "../../models/schemas/chat";
 
-import * as config from "../../../env.config"
+import * as config from "../../../environment/env.config"
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
+import {newUser} from "./utils.user.controller";
+import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
+import Operation = RBAC.Operation;
+import Subject = RBAC.Subject;
+import ObjectId = Types.ObjectId;
+import Role = RBAC.Role;
 
-const app_name = config.appName
 const client_origin = config.client.origin
 
-const mailer: IMailer = new Mailer(`no-reply@${app_name.toLowerCase()}.com`);
+import {mailer, app_name} from "./utils.user.controller";
 
 const send_email_signup = function (user) {
     let randomKey: string = randomString()
-    let url: string = client_origin + '/end-signup'
+    let pathname: string = '/end-signup'
     let emailLink = new EmailLink({
         userID: user.credential.userID,
         email: user.information.email,
         expired: futureDateFromNow(1440), //24 ore
-        link: url,
+        link: pathname,
         randomKey: randomKey
     })
     emailLink.save().then((_email_link) =>{
@@ -53,7 +52,7 @@ const send_email_signup = function (user) {
             lastname: user.information.lastname,
             email: user.information.email,
             userID: user.credential.userID,
-            url: url + '?key=' + randomKey + "&email=" + user.information.email+"&userID="+user.credential.userID
+            url: client_origin + pathname + '?key=' + randomKey + "&email=" + user.information.email+"&userID="+user.credential.userID
         })
 
         let html: string = signUpEmail.toHtml()
@@ -81,17 +80,8 @@ export function uploadProfileImage(){
 }
 
 export function create_user(req, res){
-    let userBody = {
-        credential: { userID: req.body.userID, hash_password: req.body.hash_password },
-        information: {}
-    }
-    delete req.body.userID
-    delete req.body.hash_password
-    userBody.information = req.body
-    if(req.file) userBody.information['img'] = req.file.filename
-
-    const new_user = new User(userBody)
-    new_user.save()
+    newUser(req, {role: Role.SIGNED})
+        .save()
         .then(user => {
             res.status(201).json({ userID: user._id })
             if(accessManager.isSignedUser(user.credential)) send_email_signup(user)
@@ -180,11 +170,18 @@ export function check_account(req, res) {
     let {email, userID, key} = req.body
     if(!email || !userID || !key) return res.status(400).json({description: "Require 'email', 'userID', 'key'"})
     EmailLink.findOne()
+            .where('link', '/end-signup')
             .where('randomKey').equals(key)
             .where('email').equals(email)
             .where('userID').equals(userID)
             .then((email_link) =>{
                 if(!email_link) return res.status(404).json({description: 'Link not valid'})
+
+                if(email_link.expired < Date.now()) {
+                    email_link.delete().then(() => console.debug('Remove expired email link for signup.'),
+                        err => console.error('ERROR on remove expired email link for signup. Reason: ', err))
+                    return res.status(410).json({description: 'Link expired'})
+                }
 
                 User.findOne()
                     .where('credential.userID').equals(userID)
@@ -437,7 +434,7 @@ export function checkLinkResetPassword(req, res){
     if(!key) return res.status(400).json({description: 'Missing key'})
 
     EmailLink.findOne()
-             .where('link').equals(client_origin + '/reset-password')
+             .where('link').equals('/reset-password')
              .where('randomKey').equals(key)
              .then(emailLink => {
                  if(!emailLink) return res.status(404).json({description: 'Key not valid'})
@@ -451,17 +448,26 @@ export function checkLinkResetPassword(req, res){
 }
 
 export function foundUserForNickname(req, res){
-    const {nickname} = req.query
+    const {nickname, key} = req.query
     if(!nickname) return res.status(400).json({description: 'Missing nickname'})
+    if(!key) return res.status(400).json({description: 'Missing key'})
 
-    User.findOne()
-        .where('credential.userID').equals(nickname)
-        .where('signup').equals(SignUp.State.CHECKED)
-        .then(user => {
-            if(!user) return res.status(404).json({description: 'User is not found'});
-            let token = tokensManager.createToken({_id: user._id, userID: user.credential.userID, role: user.credential.role}, "5 minutes")
-            res.status(200).json({temporary_token: token, _id: user._id})
-        }, err => res.status(500).json({description: err.message}))
+    Promise.all([
+        EmailLink.findOne()
+                 .where('link').equals('/reset-password')
+                 .where('randomKey').equals(key)
+                 .where('userID').equals(nickname),
+        User.findOne()
+            .where('credential.userID').equals(nickname)
+            .where('signup').equals(SignUp.State.CHECKED)
+    ])
+    .then(results => {
+        let [email_link, user] = results
+        if(!user) return res.status(404).json({description: 'User is not found'});
+        if(!email_link) return res.status(404).json({description: 'Request is not found'});
+        let token = tokensManager.createToken({_id: user._id, userID: user.credential.userID, role: user.credential.role}, "5 minutes")
+        res.status(200).json({temporary_token: token, _id: user._id})
+    }, err => res.status(500).json({description: err.message}))
 }
 
 //SEND EMAIL
@@ -477,12 +483,13 @@ export function send_email_password(req, res){
             if(!user) return res.status(404).json({description: 'Email is not associated with any account'});
 
             let randomKey: string = randomString()
-            let url: string = client_origin + '/reset-password'
+            let pathname: string = '/reset-password'
 
             let emailLink = new EmailLink({
                 email: email,
+                userID: user.credential.userID,
                 expired: futureDateFromNow(30),
-                link: url,
+                link: pathname,
                 randomKey: randomKey
             })
             emailLink.save()
@@ -492,7 +499,7 @@ export function send_email_password(req, res){
                         const resetPswEmail: TemplateEmail = new ResetPasswordEmail({
                             app_name: app_name,
                             user_name: user.information.firstname + ' '+user.information.lastname,
-                            url: url + '?key=' + randomKey
+                            url: client_origin + pathname + '?key=' + randomKey
                         })
 
                         let html: string = resetPswEmail.toHtml()
