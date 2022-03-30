@@ -71,14 +71,14 @@ export default {
   watch:{
     accessToken(val){
       console.debug('CHANGE ACCESS TOKEN ... ',  this.$socket)
-      this.$socket.connectStart({
+      this.$socket.updateAuthorization({
         key: val,
         userinfo: this.isLoggedIn ? { _id: this.userIdentifier, userID: this.username, isAdmin: this.isAdmin} : undefined
       })
     },
     username(val){
       console.debug('CHANGE USER ID ... ',  this.$socket)
-      this.$socket.connectStart({
+      this.$socket.updateAuthorization({
         key: this.accessToken,
         userinfo: this.isLoggedIn ? { _id: this.userIdentifier, userID: val, isAdmin: this.isAdmin} : undefined
       })

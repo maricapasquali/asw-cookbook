@@ -71,7 +71,11 @@ export class Hosting {
         this.instanceServer.listen(this.port, () => callback?.call(null, this));
     }
 
-    get origin(){
+    get server(): http.Server | https.Server {
+        return this.instanceServer
+    }
+
+    get origin(): string {
         return `${this.protocol}://${this.hostname}:${this.port}`
     }
 }
