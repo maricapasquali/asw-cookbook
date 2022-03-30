@@ -24,7 +24,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import ChatMixin from '@components/mixins/chat.mixin'
+import ChatMixin from '@mixins/chat.mixin'
 export default {
   name: "b-friendship",
   mixins: [ChatMixin],

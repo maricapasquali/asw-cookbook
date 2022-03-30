@@ -210,6 +210,7 @@ export default {
     console.debug('Store ', this.$store)
     console.debug('Socket ', this.$socket)
     console.debug('Bus ', this.$bus)
+    console.debug('window ', window)
 
     const isRedirectedToPersonalArea = (route) => {
       return this.isLoggedIn && (

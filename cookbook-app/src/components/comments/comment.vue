@@ -94,7 +94,7 @@
 </template>
 <script>
 
-import UserMixin from '@components/mixins/user.mixin'
+import UserMixin from '@mixins/user.mixin'
 import {mapGetters} from "vuex";
 
 export default {
