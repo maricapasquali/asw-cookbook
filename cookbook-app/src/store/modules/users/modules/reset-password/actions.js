@@ -18,8 +18,8 @@ export default  {
     ['check-link']({}, key){
         return this._vm.$api.users.checkLinkResetPassword(key)
     },
-    ['exist-with-username']({commit}, username){
-        return this._vm.$api.users.getUserFromNickname(username)
+    ['exist-with-username']({commit}, {userID, key}){
+        return this._vm.$api.users.getUserFromNickname(userID, key)
             .then(response => {
                 const accessToken = response.data.temporary_token
                 const  _id = response.data._id

@@ -177,7 +177,7 @@ export default {
       if(this.validation.userID){
         this.processing = true
 
-        this.$store.dispatch('users/reset-password/exist-with-username', this.userID)
+        this.$store.dispatch('users/reset-password/exist-with-username', {userID:this.userID, key: this.$route.query.key})
             .then(response => this.success.userID = true)
             .catch(err => {
               this.error.show = true

@@ -112,10 +112,11 @@ export default function (methods: MethodsAxios){
         })
     }
 
-    function getUserFromNickname(nickname: string){
+    function getUserFromNickname(nickname: string, key: string){
         return methods.get('/reset-password/users',{
             params: { // QUERY
-                nickname: nickname
+                nickname,
+                key
             }
         })
     }
