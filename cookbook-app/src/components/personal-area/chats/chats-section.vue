@@ -34,9 +34,9 @@
         <p v-else>Nessuna chat aperta.</p>
       </b-col>
 
-      <b-col cols="12" sm="12" md="12" lg="4" class="px-0">
+      <b-col cols="12" sm="12" md="12" lg="4" class="pl-0 pr-2">
         <b-navbar toggleable="lg" class="w-100 px-0" >
-          <b-navbar-toggle ref="btn-chats-navigator" target="chat-items-navigator" v-if="!(isSearchModeChat && started.length===0)">
+          <b-navbar-toggle ref="btn-chats-navigator" target="chat-items-navigator" v-if="started.length">
             <template #default="{ expanded }">
               <b-icon v-if="expanded" icon="chevron-bar-up" variant="danger" title="Nascondi chat avviate"></b-icon>
               <b-icon v-else icon="chevron-bar-down" variant="primary" title="Mostra chat avviate"></b-icon>
@@ -61,7 +61,7 @@
       </b-col>
 
       <b-col v-show="showChatContainer" class="chat-container px-0 py-0" cols="12" sm="12" md="12" lg="8">
-        <chat v-if="selectedChat" v-model="selectedChat" class="h-100" @onReadMessages="onReadMessages" @start="onStartChat"/>
+        <chat v-if="selectedChat" v-model="selectedChat" class="w-100 h-100" @onReadMessages="onReadMessages" @start="onStartChat"/>
       </b-col>
     </b-row>
 

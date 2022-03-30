@@ -72,7 +72,7 @@
 
               <!-- Likes and Comments -->
               <template #footer>
-                <b-row align-h="between">
+                <b-row align-h="between" align-v=center>
                   <b-col>
                     <!-- Like of a RECIPE -->
                     <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike(ind)"/>
