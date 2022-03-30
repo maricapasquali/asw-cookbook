@@ -10,7 +10,6 @@ export default function (bus){
         console.error(err)
         switch (err.response?.status){
             case 400: return _badRequestString(err)
-                break
             case 401: unAuthenticated(err, {_forbiddenPage: true})
                 break;
             case 403: return 'Non sei autorizzato a cambiare ' + credential + ' di quest\'account.'
@@ -47,6 +46,7 @@ export default function (bus){
         switch (err.response?.status){
             case 400: return 'LINK NON VALIDO'
             case 404: return 'UTENTE NON TROVATO/VALIDO'
+            case 410: return 'LINK SCADUTO'
             default: return serverError(err, false)
         }
     }
@@ -134,7 +134,7 @@ export default function (bus){
         console.error(err)
         switch (err.response?.status){
             case 400: return _badRequestString(err)
-            case 404: return 'Utente non trovato.'
+            case 404: return 'Utente/Richiesta non trovato/a.'
             default: return serverError(err, false)
         }
     }

@@ -162,6 +162,15 @@ export default {
     },
 
     registerSessionListener(){
+      this.$broadcastChannel.onmessage = event => {
+        const {login} = event.data
+        if(login){
+          this.$store.dispatch("initialization", login)
+              .then(() => this.$router.go(0))
+              .catch(err => console.error('Broadcast login error: ', err))
+        }
+      }
+
       this.$socket.on('logout', () => {
         console.debug("Logout ok.")
         this.$store.dispatch('reset')
@@ -196,9 +205,24 @@ export default {
     this.registerCheckAccessTokenListener()
     this.registerSessionListener()
 
+    console.debug('Vue ', this)
+    console.debug('Api ', this.$api)
     console.debug('Store ', this.$store)
     console.debug('Socket ', this.$socket)
     console.debug('Bus ', this.$bus)
+
+    const isRedirectedToPersonalArea = (route) => {
+      return this.isLoggedIn && (
+          (this.isAdmin && route.name === 'homepage') ||
+          (route.name === 'single-user' && route.params.id === this.userIdentifier)
+      )
+    }
+
+    this.$router.beforeEach((to, from, next) => {
+      if(isRedirectedToPersonalArea(to)) return next({ name: 'p-user-account', params: {id: this.userIdentifier} } )
+      return next()
+    })
+    if(isRedirectedToPersonalArea(this.$route)) this.$router.replace({ name: 'p-user-account', params: {id: this.userIdentifier} })
   },
   beforeDestroy() {
       this.$socket.disconnect()

@@ -1,11 +1,16 @@
 import * as utils from '~/utils'
 import filesystem from '~/filesystem'
 
-import * as config from '@root-project/env.config'
-import validators from '@root-project/modules/validator'
+import validators from '@commons/validator'
 
-export default function installAppPlugins(Vue, options){
-    Vue.prototype.app_name = config.appName
+export default function installAppPlugins(Vue, {appName}){
+    Vue.prototype.app_name = appName
+
+    let channel = new BroadcastChannel(appName)
+    channel.onmessage = event => {
+        console.error("[Broadcast channel] => Error: ", event)
+    }
+    Vue.prototype.$broadcastChannel = channel
 
     Object.assign(window, utils)
     Object.assign(window, filesystem)

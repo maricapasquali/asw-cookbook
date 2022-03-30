@@ -22,6 +22,15 @@ type SignUpEmailData = {
     url: string
 }
 
+type SignUpAdminEmailData = {
+    app_name: string,
+    firstname: string
+    lastname: string
+    email: string
+    userID: string
+    passwordDefault: string
+}
+
 type EraseUserEmailData = {
     app_name: string,
     firstname: string
@@ -92,6 +101,33 @@ export class SignUpEmail extends ATemplateEmail{
             
             Copia il link sottostante nel browser per completare la registrazione:
                 ${this.data.url}
+            
+            Il Team ${this.data.app_name}
+        `
+    }
+
+}
+
+export class SignUpAdminEmail extends ATemplateEmail{
+
+    constructor(data: SignUpAdminEmailData) {
+        super('signup-admin.ejs', data)
+    }
+
+    toText(): string{
+        return  `
+            Creazione account ${this.data.app_name} Amministratore.
+            
+            Gentile ${this.data.firstname} ${this.data.lastname},
+            il suo account è stato creato.
+                
+                Nome: ${this.data.firstname}
+                Cognome: ${this.data.lastname}
+                Email: ${this.data.email}
+                UserID: ${this.data.userID}
+                Password (default): ${this.data.passwordDefault}
+            
+            Attenzione: cambia la password di default il prima possibile!
             
             Il Team ${this.data.app_name}
         `

@@ -1,5 +1,5 @@
 import {Document, Schema} from "mongoose";
-import {EmailValidator} from "../../../../modules/validator";
+import {EmailValidator} from "../../../../commons/modules/validator";
 import {RBAC} from "../../../modules/rbac";
 import Role = RBAC.Role;
 
@@ -87,7 +87,8 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         email: {
             type: String,
             required: true,
-            match: [EmailValidator.regex, 'Please fill a valid email address']
+            match: [EmailValidator.regex, 'Please fill a valid email address'],
+            unique: true
         },
         tel_number: {
             type: String,

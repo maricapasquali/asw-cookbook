@@ -636,6 +636,7 @@ components:
       bearerFormat: JWT  
 
 tags:
+  - name: Admins
   - name: Users
   - name: Session
   - name: Recipes
@@ -650,8 +651,56 @@ tags:
   - name: Notifications
 
 paths:
+  #ADMINS
+  /admins:
+    post:
+      description: Signing up of an admin on the platform
+      tags:
+        - Admins
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                img:
+                  $ref: "#/components/schemas/user/properties/information/properties/img"
+                firstname:
+                  $ref: "#/components/schemas/user/properties/information/properties/firstname"
+                lastname:
+                  $ref: "#/components/schemas/user/properties/information/properties/lastname"
+                email:
+                  $ref: "#/components/schemas/user/properties/information/properties/email"
+                tel_number:
+                  $ref: "#/components/schemas/user/properties/information/properties/tel_number"
+                birth_date:
+                  $ref: "#/components/schemas/user/properties/information/properties/birth_date"
 
-#USERS
+      responses:
+        201:
+          description: Admin has been signed up
+          headers:
+            Access-Control-Allow-Origin:
+              description: allowed only from the same origin
+              schema:
+                type: string
+                example: https://localhost:3000
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userID:
+                    description: admin's identifier
+                    type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        500:
+          $ref: "#/components/responses/general_error"
+
+
+  #USERS
   /users:          
     post:
       description: Signing up of a user on the platform
@@ -818,6 +867,8 @@ paths:
           $ref: "#/components/responses/bad_request"
         404:
           description: Link not valid or User not found
+        410:
+          description: Link is expired
         500:    
           $ref: "#/components/responses/general_error"
 
@@ -1028,6 +1079,9 @@ paths:
         - name: nickname
           in: query
           required: true
+        - name: key
+          in: query
+          required: true
       responses:
         200:
           description: ''
@@ -1043,7 +1097,7 @@ paths:
         400:
           $ref: "#/components/responses/bad_request"
         404:
-          description: User not found
+          description: User/Request not found
         500:
           $ref: "#/components/responses/general_error"
 

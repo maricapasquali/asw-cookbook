@@ -227,7 +227,7 @@ export default {
         {
           key: 'owner',
           label: 'Creatore',
-          formatter: (value, key, item) => value === this.username ? 'io': value
+          formatter: (value, key, item) => value === this.username ? 'io' : (item.details.owner?.role === 'admin' ? value + ' (Amministratore)' : value)
         },
         {
           key: 'creationDate',

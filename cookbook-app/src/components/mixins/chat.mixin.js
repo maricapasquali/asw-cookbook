@@ -25,7 +25,7 @@ function _baseInfoUser(chatInfo, users) {
     if (chatInfo.type === 'one' && users.length === 2) {
         const otherUser = users.find(r => r.user?._id !== this.userIdentifier)
         if (otherUser) console.debug('Other user: base info = ', JSON.stringify(otherUser.user))
-        return otherUser && {_id: otherUser.user?._id, name: otherUser.user.userID, img: otherUser.user.img}
+        return otherUser && {_id: otherUser.user?._id, name: otherUser.user.role === "admin" ? otherUser.user.userID + " (Amministratore)" : otherUser.user.userID, img: otherUser.user.img}
     }
     else {
         if(chatInfo.type === 'group' && this.isAdmin) {
