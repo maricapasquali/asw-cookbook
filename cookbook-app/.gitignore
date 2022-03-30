@@ -1,11 +1,8 @@
 node_modules
 dist
 
-src/api/**/*.js
-src/api/**/*.js.map
+src/utils/**/*.js
+src/utils/**/*.js.map
 
-src/modules/**/*.js
-src/modules/**/*.js.map
-
-src/plugins/socket/**.js
-src/plugins/socket/**.js.map
+src/services/**/**.js
+src/services/**/**.js.map
