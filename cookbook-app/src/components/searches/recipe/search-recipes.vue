@@ -149,7 +149,7 @@
 
 <script>
 
-import UserMixin from '@components/mixins/user.mixin'
+import UserMixin from '@mixins/user.mixin'
 import {mapGetters} from "vuex";
 import {QueuePendingRequests} from "@api/request";
 

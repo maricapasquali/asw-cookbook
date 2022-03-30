@@ -15,7 +15,7 @@ import chats from './modules/chats'
 import actions from './actions'
 import getters from './getters'
 
-import app from '~/app'
+import assetsUtils from '@utils/assets'
 
 Vue.use(Vuex)
 
@@ -33,10 +33,10 @@ export default new Vuex.Store({
         chats
     },
     state: {
-        _genders: app.Genders,
-        _countries: app.Countries,
-        _diets: app.Diets,
-        _recipeCategories: app.RecipeCategories,
+        _genders: assetsUtils.Genders,
+        _countries: assetsUtils.Countries,
+        _diets: assetsUtils.Diets,
+        _recipeCategories: assetsUtils.RecipeCategories,
 
         language: 'it'
     },

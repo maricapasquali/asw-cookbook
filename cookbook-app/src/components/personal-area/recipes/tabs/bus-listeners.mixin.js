@@ -1,5 +1,5 @@
 import {mapGetters} from "vuex";
-import RecipeMixin from "@components/mixins/recipe.mixin"
+import RecipeMixin from "@mixins/recipe.mixin"
 
 /**
  * Depend on recipes-tab-content

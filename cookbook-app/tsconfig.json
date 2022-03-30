@@ -6,7 +6,7 @@
   },
   "include": [
     "src/api/**/*",
-    "src/modules/**/*",
+    "src/utils/**/*",
     "src/plugins/socket/**/*"
   ],
   "exclude": ["node_modules"]

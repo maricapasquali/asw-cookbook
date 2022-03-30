@@ -97,7 +97,7 @@
 
 <script>
 
-import UserMixin from "@components/mixins/user.mixin"
+import UserMixin from "@mixins/user.mixin"
 import {QueuePendingRequests} from "@api/request";
 
 export default {

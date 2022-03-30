@@ -71,8 +71,8 @@
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
-import ChatMixin from '@components/mixins/chat.mixin'
-import RecipeMixin from '@components/mixins/recipe.mixin'
+import ChatMixin from '@mixins/chat.mixin'
+import RecipeMixin from '@mixins/recipe.mixin'
 import {QueuePendingRequests} from "@api/request";
 
 export default {

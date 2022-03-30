@@ -130,7 +130,7 @@
 
 import {mapGetters, mapMutations} from "vuex";
 import {QueuePendingRequests} from "@api/request";
-import ChatMixin from '@components/mixins/chat.mixin'
+import ChatMixin from '@mixins/chat.mixin'
 export default {
   name: "user-information",
   mixins:[ChatMixin],
