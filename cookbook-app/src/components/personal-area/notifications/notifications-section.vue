@@ -108,10 +108,11 @@
 <script>
 
 import {mapGetters} from "vuex";
-import {QueuePendingRequests} from "@api/request";
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 
 export default {
   name: "notifications-section",
+  mixins: [PendingRequestMixin],
   data(){
     return {
       docs: [],
@@ -266,7 +267,7 @@ export default {
 
     getNotifications(){
       let _id = 'notifications-all'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
+      let options = this.makeRequestOptions(_id)
 
       this.pagination.isBusy = true
       this.$store.dispatch('notifications/all', {options})
@@ -337,8 +338,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
-
     this.setNotificationsType()
 
     this.getNotifications()
@@ -348,7 +347,6 @@ export default {
     }
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all notifications cancel')
     for (const eventName of this.events) {
       this.$bus.$off(eventName, this.addNotification.bind(this))
     }

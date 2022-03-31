@@ -129,11 +129,11 @@
 <script>
 
 import {mapGetters, mapMutations} from "vuex";
-import {QueuePendingRequests} from "@api/request";
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 import ChatMixin from '@mixins/chat.mixin'
 export default {
   name: "user-information",
-  mixins:[ChatMixin],
+  mixins:[ChatMixin, PendingRequestMixin],
   props:{
     id: String,
     personalArea: {
@@ -144,7 +144,6 @@ export default {
   data: function (){
     return {
       user: { information: {}, userID: '', _id: ''},
-      pendingRequests: null,
       changeMode: false,
       deleteAccount: false,
       changeUserID: false,
@@ -187,7 +186,7 @@ export default {
     }),
     getUser(_id){
       let idReq = 'user-info'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idReq)
+      let options = this.makeRequestOptions(idReq)
       this.$store.dispatch('users/information-of', {userID: _id || this.id, options})
          .then(({data}) =>{
             this.user = data
@@ -228,14 +227,12 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     console.debug(`CREATE GUI INFO USER (${this.id})...`)
     this.getUser()
 
     this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('user info cancel.')
     this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
   }
 }

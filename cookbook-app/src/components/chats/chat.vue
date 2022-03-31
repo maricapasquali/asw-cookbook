@@ -73,18 +73,17 @@
 import {mapGetters, mapMutations} from "vuex";
 import ChatMixin from '@mixins/chat.mixin'
 import RecipeMixin from '@mixins/recipe.mixin'
-import {QueuePendingRequests} from "@api/request";
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 
 export default {
   name: "chat",
-  mixins: [ChatMixin, RecipeMixin],
+  mixins: [ChatMixin, RecipeMixin, PendingRequestMixin],
   props: {
     value: Object | Boolean,
     fromLink: Boolean
   },
   data(){
     return {
-      pendingRequests: null,
       messages: null,
 
       writeUsers: [],
@@ -383,7 +382,7 @@ export default {
         else {
           let idRequest = 'chat-messages'
           console.debug('GET MESSAGES ....')
-          let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest, {message: 'Chat messages abort.'})
+          let options = this.makeRequestOptions(idRequest, {message: 'Chat messages abort.'})
           this.$store.dispatch('chats/messages/all', {chatID: chat._id, options})
               .then(({data}) => this._initMessages(data))
               .catch(this.handleRequestErrors.messages.listMessages)
@@ -406,7 +405,7 @@ export default {
 
     getAttachmentsRecipes(){
       let idRequest = 'attachments'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest, {message: 'Attachments abort.'})
+      let options = this.makeRequestOptions(idRequest, {message: 'Attachments abort.'})
       this.$store.dispatch('recipes/saved', {options})
           .then(({data}) =>{
             this.recipes = data.items;
@@ -502,14 +501,12 @@ export default {
 
     this.$bus.$on('user:update:info', this.onUpdateUserInfo.bind(this))
 
-    this.pendingRequests = QueuePendingRequests.create()
 
     console.log('Created: chat is  ', this.value, ', from link ', this.fromLink)
     this._initialization(this.value)
   },
 
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all retrieve chat request cancel')
 
     this.$socket.off('enter', this.enterChat.bind(this))
     this.$socket.off('leave', this.leaveChat.bind(this))

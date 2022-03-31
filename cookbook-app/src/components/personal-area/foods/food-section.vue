@@ -190,16 +190,16 @@
 <script>
 
 import {mapGetters} from "vuex";
-import {QueuePendingRequests} from "@api/request";
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 
 export default {
   name: "food-section",
+  mixins: [PendingRequestMixin],
   data(){
     return {
       skeleton: 6,
       _stacked: false,
 
-      pendingRequests: null,
       idRequest: 'foods-all',
       /* Shopping list */
       loadingSL: true,
@@ -351,7 +351,7 @@ export default {
       this.pendingRequests.cancel(this.idRequest, 'search food abort.')
     },
     getFoods(ctx){
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+      let options = this.makeRequestOptions(this.idRequest)
 
       console.debug('ctx = ', ctx);
       let {perPage, currentPage} = ctx || {}
@@ -463,7 +463,6 @@ export default {
   },
 
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     if(this.isSigned) this.getShoppingList()
 
     this.$bus.$on('food:create', this.onCreateFood.bind(this))
@@ -474,7 +473,6 @@ export default {
     this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('All Foods cancels.')
     this.$bus.$off('food:create', this.onCreateFood.bind(this))
     this.$bus.$off('food:update', this.onUpdateFood.bind(this))
 
