@@ -1,4 +1,4 @@
-import {clone} from "../../../utils";
+import {clone} from "../../../../utils";
 
 export function mapping(friendship: any, me: string): { user: { userID: string } } | any {
     let _friendship = clone(friendship)
