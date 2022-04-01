@@ -14,7 +14,7 @@ Socket.prototype.updateAuthorization = function (socketAuthorization: SocketAuth
     console.log('Socket: set authentication data & connect ...')
 }
 
-const socketIO: Socket = io({
+export const socketIO: Socket = io({
     autoConnect: false,
     withCredentials: true
 })
@@ -30,7 +30,3 @@ socketIO.on('disconnect', (reason) => {
 socketIO.on('error', (e) => {
     console.error('Error socket ', e)
 })
-
-export default {
-    socketIO
-}

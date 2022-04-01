@@ -52,6 +52,6 @@ Vue.use(AppPlugins, envConfig)
 
 new Vue({
     router,
-    store,
+    store: store(envConfig),
     render: h => h(App),
 }).$mount('#app')

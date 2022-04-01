@@ -1,4 +1,9 @@
+import {mapGetters} from "vuex";
+
 export default {
+    computed: {
+      ...mapGetters(["$api"])
+    },
     methods: {
         _updateUserInformation(userToUpdate, userInfo){
             // userInfo = {userID?: string, information?: { ... }}

@@ -28,7 +28,7 @@
 
 <script>
 
-import {mapActions, mapGetters} from "vuex";
+import {mapGetters} from "vuex";
 
 export default {
   name: "PersonalArea",
@@ -82,9 +82,6 @@ export default {
     },
   },
   methods: {
-    ...mapActions({
-      requestNewAccessToken: 'session/requestNewAccessToken'
-    }),
     _mapping(id){
       return {
         id,

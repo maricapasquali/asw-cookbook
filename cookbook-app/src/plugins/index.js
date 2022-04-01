@@ -1,6 +1,5 @@
 import EventBusPlugin from './event-bus'
 import SocketPlugin from './socket'
-import ApiPlugin from './api'
 
 import * as utils from '@utils/'
 import filesystem from '@utils/filesystem'
@@ -25,6 +24,4 @@ export default function installAppPlugins(Vue, configurationEnvironment){
     Vue.use(EventBusPlugin)
 
     Vue.use(SocketPlugin)
-
-    Vue.use(ApiPlugin, { serverConfiguration: configurationEnvironment.server })
 }

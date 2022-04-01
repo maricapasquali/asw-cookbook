@@ -180,6 +180,14 @@ export default {
   },
   created() {
     console.log('App created ')
+
+    console.debug('Vue ', this)
+    console.debug('Store ', this.$store)
+    console.debug('Api ', this.$store.getters.$api)
+    console.debug('Socket ', this.$socket)
+    console.debug('Bus ', this.$bus)
+    console.debug('window ', window)
+
     let _routeWithout = [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat']
     this.routeWithoutNavigationBar = clone(_routeWithout)
     this.routeWithoutFooter = clone(_routeWithout)
@@ -204,13 +212,6 @@ export default {
     this.registerUserOnlineOfflineListener()
     this.registerCheckAccessTokenListener()
     this.registerSessionListener()
-
-    console.debug('Vue ', this)
-    console.debug('Api ', this.$api)
-    console.debug('Store ', this.$store)
-    console.debug('Socket ', this.$socket)
-    console.debug('Bus ', this.$bus)
-    console.debug('window ', window)
 
     const isRedirectedToPersonalArea = (route) => {
       return this.isLoggedIn && (
