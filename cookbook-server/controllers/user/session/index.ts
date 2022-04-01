@@ -126,12 +126,17 @@ export function update_access_token(req, res){
         .then(user => {
             if(!user) return res.status(404).json({description: 'User not found'})
 
-            let token = tokensManager.createToken(payloadToken(user, req.id))
-            tokensManager.tokens(id).refresh({access: access_token, refresh: refresh_token}, {access: token, refresh: refresh_token})
+            let tokensFolder = tokensManager.tokens(id)
+            let _accessToken = tokensFolder.findAccessTokenByRefreshToken(refresh_token) //never undefined
+            if(_accessToken === access_token) {
+                let token = tokensManager.createToken(payloadToken(user, req.id))
+                tokensFolder.refresh({access: access_token, refresh: refresh_token}, {access: token, refresh: refresh_token})
+                console.debug("Create new access = ", token)
+                return res.status(200).json({access_token: token})
+            }
+            console.debug("Retrieve updated access = ", _accessToken)
+            return res.status(200).json({access_token: _accessToken})
 
-            console.debug("Create new access = ", token)
-
-            return res.status(200).json({access_token: token})
         }, err => res.status(500).json({description: err.message}))
 }
 
