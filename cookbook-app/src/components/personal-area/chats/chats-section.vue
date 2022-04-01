@@ -104,15 +104,14 @@
 <script>
 import {mapGetters} from "vuex";
 import ChatMixin from '@mixins/chat.mixin'
-import {QueuePendingRequests} from "@api/request";
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 
 export default {
   name: "chats-section",
-  mixins: [ChatMixin],
+  mixins: [ChatMixin, PendingRequestMixin],
   data(){
     return {
       skeletons: 3,
-      pendingRequests: null,
       processing: true,
 
       selectedChat: null,
@@ -184,7 +183,7 @@ export default {
           console.debug('request get all accepted friend ..... ')
           this.justRequestFriend = true
           let idRequest = 'friend-signed-user'
-          let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
+          let options = this.makeRequestOptions(idRequest)
           this.$store.dispatch('friendships/own', { state: 'accepted', options })
               .then(({data}) => console.debug('retrieve own accepted friends.'))
               .catch(this.handleRequestErrors.chats.getFriendOnChat)
@@ -218,7 +217,7 @@ export default {
     getFriends(){
       if(this.isAdmin){
         let idRequest = 'all-users'
-        let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
+        let options = this.makeRequestOptions(idRequest)
         this.$store.dispatch('users/all', {options})
             .then(({data}) => {
               this.friends = data.items.filter(u => u.signup === 'checked')
@@ -234,7 +233,7 @@ export default {
 
     getChats(){
       let idRequest = 'chats-own'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
+      let options = this.makeRequestOptions(idRequest)
       this.$store.dispatch('chats/own-without-message', {options})
           .then(({data}) => {
             this.chats = data.items
@@ -398,8 +397,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
-
     this.getFriends()
     this.getChats()
 
@@ -412,7 +409,6 @@ export default {
     this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all chats cancel.')
     this.$bus.$off('push-message', this.onListenersPushMessage.bind(this))
     this.$bus.$off('read-message', this.onListenersReadMessages.bind(this))
     this.$bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))

@@ -66,13 +66,12 @@
 </template>
 
 <script>
-import {QueuePendingRequests} from "@api/request";
-
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 export default {
   name: "reports-section",
+  mixins: [PendingRequestMixin],
   data(){
     return {
-      pendingRequests: null,
       processing: false,
       docsReported: [],
       docsDeleted: []
@@ -100,7 +99,7 @@ export default {
 
     getReports: function (){
       let _id = 'reported-comments'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
+      let options = this.makeRequestOptions(_id)
       this.processing = true
       this.$store.dispatch('comments/reported', {options})
          .then(({data}) => {
@@ -186,7 +185,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('comment:report', this.getReports.bind(this) )
 
     this.$bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
@@ -198,7 +196,6 @@ export default {
     this.getReports()
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all reported cancel.')
     this.$bus.$off('comment:report', this.getReports.bind(this) )
 
     this.$bus.$off('comment:delete',  this.renderDeleteComment.bind(this))

@@ -191,11 +191,11 @@
 
 import {mapGetters} from "vuex";
 import NotFound from "../404";
-import {QueuePendingRequests} from "@api/request";
 import UserMixin from "@mixins/user.mixin"
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 export default {
   name: "OneRecipe",
-  mixins: [UserMixin],
+  mixins: [UserMixin, PendingRequestMixin],
   props: {
     value: Object | Boolean
   },
@@ -203,7 +203,6 @@ export default {
   data(){
     return {
       loading: true,
-      pendingRequests: null,
       itemsBreadcrumb: [],
       processing: true,
       doc: ''
@@ -264,7 +263,7 @@ export default {
     },
     getRecipe() {
       let _idRequest = 'one-recipe'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _idRequest)
+      let options = this.makeRequestOptions(_idRequest)
 
       let {id, recipe_id} = this.$route.params;
       this.processing = true
@@ -311,7 +310,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
@@ -325,7 +323,6 @@ export default {
     }
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('One recipe cancel.')
     this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 

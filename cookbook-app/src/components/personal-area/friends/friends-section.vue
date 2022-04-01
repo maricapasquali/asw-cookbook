@@ -99,12 +99,12 @@
 <script>
 
 import UserMixin from "@mixins/user.mixin"
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 import {mapGetters} from "vuex";
-import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "friends-section",
-  mixins: [UserMixin],
+  mixins: [UserMixin, PendingRequestMixin],
   computed: {
     cssTable(){
       return {
@@ -129,7 +129,6 @@ export default {
   data(){
     return {
       _stacked: false,
-      pendingRequests: null,
       idRequest: 'friend-all',
 
       filterOptions: {
@@ -181,7 +180,7 @@ export default {
       this.pendingRequests.cancel(this.idRequest, 'search friend abort.')
     },
     _friends(ctx){
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+      let options = this.makeRequestOptions(this.idRequest)
 
       console.debug('ctx = ', ctx);
       let {perPage, currentPage} = ctx || {}
@@ -233,7 +232,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
     this.$bus.$on('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
 
@@ -241,7 +239,6 @@ export default {
     this.$bus.$on('user:delete', this.fetchData.bind(this))
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all friends cancel.')
     this.$bus.$off('friendship:request:' + this.userIdentifier, this.fetchData.bind(this))
     this.$bus.$off('friendship:remove:' + this.userIdentifier, this.fetchData.bind(this))
 

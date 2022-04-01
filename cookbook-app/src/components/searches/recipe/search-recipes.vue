@@ -150,12 +150,12 @@
 <script>
 
 import UserMixin from '@mixins/user.mixin'
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 import {mapGetters} from "vuex";
-import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "search-recipes",
-  mixins: [UserMixin],
+  mixins: [UserMixin, PendingRequestMixin],
   props: {
     withMap: {
       type: Boolean,
@@ -179,8 +179,6 @@ export default {
     return {
       _showMap: true,
       loading: true,
-
-      pendingRequests: null,
 
       countries: [],
       _showAllFilters: false,
@@ -279,7 +277,7 @@ export default {
 
     getNumberRecipesForCountry() {
       let _id = 'number-for-country'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
+      let options = this.makeRequestOptions(_id)
 
       this.$store.dispatch('recipes/number-for-country', { options })
          .then(({data}) => {
@@ -398,7 +396,7 @@ export default {
       console.debug('Search = ', JSON.stringify(filters))
 
       let _id = 'search-in-shared'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id,{ message: 'Search recipes abort.' })
+      let options = this.makeRequestOptions(_id,{ message: 'Search recipes abort.' })
 
       let promiseSearch = undefined
       if(this.triggerSearch) promiseSearch = this.triggerSearch(filters, options)
@@ -494,7 +492,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$data._showAllFilters = this.withAllFiltersVisible
 
     if(this.withHistory) {
@@ -519,8 +516,6 @@ export default {
     }
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('Search recipes cancel operation.')
-
     if(this.showResults) {
       this.$bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
       this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))

@@ -98,15 +98,14 @@
 <script>
 
 import UserMixin from "@mixins/user.mixin"
-import {QueuePendingRequests} from "@api/request";
+import PendingRequestMixin from "@mixins/pending-request.mixin"
 
 export default {
   name: "search-users",
-  mixins: [UserMixin],
+  mixins: [UserMixin, PendingRequestMixin],
   data(){
     return {
       skeleton: 6,
-      pendingRequests: null,
 
       processing: true,
       search: {
@@ -144,7 +143,7 @@ export default {
        this.$router.push({query: { name: this.search.value }})
 
        let _id = 'search-users'
-       let options = this._optionsUsers(_id, 'search users abort.')
+       let options = this.makeRequestOptions(_id, {message: 'search users abort.'})
 
        this.$store.dispatch('users/search-for-username', { search: 'partial', username: this.search.value, options })
           .then(({data}) => this.users = data.items)
@@ -164,10 +163,6 @@ export default {
       }
     },
     // USERS
-    _optionsUsers(_id, message){
-      return QueuePendingRequests.makeOptions(this.pendingRequests, _id, {message})
-    },
-
     getUsers(currentPage, limit){
       const page = currentPage || 1
       const _limit = limit || this.pagination.limit
@@ -187,7 +182,7 @@ export default {
       }
 
       let _id = 'users'
-      let options = this._optionsUsers(_id, 'get users abort.')
+      let options = this.makeRequestOptions(_id, {message: 'get users abort.'})
       this.$store.dispatch('users/search', { query, pagination, options })
          .then(({data}) => {
             let _data = data.items
@@ -248,7 +243,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('user:checked', this.fetchUsers.bind(this))
 
     this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
@@ -259,7 +253,6 @@ export default {
     window.onpopstate = function (e){ this.getUsers() }.bind(this)
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('Search users cancel operation.')
 
     this.$bus.$off('user:checked', this.fetchUsers.bind(this))
     this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
