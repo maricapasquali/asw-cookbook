@@ -89,7 +89,7 @@ export default {
            console.log('You commented.')
            return true
          })
-         .catch(this.handleRequestErrors.comments.createCommentOrResponse)
+         .catch(this.$store.$api.errorsHandler.comments.createCommentOrResponse)
          .then(success => this.commenting = { process: false, success })
     },
 

@@ -12,17 +12,19 @@ import friends from './modules/friends'
 import users from './modules/users'
 import chats from './modules/chats'
 
+import assets from './modules/assets'
+
 import actions from './actions'
 import getters from './getters'
-import createApiPluginStore from './plugins/api.plugin'
-
-import assetsUtils from '@utils/assets'
+import createApiPluginStore from './plugins/api'
 
 Vue.use(Vuex)
 
 export default function (envConfiguration){
     return new Vuex.Store({
         modules: {
+            assets,
+
             session,
             notifications,
             foods,
@@ -35,11 +37,6 @@ export default function (envConfiguration){
             chats
         },
         state: {
-            _genders: assetsUtils.Genders,
-            _countries: assetsUtils.Countries,
-            _diets: assetsUtils.Diets,
-            _recipeCategories: assetsUtils.RecipeCategories,
-
             language: 'it'
         },
         getters,

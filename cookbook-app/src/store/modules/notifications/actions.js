@@ -5,12 +5,12 @@ export default {
         let {options} = payload || {}
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return rootState._api.notifications.getNotifications(rootState.session.user._id, rootState.session.accessToken, null, null, options)
+        return this.$api.notifications.getNotifications(rootState.session.user._id, rootState.session.accessToken, null, null, options)
     },
     read({ commit, dispatch, getters, rootState, rootGetters }, notificationID){
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return rootState._api.notifications
+        return this.$api.notifications
             .updateNotification(rootState.session.user._id, notificationID, {read: true}, rootState.session.accessToken)
             .then(response => {
                 commit('remove-unread')
@@ -20,7 +20,7 @@ export default {
     remove({ commit, dispatch, getters, rootState, rootGetters }, {_id, read}){
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return  rootState._api.notifications
+        return  this.$api.notifications
             .deleteNotification(rootState.session.user._id, _id, rootState.session.accessToken)
             .then(response => {
                 if(!read) commit('remove-unread')
@@ -28,13 +28,9 @@ export default {
             })
     },
     ['not-read']({ commit, dispatch, rootState, rootGetters }){
-        console.warn('rootState ', rootState)
-        console.warn('rootGetters ', rootGetters)
         let isLoggedIn = rootGetters['session/isLoggedIn']
         if(!isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        // return rootState._api.notifications
-
-        return rootState._api.notifications
+        return this.$api.notifications
             .getNotifications(rootState.session.user._id, rootState.session.accessToken, { readed: false })
             .then(response => {
                 let data = response.data

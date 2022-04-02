@@ -95,87 +95,6 @@ export default {
       this.$bus.$on('show:error:forbidden', err => this.forbiddenError = {show: true, ...err})
       this.$bus.$on('show:error:not-found', err => this.notFoundResource = {show: true, ...err})
       this.$bus.$on('show:error:server-internal', err => this.serverError = {show: true, ...err})
-
-    },
-    registerFriendShipListener(){
-      this.$socket.on('friendship:request', this.$bus.notification.friendShipRequest.bind(this))
-      this.$socket.on('friendship:update', this.$bus.notification.friendShipUpdate.bind(this))
-      this.$socket.on('friendship:remove', this.$bus.notification.friendShipRemove.bind(this))
-    },
-    registerFoodListener(){
-      this.$socket.on('food:create', this.$bus.notification.foodCreate.bind(this))
-      this.$socket.on('food:update', this.$bus.update.updateFood.bind(this))
-    },
-    registerShoppingListListener(){
-      this.$socket.on('shopping-list:add', this.$bus.update.addInShoppingList.bind(this))
-      this.$socket.on('shopping-list:update', this.$bus.update.updatePointInShoppingList.bind(this))
-      this.$socket.on('shopping-list:remove', this.$bus.update.removePointInShoppingList.bind(this))
-    },
-    registerCommentListener(){
-      this.$socket.on('comment:response', this.$bus.notification.commentResponse.bind(this))
-      this.$socket.on('comment:report', this.$bus.notification.commentReport.bind(this))
-      this.$socket.on('comment:update', this.$bus.update.updateComment.bind(this))
-      this.$socket.on('comment:delete', this.$bus.update.deleteComment.bind(this))
-      this.$socket.on('comment:unreport', this.$bus.update.unReportComment.bind(this))
-    },
-    registerLikeListener(){
-      this.$socket.on('like:recipe', this.$bus.notification.likeRecipe.bind(this))
-      this.$socket.on('like:comment', this.$bus.notification.likeComment.bind(this))
-      this.$socket.on('unlike:recipe', this.$bus.update.unlikeRecipe.bind(this))
-      this.$socket.on('unlike:comment', this.$bus.update.unlikeComment.bind(this))
-    },
-    registerRecipeListener(){
-      this.$socket.on('recipe:comment', this.$bus.notification.recipeComment.bind(this))
-      this.$socket.on('recipe:create', this.$bus.notification.createSharedRecipe.bind(this))
-      this.$socket.on('recipe:create:saved', this.$bus.notification.createSavedRecipe.bind(this))
-      this.$socket.on('recipe:update', this.$bus.notification.updateSharedRecipe.bind(this))
-      this.$socket.on('recipe:delete', this.$bus.notification.deleteSharedRecipe.bind(this))
-
-      this.$socket.on('recipe:add:permission', this.$bus.update.addRecipePermission.bind(this))
-    },
-    registerUserInfoListener(){
-      this.$socket.on('user:update:password', this.$bus.notification.afterUpdatePassword.bind(this))
-      this.$socket.on('user:strike', this.$bus.notification.onAddStrike.bind(this))
-
-      this.$socket.on('user:signup', this.$bus.update.signupUser.bind(this))
-      this.$socket.on('user:checked', this.$bus.update.checkUser.bind(this))
-      this.$socket.on('user:update:info', this.$bus.update.updateInfoUser.bind(this))
-      this.$socket.on('user:delete', this.$bus.update.deleteUser.bind(this))
-    },
-
-    registerUserOnlineOfflineListener(){
-      this.$socket.on('all:users:online', users => this.$store.commit('users/set-onlines', users))
-      this.$socket.on('user:online', _id => this.$store.commit('users/add-online', _id))
-      this.$socket.on('user:offline', (_id, _date) => this.$store.commit('users/remove-online', {_id, _date}))
-    },
-
-    registerCheckAccessTokenListener(){
-      this.$socket.on('operation:not:authorized', ({ expired, message }) => {
-        if(expired) this.unAuthenticatedError = { show: true, message }
-        else this.forbiddenError = { show: true, message }
-      })
-    },
-
-    registerChatMessageListener(){
-      this.$socket.on('push-messages', this.$bus.chat.pushMessages.bind(this))
-      this.$socket.on('read-messages', this.$bus.chat.readMessages.bind(this))
-    },
-
-    registerSessionListener(){
-      this.$broadcastChannel.onmessage = event => {
-        const {login} = event.data
-        if(login){
-          this.$store.dispatch("initialization", login)
-              .then(() => this.$router.go(0))
-              .catch(err => console.error('Broadcast login error: ', err))
-        }
-      }
-
-      this.$socket.on('logout', () => {
-        console.debug("Logout ok.")
-        this.$store.dispatch('reset')
-        this.$router.replace({name: 'homepage'})
-      })
     }
   },
   created() {
@@ -183,7 +102,7 @@ export default {
 
     console.debug('Vue ', this)
     console.debug('Store ', this.$store)
-    console.debug('Api ', this.$store.getters.$api)
+    console.debug('Api ', this.$store.$api)
     console.debug('Socket ', this.$socket)
     console.debug('Bus ', this.$bus)
     console.debug('window ', window)
@@ -200,18 +119,6 @@ export default {
           console.error('Something wrong during the initialization: ', err.message)
           console.error(err.response)
         })
-
-    this.registerFriendShipListener()
-    this.registerFoodListener()
-    this.registerShoppingListListener()
-    this.registerCommentListener()
-    this.registerLikeListener()
-    this.registerRecipeListener()
-    this.registerUserInfoListener()
-    this.registerChatMessageListener()
-    this.registerUserOnlineOfflineListener()
-    this.registerCheckAccessTokenListener()
-    this.registerSessionListener()
 
     const isRedirectedToPersonalArea = (route) => {
       return this.isLoggedIn && (

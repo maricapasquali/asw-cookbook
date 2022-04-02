@@ -3,7 +3,7 @@
 export default {
     remove({commit, dispatch, state, rootState, rootGetters}, {ownerID, recipeID, likeID, commentID}){
         let isLoggedIn = rootGetters['session/isLoggedIn']
-        return rootState._api.recipes.likes.unLike(ownerID, recipeID, likeID , rootState.session.accessToken, commentID)
+        return this.$api.recipes.likes.unLike(ownerID, recipeID, likeID , rootState.session.accessToken, commentID)
             .then(response => {
                 if(!isLoggedIn) {
                     if(commentID) commit('anonymous:remove:like-comment', commentID)
@@ -15,7 +15,7 @@ export default {
 
     add({commit, dispatch, state, rootState, rootGetters}, {ownerID, recipeID, commentID}){
         let isLoggedIn = rootGetters['session/isLoggedIn']
-        return rootState._api.recipes.likes.like(ownerID, recipeID, rootState.session.accessToken, commentID)
+        return this.$api.recipes.likes.like(ownerID, recipeID, rootState.session.accessToken, commentID)
             .then(response => {
                 if(!isLoggedIn) {
                     if(commentID) commit('anonymous:add:like-comment', commentID)

@@ -40,7 +40,7 @@ export default {
        })
        .catch(err => {
          this.error.show = true
-         this.error.msg = this.handleRequestErrors.users.checkAccount(err)
+         this.error.msg = this.$store.$api.errorsHandler.users.checkAccount(err)
        })
        .finally(() => this.loading = false)
   }

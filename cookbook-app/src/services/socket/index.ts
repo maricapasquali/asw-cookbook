@@ -27,6 +27,6 @@ socketIO.on('disconnect', (reason) => {
     console.log('SOCKET disconnect. Reason: ', reason);
 })
 
-socketIO.on('error', (e) => {
-    console.error('Error socket ', e)
+socketIO.on('connect_error', (e) => {
+    console.error('SOCKET connection error: ', e)
 })

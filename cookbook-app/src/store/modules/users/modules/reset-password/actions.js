@@ -2,10 +2,10 @@
 
 export default  {
     request({rootState}, email){
-        return rootState._api.users.sendEmailResetPassword(email)
+        return this.$api.users.sendEmailResetPassword(email)
     },
     make({commit, rootState}, {userID, newPassword, accessToken}){
-        return rootState._api.users.changeOldPassword(userID, {new_hash_password: newPassword}, accessToken, true)
+        return this.$api.users.changeOldPassword(userID, {new_hash_password: newPassword}, accessToken, true)
             .then(response =>{
                 commit('unset-info')
                 return response
@@ -16,10 +16,10 @@ export default  {
             })
     },
     ['check-link']({rootState}, key){
-        return rootState._api.users.checkLinkResetPassword(key)
+        return this.$api.users.checkLinkResetPassword(key)
     },
     ['exist-with-username']({commit, rootState}, {userID, key}){
-        return rootState._api.users.getUserFromNickname(userID, key)
+        return this.$api.users.getUserFromNickname(userID, key)
             .then(response => {
                 const accessToken = response.data.temporary_token
                 const  _id = response.data._id

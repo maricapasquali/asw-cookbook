@@ -15,7 +15,7 @@ export default {
       isAdmin: 'session/isAdmin'
     }),
     administratorEmail(){
-      return `administrator@${this.app_name.toLowerCase()}.com`
+      return `administrator@${this.$appName.toLowerCase()}.com`
     }
   }
 }

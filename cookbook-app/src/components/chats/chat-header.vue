@@ -32,7 +32,7 @@
 
 import {mapGetters} from "vuex";
 
-import ChatMixin from '@mixins/chat.mixin'
+import {ChatMixin} from '@mixins'
 import ChatTyping from "./chat-typing";
 
 export default {

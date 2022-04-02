@@ -129,8 +129,7 @@
 <script>
 
 import {mapGetters, mapMutations} from "vuex";
-import PendingRequestMixin from "@mixins/pending-request.mixin"
-import ChatMixin from '@mixins/chat.mixin'
+import {ChatMixin, PendingRequestMixin} from '@mixins'
 export default {
   name: "user-information",
   mixins:[ChatMixin, PendingRequestMixin],
@@ -193,7 +192,7 @@ export default {
             console.debug(this.user)
             this.$emit('is-user-admin', this.user.isAdmin)
          })
-         .catch(err => this.handleRequestErrors.users.getUser(err, {_forbiddenPage: this.personalArea }))
+         .catch(err => this.$store.$api.errorsHandler.users.getUser(err, {_forbiddenPage: this.personalArea }))
          .then(notFound => {
            if(notFound) this.$emit('not-found')
            this.pendingRequests.remove(idReq)

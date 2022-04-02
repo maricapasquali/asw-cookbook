@@ -108,7 +108,7 @@
 <script>
 
 import {mapGetters} from "vuex";
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {PendingRequestMixin} from "@mixins"
 
 export default {
   name: "notifications-section",
@@ -277,7 +277,7 @@ export default {
             return true
           })
           .catch(err => {
-           this.handleRequestErrors.notifications.getNotifications(err)
+           this.$store.$api.errorsHandler.notifications.getNotifications(err)
            return false
           })
           .then(processEnd => this.pagination.isBusy = !processEnd)
@@ -302,7 +302,7 @@ export default {
           })
           .catch(err => {
             doc.read = false // doc.read = !doc.read
-            this.handleRequestErrors.notifications.updateNotification(err)
+            this.$store.$api.errorsHandler.notifications.updateNotification(err)
           })
     },
 
@@ -314,7 +314,7 @@ export default {
           .then(({data}) => {
             this.docs.splice(index, 1)
           })
-          .catch(this.handleRequestErrors.notifications.deleteNotification)
+          .catch(this.$store.$api.errorsHandler.notifications.deleteNotification)
     },
 
     addNotification(notification){

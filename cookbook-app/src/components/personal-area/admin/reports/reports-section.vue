@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {PendingRequestMixin} from "@mixins"
 export default {
   name: "reports-section",
   mixins: [PendingRequestMixin],
@@ -111,7 +111,7 @@ export default {
              else this.docsDeleted.push(comment)
            })
          })
-         .catch(this.handleRequestErrors.comments.getReportedComment)
+         .catch(this.$store.$api.errorsHandler.comments.getReportedComment)
          .finally(() => {
             this.processing = false
             this.pendingRequests.remove(_id)
@@ -130,7 +130,7 @@ export default {
             this.$socket.emit('comment:delete', comment._id)
             if(comment.user) this.$socket.emit('user:strike', comment.user._id)
          })
-         .catch(this.handleRequestErrors.comments.deleteComment)
+         .catch(this.$store.$api.errorsHandler.comments.deleteComment)
     },
     unreported(index){
       let comment = this.docsReported[index]
@@ -142,7 +142,7 @@ export default {
 
            this.$socket.emit('comment:unreport', comment._id)
          })
-         .catch(this.handleRequestErrors.comments.updateComment)
+         .catch(this.$store.$api.errorsHandler.comments.updateComment)
     },
 
     /*Listeners update*/

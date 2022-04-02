@@ -98,8 +98,7 @@
 
 <script>
 
-import UserMixin from "@mixins/user.mixin"
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {UserMixin, PendingRequestMixin} from "@mixins"
 import {mapGetters} from "vuex";
 
 export default {
@@ -198,7 +197,7 @@ export default {
                   return data.items
                 })
                 .catch(err => {
-                  this.handleRequestErrors.friends.getFriendOf(err, {_forbiddenPage: true})
+                  this.$store.$api.errorsHandler.friends.getFriendOf(err, {_forbiddenPage: true})
                   return []
                 })
                 .finally(() => {

@@ -1,7 +1,3 @@
-// DIRECTIVES
-import directives from '@components/directives'
-
-//COMPONENTS
 import CenterContainer from '@components/center-container'
 import PreviewUploader from "@components/preview-uploader";
 import Loading from "@components/loading"
@@ -163,7 +159,6 @@ const components = {
 
 export default function install(Vue, options){
     Object.values(components).forEach(comp => Vue.component(comp.name, comp))
-    Object.entries(directives).forEach(([id, directive]) => Vue.directive(id, directive))
 
-    console.log('Install plugin Custom Components and directives ...')
+    console.log('Install plugin Custom Components ...')
 }

@@ -2,7 +2,7 @@
 
 export default {
     login({dispatch, commit, rootState}, credential){
-        return rootState._api.users
+        return this.$api.users
                   .session
                   .login(credential)
                   .then(({data}) => {
@@ -22,12 +22,12 @@ export default {
 
     logout({dispatch, state, getters, rootState}){
         if(!getters.isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return rootState._api.users.session.logout(state.user._id, state.accessToken)
+        return this.$api.users.session.logout(state.user._id, state.accessToken)
     },
 
     requestNewAccessToken({commit, getters, dispatch, state, rootState}){
         if(!getters.isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return rootState._api.users
+        return this.$api.users
                   .session
                   .newAccessToken(state.user._id, { refresh_token: state.refreshToken }, state.accessToken)
                   .then(response => {

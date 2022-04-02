@@ -101,8 +101,7 @@
 
 <script>
 
-import UserMixin from "@mixins/user.mixin"
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {UserMixin, PendingRequestMixin} from "@mixins"
 import {mapGetters} from "vuex";
 
 export default {
@@ -184,7 +183,7 @@ export default {
             this.total = data.total
             if(!_limit) this.optionsPagination.page = page
          })
-         .catch(this.handleRequestErrors.recipes.allSharedRecipes)
+         .catch(this.$store.$api.errorsHandler.recipes.allSharedRecipes)
          .then(() => {
            if(currentPage) this.loadOther = false
            this.pendingRequests.remove(_id)

@@ -451,8 +451,8 @@ export default {
 
                 })
                 .catch(err => {
-                  if(options.new === false) this.handleRequestErrors.recipes.updateRecipe(err)
-                  else this.handleRequestErrors.recipes.createRecipe(err)
+                  if(options.new === false) this.$store.$api.errorsHandler.recipes.updateRecipe(err)
+                  else this.$store.$api.errorsHandler.recipes.createRecipe(err)
                 })
                 .finally(() => this.processing = false)
           })

@@ -121,7 +121,7 @@
 <script>
 import {mapGetters} from "vuex";
 
-import UserMixin from '@mixins/user.mixin'
+import {UserMixin} from '@mixins'
 export default {
   name: "recipe-tab-item",
   mixins: [UserMixin],

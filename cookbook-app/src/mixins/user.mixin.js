@@ -1,9 +1,4 @@
-import {mapGetters} from "vuex";
-
 export default {
-    computed: {
-      ...mapGetters(["$api"])
-    },
     methods: {
         _updateUserInformation(userToUpdate, userInfo){
             // userInfo = {userID?: string, information?: { ... }}
@@ -13,7 +8,7 @@ export default {
             }
         },
         _formatUserImage(image){
-            return image ? this.$api.images.path(image) : ''
+            return image ? this.$store.$api.serverInformation.images.path(image) : ''
         }
     }
 }

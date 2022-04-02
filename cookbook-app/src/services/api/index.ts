@@ -12,7 +12,7 @@ export default function ({ serverConfiguration, store }){
     let _methods: MethodsAxios = methods(serverConfiguration, store)
 
     return {
-        ..._methods.info,
+        serverInformation: _methods.info,
 
         users: users(_methods),
         friends: friends(_methods),

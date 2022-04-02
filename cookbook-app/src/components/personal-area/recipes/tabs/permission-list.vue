@@ -21,7 +21,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import UserMixin from '@mixins/user.mixin'
+import {UserMixin} from '@mixins'
 export default {
   name: "permission-list",
   mixins: [UserMixin],

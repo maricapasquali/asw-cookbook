@@ -258,8 +258,8 @@ export default {
             this.$emit('onSave', data)
           })
           .catch(err => {
-            if(this.createMode) return this.handleRequestErrors.foods.createFood(err)
-            else if(this.updateMode) return this.handleRequestErrors.foods.updateFood(err)
+            if(this.createMode) return this.$store.$api.errorsHandler.foods.createFood(err)
+            else if(this.updateMode) return this.$store.$api.errorsHandler.foods.updateFood(err)
             return false
           })
           .then(duplicate => {

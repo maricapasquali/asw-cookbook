@@ -1,4 +1,4 @@
-export default function (bus){
+export default function (bus, store, socket){
     const toastIdMessages = 'push-message'
 
     const hasInRouteOfChat = (route) => {
@@ -7,7 +7,6 @@ export default function (bus){
 
     function pushMessages(chats){ //[{info, messages}]
 
-        const store = this.$store
         const userIdentifier = store.getters.userIdentifier
         const isAdmin = store.getters.isAdmin
 
@@ -19,10 +18,9 @@ export default function (bus){
                     store.dispatch('chats/update-role', {chatID: chat.info._id, role})
                         .then(({data}) => {
                             console.log(data)
-                            this.$socket.on('chat:change:role:ok', () => bus.$emit('chat:change:role', chat.info._id, {user: userIdentifier, role}))
-                            this.$socket.emit('chat:change:role', chat.info._id, { user: userIdentifier, role })
+                            socket.emit('chat:change:role', chat.info._id, { user: userIdentifier, role })
                         })
-                        .catch(this.handleRequestErrors.chats.updateUserRoleInChat)
+                        .catch(store.$api.errorsHandler.chats.updateUserRoleInChat)
                 }
                 return chat
             })
@@ -44,7 +42,6 @@ export default function (bus){
     }
 
     function readMessages(chats){ //[{info, messages}]
-        const store = this.$store
         console.debug('Read messages ', chats)
         chats.filter(chat => chat.messages && chat.messages.length > 0)
              .forEach(chat => {

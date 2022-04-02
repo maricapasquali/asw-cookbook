@@ -149,8 +149,7 @@
 
 <script>
 
-import UserMixin from '@mixins/user.mixin'
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {UserMixin, PendingRequestMixin} from "@mixins"
 import {mapGetters} from "vuex";
 
 export default {
@@ -290,7 +289,7 @@ export default {
            console.debug('this.countries = ', this.countries)
            return true
          })
-         .catch(err => this.handleRequestErrors.recipes.getNumberRecipesForCountry(err))
+         .catch(err => this.$store.$api.errorsHandler.recipes.getNumberRecipesForCountry(err))
          .then(() => this.pendingRequests.remove(_id))
     },
 
@@ -412,7 +411,7 @@ export default {
             this.$emit('searching', data)
             return true
          })
-         .catch(err => this.handleRequestErrors.recipes.getRecipe(err, { _forbiddenPage: typeof this.triggerSearch !== 'undefined' }))
+         .catch(err => this.$store.$api.errorsHandler.recipes.getRecipe(err, { _forbiddenPage: typeof this.triggerSearch !== 'undefined' }))
          .then(processEnd => this.processingSearch = !processEnd)
          .then(() => this.pendingRequests.remove(_id))
          .then(() => this._goToResults() )
@@ -442,7 +441,7 @@ export default {
     },
 
     _addNumberRecipePerCountry(countryVal){
-      console.warn('COUNTRY NEW ', countryVal)
+      console.debug('COUNTRY NEW ', countryVal)
       let country = this.getCountryByValue(countryVal)
       if(country) {
         let index = this.countries.findIndex(i => i.value === countryVal)

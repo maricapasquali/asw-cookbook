@@ -71,9 +71,8 @@
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
-import ChatMixin from '@mixins/chat.mixin'
-import RecipeMixin from '@mixins/recipe.mixin'
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+
+import {ChatMixin, RecipeMixin, PendingRequestMixin} from "@mixins"
 
 export default {
   name: "chat",
@@ -286,7 +285,7 @@ export default {
               console.debug(description, ' from ', reader.userID)
               this.$socket.emit('chat:read', this.temporaryNameChat, messages)
             })
-            .catch(this.handleRequestErrors.messages.readMessages)
+            .catch(this.$store.$api.errorsHandler.messages.readMessages)
       }
     },
     receiveConfirmReadMessages(messages){
@@ -330,7 +329,7 @@ export default {
                   this.resetAttachment()
                   return true
                 })
-                .catch(this.handleRequestErrors.messages.createMessage)
+                .catch(this.$store.$api.errorsHandler.messages.createMessage)
                 .then(delivered => this._changeStateMyMessage({ delivered }))
           })
           .catch((e) => { console.error('NO UPDATE PERMISSION ', e); this._changeStateMyMessage({ delivered: false }); })
@@ -371,11 +370,9 @@ export default {
           this.$store.dispatch('chats/update-role', {chatID: chat._id, role })
                     .then(({data}) => {
                       console.log(data.description)
-                      let userRole = { user: this.userIdentifier, role }
-                      this.$socket.on('chat:change:role:ok', () => this.$bus.$emit('chat:change:role', chat._id, userRole))
-                      this.$socket.emit('chat:change:role', chat._id, userRole)
+                      this.$socket.emit('chat:change:role', chat._id, { user: this.userIdentifier, role })
                     })
-                    .catch(this.handleRequestErrors.chats.updateUserRoleInChat)
+                    .catch(this.$store.$api.errorsHandler.chats.updateUserRoleInChat)
         }
 
         if(chat.messages) this._initMessages(chat.messages)
@@ -385,7 +382,7 @@ export default {
           let options = this.makeRequestOptions(idRequest, {message: 'Chat messages abort.'})
           this.$store.dispatch('chats/messages/all', {chatID: chat._id, options})
               .then(({data}) => this._initMessages(data))
-              .catch(this.handleRequestErrors.messages.listMessages)
+              .catch(this.$store.$api.errorsHandler.messages.listMessages)
               .finally(() => this.pendingRequests.remove(idRequest))
         }
 
@@ -411,7 +408,7 @@ export default {
             this.recipes = data.items;
             console.debug('Attachments = > ', data.items)
           })
-          .catch(this.handleRequestErrors.messages.getAttachments)
+          .catch(this.$store.$api.errorsHandler.messages.getAttachments)
           .finally(() => this.pendingRequests.remove(idRequest))
     },
 
@@ -459,7 +456,7 @@ export default {
                                               resolve()
                                            })
                                            .catch(err =>{
-                                              this.handleRequestErrors.messages.updatePermissionAttachment(err)
+                                              this.$store.$api.errorsHandler.messages.updatePermissionAttachment(err)
                                               reject(err)
                                            })
       } else {
@@ -478,7 +475,7 @@ export default {
                     return this.createObjectPreview(data, link)
                   })
                   .catch(err => {
-                    this.handleRequestErrors.messages.getAttachment(err)
+                    this.$store.$api.errorsHandler.messages.getAttachment(err)
                     return {link}
                   })
       }
