@@ -87,7 +87,7 @@ export default {
                  this.show = false
                })
                .catch(err => {
-                 let message = this.handleRequestErrors.users.changePassword(err)
+                 let message = this.$store.$api.errorsHandler.users.changePassword(err)
                  if(message) this.error = {show: true, message}
                })
                .then(() => this.processing = false)

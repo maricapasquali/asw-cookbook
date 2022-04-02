@@ -1,4 +1,4 @@
-export default function (bus){
+export default function (bus, store){
     const options = {
         title: 'Amicizia',
         solid: true
@@ -7,8 +7,8 @@ export default function (bus){
     function friendShipRequest(notification){
         console.debug('friendship request => ', notification)
         this.$bvToast.toast(notification.content, options)
-        this.$store.commit('notifications/add-unread')
-        this.$store.commit('friendships/add', {
+        store.commit('notifications/add-unread')
+        store.commit('friendships/add', {
                 from: {_id: notification.otherInfo.from },
                 to: { _id: notification.user },
                 state: "pending"
@@ -22,8 +22,8 @@ export default function (bus){
         console.debug('friendship remove => ', {notification, friendship})
         if(notification) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('notifications/add-unread')
-            this.$store.commit('friendships/remove', notification.otherInfo.exFriend)
+            store.commit('notifications/add-unread')
+            store.commit('friendships/remove', notification.otherInfo.exFriend)
             bus.$emit('friendship:remove:' + notification.otherInfo.exFriend, notification) /* for b-friendship */
             bus.$emit('friendship:remove:' + notification.user, notification) // for friend section
         }
@@ -34,9 +34,9 @@ export default function (bus){
         console.debug('friendship update => ', {notification, friendship})
         if(notification) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('notifications/add-unread')
+            store.commit('notifications/add-unread')
             let {state, to} = notification.otherInfo
-            this.$store.commit('friendships/update', { friendID: to, updatedFriendship: {state} })
+            store.commit('friendships/update', { friendID: to, updatedFriendship: {state} })
             bus.$emit('friendship:update:' + notification.otherInfo.to, notification)
         }
         if(friendship) bus.$emit('friend:add', friendship)

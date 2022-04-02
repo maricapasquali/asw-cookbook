@@ -71,8 +71,7 @@
 
 import {mapGetters} from "vuex";
 import NotFound from "../404";
-import UserMixin from '@mixins/user.mixin'
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {UserMixin, PendingRequestMixin} from "@mixins"
 
 export default {
   name: "OneUser",
@@ -173,7 +172,7 @@ export default {
            if(!_limit) this.recipePaginationOptions.page = page
            console.debug('Recipes : ',  this.recipes)
          })
-         .catch(err => this.handleRequestErrors.recipes.getRecipe(err))
+         .catch(err => this.$store.$api.errorsHandler.recipes.getRecipe(err))
          .then(() => {
            this.pendingRequests.remove(idReq)
            this.recipesProcessing = false
@@ -210,7 +209,7 @@ export default {
            if(!_limit) this.friendsPaginationOptions.page = page
            console.debug('Friends : ',  this.friends)
          })
-         .catch(this.handleRequestErrors.friends.getFriendOf)
+         .catch(this.$store.$api.errorsHandler.friends.getFriendOf)
          .then(() => {
            this.pendingRequests.remove(idReq)
            this.friendsProcessing = false

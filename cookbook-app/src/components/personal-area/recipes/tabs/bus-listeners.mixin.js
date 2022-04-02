@@ -1,5 +1,5 @@
 import {mapGetters} from "vuex";
-import RecipeMixin from "@mixins/recipe.mixin"
+import {RecipeMixin} from "@mixins"
 
 /**
  * Depend on recipes-tab-content
@@ -40,9 +40,9 @@ export default {
         },
         onMyLikeRecipeListeners(notification, like){
             let {recipe} = notification.otherInfo
-            console.warn('Like ', like,' recipe ', recipe)
+            console.debug('Like ', like,' recipe ', recipe)
             if(like.user._id === this.userIdentifier) {
-                console.warn('Retrieve recipe ')
+                console.debug('Retrieve recipe ')
                 this.$store.dispatch("recipes/one-shared", { ownerID: recipe.owner, recipeID: recipe._id })
                     .then(({data}) => {
                         this.setDefaultValueOn(data)
@@ -52,7 +52,7 @@ export default {
                         }
                         else this.$emit("onLikeRecipe", data)
                     })
-                    .catch(err => this.handleRequestErrors.recipes.getRecipe(err, {_forbiddenPage: true}))
+                    .catch(err => this.$store.$api.errorsHandler.recipes.getRecipe(err, {_forbiddenPage: true}))
             }
         },
         onMyUnLikeRecipeListeners(recipeID, likeID){

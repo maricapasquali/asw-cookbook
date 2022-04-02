@@ -1,11 +1,11 @@
 
 
 export default  {
-    request({}, email){
-        return this._vm.$api.users.sendEmailResetPassword(email)
+    request({rootState}, email){
+        return this.$api.users.sendEmailResetPassword(email)
     },
-    make({commit}, {userID, newPassword, accessToken}){
-        return this._vm.$api.users.changeOldPassword(userID, {new_hash_password: newPassword}, accessToken, true)
+    make({commit, rootState}, {userID, newPassword, accessToken}){
+        return this.$api.users.changeOldPassword(userID, {new_hash_password: newPassword}, accessToken, true)
             .then(response =>{
                 commit('unset-info')
                 return response
@@ -15,11 +15,11 @@ export default  {
                 return err
             })
     },
-    ['check-link']({}, key){
-        return this._vm.$api.users.checkLinkResetPassword(key)
+    ['check-link']({rootState}, key){
+        return this.$api.users.checkLinkResetPassword(key)
     },
-    ['exist-with-username']({commit}, {userID, key}){
-        return this._vm.$api.users.getUserFromNickname(userID, key)
+    ['exist-with-username']({commit, rootState}, {userID, key}){
+        return this.$api.users.getUserFromNickname(userID, key)
             .then(response => {
                 const accessToken = response.data.temporary_token
                 const  _id = response.data._id

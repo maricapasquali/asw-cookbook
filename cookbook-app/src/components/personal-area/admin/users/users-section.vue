@@ -102,8 +102,7 @@
 <script>
 
 import {mapGetters} from "vuex";
-import ChatMixin from '@mixins/chat.mixin'
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {ChatMixin, PendingRequestMixin} from "@mixins"
 export default {
   name: "users-section",
   mixins: [ChatMixin, PendingRequestMixin],
@@ -237,7 +236,7 @@ export default {
                    return data.items.map(u => this.remapping(u))
                 })
                .catch(err => {
-                 this.handleRequestErrors.users.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
+                 this.$store.$api.errorsHandler.users.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
                  return []
                })
                .finally(() => {

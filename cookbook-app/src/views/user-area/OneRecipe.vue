@@ -191,8 +191,7 @@
 
 import {mapGetters} from "vuex";
 import NotFound from "../404";
-import UserMixin from "@mixins/user.mixin"
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {UserMixin, PendingRequestMixin} from "@mixins"
 export default {
   name: "OneRecipe",
   mixins: [UserMixin, PendingRequestMixin],
@@ -269,7 +268,7 @@ export default {
       this.processing = true
       this.$store.dispatch('recipes/one-shared', {ownerID: id, recipeID: recipe_id, options})
          .then(({data}) => this.setRecipe(data))
-         .catch(err => this.handleRequestErrors.recipes.getRecipe(err))
+         .catch(err => this.$store.$api.errorsHandler.recipes.getRecipe(err))
          .then(processingEnd => this.processing = !processingEnd)
          .then(() => this.pendingRequests.remove(_idRequest))
     },

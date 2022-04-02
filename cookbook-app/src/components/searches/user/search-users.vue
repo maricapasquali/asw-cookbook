@@ -97,8 +97,7 @@
 
 <script>
 
-import UserMixin from "@mixins/user.mixin"
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {UserMixin, PendingRequestMixin} from "@mixins"
 
 export default {
   name: "search-users",
@@ -147,7 +146,7 @@ export default {
 
        this.$store.dispatch('users/search-for-username', { search: 'partial', username: this.search.value, options })
           .then(({data}) => this.users = data.items)
-          .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
+          .catch(this.$store.$api.errorsHandler.users.getUsersWithAndWithoutFilters)
           .finally(() => {
             this.search.processing = false
             this.pendingRequests.remove(_id)
@@ -197,7 +196,7 @@ export default {
            console.debug('Total = ', this.total)
 
          })
-         .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
+         .catch(this.$store.$api.errorsHandler.users.getUsersWithAndWithoutFilters)
          .finally(() => {
            this.processing = false
            this.processingOthers = false

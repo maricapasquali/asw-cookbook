@@ -29,8 +29,7 @@
 
 <script>
 
-import PendingRequestMixin from "@mixins/pending-request.mixin"
-import RecipeMixin from "@mixins/recipe.mixin"
+import {RecipeMixin, PendingRequestMixin} from "@mixins"
 import {mapGetters} from "vuex";
 
 export default {
@@ -166,7 +165,7 @@ export default {
             console.debug('total = ', this.currentItemTab.total)
             return true
           })
-          .catch(err => this.handleRequestErrors.recipes.getRecipe(err, {_forbiddenPage: true}))
+          .catch(err => this.$store.$api.errorsHandler.recipes.getRecipe(err, {_forbiddenPage: true}))
           .then(processEnd => {
             this.processing = !processEnd
             this.loadOther = !processEnd

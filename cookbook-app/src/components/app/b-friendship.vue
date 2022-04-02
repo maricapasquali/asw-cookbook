@@ -24,7 +24,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import ChatMixin from '@mixins/chat.mixin'
+import {ChatMixin} from "@mixins"
 export default {
   name: "b-friendship",
   mixins: [ChatMixin],
@@ -82,7 +82,7 @@ export default {
             this.$socket.emit('friendship:request', data)
             return true
           })
-          .catch(err => this.handleRequestErrors.friends.requestFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .catch(err => this.$store.$api.errorsHandler.friends.requestFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
           .then(this._setActualState)
     },
 
@@ -95,7 +95,7 @@ export default {
             this.isMyFriend = false
             this.$socket.emit('friendship:remove', this.otherUser)
           })
-          .catch(err => this.handleRequestErrors.friends.breakFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .catch(err => this.$store.$api.errorsHandler.friends.breakFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
     },
 
     //UPDATE
@@ -106,7 +106,7 @@ export default {
             this.$socket.emit('friendship:update', data)
             return state
           })
-          .catch(err => this.handleRequestErrors.friends.updateFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .catch(err => this.$store.$api.errorsHandler.friends.updateFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
           .then(this._setActualState)
     },
     rejectRequest(){
@@ -185,7 +185,7 @@ export default {
       if(this.friends.length === 0) {
         this.$store.dispatch('friendships/own')
             .then(({data}) => this._setFriendShip())
-            .catch(this.handleRequestErrors.friends.getFriendOf)
+            .catch(this.$store.$api.errorsHandler.friends.getFriendOf)
       }
       else this._setFriendShip()
     }

@@ -8,7 +8,7 @@
            :centered="centered"
            @close="clickClose">
     <b-alert v-model="value" :variant="variant" class="text-center" centered>
-      <h1>{{app_name}}</h1>
+      <h1>{{$appName}}</h1>
       <slot name="msg"></slot>
     </b-alert>
   </b-modal>

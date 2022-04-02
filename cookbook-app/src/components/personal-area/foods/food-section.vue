@@ -190,7 +190,7 @@
 <script>
 
 import {mapGetters} from "vuex";
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {PendingRequestMixin} from "@mixins"
 
 export default {
   name: "food-section",
@@ -293,7 +293,7 @@ export default {
               console.debug(this.shopping_list)
               this.$socket.emit('shopping-list:add', data)
            })
-           .catch(this.handleRequestErrors.shoppingList.createShoppingListPoint)
+           .catch(this.$store.$api.errorsHandler.shoppingList.createShoppingListPoint)
            .then(duplicate => {
                 if(duplicate && index !== -1) this.patchShoppingList(index, false)
            })
@@ -310,7 +310,7 @@ export default {
            console.debug(this.shopping_list)
            this.$socket.emit('shopping-list:update', point)
          })
-         .catch(this.handleRequestErrors.shoppingList.updateShoppingListPoint)
+         .catch(this.$store.$api.errorsHandler.shoppingList.updateShoppingListPoint)
     },
     removeFromShoppingList(index){
       let point = this.shopping_list[index]
@@ -320,14 +320,14 @@ export default {
             console.debug(this.shopping_list)
             this.$socket.emit('shopping-list:remove', point._id)
          })
-         .catch(this.handleRequestErrors.shoppingList.deleteShoppingListPoint)
+         .catch(this.$store.$api.errorsHandler.shoppingList.deleteShoppingListPoint)
     },
     getShoppingList(){
       if(this.shopping_list.length > 0) this.loadingSL = false
       else
         this.$store.dispatch('shopping-list/get')
            .then(({data}) => this.loadingSL = false)
-           .catch(this.handleRequestErrors.shoppingList.getShoppingList)
+           .catch(this.$store.$api.errorsHandler.shoppingList.getShoppingList)
     },
 
     // Foods
@@ -376,7 +376,7 @@ export default {
                     return items
                  })
                 .catch(err => {
-                  this.handleRequestErrors.foods.getFoods(err)
+                  this.$store.$api.errorsHandler.foods.getFoods(err)
                     return []
                 })
                 .finally(() =>{

@@ -103,8 +103,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import ChatMixin from '@mixins/chat.mixin'
-import PendingRequestMixin from "@mixins/pending-request.mixin"
+import {ChatMixin, PendingRequestMixin} from '@mixins'
 
 export default {
   name: "chats-section",
@@ -186,7 +185,7 @@ export default {
           let options = this.makeRequestOptions(idRequest)
           this.$store.dispatch('friendships/own', { state: 'accepted', options })
               .then(({data}) => console.debug('retrieve own accepted friends.'))
-              .catch(this.handleRequestErrors.chats.getFriendOnChat)
+              .catch(this.$store.$api.errorsHandler.chats.getFriendOnChat)
               .then(() => this.pendingRequests.remove(idRequest))
         }
       }
@@ -224,7 +223,7 @@ export default {
                   .map(user => ({user: {_id: user._id, userID: user.userID, img: user.information.img, country: user.information.country} }))
               console.debug('users => ', this.friends)
             })
-            .catch(this.handleRequestErrors.chats.getFriendOnChat)
+            .catch(this.$store.$api.errorsHandler.chats.getFriendOnChat)
             .then(() =>  this.pendingRequests.remove(idRequest))
       } else {
         this.friends = this.acceptedFriends
@@ -241,7 +240,7 @@ export default {
             this.chats.forEach(chat => console.debug(chat.users.map(r => r.user?.role)))
             return true
           })
-          .catch(this.handleRequestErrors.chats.getChats)
+          .catch(this.$store.$api.errorsHandler.chats.getChats)
           .then(processEnd => {
             this.processing = !processEnd
             this.pendingRequests.remove(idRequest)
@@ -304,7 +303,7 @@ export default {
             console.debug(this.chats)
             if(this._iSelectedChat(this.deleteChat.chat)) this.selectedChat = null
           })
-          .catch(this.handleRequestErrors.chats.deleteChat)
+          .catch(this.$store.$api.errorsHandler.chats.deleteChat)
     },
 
     /*LISTENERS PUSH MESSAGE */
@@ -320,13 +319,13 @@ export default {
           chat.started = true
         }
       } else {
-        console.warn('Chat ', chatInfo)
+        console.debug('Chat ', chatInfo)
         this.$store.dispatch('chats/one-without-messages', {chatID: chatInfo._id})
             .then(({data}) => {
               this.chats.unshift(data)
               console.debug(data.users.map(r => r.user.role))
            })
-           .catch(this.handleRequestErrors.chats.getNewChat)
+           .catch(this.$store.$api.errorsHandler.chats.getNewChat)
       }
     },
     onListenersReadMessages({messages, info}){

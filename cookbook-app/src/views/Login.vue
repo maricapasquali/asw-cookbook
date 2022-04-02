@@ -4,7 +4,7 @@
       <!-- LOGIN -->
       <wrap-loading v-model="onLogin.processing" >
         <b-card>
-          <div class="text-center"> <h1 class="text-primary"><em>{{ app_name }}</em></h1></div>
+          <div class="text-center"> <h1 class="text-primary"><em>{{ $appName }}</em></h1></div>
           <b-card-body>
             <b-alert :variant="onLogin.error.info? 'info': 'danger'" v-model="onLogin.error.show">{{onLogin.error.msg}}</b-alert>
             <b-form @submit.prevent="onLoginSubmit">
@@ -211,7 +211,7 @@ export default {
          })
          .catch(err =>{
            this.resetPassword.error.show = true
-           this.resetPassword.error.msg = this.handleRequestErrors.users.emailResetPassword(err)
+           this.resetPassword.error.msg = this.$store.$api.errorsHandler.users.emailResetPassword(err)
          })
          .finally(() => this.resetPassword.processing = false)
     },
@@ -228,7 +228,7 @@ export default {
           .catch(err => {
             this.onLogin.error.show = true
             this.onLogin.error.info = err.response?.status === 409
-            this.onLogin.error.msg = this.handleRequestErrors.session.login(err)
+            this.onLogin.error.msg = this.$store.$api.errorsHandler.session.login(err)
           })
           .then(() => this.onLogin.processing = false)
     }

@@ -1,4 +1,4 @@
-export default function (bus){
+export default function (bus, store){
 
     const options = {
         title: 'Cibo',
@@ -9,7 +9,7 @@ export default function (bus){
         console.debug('food create => ', notification)
         if(notification) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('notifications/add-unread')
+            store.commit('notifications/add-unread')
         }
         bus.$emit('food:create', notification)
     }

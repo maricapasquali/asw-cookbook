@@ -8,7 +8,7 @@ export default {
             }
         },
         _formatUserImage(image){
-            return image ? this.$api.images.path(image) : ''
+            return image ? this.$store.$api.serverInformation.images.path(image) : ''
         }
     }
 }

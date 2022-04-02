@@ -75,7 +75,7 @@ function _goToChat(user_id, callbackCreateChat) {
 
     this.$store.dispatch('chats/create', formData)
         .then(({data}) => data)
-        .catch(this.handleRequestErrors.chats.createChat)
+        .catch(this.$store.$api.errorsHandler.chats.createChat)
         .then(chat => {
             if(chat) {
                 if(isCallable(callbackCreateChat)) callbackCreateChat(chat)
