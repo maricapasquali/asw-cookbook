@@ -102,7 +102,7 @@ export default {
              if (data.total === 0) this.onError({ barcode: barcodeNumber, error: 'not found' })
              else this.$emit('found', data.items[0])
            })
-           .catch(err => this.handleRequestErrors.foods.searchFood(err, {_forbiddenPage: !this.isAccessibleArea }))
+           .catch(err => this.$store.$api.errorsHandler.foods.searchFood(err, {_forbiddenPage: !this.isAccessibleArea }))
 
      } else throw new Error('BarcodeSearch: Funzionalità non attivata.')
 
@@ -131,7 +131,7 @@ export default {
            })
            .catch(err => {
              this.foods = []
-             this.handleRequestErrors.foods.searchFood(err, {_forbiddenPage: !this.isAccessibleArea })
+             this.$store.$api.errorsHandler.foods.searchFood(err, {_forbiddenPage: !this.isAccessibleArea })
            })
       }
     },
@@ -152,7 +152,7 @@ export default {
       return await this.$store.dispatch('foods/findById', foodID)
                       .then(({data}) => data)
                       .catch(err => {
-                        this.handleRequestErrors.foods.getFood(err, {_forbiddenPage: !this.isAccessibleArea })
+                        this.$store.$api.errorsHandler.foods.getFood(err, {_forbiddenPage: !this.isAccessibleArea })
                         return { nutritional_values: {} }
                       })
     },

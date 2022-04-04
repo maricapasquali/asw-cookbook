@@ -71,15 +71,14 @@
 
 import {mapGetters} from "vuex";
 import NotFound from "../404";
-import {QueuePendingRequests} from "@api/request";
-import UserMixin from '@components/mixins/user.mixin'
+import {UserMixin, PendingRequestMixin} from "@mixins"
 
 export default {
   name: "OneUser",
   props: {
     user: String
   },
-  mixins: [UserMixin],
+  mixins: [UserMixin, PendingRequestMixin],
   components: {NotFound},
   computed: {
     areRecipesOthers(){
@@ -107,8 +106,6 @@ export default {
     return {
       userNotFound: false,
       _userIsSigned: null,
-
-      pendingRequests: null,
 
       /* User Recipes Section */
       recipesTotal: 0,
@@ -158,7 +155,7 @@ export default {
 
     getRecipes(currentPage, _limit){
       let idReq = 'recipes-of'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idReq)
+      let options = this.makeRequestOptions(idReq)
 
       const page = currentPage || 1
       const limit = _limit || this.recipePaginationOptions.limit
@@ -175,7 +172,7 @@ export default {
            if(!_limit) this.recipePaginationOptions.page = page
            console.debug('Recipes : ',  this.recipes)
          })
-         .catch(err => this.handleRequestErrors.recipes.getRecipe(err))
+         .catch(err => this.$store.$api.errorsHandler.recipes.getRecipe(err))
          .then(() => {
            this.pendingRequests.remove(idReq)
            this.recipesProcessing = false
@@ -196,7 +193,7 @@ export default {
     /* User Friends Section */
     getFriends(currentPage, _limit) {
       let idReq = 'friend-of'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idReq)
+      let options = this.makeRequestOptions(idReq)
 
       const page = currentPage || 1
       const limit = _limit || this.friendsPaginationOptions.limit
@@ -212,7 +209,7 @@ export default {
            if(!_limit) this.friendsPaginationOptions.page = page
            console.debug('Friends : ',  this.friends)
          })
-         .catch(this.handleRequestErrors.friends.getFriendOf)
+         .catch(this.$store.$api.errorsHandler.friends.getFriendOf)
          .then(() => {
            this.pendingRequests.remove(idReq)
            this.friendsProcessing = false
@@ -285,13 +282,10 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
-
     this.$bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))
     this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('One user cancel.')
     if(this.$data._userIsSigned) this.unsetListenersForUserSigned()
 
     this.$bus.$on('user:update:info', this.onUpdateUserInfoListeners.bind(this))

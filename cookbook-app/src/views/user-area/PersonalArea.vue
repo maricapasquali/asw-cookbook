@@ -28,7 +28,7 @@
 
 <script>
 
-import {mapActions, mapGetters} from "vuex";
+import {mapGetters} from "vuex";
 
 export default {
   name: "PersonalArea",
@@ -44,7 +44,7 @@ export default {
   },
   watch: {
     '$route'(val){
-      console.warn('change route ...', val)
+      console.debug('change route ...', val)
       this._selectActive()
     }
   },
@@ -54,7 +54,7 @@ export default {
 
     if(!this.accessToken) return this.$router.replace({ name: 'login' });
     if(this.user !== this.userIdentifier) {
-      this.handleRequestErrors.session.wrongUserSession()
+      this.$store.$api.errorsHandler.session.wrongUserSession()
       this.loading = true
     }
   },
@@ -82,9 +82,6 @@ export default {
     },
   },
   methods: {
-    ...mapActions({
-      requestNewAccessToken: 'session/requestNewAccessToken'
-    }),
     _mapping(id){
       return {
         id,

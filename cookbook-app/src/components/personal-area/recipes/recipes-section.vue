@@ -29,13 +29,12 @@
 
 <script>
 
-import {QueuePendingRequests} from "@api/request";
-import RecipeMixin from "@components/mixins/recipe.mixin"
+import {RecipeMixin, PendingRequestMixin} from "@mixins"
 import {mapGetters} from "vuex";
 
 export default {
   name: "recipes-section",
-  mixins: [RecipeMixin],
+  mixins: [RecipeMixin, PendingRequestMixin],
   data(){
     return {
       _vertical: false,
@@ -147,7 +146,7 @@ export default {
 
       let active = (this.active || 'shared')
       let idReq = active + '-recipe'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idReq, {message: active + ' recipe abort.'})
+      let options = this.makeRequestOptions(idReq, {message: active + ' recipe abort.'})
 
       const page = currentPage || 1
       const limit = _limit || this.currentItemTab.paginationOptions.limit
@@ -166,7 +165,7 @@ export default {
             console.debug('total = ', this.currentItemTab.total)
             return true
           })
-          .catch(err => this.handleRequestErrors.recipes.getRecipe(err, {_forbiddenPage: true}))
+          .catch(err => this.$store.$api.errorsHandler.recipes.getRecipe(err, {_forbiddenPage: true}))
           .then(processEnd => {
             this.processing = !processEnd
             this.loadOther = !processEnd
@@ -259,16 +258,12 @@ export default {
   },
 
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.setRecipeTabs()
 
     let isValidTab = this.tabs.find(t => t.type === this.active) || this.isAddRecipeTab
     if(!isValidTab) this.$router.replace({ query: { tab: 'shared' } })
 
     this.select()
-  },
-  beforeDestroy() {
-    this.pendingRequests.cancelAll((this.active || 'shared') + ' recipes cancel.')
   }
 }
 </script>

@@ -8,16 +8,21 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const {Hosting} = require('../commons/modules/hosting')
 const config = require('../environment/env.config')
 
-const proxyMiddleware = createProxyMiddleware({
+const optionsProxy =  {
     ssl: {
         key: fs.readFileSync(path.resolve("sslcert", "proxy.key.pem"), 'utf8'),
         cert: fs.readFileSync(path.resolve("sslcert", "proxy.cert.pem"), 'utf8')
     },
     target: config.server.origin,
-    secure: false // because in ssl there is self signed certificate
-})
+    secure: false, // because in ssl there is self signed certificate,
+    logLevel: config.mode === "development" ? "debug": "info"
+}
 
-app.use(/^\/(api|images|videos|socket.io)\/.*$/, proxyMiddleware);
+const proxyMiddleware = createProxyMiddleware(optionsProxy)
+const wsProxyMiddleware = createProxyMiddleware(Object.assign(optionsProxy, { ws: true }))
+
+app.use(/^\/(api|images|videos)\/.*$/, proxyMiddleware);
+app.use('/socket.io', wsProxyMiddleware);
 
 app.use(history())
 app.use(serveStatic(path.join(__dirname , "dist")));
@@ -34,4 +39,6 @@ new Hosting(app)
     .build()
     .listen((hosting) => {
         console.log(`Client running at ${hosting.origin}`);
+
+        hosting.server.on('upgrade', wsProxyMiddleware.upgrade);
     });

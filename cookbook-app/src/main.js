@@ -1,20 +1,12 @@
+// Import global utilities
+import "@utils"
+// Import Vue
 import Vue from 'vue'
-import router from '@router'
-import store from '@store'
-import App from '@/App'
-
-import * as configuration from "@environment/env.config";
-
+// Import Bootstrap Vue and Icon Plugin
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 // Import Bootstrap an BootstrapVue CSS files (order is important)
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-
-// Make BootstrapVue available throughout your project
-Vue.use(BootstrapVue)
-// Optionally install the BootstrapVue icon components plugin
-Vue.use(IconsPlugin)
-
 // Import Fort Awesome
 import { library } from '@fortawesome/fontawesome-svg-core'
 import {
@@ -33,37 +25,42 @@ import {
     faPlus
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-library.add(faBarcode, faMinus, faPlusCircle, faTimesCircle, faSearch,
-            faSearchMinus, faSearchPlus,faTimes, faBars, faUsers, faUndo, faBan, faPlus)
-Vue.component('font-awesome-icon', FontAwesomeIcon)
-Vue.config.productionTip = false
-
 // Import Vue Zommer component
 import VueZoomer from 'vue-zoomer'
-Vue.use(VueZoomer)
-
+// Import router
+import router from '@router'
+// Import store
+import store from '@store'
+// Import App view
+import App from '@/App'
 // Import my components
 import Components from "@components"
+// Import my Plugins
+import AppPlugins from '@plugins'
+// Import Environment Variables
+import * as envConfig from "@environment/env.config";
+
+// Make BootstrapVue available throughout your project
+Vue.use(BootstrapVue)
+// Optionally install the BootstrapVue icon components plugin
+Vue.use(IconsPlugin)
+
+library.add(faBarcode, faMinus, faPlusCircle, faTimesCircle, faSearch, faSearchMinus, faSearchPlus,faTimes, faBars, faUsers, faUndo, faBan, faPlus)
+
+Vue.component('font-awesome-icon', FontAwesomeIcon)
+
+Vue.config.productionTip = false
+
+Vue.use(VueZoomer)
+
 Vue.use(Components)
 
-// Import my event bus
-import EventBusPlugin from '@event-bus'
-Vue.use(EventBusPlugin)
+const storeInstance = store(envConfig)
 
-// Import my utils
-import AppPlugins from '@plugins'
-Vue.use(AppPlugins, { appName: configuration.appName })
-
-// Import my socket.io
-import SocketPlugin from '@plugins/socket'
-Vue.use(SocketPlugin)
-
-// Import my api
-import ApiPlugin from '@plugins/api'
-Vue.use(ApiPlugin, { serverConfiguration: configuration.server })
+Vue.use(AppPlugins, { configurationEnvironment: envConfig, store: storeInstance, router })
 
 new Vue({
     router,
-    store,
+    store: storeInstance,
     render: h => h(App),
 }).$mount('#app')

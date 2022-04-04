@@ -66,13 +66,12 @@
 </template>
 
 <script>
-import {QueuePendingRequests} from "@api/request";
-
+import {PendingRequestMixin} from "@mixins"
 export default {
   name: "reports-section",
+  mixins: [PendingRequestMixin],
   data(){
     return {
-      pendingRequests: null,
       processing: false,
       docsReported: [],
       docsDeleted: []
@@ -100,7 +99,7 @@ export default {
 
     getReports: function (){
       let _id = 'reported-comments'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
+      let options = this.makeRequestOptions(_id)
       this.processing = true
       this.$store.dispatch('comments/reported', {options})
          .then(({data}) => {
@@ -112,7 +111,7 @@ export default {
              else this.docsDeleted.push(comment)
            })
          })
-         .catch(this.handleRequestErrors.comments.getReportedComment)
+         .catch(this.$store.$api.errorsHandler.comments.getReportedComment)
          .finally(() => {
             this.processing = false
             this.pendingRequests.remove(_id)
@@ -131,7 +130,7 @@ export default {
             this.$socket.emit('comment:delete', comment._id)
             if(comment.user) this.$socket.emit('user:strike', comment.user._id)
          })
-         .catch(this.handleRequestErrors.comments.deleteComment)
+         .catch(this.$store.$api.errorsHandler.comments.deleteComment)
     },
     unreported(index){
       let comment = this.docsReported[index]
@@ -143,7 +142,7 @@ export default {
 
            this.$socket.emit('comment:unreport', comment._id)
          })
-         .catch(this.handleRequestErrors.comments.updateComment)
+         .catch(this.$store.$api.errorsHandler.comments.updateComment)
     },
 
     /*Listeners update*/
@@ -186,7 +185,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('comment:report', this.getReports.bind(this) )
 
     this.$bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
@@ -198,7 +196,6 @@ export default {
     this.getReports()
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all reported cancel.')
     this.$bus.$off('comment:report', this.getReports.bind(this) )
 
     this.$bus.$off('comment:delete',  this.renderDeleteComment.bind(this))

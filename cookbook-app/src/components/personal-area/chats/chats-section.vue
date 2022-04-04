@@ -34,9 +34,9 @@
         <p v-else>Nessuna chat aperta.</p>
       </b-col>
 
-      <b-col cols="12" sm="12" md="12" lg="4" class="px-0">
+      <b-col cols="12" sm="12" md="12" lg="4" class="pl-0 pr-2">
         <b-navbar toggleable="lg" class="w-100 px-0" >
-          <b-navbar-toggle ref="btn-chats-navigator" target="chat-items-navigator" v-if="!(isSearchModeChat && started.length===0)">
+          <b-navbar-toggle ref="btn-chats-navigator" target="chat-items-navigator" v-if="started.length">
             <template #default="{ expanded }">
               <b-icon v-if="expanded" icon="chevron-bar-up" variant="danger" title="Nascondi chat avviate"></b-icon>
               <b-icon v-else icon="chevron-bar-down" variant="primary" title="Mostra chat avviate"></b-icon>
@@ -61,7 +61,7 @@
       </b-col>
 
       <b-col v-show="showChatContainer" class="chat-container px-0 py-0" cols="12" sm="12" md="12" lg="8">
-        <chat v-if="selectedChat" v-model="selectedChat" class="h-100" @onReadMessages="onReadMessages" @start="onStartChat"/>
+        <chat v-if="selectedChat" v-model="selectedChat" class="w-100 h-100" @onReadMessages="onReadMessages" @start="onStartChat"/>
       </b-col>
     </b-row>
 
@@ -103,16 +103,14 @@
 
 <script>
 import {mapGetters} from "vuex";
-import ChatMixin from '@components/mixins/chat.mixin'
-import {QueuePendingRequests} from "@api/request";
+import {ChatMixin, PendingRequestMixin} from '@mixins'
 
 export default {
   name: "chats-section",
-  mixins: [ChatMixin],
+  mixins: [ChatMixin, PendingRequestMixin],
   data(){
     return {
       skeletons: 3,
-      pendingRequests: null,
       processing: true,
 
       selectedChat: null,
@@ -184,10 +182,10 @@ export default {
           console.debug('request get all accepted friend ..... ')
           this.justRequestFriend = true
           let idRequest = 'friend-signed-user'
-          let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
+          let options = this.makeRequestOptions(idRequest)
           this.$store.dispatch('friendships/own', { state: 'accepted', options })
               .then(({data}) => console.debug('retrieve own accepted friends.'))
-              .catch(this.handleRequestErrors.chats.getFriendOnChat)
+              .catch(this.$store.$api.errorsHandler.chats.getFriendOnChat)
               .then(() => this.pendingRequests.remove(idRequest))
         }
       }
@@ -218,14 +216,14 @@ export default {
     getFriends(){
       if(this.isAdmin){
         let idRequest = 'all-users'
-        let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
+        let options = this.makeRequestOptions(idRequest)
         this.$store.dispatch('users/all', {options})
             .then(({data}) => {
               this.friends = data.items.filter(u => u.signup === 'checked')
                   .map(user => ({user: {_id: user._id, userID: user.userID, img: user.information.img, country: user.information.country} }))
               console.debug('users => ', this.friends)
             })
-            .catch(this.handleRequestErrors.chats.getFriendOnChat)
+            .catch(this.$store.$api.errorsHandler.chats.getFriendOnChat)
             .then(() =>  this.pendingRequests.remove(idRequest))
       } else {
         this.friends = this.acceptedFriends
@@ -234,7 +232,7 @@ export default {
 
     getChats(){
       let idRequest = 'chats-own'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest)
+      let options = this.makeRequestOptions(idRequest)
       this.$store.dispatch('chats/own-without-message', {options})
           .then(({data}) => {
             this.chats = data.items
@@ -242,7 +240,7 @@ export default {
             this.chats.forEach(chat => console.debug(chat.users.map(r => r.user?.role)))
             return true
           })
-          .catch(this.handleRequestErrors.chats.getChats)
+          .catch(this.$store.$api.errorsHandler.chats.getChats)
           .then(processEnd => {
             this.processing = !processEnd
             this.pendingRequests.remove(idRequest)
@@ -305,7 +303,7 @@ export default {
             console.debug(this.chats)
             if(this._iSelectedChat(this.deleteChat.chat)) this.selectedChat = null
           })
-          .catch(this.handleRequestErrors.chats.deleteChat)
+          .catch(this.$store.$api.errorsHandler.chats.deleteChat)
     },
 
     /*LISTENERS PUSH MESSAGE */
@@ -321,13 +319,13 @@ export default {
           chat.started = true
         }
       } else {
-        console.warn('Chat ', chatInfo)
+        console.debug('Chat ', chatInfo)
         this.$store.dispatch('chats/one-without-messages', {chatID: chatInfo._id})
             .then(({data}) => {
               this.chats.unshift(data)
               console.debug(data.users.map(r => r.user.role))
            })
-           .catch(this.handleRequestErrors.chats.getNewChat)
+           .catch(this.$store.$api.errorsHandler.chats.getNewChat)
       }
     },
     onListenersReadMessages({messages, info}){
@@ -398,8 +396,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
-
     this.getFriends()
     this.getChats()
 
@@ -412,7 +408,6 @@ export default {
     this.$bus.$on('user:delete', this.onDeleteUser.bind(this))
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all chats cancel.')
     this.$bus.$off('push-message', this.onListenersPushMessage.bind(this))
     this.$bus.$off('read-message', this.onListenersReadMessages.bind(this))
     this.$bus.$off('chat:change:role', this.onListenerChangeRole.bind(this))

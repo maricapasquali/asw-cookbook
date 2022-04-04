@@ -25,7 +25,7 @@ export default {
     _getChat(){
       this.$store.dispatch('chats/one', { chatID: this.$route.params.chat_id })
           .then(this._getRecipe)
-          .catch(this.handleRequestErrors.chats.getChat)
+          .catch(this.$store.$api.errorsHandler.chats.getChat)
           .then(_notFound => this.notFound = { show: _notFound, asset: 'chat' })
     },
     _getRecipe(){
@@ -36,7 +36,7 @@ export default {
          })
          .catch(err => {
            this.recipe = null
-           this.handleRequestErrors.chats.getRecipeOnChat(err)
+           this.$store.$api.errorsHandler.chats.getRecipeOnChat(err)
          })
          .then(_notFound => this.notFound = { show: _notFound, asset: 'recipe' })
     }

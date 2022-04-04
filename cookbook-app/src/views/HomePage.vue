@@ -72,7 +72,7 @@
 
               <!-- Likes and Comments -->
               <template #footer>
-                <b-row align-h="between">
+                <b-row align-h="between" align-v=center>
                   <b-col>
                     <!-- Like of a RECIPE -->
                     <like v-model="doc.likes" :recipe="doc" :no-like="youNotMakeLike(ind)"/>
@@ -101,18 +101,16 @@
 
 <script>
 
-import UserMixin from "@components/mixins/user.mixin"
+import {UserMixin, PendingRequestMixin} from "@mixins"
 import {mapGetters} from "vuex";
-import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "HomePage",
-  mixins: [UserMixin],
+  mixins: [UserMixin, PendingRequestMixin],
   data: function (){
     return {
       skeletons: 5,
 
-      pendingRequests: null,
       newArrivals: {
         toRead: 0,
         total: 0
@@ -170,7 +168,7 @@ export default {
       console.log('POST pagination: ', {page, limit})
 
       let _id = 'all-shared'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id, {message: 'homepage old recipes abort.'})
+      let options = this.makeRequestOptions(_id, {message: 'homepage old recipes abort.'})
 
       if(currentPage) this.loadOther = true
 
@@ -185,7 +183,7 @@ export default {
             this.total = data.total
             if(!_limit) this.optionsPagination.page = page
          })
-         .catch(this.handleRequestErrors.recipes.allSharedRecipes)
+         .catch(this.$store.$api.errorsHandler.recipes.allSharedRecipes)
          .then(() => {
            if(currentPage) this.loadOther = false
            this.pendingRequests.remove(_id)
@@ -247,8 +245,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
-
     this.$bus.$on('recipe:create', this.onNewRecipeListeners.bind(this))
     this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
@@ -259,8 +255,6 @@ export default {
     this.getPost()
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('Homepage cancel.')
-
     this.$bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
     this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))

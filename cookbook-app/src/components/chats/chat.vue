@@ -71,20 +71,18 @@
 
 <script>
 import {mapGetters, mapMutations} from "vuex";
-import ChatMixin from '@components/mixins/chat.mixin'
-import RecipeMixin from '@components/mixins/recipe.mixin'
-import {QueuePendingRequests} from "@api/request";
+
+import {ChatMixin, RecipeMixin, PendingRequestMixin} from "@mixins"
 
 export default {
   name: "chat",
-  mixins: [ChatMixin, RecipeMixin],
+  mixins: [ChatMixin, RecipeMixin, PendingRequestMixin],
   props: {
     value: Object | Boolean,
     fromLink: Boolean
   },
   data(){
     return {
-      pendingRequests: null,
       messages: null,
 
       writeUsers: [],
@@ -287,7 +285,7 @@ export default {
               console.debug(description, ' from ', reader.userID)
               this.$socket.emit('chat:read', this.temporaryNameChat, messages)
             })
-            .catch(this.handleRequestErrors.messages.readMessages)
+            .catch(this.$store.$api.errorsHandler.messages.readMessages)
       }
     },
     receiveConfirmReadMessages(messages){
@@ -331,7 +329,7 @@ export default {
                   this.resetAttachment()
                   return true
                 })
-                .catch(this.handleRequestErrors.messages.createMessage)
+                .catch(this.$store.$api.errorsHandler.messages.createMessage)
                 .then(delivered => this._changeStateMyMessage({ delivered }))
           })
           .catch((e) => { console.error('NO UPDATE PERMISSION ', e); this._changeStateMyMessage({ delivered: false }); })
@@ -372,21 +370,19 @@ export default {
           this.$store.dispatch('chats/update-role', {chatID: chat._id, role })
                     .then(({data}) => {
                       console.log(data.description)
-                      let userRole = { user: this.userIdentifier, role }
-                      this.$socket.on('chat:change:role:ok', () => this.$bus.$emit('chat:change:role', chat._id, userRole))
-                      this.$socket.emit('chat:change:role', chat._id, userRole)
+                      this.$socket.emit('chat:change:role', chat._id, { user: this.userIdentifier, role })
                     })
-                    .catch(this.handleRequestErrors.chats.updateUserRoleInChat)
+                    .catch(this.$store.$api.errorsHandler.chats.updateUserRoleInChat)
         }
 
         if(chat.messages) this._initMessages(chat.messages)
         else {
           let idRequest = 'chat-messages'
           console.debug('GET MESSAGES ....')
-          let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest, {message: 'Chat messages abort.'})
+          let options = this.makeRequestOptions(idRequest, {message: 'Chat messages abort.'})
           this.$store.dispatch('chats/messages/all', {chatID: chat._id, options})
               .then(({data}) => this._initMessages(data))
-              .catch(this.handleRequestErrors.messages.listMessages)
+              .catch(this.$store.$api.errorsHandler.messages.listMessages)
               .finally(() => this.pendingRequests.remove(idRequest))
         }
 
@@ -406,13 +402,13 @@ export default {
 
     getAttachmentsRecipes(){
       let idRequest = 'attachments'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, idRequest, {message: 'Attachments abort.'})
+      let options = this.makeRequestOptions(idRequest, {message: 'Attachments abort.'})
       this.$store.dispatch('recipes/saved', {options})
           .then(({data}) =>{
             this.recipes = data.items;
             console.debug('Attachments = > ', data.items)
           })
-          .catch(this.handleRequestErrors.messages.getAttachments)
+          .catch(this.$store.$api.errorsHandler.messages.getAttachments)
           .finally(() => this.pendingRequests.remove(idRequest))
     },
 
@@ -460,7 +456,7 @@ export default {
                                               resolve()
                                            })
                                            .catch(err =>{
-                                              this.handleRequestErrors.messages.updatePermissionAttachment(err)
+                                              this.$store.$api.errorsHandler.messages.updatePermissionAttachment(err)
                                               reject(err)
                                            })
       } else {
@@ -479,7 +475,7 @@ export default {
                     return this.createObjectPreview(data, link)
                   })
                   .catch(err => {
-                    this.handleRequestErrors.messages.getAttachment(err)
+                    this.$store.$api.errorsHandler.messages.getAttachment(err)
                     return {link}
                   })
       }
@@ -502,14 +498,12 @@ export default {
 
     this.$bus.$on('user:update:info', this.onUpdateUserInfo.bind(this))
 
-    this.pendingRequests = QueuePendingRequests.create()
 
     console.log('Created: chat is  ', this.value, ', from link ', this.fromLink)
     this._initialization(this.value)
   },
 
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all retrieve chat request cancel')
 
     this.$socket.off('enter', this.enterChat.bind(this))
     this.$socket.off('leave', this.leaveChat.bind(this))

@@ -17,7 +17,7 @@
 <script>
 
 import {mapActions, mapGetters} from "vuex";
-import UserMixin from '@components/mixins/user.mixin'
+import {UserMixin} from '@mixins'
 export default {
   name: "like",
   mixins: [UserMixin],
@@ -97,7 +97,7 @@ export default {
                 else this.$socket.emit('unlike:recipe', this.recipe._id, like._id)
 
              })
-             .catch(this.handleRequestErrors.likes.makeOrUnmakeLike)
+             .catch(this.$store.$api.errorsHandler.likes.makeOrUnmakeLike)
 
         }
         else {
@@ -112,7 +112,7 @@ export default {
                   else this.$socket.emit('like:recipe', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
 
              })
-             .catch(this.handleRequestErrors.likes.makeOrUnmakeLike)
+             .catch(this.$store.$api.errorsHandler.likes.makeOrUnmakeLike)
         }
       }
     },

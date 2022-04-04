@@ -66,7 +66,7 @@
 
 import {mapGetters} from "vuex";
 
-import ChatMixin from '@components/mixins/chat.mixin'
+import {ChatMixin} from '@mixins'
 
 export default {
   name: "chat-item",

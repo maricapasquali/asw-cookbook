@@ -16,15 +16,16 @@ module.exports = {
                 '@environment': path.resolve(__dirname, "..", "environment"),
                 '@commons': path.resolve(__dirname, "..", "commons", "modules"),
                 '@': path.resolve(__dirname, 'src'),
-                '@components': path.resolve(__dirname, 'src/components'),
-                '@plugins': path.resolve(__dirname, 'src/plugins'),
+                '@api': path.resolve(__dirname, 'src/services/api'),
                 '@assets': path.resolve(__dirname, 'src/assets'),
-                '@views': path.resolve(__dirname, 'src/views'),
-                '~': path.resolve(__dirname, 'src/modules'),
+                '@components': path.resolve(__dirname, 'src/components'),
+                '@mixins': path.resolve(__dirname, 'src/mixins'),
+                '@plugins': path.resolve(__dirname, 'src/plugins'),
                 '@router': path.resolve(__dirname, 'src/router'),
+                '@services': path.resolve(__dirname, 'src/services'),
                 '@store': path.resolve(__dirname, 'src/store'),
-                '@api': path.resolve(__dirname, 'src/api'),
-                '@event-bus': path.resolve(__dirname, 'src/event-bus'),
+                '@utils': path.resolve(__dirname, 'src/utils'),
+                '@views': path.resolve(__dirname, 'src/views'),
             }
         },
         module: {
@@ -68,6 +69,7 @@ module.exports = {
             '^/socket.io': {
                 target: config.server.origin,
                 changeOrigin: true,
+                ws: true
             },
             '^/api': {
                 target: config.server.origin,

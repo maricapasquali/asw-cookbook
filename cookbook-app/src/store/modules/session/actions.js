@@ -1,8 +1,8 @@
 
 
 export default {
-    login({dispatch, commit}, credential){
-        return this._vm.$api.users
+    login({dispatch, commit, rootState}, credential){
+        return this.$api.users
                   .session
                   .login(credential)
                   .then(({data}) => {
@@ -20,19 +20,19 @@ export default {
                   })
     },
 
-    logout({dispatch, state, getters}){
+    logout({dispatch, state, getters, rootState}){
         if(!getters.isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return this._vm.$api.users.session.logout(state.user._id, state.accessToken)
+        return this.$api.users.session.logout(state.user._id, state.accessToken)
     },
 
-    requestNewAccessToken({commit, getters, dispatch, state}){
+    requestNewAccessToken({commit, getters, dispatch, state, rootState}){
         if(!getters.isLoggedIn) return dispatch('sayNotLoggedIn', null, { root: true })
-        return this._vm.$api.users
+        return this.$api.users
                   .session
                   .newAccessToken(state.user._id, { refresh_token: state.refreshToken }, state.accessToken)
                   .then(response => {
-                      if(response.status === 200) commit('set-access-token', response.data.access_token)
-                      if(response.status === 204) response.data = { access_token: state.refreshToken }
+                      if(response.status === 200 && state.accessToken !== response.data.access_token) commit('set-access-token', response.data.access_token)
+                      if(response.status === 204) response.data = { access_token: state.accessToken }
                       return response
                   })
                   .catch(error => {

@@ -1,4 +1,4 @@
-interface Validator<T> {
+export interface Validator<T> {
     regex: RegExp
     check(value: T): boolean
 }
