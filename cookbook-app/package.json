@@ -6,8 +6,7 @@
   "scripts": {
     "client:build:tsc": "tsc --build",
     "client:build:production": "vue-cli-service build --mode production",
-    "client:start": "node .",
-
+    "client:start": "cross-env NODE_ENV=production node .",
     "dev:client:tsc": "tsc --build -w",
     "dev:client:serve": "vue-cli-service serve",
     "dev:client:watches": "concurrently \"npm:dev:client:tsc\" \"npm:dev:client:serve\""
@@ -38,6 +37,7 @@
     "@babel/plugin-proposal-optional-chaining": "^7.16.7",
     "@vue/cli-service": "^4.5.13",
     "babel-loader": "^8.2.4",
+    "cross-env": "^7.0.3",
     "nodemon": "^2.0.15",
     "sass": "^1.38.2",
     "sass-loader": "^10.2.0",
