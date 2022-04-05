@@ -1,4 +1,4 @@
-export default function (bus){
+export default function (bus, store){
 
     const options = {
         title: 'Ricette',
@@ -9,7 +9,7 @@ export default function (bus){
         console.debug('recipe ', op , ' => ', { notification, data })
         if(notification) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('notifications/add-unread')
+            store.commit('notifications/add-unread')
         }
         bus.$emit('recipe:' + op, notification, data)
     }

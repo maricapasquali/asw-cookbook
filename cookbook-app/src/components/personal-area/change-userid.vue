@@ -80,7 +80,7 @@ export default {
             this.show = false
          })
          .catch(err => {
-           let message = this.handleRequestErrors.users.changeUserID(err)
+           let message = this.$store.$api.errorsHandler.users.changeUserID(err)
            if(message) this.error = {show: true, message}
          })
          .finally(() => this.processing = false)

@@ -94,7 +94,7 @@
 </template>
 <script>
 
-import UserMixin from '@mixins/user.mixin'
+import {UserMixin} from '@mixins'
 import {mapGetters} from "vuex";
 
 export default {
@@ -210,7 +210,7 @@ export default {
                  this.isLoggedIn ? {_id: this.userIdentifier, userID: this.username}: undefined)
            }
          })
-         .catch(this.handleRequestErrors.comments.updateComment)
+         .catch(this.$store.$api.errorsHandler.comments.updateComment)
     },
 
     /*RESPONSE*/
@@ -232,7 +232,7 @@ export default {
                { recipe: {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner} }), data)
            return true
          })
-         .catch(this.handleRequestErrors.comments.createCommentOrResponse)
+         .catch(this.$store.$api.errorsHandler.comments.createCommentOrResponse)
          .then(success => this.responding = {process: false, success})
     },
 
@@ -254,7 +254,7 @@ export default {
           this.changeMode = false
           return true
         })
-        .catch(this.handleRequestErrors.comments.updateComment)
+        .catch(this.$store.$api.errorsHandler.comments.updateComment)
         .then(success => this.updatingOrDeleting = {process: false, success})
       }
     },
@@ -270,7 +270,7 @@ export default {
            this.$socket.emit('comment:delete', this.comment._id)
            return true
          })
-         .catch(this.handleRequestErrors.comments.deleteComment)
+         .catch(this.$store.$api.errorsHandler.comments.deleteComment)
          .then(success => this.updatingOrDeleting = {process: false, success})
     },
 

@@ -1,13 +1,13 @@
-export default function (bus) {
+export default function (bus, store, router) {
 
     function addInShoppingList(point){
-        this.$store.commit("shopping-list/add", point)
+        store.commit("shopping-list/add", point)
     }
     function updatePointInShoppingList(point){
-        this.$store.commit("shopping-list/update", {pointID: point._id, checked: point.checked})
+        store.commit("shopping-list/update", {pointID: point._id, checked: point.checked})
     }
     function removePointInShoppingList(pointID){
-        this.$store.commit("shopping-list/remove", pointID)
+        store.commit("shopping-list/remove", pointID)
     }
 
     function addRecipePermission({recipe}){
@@ -49,18 +49,18 @@ export default function (bus) {
     function updateInfoUser(user_info){
         bus.$emit('user:update:info', user_info)
         // if it is my friend
-        this.$store.commit('friendships/update-user-info', user_info)
+        store.commit('friendships/update-user-info', user_info)
     }
 
     function deleteUser(id){
         console.debug('deleted user : ', id)
-        if(this.$store.getters["session/userIdentifier"] === id){
-            this.$store.dispatch("reset")
-            this.$router.replace({name: "homepage"})
+        if(store.getters["session/userIdentifier"] === id){
+            store.dispatch("reset")
+            router.replace({name: "homepage"})
         } else {
             bus.$emit('user:delete', id)
             // if it is my friend
-            this.$store.commit('friendships/remove', id)
+            store.commit('friendships/remove', id)
         }
     }
 

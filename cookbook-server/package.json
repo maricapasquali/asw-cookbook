@@ -5,14 +5,11 @@
   "main": "index.js",
   "scripts": {
     "server:build": "tsc --build",
-    "server:start": "node .",
-
+    "server:start": "cross-env NODE_ENV=production node .",
     "dev:server:tsc": "tsc --build -w",
     "dev:server:nodemon": "nodemon .",
-
     "dev:server:watches": "concurrently \"npm:dev:server:tsc\" \"npm:dev:server:nodemon\"",
-
-    "test": "mocha"
+    "test": "cross-env NODE_ENV=test mocha"
   },
   "nodemonConfig": {
     "ext": "js"
@@ -40,6 +37,7 @@
   },
   "devDependencies": {
     "chai": "^4.3.6",
+    "cross-env": "^7.0.3",
     "nodemon": "^2.0.15",
     "typescript": "^4.6.2"
   }

@@ -190,16 +190,16 @@
 <script>
 
 import {mapGetters} from "vuex";
-import {QueuePendingRequests} from "@api/request";
+import {PendingRequestMixin} from "@mixins"
 
 export default {
   name: "food-section",
+  mixins: [PendingRequestMixin],
   data(){
     return {
       skeleton: 6,
       _stacked: false,
 
-      pendingRequests: null,
       idRequest: 'foods-all',
       /* Shopping list */
       loadingSL: true,
@@ -293,7 +293,7 @@ export default {
               console.debug(this.shopping_list)
               this.$socket.emit('shopping-list:add', data)
            })
-           .catch(this.handleRequestErrors.shoppingList.createShoppingListPoint)
+           .catch(this.$store.$api.errorsHandler.shoppingList.createShoppingListPoint)
            .then(duplicate => {
                 if(duplicate && index !== -1) this.patchShoppingList(index, false)
            })
@@ -310,7 +310,7 @@ export default {
            console.debug(this.shopping_list)
            this.$socket.emit('shopping-list:update', point)
          })
-         .catch(this.handleRequestErrors.shoppingList.updateShoppingListPoint)
+         .catch(this.$store.$api.errorsHandler.shoppingList.updateShoppingListPoint)
     },
     removeFromShoppingList(index){
       let point = this.shopping_list[index]
@@ -320,14 +320,14 @@ export default {
             console.debug(this.shopping_list)
             this.$socket.emit('shopping-list:remove', point._id)
          })
-         .catch(this.handleRequestErrors.shoppingList.deleteShoppingListPoint)
+         .catch(this.$store.$api.errorsHandler.shoppingList.deleteShoppingListPoint)
     },
     getShoppingList(){
       if(this.shopping_list.length > 0) this.loadingSL = false
       else
         this.$store.dispatch('shopping-list/get')
            .then(({data}) => this.loadingSL = false)
-           .catch(this.handleRequestErrors.shoppingList.getShoppingList)
+           .catch(this.$store.$api.errorsHandler.shoppingList.getShoppingList)
     },
 
     // Foods
@@ -351,7 +351,7 @@ export default {
       this.pendingRequests.cancel(this.idRequest, 'search food abort.')
     },
     getFoods(ctx){
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+      let options = this.makeRequestOptions(this.idRequest)
 
       console.debug('ctx = ', ctx);
       let {perPage, currentPage} = ctx || {}
@@ -376,7 +376,7 @@ export default {
                     return items
                  })
                 .catch(err => {
-                  this.handleRequestErrors.foods.getFoods(err)
+                  this.$store.$api.errorsHandler.foods.getFoods(err)
                     return []
                 })
                 .finally(() =>{
@@ -463,7 +463,6 @@ export default {
   },
 
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     if(this.isSigned) this.getShoppingList()
 
     this.$bus.$on('food:create', this.onCreateFood.bind(this))
@@ -474,7 +473,6 @@ export default {
     this.$bus.$on('user:delete', this.onDeletedUserListeners.bind(this))
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('All Foods cancels.')
     this.$bus.$off('food:create', this.onCreateFood.bind(this))
     this.$bus.$off('food:update', this.onUpdateFood.bind(this))
 

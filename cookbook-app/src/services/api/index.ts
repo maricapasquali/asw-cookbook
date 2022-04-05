@@ -8,11 +8,11 @@ import chats from './chats'
 
 import methods, {MethodsAxios} from './methods'
 
-export default function (serverConfiguration){
-    let _methods: MethodsAxios = methods(serverConfiguration)
+export default function ({ serverConfiguration, store }){
+    let _methods: MethodsAxios = methods(serverConfiguration, store)
 
     return {
-        ..._methods.info,
+        serverInformation: _methods.info,
 
         users: users(_methods),
         friends: friends(_methods),

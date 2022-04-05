@@ -165,7 +165,7 @@ export default {
               this.$socket.emit('user:update:info', { _id: this.user._id, information: response.data.info } )
               this.$emit('save', response.data.info)
             })
-            .catch(this.handleRequestErrors.users.updateUser)
+            .catch(this.$store.$api.errorsHandler.users.updateUser)
             .finally(() => this.processing = false)
       }
     }

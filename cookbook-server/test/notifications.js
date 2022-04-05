@@ -1,12 +1,60 @@
 const assert = require('assert');
+const bcrypt = require('bcrypt');
+const {Types} = require("mongoose")
+const ObjectId = Types.ObjectId
 
-const {connect, disconnect} = require('../database')
+const {connect, disconnect, dropDatabase} = require('../database')
 const {create_notification} = require("../controllers/notification")
 const {Notification} = require("../models/schemas/notification")
+const {User} = require("../models");
 
 describe('Notification', function (){
-    before(connect)
-    after(disconnect)
+
+    const kyle = {
+        _id: ObjectId("623b9fd54a142c245c6de540"),
+        information: {
+            firstname: "kyle",
+            lastname: "smith",
+            email: "kyle@gmail.com"
+        },
+        credential: {
+            userID: "Kyle066",
+            hash_password: bcrypt.hashSync("password", 10)
+        },
+        signup: "checked"
+    }
+    const marica = {
+        _id: ObjectId("623b9fd54a142c245c6de541"),
+        information: {
+            firstname: "marica",
+            lastname: "pasquali",
+            email: "pasquali@gmail.com"
+        },
+        credential: {
+            userID: "maricapasquali",
+            hash_password: bcrypt.hashSync("password", 10)
+        },
+        signup: "checked"
+    }
+    const kira = {
+        _id: ObjectId("623b9fd54a142c245c6de542"),
+        information: {
+            firstname: "kira",
+            lastname: "green",
+            email: "green@gmail.com"
+        },
+        credential: {
+            userID: "kira01",
+            hash_password: bcrypt.hashSync("password", 10)
+        },
+        signup: "checked"
+    }
+
+    this.timeout(100000)
+
+    before(() => connect().then(() => User.insertMany([kyle, marica, kira])))
+    after(() => dropDatabase().then(() => disconnect()));
+
 
     it('not valid.', function (done){
 
@@ -23,7 +71,7 @@ describe('Notification', function (){
     it('valid.', function (done){
 
         create_notification({
-            user: '614c308bc2d03660623a59e2',
+            user: kyle._id,
             type: Notification.Type.USER_INFO,
             content: 'Le informazioni del tuo account sono cambiate.'
         }).then(result => {
@@ -36,12 +84,14 @@ describe('Notification', function (){
     it('valid with some info.', function (done){
 
         create_notification({
-            user: '61a8f8b04b42e70be03df4b3', // id admin
+            user: "admin",
             type: Notification.Type.REPORT,
             content: 'maricapasquali ha segnato il commento di \'kira\' nella ricetta \'Chocolate Cookie\'',
             otherInfo: {
-                reporterUser: '614c308bc2d03660623a59e2',
-                commentID: '61a8a102045443d03b27224a'
+                recipe: {_id: ObjectId('61a8a102045443d03b27224a')},
+                commentID: {_id: ObjectId('61a8a102045443d03b27224b')},
+                reporter: marica._id,
+                reported: kira._id,
             }
         }).then(result => {
             assert.ok(result)

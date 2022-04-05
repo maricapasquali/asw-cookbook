@@ -1,5 +1,4 @@
 import axios, {AxiosRequestConfig, AxiosResponse} from 'axios'
-import store from '../../store'
 
 declare module 'axios' {
     interface AxiosRequestConfig {
@@ -17,7 +16,7 @@ export type MethodsAxios = {
     erase: (pathname: string, config?: AxiosRequestConfig) => Promise<AxiosResponse>
 }
 
-export default function (serverConfiguration): MethodsAxios {
+export default function (serverConfiguration, store): MethodsAxios {
     const subDomain = serverConfiguration['sub-domain']
 
     const _serverInfo = {
@@ -51,7 +50,6 @@ export default function (serverConfiguration): MethodsAxios {
         console.debug("interceptors.request : pathname = ", pathname)
         return {
             ...config,
-            baseURL: config.baseURL,
             url: pathname,
         };
     })

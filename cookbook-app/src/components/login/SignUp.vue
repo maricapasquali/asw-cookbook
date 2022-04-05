@@ -271,7 +271,7 @@ export default {
          })
          .catch(err => {
             this.error.show = true
-            this.error.msg = this.handleRequestErrors.users.signUp(err)
+            this.error.msg = this.$store.$api.errorsHandler.users.signUp(err)
          })
          .then(() => this.processing = false)
     },

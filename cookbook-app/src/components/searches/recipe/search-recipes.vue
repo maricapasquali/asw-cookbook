@@ -149,13 +149,12 @@
 
 <script>
 
-import UserMixin from '@mixins/user.mixin'
+import {UserMixin, PendingRequestMixin} from "@mixins"
 import {mapGetters} from "vuex";
-import {QueuePendingRequests} from "@api/request";
 
 export default {
   name: "search-recipes",
-  mixins: [UserMixin],
+  mixins: [UserMixin, PendingRequestMixin],
   props: {
     withMap: {
       type: Boolean,
@@ -179,8 +178,6 @@ export default {
     return {
       _showMap: true,
       loading: true,
-
-      pendingRequests: null,
 
       countries: [],
       _showAllFilters: false,
@@ -279,7 +276,7 @@ export default {
 
     getNumberRecipesForCountry() {
       let _id = 'number-for-country'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
+      let options = this.makeRequestOptions(_id)
 
       this.$store.dispatch('recipes/number-for-country', { options })
          .then(({data}) => {
@@ -292,7 +289,7 @@ export default {
            console.debug('this.countries = ', this.countries)
            return true
          })
-         .catch(err => this.handleRequestErrors.recipes.getNumberRecipesForCountry(err))
+         .catch(err => this.$store.$api.errorsHandler.recipes.getNumberRecipesForCountry(err))
          .then(() => this.pendingRequests.remove(_id))
     },
 
@@ -398,7 +395,7 @@ export default {
       console.debug('Search = ', JSON.stringify(filters))
 
       let _id = 'search-in-shared'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id,{ message: 'Search recipes abort.' })
+      let options = this.makeRequestOptions(_id,{ message: 'Search recipes abort.' })
 
       let promiseSearch = undefined
       if(this.triggerSearch) promiseSearch = this.triggerSearch(filters, options)
@@ -414,7 +411,7 @@ export default {
             this.$emit('searching', data)
             return true
          })
-         .catch(err => this.handleRequestErrors.recipes.getRecipe(err, { _forbiddenPage: typeof this.triggerSearch !== 'undefined' }))
+         .catch(err => this.$store.$api.errorsHandler.recipes.getRecipe(err, { _forbiddenPage: typeof this.triggerSearch !== 'undefined' }))
          .then(processEnd => this.processingSearch = !processEnd)
          .then(() => this.pendingRequests.remove(_id))
          .then(() => this._goToResults() )
@@ -444,7 +441,7 @@ export default {
     },
 
     _addNumberRecipePerCountry(countryVal){
-      console.warn('COUNTRY NEW ', countryVal)
+      console.debug('COUNTRY NEW ', countryVal)
       let country = this.getCountryByValue(countryVal)
       if(country) {
         let index = this.countries.findIndex(i => i.value === countryVal)
@@ -494,7 +491,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$data._showAllFilters = this.withAllFiltersVisible
 
     if(this.withHistory) {
@@ -519,8 +515,6 @@ export default {
     }
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('Search recipes cancel operation.')
-
     if(this.showResults) {
       this.$bus.$off('recipe:create', this.onNewRecipeListeners.bind(this))
       this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))

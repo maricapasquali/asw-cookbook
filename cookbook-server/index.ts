@@ -25,7 +25,7 @@ app.use('/libs', express.static(path.join(__dirname, 'node_modules')))
 /**
  * DATABASE CONNECTION
  */
-database.connect()
+database.connect().then(() => console.log('Database is connected.'), err => console.error("Connection database fail.\n", err))
 
 /**
  * ROUTES

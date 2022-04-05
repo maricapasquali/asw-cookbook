@@ -547,7 +547,7 @@ export default {
 
               this.$socket.emit('unlike:recipe', recipe._id, like._id)
             })
-            .catch(this.handleRequestErrors.likes.makeOrUnmakeLike)
+            .catch(this.$store.$api.errorsHandler.likes.makeOrUnmakeLike)
       } else {
         console.log('DELETE RECIPE')
         this.$store.dispatch('recipes/remove', recipe._id)
@@ -558,7 +558,7 @@ export default {
 
               this.$socket.emit('recipe:delete', recipe)
             })
-            .catch(this.handleRequestErrors.recipes.deleteRecipe)
+            .catch(this.$store.$api.errorsHandler.recipes.deleteRecipe)
       }
     },
     afterErase(position) {

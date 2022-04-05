@@ -102,15 +102,13 @@
 <script>
 
 import {mapGetters} from "vuex";
-import ChatMixin from '@mixins/chat.mixin'
-import {QueuePendingRequests} from "@api/request";
+import {ChatMixin, PendingRequestMixin} from "@mixins"
 export default {
   name: "users-section",
-  mixins: [ChatMixin],
+  mixins: [ChatMixin, PendingRequestMixin],
   data(){
     return {
       _stacked: false,
-      pendingRequests: null,
       idRequest: 'users-all',
 
       pagination: {
@@ -217,7 +215,7 @@ export default {
       this.pendingRequests.cancel(this.idRequest, 'search user abort.')
     },
     getUser(ctx) {
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+      let options = this.makeRequestOptions(this.idRequest)
 
       this.pagination.isBusy = true
       let {currentPage, perPage} = ctx
@@ -238,7 +236,7 @@ export default {
                    return data.items.map(u => this.remapping(u))
                 })
                .catch(err => {
-                 this.handleRequestErrors.users.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
+                 this.$store.$api.errorsHandler.users.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
                  return []
                })
                .finally(() => {
@@ -292,13 +290,11 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('user:signup', this.fetchUsers.bind(this))
     this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
     this.$bus.$on('user:delete', this.fetchUsers.bind(this))
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('(admin) all users cancel.')
     this.$bus.$off('user:signup', this.fetchUsers.bind(this))
     this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
     this.$bus.$off('user:delete', this.fetchUsers.bind(this))

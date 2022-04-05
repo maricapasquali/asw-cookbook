@@ -1,5 +1,5 @@
 
-export default function (bus){
+export default function (bus, store){
 
     const options = {
         title: 'Mi piace',
@@ -10,7 +10,7 @@ export default function (bus){
         console.debug('like recipe => ', notification, like)
         if(notification.content) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('notifications/add-unread')
+            store.commit('notifications/add-unread')
         }
         bus.$emit('like:recipe', notification, like)
     }
@@ -19,7 +19,7 @@ export default function (bus){
         console.debug('like comment => ', notification, like)
         if(notification.content) {
             this.$bvToast.toast(notification.content, options)
-            this.$store.commit('notifications/add-unread')
+            store.commit('notifications/add-unread')
         }
         bus.$emit('like:comment', notification, like)
     }

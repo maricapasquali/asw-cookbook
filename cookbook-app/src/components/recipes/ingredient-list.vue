@@ -81,7 +81,7 @@ export default {
               console.debug(this.$store.getters["shopping-list/list"])
               this.$socket.emit('shopping-list:update', {_id: pointID, checked: false})
             })
-            .catch(this.handleRequestErrors.shoppingList.updateShoppingListPoint)
+            .catch(this.$store.$api.errorsHandler.shoppingList.updateShoppingListPoint)
       }
       else {
         this.addInShoppingList(alimentID)
@@ -91,7 +91,7 @@ export default {
               console.debug(this.$store.getters["shopping-list/list"])
               this.$socket.emit('shopping-list:add', data)
             })
-            .catch(this.handleRequestErrors.shoppingList.createShoppingListPoint)
+            .catch(this.$store.$api.errorsHandler.shoppingList.createShoppingListPoint)
       }
     },
     removeAlimentFromShoppingList(alimentID){
@@ -103,7 +103,7 @@ export default {
               console.debug(this.$store.getters["shopping-list/list"])
               this.$socket.emit('shopping-list:remove', pointID)
             })
-            .catch(this.handleRequestErrors.shoppingList.deleteShoppingListPoint)
+            .catch(this.$store.$api.errorsHandler.shoppingList.deleteShoppingListPoint)
       }
     },
 
