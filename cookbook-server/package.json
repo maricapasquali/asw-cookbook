@@ -9,7 +9,7 @@
     "dev:server:tsc": "tsc --build -w",
     "dev:server:nodemon": "nodemon .",
     "dev:server:watches": "concurrently \"npm:dev:server:tsc\" \"npm:dev:server:nodemon\"",
-    "test": "mocha"
+    "test": "cross-env NODE_ENV=test mocha"
   },
   "nodemonConfig": {
     "ext": "js"
