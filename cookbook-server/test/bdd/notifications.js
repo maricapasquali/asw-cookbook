@@ -1,60 +1,37 @@
 const assert = require('assert');
-const bcrypt = require('bcrypt');
-const {Types} = require("mongoose")
-const ObjectId = Types.ObjectId
+const {create_notification} = require("../../controllers/notification")
+const {Notification} = require("../../models/schemas/notification")
 
-const {connect, disconnect, dropDatabase} = require('../database')
-const {create_notification} = require("../controllers/notification")
-const {Notification} = require("../models/schemas/notification")
-const {User} = require("../models");
+const {
+    TIMEOUT_DATABASE,
+    isTestingMode,
+    ObjectId,
+    connectDatabase,
+    disconnectDatabase,
+    dropDatabase
+} = require("../helpers")
+const {
+    kira,
+    kyle,
+    marica,
+    insertSomeUsers,
+} = require("../helpers/notification.helpers")
 
 describe('Notification', function (){
 
-    const kyle = {
-        _id: ObjectId("623b9fd54a142c245c6de540"),
-        information: {
-            firstname: "kyle",
-            lastname: "smith",
-            email: "kyle@gmail.com"
-        },
-        credential: {
-            userID: "Kyle066",
-            hash_password: bcrypt.hashSync("password", 10)
-        },
-        signup: "checked"
-    }
-    const marica = {
-        _id: ObjectId("623b9fd54a142c245c6de541"),
-        information: {
-            firstname: "marica",
-            lastname: "pasquali",
-            email: "pasquali@gmail.com"
-        },
-        credential: {
-            userID: "maricapasquali",
-            hash_password: bcrypt.hashSync("password", 10)
-        },
-        signup: "checked"
-    }
-    const kira = {
-        _id: ObjectId("623b9fd54a142c245c6de542"),
-        information: {
-            firstname: "kira",
-            lastname: "green",
-            email: "green@gmail.com"
-        },
-        credential: {
-            userID: "kira01",
-            hash_password: bcrypt.hashSync("password", 10)
-        },
-        signup: "checked"
-    }
+    this.timeout(TIMEOUT_DATABASE)
 
-    this.timeout(100000)
+    before(function () {
+        if(!isTestingMode) {
+            console.log("All Tests ignored..")
+            this.skip()
+        }
+        return connectDatabase().then(() => insertSomeUsers())
+    })
 
-    before(() => connect().then(() => User.insertMany([kyle, marica, kira])))
-    after(() => dropDatabase().then(() => disconnect()));
-
+    after(() => {
+        if(isTestingMode) return dropDatabase().then(() => disconnectDatabase())
+    });
 
     it('not valid.', function (done){
 
@@ -88,8 +65,8 @@ describe('Notification', function (){
             type: Notification.Type.REPORT,
             content: 'maricapasquali ha segnato il commento di \'kira\' nella ricetta \'Chocolate Cookie\'',
             otherInfo: {
-                recipe: {_id: ObjectId('61a8a102045443d03b27224a')},
-                commentID: {_id: ObjectId('61a8a102045443d03b27224b')},
+                recipe: {_id: ObjectId() },
+                commentID: {_id: ObjectId() },
                 reporter: marica._id,
                 reported: kira._id,
             }
