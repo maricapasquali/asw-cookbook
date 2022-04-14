@@ -6,7 +6,7 @@ import * as _ from "lodash"
 export type DecodedTokenType = { _id: string, role: string }
 type TokenPayload = DecodedTokenType | any
 
-type Tokens = { access: string, refresh: string }
+export type Tokens = { access: string, refresh: string }
 type RevokeToken = Tokens | { access: string } | { refresh: string } | string
 
 export interface IFolderTokens {
@@ -133,7 +133,7 @@ export class JwtTokensManager implements IJwtTokensManager {
         console.debug('Verify token...')
         try {
             let decodedToken: DecodedTokenType = this.getDecodedToken(token)
-            return decodedToken && !this.tokens(decodedToken._id).isRevoked(token) && verify(token, this.privateKey)
+            return !!decodedToken && !this.tokens(decodedToken._id).isRevoked(token) && verify(token, this.privateKey)
         }catch (e){
             console.error(e)
             return false

@@ -19,6 +19,6 @@ export function disconnect(): Promise<void> {
     return mongoose.disconnect()
 }
 
-export function dropDatabase(): Promise<void> {
+export function drop(): Promise<void> {
     return mongoose.connection.db?.dropDatabase() || new Promise<any>((resolve, reject) => reject(new mongoose.Error("No Connection on a database.")))
 }

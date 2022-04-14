@@ -4,11 +4,12 @@ import * as path from 'path';
 import * as cors from 'cors';
 
 import * as config from "../environment/env.config"
-import {Hosting} from "../commons/modules/hosting"
+import {Hosting, HTTPSOptions} from "../commons/modules/hosting"
 import * as database from './database'
 import routes from './routes'
 import socket from './sockets'
 import {requestId} from './modules/middleware'
+import {Server} from "socket.io"
 
 const app = express();
 app.use(express.json());
@@ -36,16 +37,23 @@ routes(app)
  * SERVER INIT
  */
 const ServerConfig = config.server
-new Hosting(app)
-    .setHttpsOptions(() => {
-        return {
-            key: fs.readFileSync(path.join(__dirname,"sslcert", "privatekey.pem")),
-            cert: fs.readFileSync(path.join(__dirname,"sslcert", "cert.pem"))
-        }
-    })
+const optionsHttps: HTTPSOptions = {
+    key: fs.readFileSync(path.join(__dirname,"sslcert", "privatekey.pem")),
+    cert: fs.readFileSync(path.join(__dirname,"sslcert", "cert.pem"))
+}
+Hosting
+    .createHttpsServer(app, optionsHttps)
     .setHostName(ServerConfig.hostname)
     .setPort(ServerConfig.port)
-    .setSocket(socket)
+    .setSocket((server) => {
+        socket(new Server(server, {
+            cors: {
+                origin: config.client.origin,
+                methods: ["GET", "POST"],
+                credentials: true
+            }
+        }))
+    })
     .build()
     .listen((hosting) => {
         console.log(`Server running at ${hosting.origin}`);

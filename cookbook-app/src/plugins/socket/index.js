@@ -67,6 +67,15 @@ export default function installSocket(Vue, {bus, store, router}) {
         router.replace({name: 'homepage'})
     })
 
+    socketIO.on('connect_error', error => {
+        if(error.data){
+            let expired = error.data.expired
+            let message = error.message
+            console.error("connect_error : message: ", message, ", expired ", expired)
+            bus.$emit(expired ? 'show:error:unauthenticated' : 'show:error:forbidden', {message})
+        }
+    })
+
     Vue.prototype.$socket = socketIO
 
     console.log('Install plugin socket ...')

@@ -1,6 +1,8 @@
 import {futureDateFromNow, hasKey} from "../utilities";
 
 export interface IAccessLocker {
+    maxAttempts: number
+    tryAgainInMinutes: number
     insert(ip: string): void
     checkAttempts(ip: string): boolean
     reduceAttempts(ip: string): void
@@ -21,6 +23,12 @@ export class AccessLocker implements IAccessLocker {
         this._tryAgainInMinutes = tryAgainInMinutes || this.TRY_AGAIN_DEFAULT
     }
 
+    get maxAttempts(){
+        return this._maxAttempts
+    }
+    get tryAgainInMinutes(){
+        return this._tryAgainInMinutes
+    }
 
     insert(ip: string): void {
         if(!hasKey(this._ips, ip)) this._ips[ip] = <LockerType> { number: 0, again: 0 }
@@ -28,7 +36,7 @@ export class AccessLocker implements IAccessLocker {
 
     checkAttempts(ip: string): boolean {
         this.insert(ip)
-        return !this.isMaxAttempts(ip) || this.isTimeToTryAgain(ip);
+        return !this.isMaxOrHighAttempts(ip) || this.isTimeToTryAgain(ip);
     }
 
     reduceAttempts(ip: string): void {
@@ -62,10 +70,14 @@ export class AccessLocker implements IAccessLocker {
     }
 
     private isMaxAttempts(ip: string): boolean {
+        return this._ips[ip]?.number === this._maxAttempts
+    }
+
+    private isMaxOrHighAttempts(ip: string): boolean {
         return this._ips[ip]?.number >= this._maxAttempts
     }
 
     private isTimeToTryAgain(ip: string): boolean {
-        return this.isMaxAttempts(ip) && this._ips[ip]?.again < Date.now()
+        return this.isMaxOrHighAttempts(ip) && this._ips[ip]?.again < Date.now()
     }
 }

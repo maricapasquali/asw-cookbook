@@ -27,13 +27,13 @@ app.use('/socket.io', wsProxyMiddleware);
 app.use(history())
 app.use(serveStatic(path.join(__dirname , "dist")));
 
-new Hosting(app)
-    .setHttpsOptions(() => {
-        return {
-            key: fs.readFileSync(path.join(__dirname,"sslcert","privatekey.pem")),
-            cert: fs.readFileSync(path.join(__dirname,"sslcert","cert.pem"))
-        }
-    })
+const optionsHttps = {
+    key: fs.readFileSync(path.join(__dirname,"sslcert","privatekey.pem")),
+    cert: fs.readFileSync(path.join(__dirname,"sslcert","cert.pem"))
+}
+
+Hosting
+    .createHttpsServer(app, optionsHttps)
     .setHostName(config.client.hostname)
     .setPort(config.client.port)
     .build()
