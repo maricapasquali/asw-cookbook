@@ -1,4 +1,4 @@
-import {Middlewares, normalUser} from "../../base";
+import {Middlewares, checkNormalRBAC} from "../../base";
 import {RBAC} from "../../../modules/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
@@ -6,17 +6,17 @@ import {Types} from "mongoose";
 import {retrieveComment} from "../comment";
 
 function add_like_on_recipe(req, res, next){
-    normalUser({
+    checkNormalRBAC({
         operation: Operation.CREATE,
-        subject: Resource.LIKE,
+        resource: Resource.LIKE,
         others: ((decodedToken, param_id) => decodedToken._id == param_id)
     })(req, res, next)
 }
 
 function remove_like_on_recipe(req, res, next){
-    normalUser({
+    checkNormalRBAC({
         operation: Operation.DELETE,
-        subject: Resource.LIKE,
+        resource: Resource.LIKE,
         others: ((decodedToken, param_id) => decodedToken._id == param_id)
     })(req, res, next)
 }
@@ -25,9 +25,9 @@ function add_like_on_comment(req, res, next){
     retrieveComment(req, res, (err?: any): any => {
         if(err) return next(err)
         const comment = req.locals.comment
-        return normalUser({
+        return checkNormalRBAC({
             operation: Operation.CREATE,
-            subject: Resource.LIKE,
+            resource: Resource.LIKE,
             others: decodedToken => (comment.user && decodedToken._id == comment.user._id)
         })(req, res, next)
     })
@@ -40,9 +40,9 @@ function remove_like_on_comment(req, res, next){
         const like = comment.likes.find(l => l._id == req.params.likeID)
         if(!like) return next({status: 404, description: 'Like is not found'})
         req.locals.like = like
-        return normalUser({
+        return checkNormalRBAC({
             operation: Operation.DELETE,
-            subject: Resource.LIKE,
+            resource: Resource.LIKE,
             others: decodedToken => (decodedToken && like.user._id != decodedToken._id)
         })(req, res, next)
     })

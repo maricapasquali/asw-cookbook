@@ -1,23 +1,23 @@
-import {Middlewares, restrictedUser, normalUser} from "../base";
+import {Middlewares, checkRestrictedRBAC, checkNormalRBAC} from "../base";
 import {RBAC} from "../../modules/rbac";
 import Resource = RBAC.Resource;
 import Operation = RBAC.Operation;
 import {Food} from "../../models";
 
 export function create(): Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.CREATE,
-        subject: Resource.FOOD,
+        resource: Resource.FOOD,
         ignoreValidationParamId: true
     })
 }
 
 export function list(): Middlewares {
-    return normalUser()
+    return checkNormalRBAC()
 }
 
 export function one(): Middlewares {
-    return normalUser()
+    return checkNormalRBAC()
 }
 
 export function update(): Middlewares {
@@ -31,9 +31,9 @@ export function update(): Middlewares {
 
                        req.locals.food = food
 
-                       return restrictedUser({
+                       return checkRestrictedRBAC({
                             operation: Operation.UPDATE,
-                            subject: Resource.FOOD,
+                            resource: Resource.FOOD,
                             others: (decodedToken) =>  decodedToken._id != food.owner._id,
                             ignoreValidationParamId: true
                        })(req, res, next)

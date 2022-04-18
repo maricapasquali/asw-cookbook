@@ -1,8 +1,8 @@
 import {
     checkRequestHeaders,
     Middlewares,
-    normalUser,
-    restrictedUser,
+    checkNormalRBAC,
+    checkRestrictedRBAC,
     Middleware
 } from "../base";
 import {RBAC} from "../../modules/rbac";
@@ -47,30 +47,30 @@ export function uploadImageAndTutorial(): Middleware {
 export function create(): Middlewares {
     return [
         checkRequestHeaders({'content-type': 'multipart/form-data'}),
-        restrictedUser({
+        checkRestrictedRBAC({
             operation: Operation.CREATE,
-            subject: RBAC.Resource.RECIPE,
+            resource: RBAC.Resource.RECIPE,
             others: (decodedToken, param_id) => decodedToken._id != param_id
         })
     ]
 }
 
 export function all(): Middlewares {
-    return normalUser()
+    return checkNormalRBAC()
 }
 
 export function one_shared(): Middlewares {
-    return normalUser()
+    return checkNormalRBAC()
 }
 
 export function numberRecipesForCountry(): Middlewares {
-    return normalUser()
+    return checkNormalRBAC()
 }
 
 export function erase(): Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.DELETE,
-        subject: RBAC.Resource.RECIPE
+        resource: RBAC.Resource.RECIPE
     })
 }
 
@@ -80,9 +80,9 @@ export function update(): Middlewares {
             const { field } = req.query
             checkRequestHeaders({'content-type': UpdateAction.isPermissionType(field) ? 'application/json' : 'multipart/form-data' })(req, res, next)
         },
-        restrictedUser({
+        checkRestrictedRBAC({
             operation: Operation.UPDATE,
-            subject: RBAC.Resource.RECIPE
+            resource: RBAC.Resource.RECIPE
         })
     ]
 }
@@ -90,11 +90,11 @@ export function update(): Middlewares {
 export function list(): Middlewares {
     return function (req, res, next) {
         let {type} = req.query
-        if(type === 'shared') normalUser()(req, res, next)
+        if(type === 'shared') checkNormalRBAC()(req, res, next)
         else
-            restrictedUser({
+            checkRestrictedRBAC({
                 operation: Operation.RETRIEVE,
-                subject: RBAC.Resource.RECIPE,
+                resource: RBAC.Resource.RECIPE,
                 others: (decodedToken, param_id) => decodedToken._id != param_id
             })(req, res, next)
     }
@@ -107,12 +107,12 @@ export function one(): Middlewares {
             let filters = { owner: req.params.id }
             if(!req.locals) req.locals = { filters }
             else req.locals.filters = filters
-            normalUser()(req, res, next)
+            checkNormalRBAC()(req, res, next)
         }
         else {
-            restrictedUser({
+            checkRestrictedRBAC({
                 operation: Operation.RETRIEVE,
-                subject: RBAC.Resource.RECIPE,
+                resource: RBAC.Resource.RECIPE,
                 others: (decodedToken, param_id) => decodedToken._id != param_id
             })(req, res, next)
         }
