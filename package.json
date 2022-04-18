@@ -8,7 +8,6 @@
     "build": "cd ./commons && npm run modules:build && cd ../cookbook-server && npm run server:build && cd ../cookbook-app && npm run client:build:tsc && npm run client:build:production",
     "server:start": "cd ./cookbook-server && npm run server:start",
     "client:start": "cd ./cookbook-app && npm run client:start",
-
     "dev:server:start": "cd ./cookbook-server && npm run dev:server:watches",
     "dev:client:start": "cd ./cookbook-app && npm run dev:client:watches"
   },

@@ -1,12 +1,37 @@
 const assert = require('assert');
+const {create_notification} = require("../../controllers/notification")
+const {Notification} = require("../../models/schemas/notification")
 
-const {connect, disconnect} = require('../database')
-const {create_notification} = require("../controllers/notification")
-const {Notification} = require("../models/schemas/notification")
+const {
+    TIMEOUT_DATABASE,
+    isTestingMode,
+    ObjectId,
+    connectDatabase,
+    disconnectDatabase,
+    dropDatabase
+} = require("../helpers")
+const {
+    kira,
+    kyle,
+    marica,
+    insertSomeUsers,
+} = require("../helpers/notification.helpers")
 
 describe('Notification', function (){
-    before(connect)
-    after(disconnect)
+
+    this.timeout(TIMEOUT_DATABASE)
+
+    before(function () {
+        if(!isTestingMode) {
+            console.log("All Tests ignored..")
+            this.skip()
+        }
+        return connectDatabase().then(() => insertSomeUsers())
+    })
+
+    after(() => {
+        if(isTestingMode) return dropDatabase().then(() => disconnectDatabase())
+    });
 
     it('not valid.', function (done){
 
@@ -23,7 +48,7 @@ describe('Notification', function (){
     it('valid.', function (done){
 
         create_notification({
-            user: '614c308bc2d03660623a59e2',
+            user: kyle._id,
             type: Notification.Type.USER_INFO,
             content: 'Le informazioni del tuo account sono cambiate.'
         }).then(result => {
@@ -36,12 +61,14 @@ describe('Notification', function (){
     it('valid with some info.', function (done){
 
         create_notification({
-            user: '61a8f8b04b42e70be03df4b3', // id admin
+            user: "admin",
             type: Notification.Type.REPORT,
             content: 'maricapasquali ha segnato il commento di \'kira\' nella ricetta \'Chocolate Cookie\'',
             otherInfo: {
-                reporterUser: '614c308bc2d03660623a59e2',
-                commentID: '61a8a102045443d03b27224a'
+                recipe: {_id: ObjectId() },
+                commentID: {_id: ObjectId() },
+                reporter: marica._id,
+                reported: kira._id,
             }
         }).then(result => {
             assert.ok(result)

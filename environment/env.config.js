@@ -39,7 +39,7 @@ if(process.env.DOCKER_CONTAINER_ENV) {
     port_client = parseInt(process.env.COOKBOOK_CLIENT_PORT || process.env.VUE_APP_COOKBOOK_CLIENT_PORT) || 5000
 }
 
-const databaseURI = process.env.DATABASE_URI || "mongodb://localhost:27017/cookbook"
+const databaseURI = (process.env.NODE_ENV === "test" ? process.env.DATABASE_TEST_URI || "mongodb://localhost:27017/cookbook-test" : process.env.DATABASE_URI || "mongodb://localhost:27017/cookbook" )
 
 const server_origin = `${protocol_server}://${hostname_server}:${port_server}`
 const api_pathname = "/api"

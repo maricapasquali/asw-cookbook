@@ -1,12 +1,9 @@
 import {Notification, User} from "../../models";
-import {accessManager, getRestrictedUser, pagination} from "../utils.controller";
-import {RBAC} from "../../modules/rbac";
 import {Types} from "mongoose";
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 import {INotification} from "../../models/schemas/notification";
-import Subject = RBAC.Subject;
-import Operation = RBAC.Operation;
 import {DecodedTokenType} from "../../modules/jwt.token";
+import {Pagination} from "../../modules/pagination";
 
 function notificationUser(decodedToken: DecodedTokenType): Array<any> {
     return accessManager.isAdminUser(decodedToken) ? [decodedToken.role] : [decodedToken._id, Types.ObjectId(decodedToken._id)];
@@ -24,21 +21,16 @@ export function list_notification(req, res){
             return res.status(400).json('Query \'readed\' must be a boolean')
         }
     }
-    const user = getRestrictedUser(req, res, {
-        operation: Operation.RETRIEVE,
-        subject: Subject.NOTIFICATION,
-        others: (decodedToken => decodedToken._id !== id)
-    })
-    if(user){
-        const filters = typeof readed === 'boolean' ? { read: readed }: {}
-        pagination(
-            Notification.find(filters)
-                        .where('user').in(notificationUser(user))
-                        .sort({ timestamp: -1, _id: -1 }),
-            page && limit ? { page: +page, limit: +limit } : undefined
-        ).then(result => res.status(200).json(result),
-               err => res.status(500).json({code: err.code, description: err.message}))
-    }
+    const user = req.locals.user
+
+    const filters = typeof readed === 'boolean' ? { read: readed }: {}
+    Pagination.ofQueryDocument(
+        Notification.find(filters)
+            .where('user').in(notificationUser(user))
+            .sort({ timestamp: -1, _id: -1 }),
+        page && limit ? { page: +page, limit: +limit } : undefined
+    ).then(result => res.status(200).json(result),
+        err => res.status(500).json({code: err.code, description: err.message}))
 }
 
 export function update_notification(req, res){
@@ -48,19 +40,14 @@ export function update_notification(req, res){
     let { read } = req.body
     if(typeof read !== 'boolean') return res.status(400).json({ description: 'Body required field \'read: boolean\' '})
 
-    const user = getRestrictedUser(req, res, {
-        operation: Operation.UPDATE,
-        subject: Subject.NOTIFICATION,
-        others: (decodedToken => decodedToken._id !== id)
-    })
-    if(user){
-        Notification.updateOne({ user: { $in: notificationUser(user) }, _id: notificationID }, { read: read })
-                    .then(result => {
-                        if(result.n === 0) return res.status(404).json({ description: 'Notification is not found.' })
-                        return res.status(200).json({ description: 'Notification marked as ' + (read ? 'read.': 'unread.') })
-                    },
-                    err => res.status(500).json({code: err.code, description: err.message}))
-    }
+    const user = req.locals.user
+
+    Notification.updateOne({ user: { $in: notificationUser(user) }, _id: notificationID }, { read: read })
+        .then(result => {
+                if(result.n === 0) return res.status(404).json({ description: 'Notification is not found.' })
+                return res.status(200).json({ description: 'Notification marked as ' + (read ? 'read.': 'unread.') })
+            },
+            err => res.status(500).json({code: err.code, description: err.message}))
 }
 
 export function delete_notification(req, res){
@@ -68,19 +55,14 @@ export function delete_notification(req, res){
     if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     if(!Types.ObjectId.isValid(notificationID)) return res.status(400).json({ description: 'Required a valid \'notificationID\''})
 
-    const user = getRestrictedUser(req, res, {
-        operation: Operation.DELETE,
-        subject: Subject.NOTIFICATION,
-        others: (decodedToken => decodedToken._id !== id)
-    })
-    if(user){
-        Notification.deleteOne({ user: { $in: notificationUser(user) }, _id: notificationID })
-                    .then(result => {
-                        if(result.n === 0) return res.status(404).json({ description: 'Notification is not found.' })
-                        return res.status(200).json({description: 'Notification has been deleted.'})
-                    },
-                    err => res.status(500).json({code: err.code, description: err.message}))
-    }
+    const user = req.locals.user
+
+    Notification.deleteOne({ user: { $in: notificationUser(user) }, _id: notificationID })
+        .then(result => {
+                if(result.n === 0) return res.status(404).json({ description: 'Notification is not found.' })
+                return res.status(200).json({description: 'Notification has been deleted.'})
+            },
+            err => res.status(500).json({code: err.code, description: err.message}))
 }
 
 export async function create_notification(document: INotification | any): Promise<INotification> {

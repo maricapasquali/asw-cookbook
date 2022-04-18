@@ -1,17 +1,18 @@
-import * as commentController from '../../../controllers/recipe/comment'
+import {commentController} from '../../../controllers'
+import {commentMiddleware} from '../../../middlewares'
 
 export default function (app){
 
     app.route('/api/comments-reported')
-       .get(commentController.list_reported_comments)
+       .get(commentMiddleware.list_reported(), commentController.list_reported_comments)
 
     app.route('/api/users/:id/recipes/:recipeID/comments')
-        .post(commentController.writeComment)
+        .post(commentMiddleware.writeCommentOnRecipe(), commentController.writeComment)
 
     app.route('/api/users/:id/recipes/:recipeID/comments/:commentID')
-        .patch(commentController.update_comment)
-        .delete(commentController.remove_comment)
+        .patch(commentMiddleware.update(), commentController.update_comment)
+        .delete(commentMiddleware.remove(), commentController.remove_comment)
 
     app.route('/api/users/:id/recipes/:recipeID/comments/:commentID/responses')
-       .post(commentController.writeComment)
+       .post(commentMiddleware.writeResponseOnComment(), commentController.writeComment)
 }
