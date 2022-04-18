@@ -1,4 +1,3 @@
-import {tokensManager} from "../../../controllers/utils.controller";
 import {ExtendedError} from "socket.io/dist/namespace";
 
 export type UserInformationType = {

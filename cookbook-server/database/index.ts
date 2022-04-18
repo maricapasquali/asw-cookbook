@@ -1,7 +1,6 @@
 import * as mongoose from "mongoose";
-import * as config from "../../environment/env.config";
 
-let CONNECTION_URI: string = config.database.uri
+let CONNECTION_URI: string = configuration.database.uri
 //console.log(CONNECTION_URI)
 
 const CONNECTION_OPTIONS: object = {

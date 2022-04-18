@@ -5,10 +5,8 @@ import * as express from "express";
 import * as fs from "fs";
 import * as  path from "path";
 import sockets from "../../sockets";
-import * as env from "../../../environment/env.config";
 import {Hosting} from "../../../commons/modules/hosting";
 import {Chat, User} from "../../models";
-import {tokensManager} from "../../controllers/utils.controller";
 import {ChatPopulationPipeline, IChat} from "../../models/schemas/chat";
 import Rooms from "../../sockets/rooms";
 import {ChatInfo} from "../../sockets/chat";
@@ -166,8 +164,8 @@ export const insertSomeUsers = (): Promise<any> => User.insertMany(usersIntoData
 
 export const startServer = (): Promise<void> => new Promise((resolve, reject) => {
 
-    const serverPort: number = env.server.port
-    const serverHostname: string = env.server.hostname
+    const serverPort: number = configuration.server.port
+    const serverHostname: string = configuration.server.hostname
     const optionsHTTPS = {
         key: fs.readFileSync(path.join(__dirname, "..", "..", "sslcert", "privatekey.pem")),
         cert: fs.readFileSync(path.join(__dirname, "..", "..", "sslcert", "cert.pem")),

@@ -1,10 +1,7 @@
 import * as bcrypt from 'bcrypt'
-import {accessManager, getRestrictedUser, tokensManager, extractAuthorization} from "../../utils.controller";
 import {User} from "../../../models";
 import {SignUp, Strike, IUser} from "../../../models/schemas/user";
 import {RBAC} from "../../../modules/rbac";
-import Operation = RBAC.Operation;
-import Subject = RBAC.Subject;
 import {Types} from "mongoose";
 import ObjectId = Types.ObjectId
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
@@ -13,7 +10,8 @@ import {AccessLocker} from "../../../modules/access.locker";
 const locker = new AccessLocker(5, 15) //max attempts 5 & try again in 15 minutes
 
 export function login(req, res){
-    const {userID, password} = extractAuthorization(req.headers)
+    const {userID, password} = req.locals
+
     if(!userID && !password) return res.status(400).json({description: 'userID and password are required.'})
     if(!userID) return res.status(400).json({description: 'userID is required.'})
     if(!password) return res.status(400).json({description: 'password is required.'})
@@ -71,31 +69,25 @@ export function logout(req, res){
     let {id} = req.params
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
 
-    const decoded_token = getRestrictedUser(req, res, {
-        operation: Operation.DELETE,
-        subject: Subject.SESSION,
-        others: decodedToken => decodedToken._id !== id
-    })
-    if(decoded_token){
-        User.findOne()
-            .where('signup').equals(SignUp.State.CHECKED)
-            .where('_id').equals(id)
-            .then(user => {
-                if(!user) return res.status(404).json({description: 'User not found'})
+    const decoded_token = req.locals.user
 
-                if(isAlreadyLoggedOut(user)) return res.status(204).send()
+    User.findOne()
+        .where('signup').equals(SignUp.State.CHECKED)
+        .where('_id').equals(id)
+        .then(user => {
+            if(!user) return res.status(404).json({description: 'User not found'})
 
-                user.credential.lastAccess = Date.now()
-                user.save().then(() => {
+            if(isAlreadyLoggedOut(user)) return res.status(204).send()
 
-                    let {access_token} = extractAuthorization(req.headers)
-                    if(access_token) tokensManager.tokens(decoded_token._id).revoke({access: access_token})
+            user.credential.lastAccess = Date.now()
+            user.save().then(() => {
 
-                    return res.status(200).json({logout: true})
-                }, err => res.status(500).send({description: err.message}))
+                tokensManager.tokens(decoded_token._id).revoke({access: req.locals.access_token})
 
-            }, err => res.status(500).json({description: err.message}))
-    }
+                return res.status(200).json({logout: true})
+            }, err => res.status(500).send({description: err.message}))
+
+        }, err => res.status(500).json({description: err.message}))
 }
 
 //use token
@@ -103,7 +95,7 @@ export function update_access_token(req, res){
     let { id } = req.params
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     let { refresh_token } = req.body
-    let { access_token } = extractAuthorization(req.headers)
+    let access_token = req.locals.access_token
 
     if(!access_token) return res.status(400).json({description: 'Missing access token'})
     if(!refresh_token) return res.status(400).json({description: 'Missing refresh token'})
@@ -117,7 +109,7 @@ export function update_access_token(req, res){
         return res.status(401).json({description: 'Refresh token was expired. Please make a new signin request'})
     }
 
-    if(!accessManager.isAuthorized(decoded_rToken.role, RBAC.Operation.UPDATE, RBAC.Subject.SESSION, decoded_rToken._id !== id))
+    if(!accessManager.isAuthorized(decoded_rToken.role, RBAC.Operation.UPDATE, RBAC.Resource.SESSION, decoded_rToken._id !== id))
         return res.status(403).json({description: 'User is unauthorized to update session.'})
 
     User.findOne()

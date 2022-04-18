@@ -1,19 +1,20 @@
+import "./modules/global"
+
 import * as express from 'express'
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cors from 'cors';
+import {Server} from "socket.io";
 
-import * as config from "../environment/env.config"
 import {Hosting, HTTPSOptions} from "../commons/modules/hosting"
 import * as database from './database'
 import routes from './routes'
 import socket from './sockets'
-import {requestId} from './modules/middleware'
-import {Server} from "socket.io"
+import {requestId} from './middlewares'
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: config.client.origin })) //used to enable HTTPS requests from a different source
+app.use(cors({ origin: configuration.client.origin })) //used to enable HTTPS requests from a different source
 app.use(requestId)
 
 const views = path.join(__dirname ,'views')
@@ -36,7 +37,7 @@ routes(app)
 /**
  * SERVER INIT
  */
-const ServerConfig = config.server
+const ServerConfig = configuration.server
 const optionsHttps: HTTPSOptions = {
     key: fs.readFileSync(path.join(__dirname,"sslcert", "privatekey.pem")),
     cert: fs.readFileSync(path.join(__dirname,"sslcert", "cert.pem"))
@@ -48,7 +49,7 @@ Hosting
     .setSocket((server) => {
         socket(new Server(server, {
             cors: {
-                origin: config.client.origin,
+                origin: configuration.client.origin,
                 methods: ["GET", "POST"],
                 credentials: true
             }

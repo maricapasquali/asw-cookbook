@@ -1,5 +1,4 @@
 import {Document, Schema} from "mongoose";
-import {EmailValidator} from "../../../../commons/modules/validator";
 import {RBAC} from "../../../modules/rbac";
 import Role = RBAC.Role;
 
@@ -126,7 +125,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
             type: String,
             required: false,
             default: Role.SIGNED,
-            enum: Role.value(),
+            enum: Role.values(),
         },
         lastAccess: { type: Number, required: false, default: undefined },
     },

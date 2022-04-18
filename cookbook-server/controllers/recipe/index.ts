@@ -1,38 +1,14 @@
-import * as path from "path";
-import {FileUploader} from "../../modules/uploader";
-import {decodeToArray, randomString} from "../../modules/utilities";
+import {decodeToArray} from "../../modules/utilities";
 import {Query, Types} from "mongoose";
 import {Food, Recipe, User} from "../../models";
-
-import {
-    checkRequestHeaders,
-    existById,
-    FileConfigurationImage,
-    FileConfigurationVideo,
-    fileUploader,
-    getRestrictedUser, getUser, paginationOf,
-} from '../utils.controller'
+import { existById } from '../../database/utils'
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
-import {RBAC} from "../../modules/rbac";
-
-import FileType = FileUploader.FileType;
-import Operation = RBAC.Operation;
 import {IPermission} from "../../models/schemas/recipe/permission";
 import GrantedType = IPermission.GrantedType;
-
-import {pagination} from "../utils.controller"
-import {DecodedTokenType} from "../../modules/jwt.token";
+import {Pagination} from "../../modules/pagination";
 import {IRecipe, RecipePopulationPipeline} from "../../models/schemas/recipe";
-
+import {UpdateAction} from "../../middlewares/recipe"
 const RecipeType: Array<string> = ['shared', 'saved',  'loved', 'shared-in-chat']
-
-function authorized(req, res, options: { operation: RBAC.Operation, others?: (decodedToken: DecodedTokenType) => boolean}): DecodedTokenType | false {
-    return getRestrictedUser(req, res, {operation: options.operation, subject: RBAC.Subject.RECIPE, others: options.others})
-}
-
-function noAuthorizationForOther(id: string | Types.ObjectId){
-    return decodedToken => decodedToken._id != id
-}
 
 async function getBody(req: any, res: any): Promise<any> {
     console.log('get RECIPE BODY ... ')
@@ -95,30 +71,6 @@ function getFilters(query: any, user?: string): object {
     return filters
 }
 
-
-export function uploadImageAndTutorial(){
-    let _configurationImage = {
-        ...FileConfigurationImage, ...{
-            newFileName: function (file: any){
-                return 'recipe-' + randomString(30) + path.extname(file.originalname)
-            }
-        }
-    }
-
-    let _configurationVideo = {...FileConfigurationVideo, ...{
-            newFileName: function (file: any){
-                return 'tutorial-' + randomString(30) + path.extname(file.originalname)
-            }
-        }}
-
-    return fileUploader.mixed(
-        [
-            { name: 'img', maxCount: 1, type: FileType.IMAGE },
-            { name: 'tutorial', maxCount: 1, type: FileType.VIDEO }
-        ],
-        [_configurationImage, _configurationVideo])
-}
-
 function sendPopulatedRecipe(recipe: IRecipe, res: any, status: number){
     recipe.populate(RecipePopulationPipeline, function (err, recipe){
         if(err) return res.status(500).json({description: err.message})
@@ -126,30 +78,26 @@ function sendPopulatedRecipe(recipe: IRecipe, res: any, status: number){
     })
 }
 export function create_recipe(req, res){
-    if(checkRequestHeaders(req, res, {'content-type': 'multipart/form-data'})){
-        let {id} = req.params
-        if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+    let {id} = req.params
+    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
 
-        if(authorized(req, res, {operation: Operation.CREATE, others: noAuthorizationForOther(id) })){
-            existById(User, [id])
-                .then(() => {
-                    getBody(req, res)
-                        .then(recipeBody => {
-                            recipeBody.owner = req.params.id
-                            new Recipe(recipeBody)
-                                .save()
-                                .then(recipe => sendPopulatedRecipe(recipe, res, 201),
-                                    err => {
-                                        if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
-                                        if(MongooseDuplicateError.is(err)) return res.status(409).json({ description: 'Recipe has been already inserted' })
-                                        return res.status(500).json({ code: 0, description: err.message })
-                                    }
-                                )
+    existById(User, [id])
+        .then(() => {
+            getBody(req, res)
+                .then(recipeBody => {
+                    recipeBody.owner = req.params.id
+                    new Recipe(recipeBody)
+                        .save()
+                        .then(recipe => sendPopulatedRecipe(recipe, res, 201),
+                            err => {
+                                if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
+                                if(MongooseDuplicateError.is(err)) return res.status(409).json({ description: 'Recipe has been already inserted' })
+                                return res.status(500).json({ code: 0, description: err.message })
+                            }
+                        )
 
-                        }, err => console.error(err))
-                }, ids => res.status(404).json({description: 'User ('+ids[0]+') is not found.'}))
-        }
-    }
+                }, err => console.error(err))
+        }, ids => res.status(404).json({description: 'User ('+ids[0]+') is not found.'}))
 }
 
 function queryListRecipes(user: string, type: string, filters: object): Query<IRecipe[], IRecipe, {}, IRecipe> {
@@ -189,35 +137,28 @@ export function list_recipes(req, res){
     existById(User, [id])
         .then(() => {
 
-            const retrieveRecipes = () => {
+            let filters = getFilters(req.query, id)
 
-                let filters = getFilters(req.query, id)
+            let paginationOptions = page && limit ? {page: +page, limit: +limit,  skip: +skip}: undefined
 
-                let paginationOptions = page && limit ? {page: +page, limit: +limit,  skip: +skip}: undefined
+            let promise;
 
-                let promise;
+            if(type === "loved"){
+                let timestampMyLike = (recipe: IRecipe) => recipe.likes.find(l => l.user?._id == id)?.timestamp
 
-                if(type === "loved"){
-                    let timestampMyLike = (recipe: IRecipe) => recipe.likes.find(l => l.user?._id == id)?.timestamp
-
-                    promise = queryListRecipes(id, type, filters)
-                                .then((likesRecipes) => {
-                                    likesRecipes.sort((l1, l2) => timestampMyLike(l2) - timestampMyLike(l1)) // descending sort
-                                    return Promise.resolve(paginationOf(likesRecipes, paginationOptions))
-                                }, err => Promise.reject(err))
-                } else {
-                    promise = pagination(
-                        queryListRecipes(id, type, filters).sort({ updatedAt: -1 }),
-                        paginationOptions
-                    )
-                }
-
-                promise.then(paginationResult => res.status(200).json(paginationResult),
-                    err => res.status(500).json({code: err.code || 0, description: err.message}))
+                promise = queryListRecipes(id, type, filters)
+                    .then((likesRecipes) => {
+                        likesRecipes.sort((l1, l2) => timestampMyLike(l2) - timestampMyLike(l1)) // descending sort
+                        return Promise.resolve(Pagination.ofArray(likesRecipes, paginationOptions))
+                    }, err => Promise.reject(err))
+            } else {
+                promise = Pagination.ofQueryDocument(
+                    queryListRecipes(id, type, filters).sort({ updatedAt: -1 }),
+                    paginationOptions
+                )
             }
 
-            if(type === 'shared') getUser(req, res).then(user => retrieveRecipes(), err => console.error(err))
-            else if(authorized(req, res, {operation: Operation.RETRIEVE, others: noAuthorizationForOther(id) })) retrieveRecipes()
+            promise.then(paginationResult => res.status(200).json(paginationResult), err => res.status(500).json({code: err.code || 0, description: err.message}))
 
         }, ids => res.status(404).json({description: 'User ('+ids[0]+') is not found.'}))
 }
@@ -225,19 +166,15 @@ export function list_recipes(req, res){
 export function one_shared_recipe(req, res){
     let {recipeID} = req.params
     if(!Types.ObjectId.isValid(recipeID))  return res.status(400).json({ description: 'Required a valid \'recipeID\''})
-    getUser(req, res)
-        .then(user => {
 
-            Recipe.findOne(req.locals && req.locals.filters)
-                .where('_id').equals(recipeID)
-                .where('shared').equals(true)
-                .select('-permission')
-                .then(recipe => {
-                    if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-                    return  res.status(200).json(recipe)
-                }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-
-        }, err => console.error(err))
+    Recipe.findOne(req.locals && req.locals.filters)
+        .where('_id').equals(recipeID)
+        .where('shared').equals(true)
+        .select('-permission')
+        .then(recipe => {
+            if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
+            return  res.status(200).json(recipe)
+        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
 }
 
 export function one_recipe(req, res){
@@ -250,173 +187,161 @@ export function one_recipe(req, res){
     console.debug({...req.params, ...req.query})
     switch (type){
         case 'shared':
-            req.locals = { filters: { owner: id } }
             one_shared_recipe(req, res)
             break
         default: {
-            if(authorized(req, res, {operation: Operation.RETRIEVE, others: noAuthorizationForOther(id) })){
-                let query: Query<IRecipe, IRecipe, {}, IRecipe> = null
-                switch (type){
-                    case 'saved':
-                        query = Recipe.findOne()
-                                      .where('_id').equals(recipeID)
-                                      .where('owner').equals(id)
-                                      .where('shared').equals(false)
-                        break
-                    case 'loved':
-                        query = Recipe.findOne()
-                                       .where('_id').equals(recipeID)
-                                       .where('shared').equals(true)
-                                       .where('likes.user').equals(Types.ObjectId(id))
-                                       .select('-permission')
-                        break
-                    case 'shared-in-chat':
-                        query = Recipe.findOne()
-                                       .where('_id').equals(recipeID)
-                                       .where('permission.user').equals(id)
-                                       .where('owner').ne(id)
-                        break
-                    default: {
-                        query = Recipe.findOne()
-                                      .where('_id').equals(recipeID)
-                                      .where('permission.user').equals(id)
-                    }
-
-                    query
-                        .then(recipe => {
-                            if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-                            return  res.status(200).json(recipe)
-                        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+            let query: Query<IRecipe, IRecipe, {}, IRecipe> = null
+            switch (type){
+                case 'saved':
+                    query = Recipe.findOne()
+                        .where('_id').equals(recipeID)
+                        .where('owner').equals(id)
+                        .where('shared').equals(false)
+                    break
+                case 'loved':
+                    query = Recipe.findOne()
+                        .where('_id').equals(recipeID)
+                        .where('shared').equals(true)
+                        .where('likes.user').equals(Types.ObjectId(id))
+                        .select('-permission')
+                    break
+                case 'shared-in-chat':
+                    query = Recipe.findOne()
+                        .where('_id').equals(recipeID)
+                        .where('permission.user').equals(id)
+                        .where('owner').ne(id)
+                    break
+                default: {
+                    query = Recipe.findOne()
+                        .where('_id').equals(recipeID)
+                        .where('permission.user').equals(id)
                 }
             }
+            query
+                .then(recipe => {
+                    if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
+                    return  res.status(200).json(recipe)
+                }, err => res.status(500).json({code: err.code || 0, description: err.message}))
         }
             break;
     }
 }
 
 function update_actual_recipe(req, res){
-    if(checkRequestHeaders(req, res, {'content-type': 'multipart/form-data'})){
-        let {id, recipeID} = req.params
-        if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-        if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
-        if(Object.keys(req.body).length === 0) return res.status(400).json({ description: 'Required body'})
+    let {id, recipeID} = req.params
+    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+    if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
+    if(Object.keys(req.body).length === 0) return res.status(400).json({ description: 'Required body'})
 
-        const decodedToken = authorized(req, res, {operation: Operation.UPDATE})
-        if(decodedToken) {
-            getBody(req, res)
-                .then(updated => {
-                    if(Object.keys(updated).length === 0) return res.status(400).json({
-                        description: 'Required body have to contain: '+
-                            'img?: string, tutorial?: string, '+
-                            'name?: string, ingredients?: array, preparation?: string note?: string, '+
-                            'shared?: boolean, country?: string, category?: string, diet?: string'
-                    })
-                    Recipe.findOne()
-                        .where('_id').equals(recipeID)
-                        .where('owner').equals(id)
-                        .then(doc => {
-                            if(!doc) return res.status(404).json({description: 'Recipe is not found'})
+    const decodedToken = req.locals.user
 
-                            if(!(decodedToken._id == doc.owner._id || doc.permission.find(p => p.user._id == decodedToken._id && GrantedType.isWritePermission(p.granted))))
-                                return res.status(403).json({description: 'User is not allowed to update this resource'})
+    getBody(req, res)
+        .then(updated => {
+            if(Object.keys(updated).length === 0) return res.status(400).json({
+                description: 'Required body have to contain: '+
+                    'img?: string, tutorial?: string, '+
+                    'name?: string, ingredients?: array, preparation?: string note?: string, '+
+                    'shared?: boolean, country?: string, category?: string, diet?: string'
+            })
+            Recipe.findOne()
+                .where('_id').equals(recipeID)
+                .where('owner').equals(id)
+                .then(doc => {
+                    if(!doc) return res.status(404).json({description: 'Recipe is not found'})
 
-                            updated.updatedAt = Date.now()
-                            let newDoc = new Recipe(Object.assign(doc, updated))
-                            newDoc.save()
-                                .then(_doc => sendPopulatedRecipe(_doc, res, 200),
-                                    err => {
-                                        if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
-                                        if(MongooseDuplicateError.is(err)) return res.status(409).json({ description: "Shared recipe already exists with this name" })
-                                        return res.status(500).json({code: err.code || 0, description: err.message})
-                                    })
-                        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-                }, err => console.error(err))
-        }
-    }
+                    if(!(decodedToken._id == doc.owner._id || doc.permission.find(p => p.user._id == decodedToken._id && GrantedType.isWritePermission(p.granted))))
+                        return res.status(403).json({description: 'User is not allowed to update this resource'})
+
+                    updated.updatedAt = Date.now()
+                    let newDoc = new Recipe(Object.assign(doc, updated))
+                    newDoc.save()
+                        .then(_doc => sendPopulatedRecipe(_doc, res, 200),
+                            err => {
+                                if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
+                                if(MongooseDuplicateError.is(err)) return res.status(409).json({ description: "Shared recipe already exists with this name" })
+                                return res.status(500).json({code: err.code || 0, description: err.message})
+                            })
+                }, err => res.status(500).json({code: err.code || 0, description: err.message}))
+        }, err => console.error(err))
 }
 
 function update_permission_recipe(req, res){
-    if(checkRequestHeaders(req, res, {'content-type': 'application/json'})){
-        const {id, recipeID} = req.params
-        if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-        if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
+    const {id, recipeID} = req.params
+    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+    if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
 
-        const err_ms_empty = "Permission must be array and have at least one element"
-        const permission = req.body.permission
+    const err_ms_empty = "Permission must be array and have at least one element"
+    const permission = req.body.permission
 
-        if(!permission) return res.status(400).json({ description:  err_ms_empty })
-        const _availableGranted = IPermission.GrantedType.values().map(g => g.toString())
-        _availableGranted.push('revoke')
-        if(!permission.every(p => p.user)) return res.status(400).json({ description: 'Elements of \'Permission\' must be of the form : { user: string, granted?: string } with granted in ' + _availableGranted })
+    if(!permission) return res.status(400).json({ description:  err_ms_empty })
+    const _availableGranted = IPermission.GrantedType.values().map(g => g.toString())
+    _availableGranted.push('revoke')
+    if(!permission.every(p => p.user)) return res.status(400).json({ description: 'Elements of \'Permission\' must be of the form : { user: string, granted?: string } with granted in ' + _availableGranted })
 
-        console.debug(permission)
+    console.debug(permission)
 
-        existById(User, permission.map(p => p.user))
-            .then(() =>{
-                const decodedToken = authorized(req, res, { operation: Operation.UPDATE })
-                if(decodedToken) {
-                    Recipe.findOne()
-                        .where('_id').equals(recipeID)
-                        .then(recipe => {
+    existById(User, permission.map(p => p.user))
+        .then(() => {
+            const decodedToken = req.locals.user
 
-                            if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-                            if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
-                                return res.status(403).json({ description: 'User is not allowed to update permissions.' })
+            Recipe.findOne()
+                .where('_id').equals(recipeID)
+                .then(recipe => {
 
-                            const _revoke = permission.filter(p => p.granted === 'revoke')
-                            const _update = permission.filter(p => p.granted !== 'revoke')
-                            const _unChanged: number[] = []
-                            const _unRevoked: number[] = []
-                            console.debug('permission to remove ', JSON.stringify(_revoke))
-                            console.debug('permission to update ', JSON.stringify(_update))
+                    if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
+                    if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
+                        return res.status(403).json({ description: 'User is not allowed to update permissions.' })
 
-                            _revoke.forEach(p => {
-                                let index = recipe.permission.findIndex(pp => pp.user._id == p.user)
-                                if(index !== -1) recipe.permission.splice(index, 1)
-                                else _unRevoked.push(index)
+                    const _revoke = permission.filter(p => p.granted === 'revoke')
+                    const _update = permission.filter(p => p.granted !== 'revoke')
+                    const _unChanged: number[] = []
+                    const _unRevoked: number[] = []
+                    console.debug('permission to remove ', JSON.stringify(_revoke))
+                    console.debug('permission to update ', JSON.stringify(_update))
+
+                    _revoke.forEach(p => {
+                        let index = recipe.permission.findIndex(pp => pp.user._id == p.user)
+                        if(index !== -1) recipe.permission.splice(index, 1)
+                        else _unRevoked.push(index)
+                    })
+
+                    _update.map(p => ({ user: p.user, granted: p.granted || IPermission.GrantedType.READ }))
+                        .forEach(p => {
+                            console.log('permission ', JSON.stringify(permission))
+                            let index = recipe.permission.findIndex(pp => pp.user._id == p.user)
+                            if(index === -1) recipe.permission.push(p)
+                            else if(p.granted != recipe.permission[index].granted) recipe.permission.splice(index, 1, p)
+                            else _unChanged.push(index)
+                        })
+                    console.debug('_unChanged', _unChanged, ', _unRevoked', _unRevoked)
+
+                    if(_unChanged.length === _update.length && _unRevoked.length === _revoke.length) return res.status(204).send()
+
+                    recipe.updatedAt = Date.now()
+                    recipe.save()
+                        .then(_doc => {
+                                _doc.populate(RecipePopulationPipeline, function (err, populateRecipe) {
+                                    if(err) return res.status(500).json({description: err.message})
+                                    res.status(200).json({ description: 'Permission has been updated', updatedRecipe: populateRecipe })
+                                })
+                            },
+                            err => {
+                                if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
+                                return res.status(500).json({ code: err.code || 0, description: err.message })
                             })
 
-                            _update.map(p => ({ user: p.user, granted: p.granted || IPermission.GrantedType.READ }))
-                                   .forEach(p => {
-                                        console.log('permission ', JSON.stringify(permission))
-                                        let index = recipe.permission.findIndex(pp => pp.user._id == p.user)
-                                        if(index === -1) recipe.permission.push(p)
-                                        else if(p.granted != recipe.permission[index].granted) recipe.permission.splice(index, 1, p)
-                                        else _unChanged.push(index)
-                                   })
-                            console.debug('_unChanged', _unChanged, ', _unRevoked', _unRevoked)
+                }, err => res.status(500).json({code: err.code || 0, description: err.message}))
 
-                            if(_unChanged.length === _update.length && _unRevoked.length === _revoke.length) return res.status(204).send()
-
-                            recipe.updatedAt = Date.now()
-                            recipe.save()
-                                  .then(_doc => {
-                                          _doc.populate(RecipePopulationPipeline, function (err, populateRecipe) {
-                                              if(err) return res.status(500).json({description: err.message})
-                                              res.status(200).json({ description: 'Permission has been updated', updatedRecipe: populateRecipe })
-                                          })
-                                      },
-                                      err => {
-                                        if(MongooseValidationError.is(err)) return res.status(400).json({ description: err.message })
-                                        return res.status(500).json({ code: err.code || 0, description: err.message })
-                                      })
-
-                        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-                }
-            }, err => {
-                if(Array.isArray(err)) res.status(404).json({description: 'Users [' + err +'] are not founds.'})
-                else res.status(400).json({ description: err_ms_empty })
-            })
-    }
+        }, err => {
+            if(Array.isArray(err)) res.status(404).json({description: 'Users [' + err +'] are not founds.'})
+            else res.status(400).json({ description: err_ms_empty })
+        })
 }
 
-enum UpdateType {
-    PERMISSION = 'permission'
-}
 export function update_recipe(req, res){
     const { field } = req.query
-    switch (field as UpdateType){
-        case UpdateType.PERMISSION:
+    switch (field as UpdateAction){
+        case UpdateAction.PERMISSION:
             return update_permission_recipe(req, res)
         default:
             return update_actual_recipe(req, res)
@@ -428,52 +353,41 @@ export function delete_recipe(req, res){
     if(!Types.ObjectId.isValid(id))  return res.status(400).json({ description: 'Required a valid \'id\''})
     if(!Types.ObjectId.isValid(recipeID))  return res.status(400).json({ description: 'Required a valid \'recipeID\''})
 
-    const decodedToken = authorized(req, res, { operation: Operation.DELETE })
-    if(decodedToken){
-        Recipe.findOne()
-            .where('_id').equals(recipeID)
-            .then(recipe =>{
-                if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
+    const decodedToken = req.locals.user
+    Recipe.findOne()
+        .where('_id').equals(recipeID)
+        .then(recipe =>{
+            if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
 
-                if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
-                    return res.status(403).json({description: 'User is not allowed to delete this resource'})
+            if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
+                return res.status(403).json({description: 'User is not allowed to delete this resource'})
 
-                recipe.remove()
-                    .then(doc => res.status(200).json({description: 'Recipe has been deleted', deletedDoc: doc}),
-                        err => res.status(500).json({code: err.code || 0, description: err.message}) )
+            recipe.remove()
+                .then(doc => res.status(200).json({description: 'Recipe has been deleted', deletedDoc: doc}),
+                    err => res.status(500).json({code: err.code || 0, description: err.message}) )
 
-            }, err => res.status(500).json({code: err.code || 0, description: err.message}))
-    }
+        }, err => res.status(500).json({code: err.code || 0, description: err.message}))
 }
 
 export function list_all_recipes(req, res){
-    getUser(req, res)
-        .then(user => {
 
-            let {page, limit, skip} = req.query
+    let {page, limit, skip} = req.query
 
-            let filters = getFilters(req.query)
-            pagination(
-                Recipe.find(filters).sort({ updatedAt: -1 }).select('-permission'),
-                page && limit ? {page: +page, limit: +limit, skip: +skip}: undefined,
-            )
-            .then(recipes => res.status(200).json(recipes),
-                  err => res.status(500).json({code: err.code || 0, description: err.message}))
-
-        }, err => console.error(err))
+    let filters = getFilters(req.query)
+    Pagination.ofQueryDocument(
+        Recipe.find(filters).sort({ updatedAt: -1 }).select('-permission'),
+        page && limit ? {page: +page, limit: +limit, skip: +skip}: undefined,
+    )
+        .then(recipes => res.status(200).json(recipes),
+            err => res.status(500).json({code: err.code || 0, description: err.message}))
 }
 
 export function numberRecipesForCountry(req, res){
-    getUser(req, res)
-        .then(user => {
-
-            Recipe.aggregate([
-                { $match: { shared: true } },
-                { $group: { _id: "$country",  number: { $sum : 1 } } },
-                { $project: { country: "$_id", number: 1, _id: 0 } }
-            ])
-            .then(items => res.status(200).json(items),
-                  err => res.status(500).json({code: err.code || 0, description: err.message}))
-
-        }, err => console.error(err))
+    Recipe.aggregate([
+        { $match: { shared: true } },
+        { $group: { _id: "$country",  number: { $sum : 1 } } },
+        { $project: { country: "$_id", number: 1, _id: 0 } }
+    ])
+        .then(items => res.status(200).json(items),
+            err => res.status(500).json({code: err.code || 0, description: err.message}))
 }
