@@ -233,7 +233,7 @@ export const subscribeEvent = ( options: { client: Socket, method?: "once" | "on
     options.method = options.method || "once"
     options.filter = options.filter || (() => true)
     options.assertionHandler = options.assertionHandler || (() => {
-        console.log("ignored assertionHandler .")
+        console.debug("ignored assertionHandler .")
     })
 
     return new Promise((resolve, reject) => {

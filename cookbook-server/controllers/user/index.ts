@@ -209,7 +209,7 @@ export function update_user(req, res){
     if(req.file) userBody.img = req.file.filename
     if(userBody.img?.length === 0) userBody.img = null
     if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
-    console.log("Update info user = ", userBody)
+    console.debug("Update info user = ", userBody)
 
     User.findOne()
         .where('signup').equals(SignUp.State.CHECKED)
@@ -231,23 +231,23 @@ function deleteUserRef(user: IUser): void {
     const userID: string = user.credential.userID
     ShoppingList.deleteOne()
                 .where('user').equals(user._id)
-                .then(result => console.log('Delete shopping list of user ', userID, ' : ', result),
+                .then(result => console.debug('Delete shopping list of user ', userID, ' : ', result),
                       err => console.error('Delete shopping list of user ', userID, ' : ', err))
 
     Notification.deleteMany()
                 .where('user').in([user._id, user._id.toString()])
-                .then(result => console.log('Delete notifications of user ', userID, ' : ', result),
+                .then(result => console.debug('Delete notifications of user ', userID, ' : ', result),
                     err => console.error('Delete notifications of user ', userID, ' : ', err))
 
     Friend.deleteMany({ $or: [{ from: {$eq: user._id} }, { to: {$eq: user._id} }] })
           .where('user').in([user._id, user._id.toString()])
-          .then(result => console.log('Delete friendships of user ', userID, ' : ', result),
+          .then(result => console.debug('Delete friendships of user ', userID, ' : ', result),
                 err => console.error('Delete friendships of user ', userID, ' : ', err))
 
     Chat.deleteMany()
         .where('chat.info').equals(IChat.Type.ONE)
         .where('users.user').equals(user._id)
-        .then(result => console.log('Delete chats one of user ', userID, ' : ', result),
+        .then(result => console.debug('Delete chats one of user ', userID, ' : ', result),
             err => console.error('Delete chats one  of user ', userID, ' : ', err))
 
     Chat.find()
@@ -261,13 +261,13 @@ function deleteUserRef(user: IUser): void {
                         let chatWithAdmin = chat.users.filter(u => Role.ADMIN == u.user.role)
                         if(chatWithAdmin.length == chat.users.length - 1) {
                             chat.remove()
-                                .then(result => console.log('Delete chat group with admins of ', userID, ' : ', result),
+                                .then(result => console.debug('Delete chat group with admins of ', userID, ' : ', result),
                                       err => console.error('Delete chat group with admins of ', userID, ' : ', err))
                         }
                         else {
                             chat.users.splice(index, 1)
                             chat.save()
-                                .then(result => console.log('Delete user '+userID+' on chat group ('+chat._id+') : ', result),
+                                .then(result => console.debug('Delete user '+userID+' on chat group ('+chat._id+') : ', result),
                                       err => console.error('Delete user '+userID+' on chat group ('+chat._id+') : ', err))
                         }
                     } else console.error('User not found in chat = ', chat._id)

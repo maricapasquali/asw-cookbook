@@ -36,7 +36,7 @@ export default function (io: Server): void {
 
           // DISCONNECT
           socket.on('disconnect', (reason) => {
-              console.log('Disconnected: reason ', reason)
+              console.debug('Disconnected: reason ', reason)
               onDisconnect(io, socket)
           });
 

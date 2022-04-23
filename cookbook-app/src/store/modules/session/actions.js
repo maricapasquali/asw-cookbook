@@ -8,7 +8,7 @@ export default {
                   .then(({data}) => {
                       let {token, userInfo} = data
                       dispatch('initialization', {...token, user: userInfo}, { root: true })
-                          .then(() => console.log('initialization on login ...') )
+                          .then(() => console.debug('initialization on login ...') )
                           .catch(err => console.error('initialization error ', err))
                       return {
                           location: {

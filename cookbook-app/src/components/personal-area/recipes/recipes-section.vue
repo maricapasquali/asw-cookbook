@@ -155,7 +155,7 @@ export default {
 
       this.$store.dispatch('recipes/all', { pagination:  {page, limit, skip}, type: this.active, options })
           .then(({data}) => {
-            console.log(data)
+            console.debug(data)
             this.setDefaultValueOn(data.items)
 
             this._setRecipesInTab({page: currentPage, recipes: data.items, total: data.total })

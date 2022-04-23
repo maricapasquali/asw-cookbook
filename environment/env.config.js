@@ -2,6 +2,8 @@ const dotenv = require("dotenv");
 const dotenvExpand = require('dotenv-expand')
 const path = require("path");
 
+const DEVELOPMENT = "development"
+
 myEnv = dotenv.config({ path: path.join(__dirname, '.env') })
 dotenvExpand.expand(myEnv)
 
@@ -17,7 +19,7 @@ let port_client
 
 if(process.env.DOCKER_CONTAINER_ENV) {
 
-    let isDevMode = process.env.NODE_ENV === "development"
+    let isDevMode = process.env.NODE_ENV === DEVELOPMENT
     const _dev = isDevMode ? "-dev" : ''
 
     protocol_server = process.env.SERVER_PROTOCOL || "https"
@@ -50,7 +52,7 @@ const client_origin = `${protocol_client}://${hostname_client}:${port_client}`
 
 _environment = {
     appName: 'CookBook',
-    mode: process.env.NODE_ENV || "development",
+    mode: process.env.NODE_ENV || DEVELOPMENT,
     server: {
         protocol: protocol_server,
         hostname: hostname_server,
@@ -72,6 +74,8 @@ _environment = {
         uri: databaseURI
     }
 }
+
+if(_environment.mode !== DEVELOPMENT) console.debug = function (...args){}
 
 console.debug("Environment = ", _environment)
 

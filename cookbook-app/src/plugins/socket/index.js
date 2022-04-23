@@ -78,5 +78,5 @@ export default function installSocket(Vue, {bus, store, router}) {
 
     Vue.prototype.$socket = socketIO
 
-    console.log('Install plugin socket ...')
+    console.debug('Install plugin socket ...')
 }

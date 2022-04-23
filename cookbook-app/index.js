@@ -15,7 +15,7 @@ const optionsProxy =  {
     },
     target: config.server.origin,
     secure: false, // because in ssl there is self signed certificate,
-    logLevel: config.mode === "development" ? "debug": "info"
+    logLevel: config.mode === "development" ? "debug": "silent"
 }
 
 const proxyMiddleware = createProxyMiddleware(optionsProxy)

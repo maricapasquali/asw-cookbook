@@ -310,7 +310,7 @@ export function update_chat(req, res, err) {
                                                     const _users = chat.users.map(u => u.user._id.toString())
                                                     const diff = bodyUsers.filter(u => !_users.includes(u.user))
                                                     if(diff.length) return res.status(404).json({ description: 'Users '+JSON.stringify(diff)+' are not in chat'})
-                                                    console.log('Body users unique = ', bodyUsers, ', now present users: ',_users, ', diff = ', diff)
+                                                    console.debug('Body users unique = ', bodyUsers, ', now present users: ',_users, ', diff = ', diff)
 
                                                     //- role READER to WRITER/ADMIN   -> ri aggiunge utente
                                                     //- role WRITER to ADMIN          -> rende un utente amministratore
@@ -319,7 +319,7 @@ export function update_chat(req, res, err) {
                                                         const _user = chat.users.find(_uu => _uu.user._id == uu.user)
                                                         const oldRole = _user.role
                                                         _user.role = uu.role;
-                                                        console.log('old role = ', oldRole, ', new role = ', _user.role)
+                                                        console.debug('old role = ', oldRole, ', new role = ', _user.role)
                                                         if(IChat.Role.isReader(uu.role)) _user.exitedAt = Date.now();
                                                         if(IChat.Role.isReader(oldRole) && !IChat.Role.isReader(uu.role)) {
                                                             _user.exitedAt = undefined
@@ -348,7 +348,7 @@ export function update_chat(req, res, err) {
                                         const diff = bodyUsers.filter(u => _users.includes(u.user))
 
                                         if(diff.length) return res.status(409).json({ description: 'Users '+JSON.stringify(diff)+' are already in chat'})
-                                        console.log('Body users unique = ', bodyUsers, ', now present users: ',_users, ', diff = ', diff)
+                                        console.debug('Body users unique = ', bodyUsers, ', now present users: ',_users, ', diff = ', diff)
 
                                         chat.users.push(...bodyUsers)
                                         saveUpdatedChatUsers(chat, { res, message: 'Add users on chat.'})

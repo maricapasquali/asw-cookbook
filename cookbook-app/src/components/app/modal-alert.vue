@@ -39,7 +39,7 @@ export default {
     },
     clickClose: function (e){
       if(this.closable) e.preventDefault()
-      console.log('Close Modal Error...')
+      console.debug('Close Modal Error...')
       this.$emit('close')
     }
   }

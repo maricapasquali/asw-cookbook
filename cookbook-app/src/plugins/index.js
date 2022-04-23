@@ -7,7 +7,7 @@ export default function installAppPlugins(Vue, {configurationEnvironment, store,
 
     Vue.prototype.$appName = configurationEnvironment.appName
 
-    console.log('Install plugin App Utilities ...')
+    console.debug('Install plugin App Utilities ...')
 
     Vue.use(DirectivePlugin)
 

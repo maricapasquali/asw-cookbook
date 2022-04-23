@@ -35,20 +35,16 @@ function checkAndDecode(options?: AuthOption): Middleware {
                 options.ignoreValidationParamId = options.ignoreValidationParamId || false
 
                 let isIDValid = options.ignoreValidationParamId || Types.ObjectId.isValid(req.params.id)
-                if(!isIDValid) return next({status: 400, description: 'Required a valid \'id\''})
+                if(!isIDValid) {
+                    return next({status: 400, description: 'Required a valid \'id\''})
+                }
 
-                if(isIDValid && accessManager.isAuthorized(decoded_token.role, options.operation, options.resource, options.others(decoded_token, req.params.id))){
-                    req.locals.user = decoded_token
-                    next()
-                }
-                else {
-                    next({status: 403, description: 'User is unauthorized to execute this function.'})
+                if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.resource, options.others(decoded_token, req.params.id))) {
+                    return next({status: 403, description: 'User is unauthorized to execute this function.'})
                 }
             }
-            else {
-                req.locals.user = decoded_token
-                next()
-            }
+            req.locals.user = decoded_token
+            next()
         }
         else {
             next({status: 401, description: 'User is not authenticated'})

@@ -140,7 +140,7 @@ export default {
   methods: {
 
     fetchData(){
-      console.log('Fetch User info .')
+      console.debug('Fetch User info .')
       this.$emit('force-update')
     },
 

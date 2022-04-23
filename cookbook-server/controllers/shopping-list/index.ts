@@ -59,12 +59,12 @@ export function add_food(req, res){
                             }
 
                             if(doc) {
-                                console.log('Update list ..')
+                                console.debug('Update list ..')
                                 doc.shoppingList.push(body)
                                 doc.save().then(_doc => sendNewListPoint(_doc), err => handlerError(err, {newPoint: true}))
                             }
                             else {
-                                console.log('Crete list ..')
+                                console.debug('Crete list ..')
                                 new ShoppingList({ user: user._id, shoppingList: [body] })
                                     .save().then(_doc => sendNewListPoint(_doc), err => handlerError(err, {newList: true}))
                             }

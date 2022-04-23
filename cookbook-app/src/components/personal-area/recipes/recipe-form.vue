@@ -401,17 +401,17 @@ export default {
       // const formData = this._formData(options)
       this._formData(options)
           .then(formData => {
-            console.log('Ready form data ')
+            console.debug('Ready form data ')
             let request
             this.processing = true
 
             if(options.new === false){
-              console.log('Changed recipe ')
+              console.debug('Changed recipe ')
               // console.debug(this.recipe)
               request = this.$store.dispatch('recipes/update', {_id: this.value._id, body: formData})
             }
             else{
-              console.log('New recipe ')
+              console.debug('New recipe ')
               // console.debug(this.recipe)
               request = this.$store.dispatch('recipes/create', formData)
             }
@@ -427,18 +427,18 @@ export default {
                       let event
                       if(data.shared === false) {
                         event = 'recipe:create:saved'
-                        console.log('Saved a private copy of a shared recipe.')
+                        console.debug('Saved a private copy of a shared recipe.')
                       }
                       if(data.shared === true){
                         event = 'recipe:create'
-                        console.log('Create a new shared recipe from a old shared recipe.')
+                        console.debug('Create a new shared recipe from a old shared recipe.')
                       }
                       if(event) this.$socket.emit(event, data)
                     } else {
-                      console.log('Update a ' + (data.shared ? 'shared' : 'saved') + ' recipe.')
+                      console.debug('Update a ' + (data.shared ? 'shared' : 'saved') + ' recipe.')
                       this.$socket.emit('recipe:update', data)
                       if(this.value.shared === false && data.shared === true) {
-                        console.log('Share and/or update a saved recipe.')
+                        console.debug('Share and/or update a saved recipe.')
                         this.$socket.emit('recipe:create', data)
                       }
                     }
@@ -491,9 +491,9 @@ export default {
       if(!(copyRecipe.tutorial instanceof File)) delete copyRecipe.tutorial
 
       Object.entries(copyRecipe).forEach(([k, v]) => addOnFormData(k, v))
-      for(const i of formData.entries()) console.log(i)
+      for(const i of formData.entries()) console.debug(i)
 
-      console.log(options.new ? 'Create ...': 'Update ...')
+      console.debug(options.new ? 'Create ...': 'Update ...')
       return formData;
     },
 

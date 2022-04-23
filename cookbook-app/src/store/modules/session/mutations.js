@@ -7,7 +7,7 @@ export default {
             Vue.set(state, 'user', _session.user)
             Vue.set(state, 'accessToken', _session.access)
             Vue.set(state, 'refreshToken', _session.refresh)
-            console.log('Set session : ', state)
+            console.debug('Set session : ', state)
         }
         if(session){
             _set(session)
@@ -26,7 +26,7 @@ export default {
         Vue.set(state, 'user', null)
         Vue.set(state, 'accessToken', null)
         Vue.set(state, 'refreshToken', null)
-        console.log('End session : ', state)
+        console.debug('End session : ', state)
 
         localStorage.removeItem('user.info')
         localStorage.removeItem('token.access')
@@ -36,12 +36,12 @@ export default {
         if(state.user){
             Vue.set(state.user, 'userID', newUserID)
             localStorage.setItem('user.info', JSON.stringify(state.user))
-            console.log('Change userID .')
+            console.debug('Change userID .')
         }
     },
     ['set-access-token'](state, newAccessToken) {
         Vue.set(state, 'accessToken', newAccessToken)
         localStorage.setItem('token.access', newAccessToken)
-        console.log('Refresh access token .')
+        console.debug('Refresh access token .')
     }
 }

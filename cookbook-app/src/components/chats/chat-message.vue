@@ -49,7 +49,7 @@ export default {
   },
   watch: {
     value(val, old){
-      console.log('Message is changed ', val)
+      console.debug('Message is changed ', val)
       this.message = val
     }
   },

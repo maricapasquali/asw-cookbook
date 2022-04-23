@@ -78,7 +78,7 @@ export default {
     sendRequestFriendShip(){
       this.$store.dispatch('friendships/request-to', this.otherUser._id)
           .then(({ data }) => {
-            console.log('Request friendship pending. ')
+            console.debug('Request friendship pending. ')
             this.$socket.emit('friendship:request', data)
             return true
           })
@@ -90,7 +90,7 @@ export default {
     sendRemoveFriendShip(){
       this.$store.dispatch('friendships/break-up-with', this.otherUser._id)
           .then(({data}) => {
-            console.log('Friendship is over. ')
+            console.debug('Friendship is over. ')
             this.justFollow = false
             this.isMyFriend = false
             this.$socket.emit('friendship:remove', this.otherUser)
@@ -102,7 +102,7 @@ export default {
     _updateFriendShip(state){
       this.$store.dispatch('friendships/update-request', {userID: this.otherUser._id, state})
           .then(({data}) => {
-            console.log('State friendship is '+state+'. ')
+            console.debug('State friendship is '+state+'. ')
             this.$socket.emit('friendship:update', data)
             return state
           })

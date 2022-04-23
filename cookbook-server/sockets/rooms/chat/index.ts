@@ -7,7 +7,7 @@ const openedChats: Chat[] = []
 export function pushInOpenedChat(chatName: string, availableUsers: ChatRoomUser[], extrasInfo: ChatExtraInfo){
     const _chat = { name: chatName, availableUsers , extra: extrasInfo }
     const opened: boolean = !!openedChats.find(c => c.name === chatName)
-    console.log('Chat ', JSON.stringify(_chat), ' is open = ', opened)
+    console.debug('Chat ', JSON.stringify(_chat), ' is open = ', opened)
     if(!opened) openedChats.push(_chat)
 }
 
@@ -38,11 +38,11 @@ export function popFromOpenedChat(io: any, chatName: string){
     if(!roomSockets){
         const index = openedChats.findIndex(chat => chat.name == chatName)
         if(index !== -1) {
-            console.log('remove opened chat ', chatName)
+            console.debug('remove opened chat ', chatName)
             openedChats.splice(index, 1)
         }
     }
-    console.log('Opened chats ', openedChats)
+    console.debug('Opened chats ', openedChats)
 }
 
 export function isInChat(chatName: string, io: any, socketId: any): boolean{

@@ -176,12 +176,12 @@ function remove_chat_between(friend: string, me: string){
     Chat.findOne({ 'users.user': { $all: [ Types.ObjectId(friend), Types.ObjectId(me) ] } })
         .where('info.type').equals(IChat.Type.ONE)
         .then(chat => {
-            if(!chat) return console.log('FriendShip - Remove chat : chat not found')
+            if(!chat) return console.debug('FriendShip - Remove chat : chat not found')
             const exitedAt  = Date.now();
             chat.users.forEach(r => {
                 r.role = IChat.Role.READER
                 r.exitedAt = exitedAt
             })
-            chat.save().then(data => console.log('remove chat ',data._id), err => console.error('FriendShip: remove chat : err = ', err))
+            chat.save().then(data => console.debug('remove chat ',data._id), err => console.error('FriendShip: remove chat : err = ', err))
         }, err => console.error('FriendShip: remove chat', err))
 }

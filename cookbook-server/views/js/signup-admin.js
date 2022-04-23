@@ -46,10 +46,10 @@ $(function() {
         if (target.checkValidity()) {
             startRequest()
             let formData = new FormData(target)
-            // for(const [k, v] of formData.entries()) console.log(k, ' -> ', v);
+            // for(const [k, v] of formData.entries()) console.debug(k, ' -> ', v);
             axios.post('/api/admins', formData)
                 .then(({data}) => {
-                    console.log("User id = ", data?.userID)
+                    console.debug("User id = ", data?.userID)
                     $(".alert-success").show()
                 })
                 .catch(err => {

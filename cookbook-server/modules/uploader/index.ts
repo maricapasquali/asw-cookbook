@@ -25,7 +25,7 @@ export class FileUploader implements IFileUploader {
             },
             filename: (req, file, cb) => {
                 let configuration = getConfiguration(file.fieldname)
-                console.log('Upload ' + configuration.type + ' : ' + file.originalname)
+                console.debug('Upload ' + configuration.type + ' : ' + file.originalname)
                 configuration.newFileName = configuration.newFileName || ((file: any) => file.originalname + '_' + Date.now() + path.extname(file.originalname))
                 cb(null, configuration.newFileName(file))
             }
@@ -50,7 +50,7 @@ export class FileUploader implements IFileUploader {
             // Destination to store image
             destination: configuration.dest,
             filename: (req, file, cb) => {
-                console.log('Upload ' + configuration.type + ' : ' + file.originalname)
+                console.debug('Upload ' + configuration.type + ' : ' + file.originalname)
                 configuration.newFileName = configuration.newFileName ||  ((file: any) => file.originalname + '_' + Date.now() + path.extname(file.originalname))
                 cb(null, configuration.newFileName(file))
             }

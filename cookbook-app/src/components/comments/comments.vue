@@ -86,7 +86,7 @@ export default {
 
            this.$socket.emit('recipe:comment', {_id: this.recipe._id, name: this.recipe.name, owner: this.recipe.owner}, data)
 
-           console.log('You commented.')
+           console.debug('You commented.')
            return true
          })
          .catch(this.$store.$api.errorsHandler.comments.createCommentOrResponse)
