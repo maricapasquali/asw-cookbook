@@ -417,7 +417,7 @@ export default {
     _updateOnly(position, cRecipe){
       let _position = this.searching.on ? -1 : position
       if(this.searching.on){
-        console.log('Only update ...')
+        console.debug('Only update ...')
         if (this.isFilteredOnSearchMode(cRecipe)) {
           Object.assign(this.searching.result[position], {recipe: cRecipe})
           prepend(this.searching.result, position)
@@ -442,7 +442,7 @@ export default {
       // new shared
 
       if (cRecipe._id !== old._id && cRecipe.shared === false) { // when click 're-saved' //ok
-        console.log('Save a private copy of shared recipe ...')
+        console.debug('Save a private copy of shared recipe ...')
         this.$emit('onClickReSaved', cRecipe)
       }
 
@@ -536,7 +536,7 @@ export default {
       let recipe = this.selectedItem.recipe
       console.debug(recipe)
       if(this.isLovedTab) {
-        console.log('REMOVE LIKE ON RECIPE')
+        console.debug('REMOVE LIKE ON RECIPE')
         let like = recipe.likes.find(l => l.user && l.user._id === this.userIdentifier)
         console.debug(like)
         this.$store.dispatch('likes/remove', {ownerID: recipe.owner._id, recipeID:  recipe._id, likeID: like._id})
@@ -549,7 +549,7 @@ export default {
             })
             .catch(this.$store.$api.errorsHandler.likes.makeOrUnmakeLike)
       } else {
-        console.log('DELETE RECIPE')
+        console.debug('DELETE RECIPE')
         this.$store.dispatch('recipes/remove', recipe._id)
             .then(({data}) => {
               console.debug(data)

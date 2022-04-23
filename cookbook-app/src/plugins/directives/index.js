@@ -11,5 +11,5 @@ const directives = {
 export default function installDirectives(Vue) {
     Object.entries(directives).forEach(([id, directive]) => Vue.directive(id, directive))
 
-    console.log('Install plugin Directives ...')
+    console.debug('Install plugin Directives ...')
 }

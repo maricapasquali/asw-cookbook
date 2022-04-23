@@ -98,7 +98,7 @@ export default {
     }
   },
   created() {
-    console.log('App created ')
+    console.debug('App created ')
 
     console.debug('Vue ', this)
     console.debug('Store ', this.$store)
@@ -114,7 +114,7 @@ export default {
     this.updateGUIListener()
 
     this.initialization()
-        .then(vl => console.log('Initialization ok : Store State ', this.$store.state))
+        .then(vl => console.debug('Initialization ok : Store State ', this.$store.state))
         .catch(err => {
           console.error('Something wrong during the initialization: ', err.message)
           console.error(err.response)

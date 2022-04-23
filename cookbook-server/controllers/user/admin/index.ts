@@ -6,7 +6,6 @@ import Role = RBAC.Role;
 import {MongooseValidationError} from "../../../modules/custom.errors";
 import {User} from "../../../models";
 import {SignUpAdminEmail, TemplateEmail} from "../../../modules/mailer/templates";
-import {mailer, app_name, configuration} from "../utils.user.controller";
 
 const send_email_signup = function (user) {
     const signUpEmail: TemplateEmail = new SignUpAdminEmail({

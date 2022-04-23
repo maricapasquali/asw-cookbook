@@ -18,7 +18,7 @@ export function joinUserRoom(socket: any): void {
     let userName = userInformation(socket).name
     let rooms = roomsOf(socket)
     rooms.forEach(room => socket.join(room))
-    console.log(userName + ' is connected. Rooms = ', socket.rooms, '\n--------------------')
+    console.debug(userName + ' is connected. Rooms = ', socket.rooms, '\n--------------------')
 }
 
 export function containInAdminsRoom(io: any, socket: any): boolean {
@@ -43,11 +43,11 @@ export function onConnect(io: any, socket: any): void {
         setUserState( {state: UserState.ONLINE, id: userInfo.id})
             .then(() =>  {
                 io.emit('user:online', userInfo.id)
-                console.log('Change STATE: ( user = ', userInfo.id, ', state = ', UserState.ONLINE, ')')
+                console.debug('Change STATE: ( user = ', userInfo.id, ', state = ', UserState.ONLINE, ')')
             })
     }
 
-    console.log('On Connection: All Rooms = ', io.sockets.adapter.rooms, ', user online = ', userIdsOnline)
+    console.debug('On Connection: All Rooms = ', io.sockets.adapter.rooms, ', user online = ', userIdsOnline)
 }
 
 
@@ -56,19 +56,19 @@ export function onDisconnect(io: any, socket: any): void {
     if(userInfo.id) {
         let room = io.sockets.adapter.rooms.get(userInfo.id)
         if(!room || room?.length === 0) {
-            console.log('Disconnected: ', userInfo.name)
+            console.debug('Disconnected: ', userInfo.name)
             setUserState( {state: UserState.OFFLINE, id: userInfo.id})
                 .then(({date}) => {
                     io.emit('user:offline', userInfo.id, date)
-                    console.log('Change STATE: ( user = ', userInfo.id, ', state = ', UserState.OFFLINE, ', date = ', date ,')')
+                    console.debug('Change STATE: ( user = ', userInfo.id, ', state = ', UserState.OFFLINE, ', date = ', date ,')')
                 })
         } else {
-            console.log('Disconnected one connection: ', userInfo.name)
+            console.debug('Disconnected one connection: ', userInfo.name)
         }
     }
     else io.emit('user:offline')
 
-    console.log('On Disconnection: All Rooms = ', io.sockets.adapter.rooms ,', user online = ', usersOnline(io))
+    console.debug('On Disconnection: All Rooms = ', io.sockets.adapter.rooms ,', user online = ', usersOnline(io))
 }
 
 /* -- PRIVATE FUNCTION --- */

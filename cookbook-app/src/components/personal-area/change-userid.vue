@@ -74,7 +74,7 @@ export default {
 
       this.$store.dispatch('users/update-username', { oldUsername: this.old_userID, newUsername: this.userID })
          .then(response => {
-            console.log("CHANGE USER ID...")
+            console.debug("CHANGE USER ID...")
             this.$emit("onChangeUserID", this.userID)
             this.$socket.emit('user:update:info', { _id: this.id, userID: this.userID })
             this.show = false

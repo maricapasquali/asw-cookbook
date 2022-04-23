@@ -16,6 +16,6 @@ export default function createApiPluginStore(serverConfiguration) {
             store.$api.errorsHandler = errorsHandler(eventBus)
         }
 
-        console.log('Add API plugin on store.')
+        console.debug('Add API plugin on store.')
     }
 }

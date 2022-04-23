@@ -1,9 +1,10 @@
-import * as likeController from '../../../controllers/recipe/like'
+import {likeController} from '../../../controllers'
+import {likeMiddleware} from '../../../middlewares'
 
 export default function (app){
     app.route('/api/users/:id/recipes/:recipeID/likes')
-        .post(likeController.add_like)
+        .post(likeMiddleware.add(), likeController.add_like)
 
     app.route('/api/users/:id/recipes/:recipeID/likes/:likeID')
-        .delete(likeController.remove_like)
+        .delete(likeMiddleware.remove(), likeController.remove_like)
 }

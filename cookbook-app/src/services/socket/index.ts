@@ -11,7 +11,7 @@ declare module 'socket.io-client' {
 Socket.prototype.updateAuthorization = function (socketAuthorization: SocketAuthorization){
     this.auth = socketAuthorization
     this.disconnect().connect()
-    console.log('Socket: set authentication data & connect ...')
+    console.debug('Socket: set authentication data & connect ...')
 }
 
 export const socketIO: Socket = io({
@@ -20,11 +20,11 @@ export const socketIO: Socket = io({
 })
 
 socketIO.on('connect', () => {
-    console.log('SOCKET connect with ID ', socketIO.id)
+    console.debug('SOCKET connect with ID ', socketIO.id)
 })
 
 socketIO.on('disconnect', (reason) => {
-    console.log('SOCKET disconnect. Reason: ', reason);
+    console.debug('SOCKET disconnect. Reason: ', reason);
 })
 
 socketIO.on('connect_error', (e) => {

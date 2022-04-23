@@ -12,5 +12,5 @@ export default function installBroadcastChannel(Vue, {appName, store, router}){
 
     Vue.prototype.$broadcastChannel = channel
 
-    console.log('Install plugin Broadcast channel ...')
+    console.debug('Install plugin Broadcast channel ...')
 }

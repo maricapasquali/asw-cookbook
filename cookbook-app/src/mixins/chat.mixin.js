@@ -61,7 +61,7 @@ function _amINotReader(users){
 }
 
 function _goToChat(user_id, callbackCreateChat) {
-    console.log('GO TO CHAT OF USER =', user_id)
+    console.debug('GO TO CHAT OF USER =', user_id)
     const formData = new FormData()
     if(user_id === 'admin') {
         formData.set('users', JSON.stringify([{user: user_id, role: 'admin'}]))

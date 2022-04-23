@@ -160,5 +160,5 @@ const components = {
 export default function install(Vue, options){
     Object.values(components).forEach(comp => Vue.component(comp.name, comp))
 
-    console.log('Install plugin Custom Components ...')
+    console.debug('Install plugin Custom Components ...')
 }

@@ -16,11 +16,11 @@ export default function (methods: MethodsAxios) {
     function setUrlPath(recipe: any){
         if(recipe.img) {
             recipe.img = methods.info.images.path(recipe.img)
-            console.log('image = ' + recipe.img)
+            console.debug('image = ' + recipe.img)
         }
         if(recipe.tutorial) {
             recipe.tutorial = methods.info.videos.path(recipe.tutorial)
-            console.log('tutorial = ' + recipe.tutorial)
+            console.debug('tutorial = ' + recipe.tutorial)
         }
     }
 

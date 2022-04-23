@@ -28,7 +28,7 @@ export default function (io: any, socket: any): void {
     // REAL TIME SIGNED/ADMIN USER
     const enterOrLeaveChat = ( mode: 'enter' | 'leave', chat: ChatInfo) => {
         if (user._id !== null && chat.users.find(u => u._id == user._id)) {
-            console.log(" -------------- " + mode + "-chat -------------- ")
+            console.debug(" -------------- " + mode + "-chat -------------- ")
             let room: string = chatRoomName(chat)
             switch (mode){
                 case "enter": {
@@ -49,7 +49,7 @@ export default function (io: any, socket: any): void {
                     break;
             }
             io.in(room).emit(mode, {chatName: room, enteredUser: user._id})
-            console.log(user.userID + ' ' + mode + ' room ' + room)
+            console.debug(user.userID + ' ' + mode + ' room ' + room)
         } else {
             socket.emit("user:not-found", user._id)
         }
@@ -73,7 +73,7 @@ export default function (io: any, socket: any): void {
 
             const chat = findUsersInOpenedChat(room, _messages.map(u => u.sender._id))
             if(chat.users) {
-                console.log('--> Push messages to users = ', chat.users)
+                console.debug('--> Push messages to users = ', chat.users)
                 socket.to(chat.users).emit('push-messages', [{ info: chat.chatInfo, messages: _messages}])
             }
         } else socket.emit("user:not-entered", user._id)
@@ -91,7 +91,7 @@ export default function (io: any, socket: any): void {
                 const {chatInfo} = findUsersInOpenedChat(room, messages.map(u => u.sender._id))
                 let readUser = userInformation(socket)
                 if(readUser.id && chatInfo) {
-                    console.log('--> Read messages = ', messages)
+                    console.debug('--> Read messages = ', messages)
                     socket.to(readUser.id).emit('read-messages', [{ info: chatInfo, messages }])
                 }
             } else socket.emit("user:not-entered", user._id)

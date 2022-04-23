@@ -198,7 +198,7 @@ export default {
     },
   },
   updated() {
-    console.log('map world components = ', this.$refs['world-map'])
+    console.debug('map world components = ', this.$refs['world-map'])
   }
 }
 </script>

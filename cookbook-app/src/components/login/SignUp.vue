@@ -255,12 +255,12 @@ export default {
     },
 
     signup: function (){
-      console.log('signup')
+      console.debug('signup')
       const formData = new FormData()
       Object.entries(this.user)
             .filter(([k,v]) => (v && v.length > 0) || (v instanceof File && v.size >0))
             .forEach(([k, v]) => formData.append(k, v))
-      //for(const [k, v] of formData.entries()) console.log(k, ' -> ', v);
+      //for(const [k, v] of formData.entries()) console.debug(k, ' -> ', v);
 
       this.processing = true
       this.registerUser(formData)

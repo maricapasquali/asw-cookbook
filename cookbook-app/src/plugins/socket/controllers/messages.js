@@ -17,7 +17,7 @@ export default function (bus, store, socket){
                     const role = 'writer'
                     store.dispatch('chats/update-role', {chatID: chat.info._id, role})
                         .then(({data}) => {
-                            console.log(data)
+                            console.debug(data)
                             socket.emit('chat:change:role', chat.info._id, { user: userIdentifier, role })
                         })
                         .catch(store.$api.errorsHandler.chats.updateUserRoleInChat)
@@ -25,7 +25,7 @@ export default function (bus, store, socket){
                 return chat
             })
             .forEach(chat => {
-                console.log(`From chat ${JSON.stringify(chat.info)}, pushed messages: ${JSON.stringify(chat.messages)}`)
+                console.debug(`From chat ${JSON.stringify(chat.info)}, pushed messages: ${JSON.stringify(chat.messages)}`)
 
                 chat.messages.forEach(message => {
                     const dest = chat.info.type === 'one' || isAdmin ? 'da ' + message.sender.userID :

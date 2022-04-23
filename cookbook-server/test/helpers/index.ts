@@ -1,5 +1,6 @@
+import "../../modules/global"
+
 import {Types} from "mongoose";
-import * as env from "../../../environment/env.config";
 import {connect, disconnect, drop} from "../../database"
 
 /* -- EXPORTED FUNCTIONALITY -- */
@@ -19,7 +20,7 @@ export const dropDatabase = drop
 
 export const ObjectId = Types.ObjectId
 
-export const isTestingMode = env.mode === "test"
+export const isTestingMode = configuration.mode === "test"
 
 export const sleep = (seconds: number): Promise<void> => new Promise(resolve => setTimeout(resolve, seconds * SECOND_IN_MS))
 

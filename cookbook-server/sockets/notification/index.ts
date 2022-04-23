@@ -17,7 +17,7 @@ export default function (io: any, socket: any): void {
     })
     socket.on('user:strike', user => {
         if(containInAdminsRoom(io, socket)) {
-            console.log('Add strike => User :', userInfo.name)
+            console.debug('Add strike => User :', userInfo.name)
             userInfosHandler.strike(io, user)
         }
     })

@@ -1,4 +1,4 @@
-const {RBAC} = require("../../modules/rbac");
+const {RBAC, createRBAC} = require("../../modules/rbac");
 const assert = require("assert");
 
 suite('RBAC', function () {
@@ -7,7 +7,7 @@ suite('RBAC', function () {
     let signed
 
     suiteSetup(function () {
-        accessManager = new RBAC()
+        accessManager = createRBAC()
         admin = RBAC.Role.ADMIN.toString()
         signed = RBAC.Role.SIGNED.toString()
     });
@@ -15,16 +15,16 @@ suite('RBAC', function () {
     suite("#isAuthorized(...)", function () {
 
         test('should return true when the user has role ADMIN and deletes some user', function() {
-            assert(accessManager.isAuthorized(admin, RBAC.Operation.DELETE, RBAC.Subject.USER, true))
+            assert(accessManager.isAuthorized(admin, RBAC.Operation.DELETE, RBAC.Resource.USER, true))
         })
         test('should return false when the user has role SIGNED and deletes users', function() {
-            assert(!accessManager.isAuthorized(signed, RBAC.Operation.DELETE, RBAC.Subject.USER, true))
+            assert(!accessManager.isAuthorized(signed, RBAC.Operation.DELETE, RBAC.Resource.USER, true))
         })
         test('should return true when the user has role SIGNED and deletes his account', function() {
-            assert(accessManager.isAuthorized(signed, RBAC.Operation.DELETE, RBAC.Subject.USER, false))
+            assert(accessManager.isAuthorized(signed, RBAC.Operation.DELETE, RBAC.Resource.USER, false))
         })
         test('should return true when the user has role SIGNED and deletes his account', function() {
-            assert(accessManager.isAuthorized(signed, RBAC.Operation.DELETE, RBAC.Subject.USER))
+            assert(accessManager.isAuthorized(signed, RBAC.Operation.DELETE, RBAC.Resource.USER))
         })
     });
 

@@ -79,11 +79,11 @@ export default {
       this.validation.password = PasswordValidator.check(password)
 
       if(this.validation.check_password !== null) this.compare(this.$refs.check_password.$el.value)
-      console.log("validation  = ",this.validation.password, ", diff old = ", this.diffOld)
+      console.debug("validation  = ",this.validation.password, ", diff old = ", this.diffOld)
 
       if(this.validation.password){
         this.diffOld = password !== this.old
-        console.log("Diff old = ", this.diffOld )
+        console.debug("Diff old = ", this.diffOld )
         if(this.diffOld){
           let salt = bcryptjs.genSaltSync(10)
           this.hash_password = bcryptjs.hashSync(password,salt)
@@ -96,7 +96,7 @@ export default {
     },
     compare: function (pass){
       this.validation.check_password = (pass === this.$refs.password.$el.value)
-      console.log("compare  = ", this.validation.check_password)
+      console.debug("compare  = ", this.validation.check_password)
       this.$emit('checkPassword', this.validation.check_password)
     },
   }

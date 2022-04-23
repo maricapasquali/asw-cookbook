@@ -14,8 +14,8 @@ function getFriendOf(user: string): Promise<Array<IFriend>> {
 }
 
 function operationOnRecipe(io: any, user: UserInformationType, operation: 'update' | 'delete', recipe: IRecipe): void {
-    console.log(operation + ' shared recipe : ', recipe)
-    console.log('shared recipe permissions : ', recipe.permission)
+    console.debug(operation + ' shared recipe : ', recipe)
+    console.debug('shared recipe permissions : ', recipe.permission)
 
     let permissionGranted: (value: string) => boolean
     let operationString: string
@@ -34,7 +34,7 @@ function operationOnRecipe(io: any, user: UserInformationType, operation: 'updat
     }
 
     let permission = recipe.permission.find(p => p.user._id == user.id && permissionGranted(p.granted))
-    console.log('permission : ', permission)
+    console.debug('permission : ', permission)
     if(permission){
         const otherInfo = {
             recipe: operation === 'delete' ? { ...recipe, ...{ deleted:true } } : {_id:recipe._id, owner: recipe.owner._id, shared: recipe.shared},
@@ -52,7 +52,7 @@ function operationOnRecipe(io: any, user: UserInformationType, operation: 'updat
         if(recipe.shared){
             const ownerId = recipe.owner._id
             const lovers = recipe.likes.filter(l => l.user).map(l => l.user)
-            console.log('user lovers = ', lovers)
+            console.debug('user lovers = ', lovers)
             for (const lover of lovers){
                 create_notification({
                     user: lover._id,
@@ -92,8 +92,8 @@ function operationOnRecipe(io: any, user: UserInformationType, operation: 'updat
 }
 
 export function comment(io: any, recipe: any, comment: IComment): void {
-    console.log('recipe = ', recipe)
-    console.log('comment = ', comment)
+    console.debug('recipe = ', recipe)
+    console.debug('comment = ', comment)
     const otherInfo = {
         recipe: { _id: recipe._id, owner: recipe.owner._id },
         comment: {_id: comment._id, user: comment.user?._id},
@@ -125,7 +125,7 @@ export function comment(io: any, recipe: any, comment: IComment): void {
 export function create(io: any, recipe: IRecipe): void {
     let ownerId = recipe.owner._id
     let ownerName = recipe.owner.userID
-    console.log('shared recipe : ', recipe)
+    console.debug('shared recipe : ', recipe)
 
     create_notification({
         user: ownerId,
@@ -161,7 +161,7 @@ export function create(io: any, recipe: IRecipe): void {
 
 export function createSaved(io: any, recipe: IRecipe){
     let ownerId = recipe.owner._id
-    console.log('saved recipe : ', recipe)
+    console.debug('saved recipe : ', recipe)
     create_notification({
         user: ownerId,
         type: Notification.Type.RECIPE,

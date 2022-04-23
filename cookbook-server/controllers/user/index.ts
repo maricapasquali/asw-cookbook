@@ -5,34 +5,18 @@ import {Chat, EmailLink, Friend, Notification, ShoppingList, User} from '../../m
 import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
 import {IUser, SignUp} from "../../models/schemas/user";
-import {
-    accessManager,
-    FileConfigurationImage,
-    fileUploader,
-    getRestrictedUser,
-    getUser,
-    pagination,
-    tokensManager
-} from "../utils.controller";
-
 import {EraseUserEmail, ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
-import * as path from "path";
 import {Types} from "mongoose";
-import {EmailValidator} from "../../../commons/modules/validator";
 import {IChat} from "../../models/schemas/chat";
+import {Pagination} from "../../modules/pagination";
 
-import * as config from "../../../environment/env.config"
 import {MongooseDuplicateError, MongooseValidationError} from "../../modules/custom.errors";
 import {newUser} from "./utils.user.controller";
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
-import Operation = RBAC.Operation;
-import Subject = RBAC.Subject;
 import ObjectId = Types.ObjectId;
 import Role = RBAC.Role;
 
-const client_origin = config.client.origin
-
-import {mailer, app_name} from "./utils.user.controller";
+const client_origin = configuration.client.origin
 
 const send_email_signup = function (user) {
     let randomKey: string = randomString()
@@ -68,15 +52,6 @@ const send_email_signup = function (user) {
 
     }, err => console.error(err.message))
 
-}
-
-export function uploadProfileImage(){
-    let config = {...FileConfigurationImage, ...{
-            newFileName: function (file: any){
-                return randomString(30) + path.extname(file.originalname)
-            }
-        }}
-    return fileUploader.single('img', config)
 }
 
 export function create_user(req, res){
@@ -148,22 +123,19 @@ export function all_users(req, res){
         filters['$or'] = [ { 'information.firstname': regexObject  },  { 'information.lastname': regexObject } ]
     }
 
-    getUser(req, res)
-        .then(user => {
+    const user = req.locals.user
 
-            if(!accessManager.isAdminUser(user)) filters['signup'] = SignUp.State.CHECKED
+    if(!accessManager.isAdminUser(user)) filters['signup'] = SignUp.State.CHECKED
 
-            if(user) filters['_id'] = {$ne: user._id}
-            console.debug(JSON.stringify(filters, null, 2))
+    if(user) filters['_id'] = {$ne: user._id}
+    console.debug(JSON.stringify(filters, null, 2))
 
-            pagination(
-                User.find(filters).collation({'locale':'en'}  /* sort case insensitive*/ ).sort({'credential.userID': 1}),
-                page && limit ? {page: +page, limit: +limit}: undefined
-            )
-            .then(result => res.status(200).json(Object.assign(result, {items: infoUsers(result.items as Array<IUser>, user)})),
-                  err => res.status(500).json({description: err.message}))
-
-        }, err => console.error(err))
+    Pagination.ofQueryDocument(
+        User.find(filters).collation({'locale':'en'}  /* sort case insensitive*/ ).sort({'credential.userID': 1}),
+        page && limit ? {page: +page, limit: +limit}: undefined
+    )
+        .then(result => res.status(200).json(Object.assign(result, {items: infoUsers(result.items as Array<IUser>, user)})),
+            err => res.status(500).json({description: err.message}))
 }
 
 export function check_account(req, res) {
@@ -202,31 +174,29 @@ export function check_account(req, res) {
 export function one_user(req, res){
     const {id} = req.params
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    getUser(req, res)
-        .then(decoded_token => {
 
-            User.findOne()
-                .where('signup').equals(SignUp.State.CHECKED)
-                .where('_id').equals(id)
-                .then(user => {
-                        if (!user) return res.status(404).json({description: 'User is not found'});
-                        let isSigned = accessManager.isSignedUser(user.credential) ? true : undefined
-                        let isAdmin = accessManager.isAdminUser(user.credential) ? true : undefined
-                        var userO = user.toObject();
-                        if(!decoded_token || decoded_token._id !== id) {
-                            delete userO.information.email;
-                            delete userO.information.tel_number;
-                        }
-                        res.status(200).json({
-                            information: userO.information,
-                            userID: user.credential.userID,
-                            isSigned: isSigned,
-                            isAdmin: isAdmin,
-                            _id: user._id
-                        });
-                    },err => res.status(500).json({description: err.message}))
+    const decoded_token = req.locals.user
 
-        }, err => console.error(err))
+    User.findOne()
+        .where('signup').equals(SignUp.State.CHECKED)
+        .where('_id').equals(id)
+        .then(user => {
+            if (!user) return res.status(404).json({description: 'User is not found'});
+            let isSigned = accessManager.isSignedUser(user.credential) ? true : undefined
+            let isAdmin = accessManager.isAdminUser(user.credential) ? true : undefined
+            let userO = user.toObject();
+            if(!decoded_token || decoded_token._id !== id) {
+                delete userO.information.email;
+                delete userO.information.tel_number;
+            }
+            res.status(200).json({
+                information: userO.information,
+                userID: user.credential.userID,
+                isSigned: isSigned,
+                isAdmin: isAdmin,
+                _id: user._id
+            });
+        },err => res.status(500).json({description: err.message}))
 
 }
 
@@ -234,56 +204,50 @@ export function one_user(req, res){
 export function update_user(req, res){
     let {id} = req.params
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    const decoded_token = getRestrictedUser(req, res, {
-        operation: Operation.UPDATE,
-        subject: Subject.USER,
-        others: decodedToken => decodedToken._id !== id
-    })
-    if(decoded_token) {
-        let userBody = req.body
-        if(req.file) userBody.img = req.file.filename
-        if(userBody.img?.length === 0) userBody.img = null
-        if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
-        console.log("Update info user = ", userBody)
 
-        User.findOne()
-            .where('signup').equals(SignUp.State.CHECKED)
-            .where('_id').equals(id)
-            .then(user =>{
-                if (!user) return res.status(404).json({description: 'User is not found'});
-                if(isAlreadyLoggedOut(user)) return res.status(401).send({description: 'User is not authenticated'})
-                user.information = Object.assign(user.information , userBody)
-                user.save()
-                    .then((u) => res.status(200).json({update: true, info: u.information}),
-                         err => {
-                            if(MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
-                            return res.status(500).json({description: err.message})
+    let userBody = req.body
+    if(req.file) userBody.img = req.file.filename
+    if(userBody.img?.length === 0) userBody.img = null
+    if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
+    console.debug("Update info user = ", userBody)
+
+    User.findOne()
+        .where('signup').equals(SignUp.State.CHECKED)
+        .where('_id').equals(id)
+        .then(user =>{
+            if (!user) return res.status(404).json({description: 'User is not found'});
+            if(isAlreadyLoggedOut(user)) return res.status(401).send({description: 'User is not authenticated'})
+            user.information = Object.assign(user.information , userBody)
+            user.save()
+                .then((u) => res.status(200).json({update: true, info: u.information}),
+                    err => {
+                        if(MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
+                        return res.status(500).json({description: err.message})
                     })
-            }, err => res.status(500).json({description: err.message}))
-    }
+        }, err => res.status(500).json({description: err.message}))
 }
 
 function deleteUserRef(user: IUser): void {
     const userID: string = user.credential.userID
     ShoppingList.deleteOne()
                 .where('user').equals(user._id)
-                .then(result => console.log('Delete shopping list of user ', userID, ' : ', result),
+                .then(result => console.debug('Delete shopping list of user ', userID, ' : ', result),
                       err => console.error('Delete shopping list of user ', userID, ' : ', err))
 
     Notification.deleteMany()
                 .where('user').in([user._id, user._id.toString()])
-                .then(result => console.log('Delete notifications of user ', userID, ' : ', result),
+                .then(result => console.debug('Delete notifications of user ', userID, ' : ', result),
                     err => console.error('Delete notifications of user ', userID, ' : ', err))
 
     Friend.deleteMany({ $or: [{ from: {$eq: user._id} }, { to: {$eq: user._id} }] })
           .where('user').in([user._id, user._id.toString()])
-          .then(result => console.log('Delete friendships of user ', userID, ' : ', result),
+          .then(result => console.debug('Delete friendships of user ', userID, ' : ', result),
                 err => console.error('Delete friendships of user ', userID, ' : ', err))
 
     Chat.deleteMany()
         .where('chat.info').equals(IChat.Type.ONE)
         .where('users.user').equals(user._id)
-        .then(result => console.log('Delete chats one of user ', userID, ' : ', result),
+        .then(result => console.debug('Delete chats one of user ', userID, ' : ', result),
             err => console.error('Delete chats one  of user ', userID, ' : ', err))
 
     Chat.find()
@@ -297,13 +261,13 @@ function deleteUserRef(user: IUser): void {
                         let chatWithAdmin = chat.users.filter(u => Role.ADMIN == u.user.role)
                         if(chatWithAdmin.length == chat.users.length - 1) {
                             chat.remove()
-                                .then(result => console.log('Delete chat group with admins of ', userID, ' : ', result),
+                                .then(result => console.debug('Delete chat group with admins of ', userID, ' : ', result),
                                       err => console.error('Delete chat group with admins of ', userID, ' : ', err))
                         }
                         else {
                             chat.users.splice(index, 1)
                             chat.save()
-                                .then(result => console.log('Delete user '+userID+' on chat group ('+chat._id+') : ', result),
+                                .then(result => console.debug('Delete user '+userID+' on chat group ('+chat._id+') : ', result),
                                       err => console.error('Delete user '+userID+' on chat group ('+chat._id+') : ', err))
                         }
                     } else console.error('User not found in chat = ', chat._id)
@@ -336,43 +300,37 @@ function send_email_erase_user(user: IUser): void {
 export function delete_user(req, res){
     let {id} = req.params
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    const decoded_token = getRestrictedUser(req, res, {
-        operation: Operation.DELETE,
-        subject: Subject.USER,
-        others: decodedToken => decodedToken._id !== id
-    })
-    if(decoded_token) {
+    const decoded_token = req.locals.user
 
-        const deleteUser = (id, decoded_token) => {
-            let query =  User.findOne()
-                             .where('_id').equals(id)
+    const deleteUser = (id, decoded_token) => {
+        let query =  User.findOne()
+            .where('_id').equals(id)
 
-            if(!accessManager.isAdminUser(decoded_token)) query.where('signup').equals(SignUp.State.CHECKED)
+        if(!accessManager.isAdminUser(decoded_token)) query.where('signup').equals(SignUp.State.CHECKED)
 
-            query
-                .then(user => {
-                    if(!user) return res.status(404).json({description: 'User not found'})
-                    if(accessManager.isSignedUser(decoded_token) && isAlreadyLoggedOut(user))
-                        return res.status(401).send({description: 'User is not authenticated'})
-                    user.remove()
-                        .then(_user => {
-                            res.status(200).json({delete: true})
-                            send_email_erase_user(_user)
-                            deleteUserRef(_user)
-                        }, err => res.status(500).json({description: err.message}))
-                }, err => res.status(500).json({description: err.message}))
-        }
-
-        if(accessManager.isAdminUser(decoded_token)){
-            User.findOne()
-                .where('credential.role').equals(Role.ADMIN)
-                .where('_id').equals(decoded_token._id)
-                .then(admin => {
-                    if (isAlreadyLoggedOut(admin)) return res.status(401).send({description: 'User is not authenticated'})
-                    return deleteUser(id, decoded_token)
-                }, err => res.status(500).json({description: err.message}))
-        } else deleteUser(id, decoded_token)
+        query
+            .then(user => {
+                if(!user) return res.status(404).json({description: 'User not found'})
+                if(accessManager.isSignedUser(decoded_token) && isAlreadyLoggedOut(user))
+                    return res.status(401).send({description: 'User is not authenticated'})
+                user.remove()
+                    .then(_user => {
+                        res.status(200).json({delete: true})
+                        send_email_erase_user(_user)
+                        deleteUserRef(_user)
+                    }, err => res.status(500).json({description: err.message}))
+            }, err => res.status(500).json({description: err.message}))
     }
+
+    if(accessManager.isAdminUser(decoded_token)){
+        User.findOne()
+            .where('credential.role').equals(Role.ADMIN)
+            .where('_id').equals(decoded_token._id)
+            .then(admin => {
+                if (isAlreadyLoggedOut(admin)) return res.status(401).send({description: 'User is not authenticated'})
+                return deleteUser(id, decoded_token)
+            }, err => res.status(500).json({description: err.message}))
+    } else deleteUser(id, decoded_token)
 }
 
 //use token
@@ -381,51 +339,42 @@ export function update_credential_user(req, res){
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     let {change, reset} = req.query
 
-    const decoded_token = getRestrictedUser(req, res, {
-        operation: Operation.UPDATE,
-        subject: Subject.USER_CREDENTIAL,
-        others: decodedToken => decodedToken._id !== id
-    })
+    if(!['userID', 'password'].includes(change)) return res.status(400).json({description: 'Available values: ["userID", "password"]'})
 
-    if(decoded_token) {
+    const {old_userID, new_userID, old_password, new_hash_password} = req.body
 
-        if(!['userID', 'password'].includes(change)) return res.status(400).json({description: 'Available values: ["userID", "password"]'})
+    switch (change){
+        case 'userID':{
+            if(!(old_userID && new_userID))
+                return res.status(400).send({description: 'Update userID: required [old_userID, new_userID] '})
 
-        const {old_userID, new_userID, old_password, new_hash_password} = req.body
+            User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
+                    if (!user) return res.status(404).json({description: 'User is not found'});
+                    if(user.credential.userID === old_userID) {
+                        user.credential.userID = new_userID
+                        user.save().then(() => res.status(200).json({update: change}),
+                            err => res.status(500).json({description: err.message}))
+                    }else return res.status(409).json({description: 'Old UserID is incorrect'});
+                },
+                err => res.status(500).json({description: err.message}))
 
-        switch (change){
-            case 'userID':{
-                if(!(old_userID && new_userID))
-                    return res.status(400).send({description: 'Update userID: required [old_userID, new_userID] '})
+        }break;
+        case 'password':{
+            if(!reset && !(old_password && new_hash_password))
+                return res.status(400).send({description: 'Update password: required [old_password, new_hash_password] '})
 
-                User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
-                        if (!user) return res.status(404).json({description: 'User is not found'});
-                        if(user.credential.userID === old_userID) {
-                            user.credential.userID = new_userID
-                            user.save().then(() => res.status(200).json({update: change}),
-                                err => res.status(500).json({description: err.message}))
-                        }else return res.status(409).json({description: 'Old UserID is incorrect'});
-                    },
-                    err => res.status(500).json({description: err.message}))
+            User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
+                    if (!user) return res.status(404).json({description: 'User is not found'});
+                    let result = reset || bcrypt.compareSync(old_password, user.credential.hash_password)
+                    if(result) {
+                        user.credential.hash_password = new_hash_password
+                        user.save().then(() => res.status(200).json({update: change}),
+                            err => res.status(500).json({description: err.message}))
+                    }else return res.status(409).json({description: 'Old Password is incorrect'});
+                },
+                err => res.status(500).json({description: err.message}))
 
-            }break;
-            case 'password':{
-                if(!reset && !(old_password && new_hash_password))
-                    return res.status(400).send({description: 'Update password: required [old_password, new_hash_password] '})
-
-                User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
-                        if (!user) return res.status(404).json({description: 'User is not found'});
-                        let result = reset || bcrypt.compareSync(old_password, user.credential.hash_password)
-                        if(result) {
-                            user.credential.hash_password = new_hash_password
-                            user.save().then(() => res.status(200).json({update: change}),
-                                err => res.status(500).json({description: err.message}))
-                        }else return res.status(409).json({description: 'Old Password is incorrect'});
-                    },
-                    err => res.status(500).json({description: err.message}))
-
-            }break
-        }
+        }break
     }
 }
 
