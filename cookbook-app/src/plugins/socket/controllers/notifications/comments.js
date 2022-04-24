@@ -8,7 +8,7 @@ export default function (bus, store){
     function commentResponse({notification, response}){
         console.debug('comment response => ', { notification, response})
         if(notification) {
-            this.$bvToast.toast(notification.content, options)
+            bus.$emit('show:bv-toast', { message: notification.content, options })
             store.commit('notifications/add-unread')
         }
         bus.$emit('comment:response', notification, response)
@@ -19,7 +19,7 @@ export default function (bus, store){
         if(typeof data === 'string'){
             bus.$emit('comment:report', data)
         }else {
-            this.$bvToast.toast(data.content, options)
+            bus.$emit('show:bv-toast', { message: data.content, options })
             store.commit('notifications/add-unread')
             bus.$emit('comment:report', data.otherInfo.comment._id)
         }

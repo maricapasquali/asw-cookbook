@@ -100,6 +100,9 @@ export default {
       this.$bus.$on('show:error:forbidden', err => this.forbiddenError = {show: true, ...err})
       this.$bus.$on('show:error:not-found', err => this.notFoundResource = {show: true, ...err})
       this.$bus.$on('show:error:server-internal', err => this.serverError = {show: true, ...err})
+
+      this.$bus.$on('show:bv-toast', ({ message, options }) => this.$bvToast.toast(message, options))
+      this.$bus.$on('hide:bv-toast', id => this.$bvToast.hide(id))
     }
   },
   created() {
