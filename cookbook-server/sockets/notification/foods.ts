@@ -8,7 +8,7 @@ import Rooms from "../rooms";
 import {UserInformationType} from "../rooms/user";
 
 export function create(io: any, userInfo: UserInformationType, food: IFood): void  {
-    console.log('food = ', food)
+    console.debug('food = ', food)
 
     create_notification({
         user: food.owner,

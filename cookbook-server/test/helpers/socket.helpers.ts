@@ -233,7 +233,7 @@ export const subscribeEvent = ( options: { client: Socket, method?: "once" | "on
     options.method = options.method || "once"
     options.filter = options.filter || (() => true)
     options.assertionHandler = options.assertionHandler || (() => {
-        console.log("ignored assertionHandler .")
+        console.debug("ignored assertionHandler .")
     })
 
     return new Promise((resolve, reject) => {
@@ -351,8 +351,8 @@ export const getExceptedChatName = (type: IChat.Type): string => {
     let _chat = getChatInfo(type)
     if(_chat) {
         switch(type){
-            case IChat.Type.ONE: return [Rooms.CHAT_ONE, _chat.users.map(u => u._id).join('-')].join('-');
-            case IChat.Type.GROUP: return  [Rooms.CHAT_GROUP, [_chat.info.name, _chat.users.map(u => u._id).join('-')].join('-') ].join('-')
+            case IChat.Type.ONE: return [Rooms.CHAT_ONE, _chat._id].join('-');
+            case IChat.Type.GROUP: return [Rooms.CHAT_GROUP, _chat._id ].join('-')
         }
     }
 }

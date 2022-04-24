@@ -1,7 +1,7 @@
 import * as mongoose from "mongoose";
 
 let CONNECTION_URI: string = configuration.database.uri
-//console.log(CONNECTION_URI)
+//console.debug(CONNECTION_URI)
 
 const CONNECTION_OPTIONS: object = {
     useNewUrlParser: true,

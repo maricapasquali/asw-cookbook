@@ -1,6 +1,7 @@
 import notificationsController from "./controllers/notifications"
 import messagesController from "./controllers/messages"
 import updatesController from "./controllers/updates"
+import errorsController from "./controllers/errors"
 
 import {socketIO} from "@services/socket";
 
@@ -9,7 +10,7 @@ export default function installSocket(Vue, {bus, store, router}) {
     const notificController = notificationsController(bus, store, router)
     const mexController = messagesController(bus, store, socketIO)
     const updController = updatesController(bus, store, router)
-
+    const errsController = errorsController(bus, store, socketIO)
 
     socketIO.on('friendship:request', notificController.friendShipRequest.bind(this))
     socketIO.on('friendship:update', notificController.friendShipUpdate.bind(this))
@@ -59,24 +60,16 @@ export default function installSocket(Vue, {bus, store, router}) {
 
     socketIO.on('chat:change:role:ok', (chatID, userRole) => bus.$emit('chat:change:role', chatID, userRole))
 
-    socketIO.on('operation:not:authorized', ({ expired, message }) => bus.$emit(expired ? 'show:error:unauthenticated' : 'show:error:forbidden', {message}))
-
     socketIO.on('logout', () => {
         console.debug("Logout ok.")
         store.dispatch('reset')
         router.replace({name: 'homepage'})
     })
 
-    socketIO.on('connect_error', error => {
-        if(error.data){
-            let expired = error.data.expired
-            let message = error.message
-            console.error("connect_error : message: ", message, ", expired ", expired)
-            bus.$emit(expired ? 'show:error:unauthenticated' : 'show:error:forbidden', {message})
-        }
-    })
+    socketIO.on('operation:not:authorized', errsController.checkRefreshToken.bind(this))
+    socketIO.on('connect_error', errsController.onConnectError.bind(this))
 
     Vue.prototype.$socket = socketIO
 
-    console.log('Install plugin socket ...')
+    console.debug('Install plugin socket ...')
 }

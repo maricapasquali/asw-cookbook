@@ -1,4 +1,4 @@
-import {Middlewares, restrictedUser, extractAuthorization} from "../../base";
+import {Middlewares, checkRestrictedRBAC, extractAuthorization} from "../../base";
 import {RBAC} from "../../../modules/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
@@ -8,9 +8,9 @@ export function login(): Middlewares {
 }
 
 export function logout(): Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.DELETE,
-        subject: Resource.SESSION,
+        resource: Resource.SESSION,
         others: (decodedToken, param_id) => decodedToken._id !== param_id
     })
 }

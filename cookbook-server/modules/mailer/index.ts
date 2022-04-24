@@ -47,7 +47,7 @@ export class Mailer implements IMailer{
               if(callbacks && typeof callbacks.error === 'function') callbacks.error(err)
            }
            else {
-              console.log('Email was sent to '+ messageHeader.to)
+              console.debug('Email was sent to '+ messageHeader.to)
               if(callbacks && typeof callbacks.success === 'function') callbacks.success(info)
            }
         })
@@ -60,7 +60,7 @@ export class Mailer implements IMailer{
    save(filename: string, content, callback?: (err) => void) {
       fs.writeFile(path.join(this.output , filename), content, callback? callback: (e)=> {
          if(e) console.error(e.message)
-         else console.log('Save email in '+ this.output)
+         else console.debug('Save email in '+ this.output)
       });
    }
 }

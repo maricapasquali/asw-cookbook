@@ -1,4 +1,4 @@
-import {checkRequestHeaders, Middlewares, normalUser, restrictedUser} from "../../base";
+import {checkRequestHeaders, Middlewares, checkNormalRBAC, checkRestrictedRBAC} from "../../base";
 import {RBAC} from "../../../modules/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
@@ -28,9 +28,9 @@ export function retrieveComment(req, res, next) {
 }
 
 export function list_reported(): Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.RETRIEVE,
-        subject: Resource.COMMENT,
+        resource: Resource.COMMENT,
         others: () => true,
         ignoreValidationParamId: true
     })
@@ -39,9 +39,9 @@ export function list_reported(): Middlewares {
 export function writeCommentOnRecipe(): Middlewares {
     return [
         checkRequestHeaders({'content-type': 'application/json'}),
-        normalUser({
+        checkNormalRBAC({
             operation: Operation.CREATE,
-            subject: Resource.COMMENT
+            resource: Resource.COMMENT
         })
     ]
 }
@@ -52,9 +52,9 @@ export function writeResponseOnComment(): Middlewares {
         retrieveComment,
         function (req, res, next) {
             const comment = req.locals.comment
-            return normalUser({
+            return checkNormalRBAC({
                 operation: Operation.CREATE,
-                subject: Resource.COMMENT,
+                resource: Resource.COMMENT,
                 others: (decodedToken => comment.user && comment.user._id == decodedToken._id)
             })(req, res, next)
         }
@@ -71,22 +71,22 @@ export function update(): Middlewares {
             const comment = req.locals.comment
             switch (action as UpdateAction){
                 case UpdateAction.REPORT: {
-                    return normalUser({
+                    return checkNormalRBAC({
                         operation: Operation.CREATE,
-                        subject: Resource.COMMENT_REPORT,
+                        resource: Resource.COMMENT_REPORT,
                         others: decodedToken => comment.user && decodedToken._id == comment.user._id
                     })(req, res, next)
                 }
                 case UpdateAction.UN_REPORT:
-                    return restrictedUser({
+                    return checkRestrictedRBAC({
                         operation: Operation.DELETE,
-                        subject: Resource.COMMENT_REPORT,
+                        resource: Resource.COMMENT_REPORT,
                         others: () => true
                     })(req, res, next)
                 default :
-                    return restrictedUser({
+                    return checkRestrictedRBAC({
                         operation: Operation.UPDATE,
-                        subject: Resource.COMMENT,
+                        resource: Resource.COMMENT,
                         others: (decodedToken => !comment.user || decodedToken._id != comment.user._id)
                     })(req, res, next)
             }
@@ -99,9 +99,9 @@ export function remove(): Middlewares {
         retrieveComment,
         function (req, res, next) {
             const comment = req.locals.comment
-            return restrictedUser({
+            return checkRestrictedRBAC({
                 operation: Operation.DELETE,
-                subject: Resource.COMMENT,
+                resource: Resource.COMMENT,
                 others: (decodedToken => !comment.user || decodedToken._id != comment.user._id)
             })(req, res, next)
         }

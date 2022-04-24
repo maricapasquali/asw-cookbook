@@ -120,9 +120,9 @@ export function remove_comment(req, res){
             .then(_comment => {
                 res.status(200).json({description: 'Comment content has been deleted.'})
                 if(accessManager.isAdminUser(user) && _comment.user){
-                    console.log('Strike to '+ _comment.user.userID)
+                    console.debug('Strike to '+ _comment.user.userID)
                     User.updateOne({ _id: _comment.user._id }, { $inc : { strike: 1 } })
-                        .then(result => console.log(result.n > 0 && result.nModified > 0 ? 'Add strike.': 'No ad strike'),
+                        .then(result => console.debug(result.n > 0 && result.nModified > 0 ? 'Add strike.': 'No ad strike'),
                             err => console.error(err))
                 }
             }, err => res.status(500).json({code: err.code || 0, description: err.message}))

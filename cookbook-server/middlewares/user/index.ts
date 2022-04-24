@@ -1,4 +1,4 @@
-import {Middlewares, restrictedUser, normalUser, Middleware} from "../base";
+import {Middlewares, checkRestrictedRBAC, checkNormalRBAC, Middleware} from "../base";
 import {RBAC} from "../../modules/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
@@ -15,33 +15,33 @@ export function uploadProfileImage(): Middleware {
 }
 
 export function all_user(): Middlewares {
-    return normalUser()
+    return checkNormalRBAC()
 }
 
 export function one(): Middlewares {
-    return normalUser()
+    return checkNormalRBAC()
 }
 
 export function update_user(): Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.UPDATE,
-        subject: Resource.USER,
+        resource: Resource.USER,
         others: (decodedToken, param_id) => decodedToken._id !== param_id
     })
 }
 
 export function update_credential():Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.UPDATE,
-        subject: Resource.USER_CREDENTIAL,
+        resource: Resource.USER_CREDENTIAL,
         others: (decodedToken, param_id) => decodedToken._id !== param_id
     })
 }
 
 export function erase(): Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.DELETE,
-        subject: Resource.USER,
+        resource: Resource.USER,
         others: (decodedToken, param_id) => decodedToken._id !== param_id
     })
 }

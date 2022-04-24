@@ -403,7 +403,7 @@ export default {
 
       promiseSearch
          .then(({data}) => {
-            console.log('# Found Recipes = ', data.total)
+            console.debug('# Found Recipes = ', data.total)
             this.docs = data.items
             this.total = data.total
             if(!this.searchingMode) this.searchingMode = true

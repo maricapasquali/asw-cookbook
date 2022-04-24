@@ -293,12 +293,12 @@ export default {
     },
 
     updateNotification(doc){
-      console.log(doc._id + ' mark as read .')
+      console.debug(doc._id + ' mark as read .')
       this.$store
           .dispatch('notifications/read', doc._id)
           .then(({data}) => {
               doc.read = true
-              console.log(data)
+              console.debug(data)
           })
           .catch(err => {
             doc.read = false // doc.read = !doc.read
@@ -308,7 +308,7 @@ export default {
 
     deleteNotification(index){
       let notification =  this.docs[index]
-      console.log('Delete: ', notification._id)
+      console.debug('Delete: ', notification._id)
       this.$store
           .dispatch('notifications/remove', notification)
           .then(({data}) => {

@@ -103,7 +103,7 @@ export default {
       this.processing = true
       this.$store.dispatch('comments/reported', {options})
          .then(({data}) => {
-           console.log(data)
+           console.debug(data)
            this.docsReported = []
            this.docsDeleted = []
            data.forEach(comment => {
@@ -123,7 +123,7 @@ export default {
       let recipe = comment.recipe
       this.$store.dispatch('comments/remove', {ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id})
          .then(({data}) =>{
-            console.log(data)
+            console.debug(data)
             this.docsDeleted.push(this.docsReported[index])
             this.docsReported.splice(index, 1)
 
@@ -137,7 +137,7 @@ export default {
       let recipe = comment.recipe
       this.$store.dispatch('comments/un-report', {ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id})
          .then(({data}) =>{
-           console.log(data)
+           console.debug(data)
            this.docsReported.splice(index, 1)
 
            this.$socket.emit('comment:unreport', comment._id)

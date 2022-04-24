@@ -10,7 +10,7 @@ export default function (methods: MethodsAxios){
     function setImageUrl(user: any){
         if(user.information.img){
             user.information.img = methods.info.images.path(user.information.img)
-            console.log('image = ' + user.information.img)
+            console.debug('image = ' + user.information.img)
         }
     }
 
@@ -62,7 +62,7 @@ export default function (methods: MethodsAxios){
         }).then(response =>{
             if(response.data.info.img){
                 response.data.info.img =  methods.info.images.path(response.data.info.img)
-                console.log('image = ' + response.data.info.img)
+                console.debug('image = ' + response.data.info.img)
             }
             return response
         })

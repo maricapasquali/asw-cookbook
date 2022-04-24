@@ -35,20 +35,16 @@ function checkAndDecode(options?: AuthOption): Middleware {
                 options.ignoreValidationParamId = options.ignoreValidationParamId || false
 
                 let isIDValid = options.ignoreValidationParamId || Types.ObjectId.isValid(req.params.id)
-                if(!isIDValid) return next({status: 400, description: 'Required a valid \'id\''})
+                if(!isIDValid) {
+                    return next({status: 400, description: 'Required a valid \'id\''})
+                }
 
-                if(isIDValid && accessManager.isAuthorized(decoded_token.role, options.operation, options.subject, options.others(decoded_token, req.params.id))){
-                    req.locals.user = decoded_token
-                    next()
-                }
-                else {
-                    next({status: 403, description: 'User is unauthorized to execute this function.'})
+                if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.resource, options.others(decoded_token, req.params.id))) {
+                    return next({status: 403, description: 'User is unauthorized to execute this function.'})
                 }
             }
-            else {
-                req.locals.user = decoded_token
-                next()
-            }
+            req.locals.user = decoded_token
+            next()
         }
         else {
             next({status: 401, description: 'User is not authenticated'})
@@ -56,7 +52,7 @@ function checkAndDecode(options?: AuthOption): Middleware {
     }
 }
 
-type AuthOption = { operation: Operation, subject: Resource, others?: (decodedToken: DecodedTokenType, param_id: string) => boolean, ignoreValidationParamId?: boolean }
+type AuthOption = { operation: Operation, resource: Resource, others?: (decodedToken: DecodedTokenType, param_id: string) => boolean, ignoreValidationParamId?: boolean }
 
 export type Middleware = ( req, res, next: (err?: any) => any ) => void
 
@@ -73,7 +69,7 @@ export function extractAuthorization(): Middleware {
     }
 }
 
-export function restrictedUser(options?: AuthOption): Middleware {
+export function checkRestrictedRBAC(options?: AuthOption): Middleware {
     return function (req, res, next){
         extractAuthorization()(req, res, (err?: any): any => {
             if(err) return next(err)
@@ -83,7 +79,7 @@ export function restrictedUser(options?: AuthOption): Middleware {
     }
 }
 
-export function normalUser(options?: AuthOption): Middleware {
+export function checkNormalRBAC(options?: AuthOption): Middleware {
     return function (req, res, next){
         extractAuthorization()(req, res, (err?: any): any => {
             if(err) return next(err)

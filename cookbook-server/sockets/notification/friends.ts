@@ -4,7 +4,7 @@ import {FriendShip, IFriend} from "../../models/schemas/user/friend";
 import {UserInformationType} from "../rooms/user";
 
 export function request(io: any, request: IFriend): void {
-    console.log('Request = ', request)
+    console.debug('Request = ', request)
 
     create_notification({
         user: request.from._id,
@@ -29,7 +29,7 @@ export function request(io: any, request: IFriend): void {
 }
 
 export function update(io: any, request: IFriend): void {
-    console.log('Request update = ', request)
+    console.debug('Request update = ', request)
 
     let friendship = request
 
@@ -60,7 +60,7 @@ export function update(io: any, request: IFriend): void {
 
 export function remove(io: any, user: UserInformationType, otherUser: { _id: string, userID: string }): void {
     let friendship = { from: { _id: user.id }, to: { _id: otherUser._id } }
-    console.log('I (id: '+user.id+', name: '+user.name+') remove friend = (id: '+otherUser._id+', name: '+otherUser.userID+') ')
+    console.debug('I (id: '+user.id+', name: '+user.name+') remove friend = (id: '+otherUser._id+', name: '+otherUser.userID+') ')
 
     create_notification({
         user: user.id,

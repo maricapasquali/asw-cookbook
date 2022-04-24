@@ -77,11 +77,11 @@ export default {
     },
     change: function (e){
       e.preventDefault()
-      console.log("Change password ...")
+      console.debug("Change password ...")
       this.processing = true
       this.$store.dispatch('users/update-password',{oldPassword: this.oldPassword, newPassword: this.newPassword})
                .then(({data}) => {
-                 console.log(data)
+                 console.debug(data)
                  this.$emit('onChangePassword', data)
                  this.$socket.emit('user:update:password')
                  this.show = false

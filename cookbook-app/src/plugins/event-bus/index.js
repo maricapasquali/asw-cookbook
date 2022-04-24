@@ -6,5 +6,5 @@ export default function installEventBus(Vue, options){
 
     Vue.prototype.$bus = eventBus
 
-    console.log('Install plugin Event Bus ...')
+    console.debug('Install plugin Event Bus ...')
 }

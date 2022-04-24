@@ -1,4 +1,4 @@
-import {checkRequestHeaders, Middleware, Middlewares, restrictedUser} from "../base";
+import {checkRequestHeaders, Middleware, Middlewares, checkRestrictedRBAC} from "../base";
 import {RBAC} from "../../modules/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
@@ -31,34 +31,34 @@ export function uploadChatImage(): Middleware {
 export function create(): Middlewares {
     return [
         checkRequestHeaders({'content-type': 'multipart/form-data'}),
-        restrictedUser({
+        checkRestrictedRBAC({
             operation: Operation.CREATE,
-            subject: Resource.CHAT,
+            resource: Resource.CHAT,
             others: (decodedToken, param_id) => decodedToken._id !== param_id
         })
     ]
 }
 
 export function list(): Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.RETRIEVE,
-        subject: Resource.CHAT,
+        resource: Resource.CHAT,
         others:  (decodedToken, param_id) => decodedToken._id !== param_id
     })
 }
 
 export function one(): Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.RETRIEVE,
-        subject: Resource.CHAT,
+        resource: Resource.CHAT,
         others: (decodedToken, param_id) => decodedToken._id !== param_id
     })
 }
 
 export function erase(): Middlewares {
-    return restrictedUser({
+    return checkRestrictedRBAC({
         operation: Operation.DELETE,
-        subject: Resource.CHAT,
+        resource: Resource.CHAT,
         others: (decodedToken, param_id) => decodedToken._id !== param_id
     })
 }
@@ -69,9 +69,9 @@ export function update(): Middlewares {
             let {action} = req.query
             checkRequestHeaders({'content-type': UpdateAction.isUpdateImageAction(action) ? 'multipart/form-data': 'application/json'})(req, res, next)
         },
-        restrictedUser({
+        checkRestrictedRBAC({
             operation: Operation.UPDATE,
-            subject: Resource.CHAT,
+            resource: Resource.CHAT,
             others: (decodedToken, param_id) => decodedToken._id !== param_id
         })
     ]

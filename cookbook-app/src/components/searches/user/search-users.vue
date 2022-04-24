@@ -174,7 +174,7 @@ export default {
         query = {userID: { search: 'partial', value: this.$route.query.name }}
         pagination = {}
         this.search.mode = true
-        console.log('Serch mode = ', query.userID)
+        console.debug('Serch mode = ', query.userID)
       }else {
         this.search.mode = false
         this.search.value = ''

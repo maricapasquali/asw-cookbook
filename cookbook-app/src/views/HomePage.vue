@@ -165,7 +165,7 @@ export default {
       const page = currentPage || 1
       const limit = _limit || this.optionsPagination.limit
 
-      console.log('POST pagination: ', {page, limit})
+      console.debug('POST pagination: ', {page, limit})
 
       let _id = 'all-shared'
       let options = this.makeRequestOptions(_id, {message: 'homepage old recipes abort.'})
@@ -175,7 +175,7 @@ export default {
       this.$store.dispatch('recipes/all-shared', { pagination: {page, limit, skip: this.newArrivals.total }, options })
          .then(({data}) => {
 
-            console.log(data)
+            console.debug(data)
             data.items.forEach(r => this._remapRecipe(r))
             if(currentPage) this.docs.push(...data.items)
             else this.docs = data.items

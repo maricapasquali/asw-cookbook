@@ -4,7 +4,7 @@ import {ILike} from "../../models/schemas/recipe/like";
 
 export function recipe(io: any, recipe: any, like: ILike): void {
     const recipeOwner = recipe.owner?._id
-    console.log('recipe = ', recipe, ', like = ', like)
+    console.debug('recipe = ', recipe, ', like = ', like)
 
     const likerName = like.user ? like.user.userID : 'Anonimo'
     const otherInfo = {
@@ -36,7 +36,7 @@ export function recipe(io: any, recipe: any, like: ILike): void {
 export function comment(io: any, comment: any, like: any): void {
 
     const commentOwner = comment.user?._id
-    console.log('comment = ', comment, ', like = ', like)
+    console.debug('comment = ', comment, ', like = ', like)
 
     const likerName = like.user ? like.user.userID : 'Anonimo'
     const commentName = comment.user ? comment.user.userID : 'Anonimo'

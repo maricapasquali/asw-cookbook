@@ -11,11 +11,11 @@ import {UpdateAction} from "../../middlewares/recipe"
 const RecipeType: Array<string> = ['shared', 'saved',  'loved', 'shared-in-chat']
 
 async function getBody(req: any, res: any): Promise<any> {
-    console.log('get RECIPE BODY ... ')
+    console.debug('get RECIPE BODY ... ')
     const recipeBody = {...req.body}
 
     if(req.files) {
-        console.log(req.files)
+        console.debug(req.files)
         let fileImage = req.files['img']
         if (fileImage && fileImage.length === 1) recipeBody.img = fileImage[0].filename
         let fileVideo = req.files['tutorial']
@@ -49,7 +49,7 @@ async function getBody(req: any, res: any): Promise<any> {
     delete recipeBody.likes
     delete recipeBody.comments
 
-    console.log(recipeBody)
+    console.debug(recipeBody)
     return Promise.resolve(recipeBody)
 }
 
@@ -67,7 +67,7 @@ function getFilters(query: any, user?: string): object {
     if(ingredients) filters['ingredients.food'] = { $all: ingredients.filter(i => Types.ObjectId.isValid(i)).map(i => Types.ObjectId(i)) }
     // if(ingredients) filters['ingredients.food.name'] = { $all: ingredients } not work
 
-    console.log(filters)
+    console.debug(filters)
     return filters
 }
 
@@ -307,7 +307,7 @@ function update_permission_recipe(req, res){
 
                     _update.map(p => ({ user: p.user, granted: p.granted || IPermission.GrantedType.READ }))
                         .forEach(p => {
-                            console.log('permission ', JSON.stringify(permission))
+                            console.debug('permission ', JSON.stringify(permission))
                             let index = recipe.permission.findIndex(pp => pp.user._id == p.user)
                             if(index === -1) recipe.permission.push(p)
                             else if(p.granted != recipe.permission[index].granted) recipe.permission.splice(index, 1, p)

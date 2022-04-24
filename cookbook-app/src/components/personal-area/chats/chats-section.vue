@@ -236,7 +236,7 @@ export default {
       this.$store.dispatch('chats/own-without-message', {options})
           .then(({data}) => {
             this.chats = data.items
-            console.log('Chats = ', this.chats)
+            console.debug('Chats = ', this.chats)
             this.chats.forEach(chat => console.debug(chat.users.map(r => r.user?.role)))
             return true
           })
@@ -296,7 +296,7 @@ export default {
     onRemoveChat(){
       this.$store.dispatch('chats/remove', this.deleteChat.chat._id)
           .then(({data}) => {
-            console.log(data.description)
+            console.debug(data.description)
             let userRole = { user: this.userIdentifier, role: 'reader' }
             this.onListenerChangeRole(this.deleteChat.chat._id, userRole)
             this.$socket.emit('chat:change:role',this.deleteChat.chat._id, userRole)
@@ -329,14 +329,14 @@ export default {
       }
     },
     onListenersReadMessages({messages, info}){
-      console.log('Read messages ', messages ,' of chat ', info)
+      console.debug('Read messages ', messages ,' of chat ', info)
       if(!this._iSelectedChat(info)) {
         const chat = this.chats.find(chat => chat._id === info._id)
         if(chat){
           messages.forEach(() => {
             this.$store.commit('chats/remove-unread')
             chat.unreadMessages -= 1
-            console.log('chat.unreadMessages ', chat.unreadMessages )
+            console.debug('chat.unreadMessages ', chat.unreadMessages )
           })
         }
       }

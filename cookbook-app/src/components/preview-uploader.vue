@@ -85,12 +85,12 @@ export default {
   methods:{
     openZoomImage: function (){
       if(!this.zoomable || !this.load_file_preview) return ;
-      console.log('Open Zoom ...')
+      console.debug('Open Zoom ...')
       this.zoom = true
     },
     closeZoomImage: function (){
       if(!this.zoomable || !this.load_file_preview) return ;
-      console.log('Close Zoom ...')
+      console.debug('Close Zoom ...')
       this.zoom = false
     },
     clickLoad: function (){
@@ -111,9 +111,9 @@ export default {
       if(this.videoType) return ReaderStreamVideo.read(file, this.setFile.bind(this, file))
     },
     setFile(file, event){
-      console.log('File = ' , file)
+      console.debug('File = ' , file)
       this.$emit('selectFile', file)
-      console.log(`Load file ${file.type} preview...`)
+      console.debug(`Load file ${file.type} preview...`)
       this.load_file_preview = event.target.result
       this.remove = false
     },

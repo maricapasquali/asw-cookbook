@@ -89,7 +89,12 @@ export default {
     updateGUIListener(){
       this.$bus.$on('hide:navigation-bar', () => this.routeWithoutNavigationBar.push(this.$route.name))
       this.$bus.$on('hide:footer', () => this.routeWithoutFooter.push(this.$route.name))
-
+      this.$bus.$on('hide:errors', () => {
+        this.badRequestError.show = false
+        this.unAuthenticatedError.show = false
+        this.forbiddenError.show = false
+        this.serverError.show = false
+      })
       this.$bus.$on('show:error:bad-request', err => this.badRequestError = {show: true, ...err})
       this.$bus.$on('show:error:unauthenticated', err => this.unAuthenticatedError = {show: true, ...err})
       this.$bus.$on('show:error:forbidden', err => this.forbiddenError = {show: true, ...err})
@@ -98,7 +103,7 @@ export default {
     }
   },
   created() {
-    console.log('App created ')
+    console.debug('App created ')
 
     console.debug('Vue ', this)
     console.debug('Store ', this.$store)
@@ -114,7 +119,7 @@ export default {
     this.updateGUIListener()
 
     this.initialization()
-        .then(vl => console.log('Initialization ok : Store State ', this.$store.state))
+        .then(vl => console.debug('Initialization ok : Store State ', this.$store.state))
         .catch(err => {
           console.error('Something wrong during the initialization: ', err.message)
           console.error(err.response)
