@@ -1,4 +1,4 @@
-export default function (bus, store, socket){
+export default function (bus, store, router, socket){
     const toastIdMessages = 'push-message'
 
     const hasInRouteOfChat = (route) => {
@@ -31,8 +31,8 @@ export default function (bus, store, socket){
                     const dest = chat.info.type === 'one' || isAdmin ? 'da ' + message.sender.userID :
                         chat.info.type === 'group' ? 'in ' + chat.info.name : ''
 
-                    if(hasInRouteOfChat(this.$route) ) bus.$emit('push-message', chat.info, message)
-                    else this.$bvToast.toast('Hai ricevuto un nuovo messaggio ' + dest, { id: toastIdMessages, title: 'Messaggio', solid: true, variant: 'info', })
+                    if(hasInRouteOfChat(router.currentRoute)) bus.$emit('push-message', chat.info, message)
+                    else bus.$emit('show:bv-toast', { message: 'Hai ricevuto un nuovo messaggio ' + dest, options: { id: toastIdMessages, title: 'Messaggio', solid: true, variant: 'info' } })
 
                     store.commit('chats/add-unread')
 
@@ -45,9 +45,9 @@ export default function (bus, store, socket){
         console.debug('Read messages ', chats)
         chats.filter(chat => chat.messages && chat.messages.length > 0)
              .forEach(chat => {
-                 if(hasInRouteOfChat(this.$route)) bus.$emit('read-message', chat)
+                 if(hasInRouteOfChat(router.currentRoute)) bus.$emit('read-message', chat)
                  else {
-                    this.$bvToast.hide(toastIdMessages)
+                    bus.$emit('hide:bv-toast', toastIdMessages)
                     chat.messages.forEach(() => store.commit('chats/remove-unread'))
                  }
              })

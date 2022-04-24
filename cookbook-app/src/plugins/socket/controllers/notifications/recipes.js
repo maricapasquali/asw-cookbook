@@ -8,7 +8,7 @@ export default function (bus, store){
     function _operationOnRecipe(op, notification, data){
         console.debug('recipe ', op , ' => ', { notification, data })
         if(notification) {
-            this.$bvToast.toast(notification.content, options)
+            bus.$emit('show:bv-toast', { message: notification.content, options })
             store.commit('notifications/add-unread')
         }
         bus.$emit('recipe:' + op, notification, data)

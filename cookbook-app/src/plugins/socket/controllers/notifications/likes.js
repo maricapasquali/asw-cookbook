@@ -9,7 +9,7 @@ export default function (bus, store){
     function likeRecipe({notification, like}){
         console.debug('like recipe => ', notification, like)
         if(notification.content) {
-            this.$bvToast.toast(notification.content, options)
+            bus.$emit('show:bv-toast', { message: notification.content, options })
             store.commit('notifications/add-unread')
         }
         bus.$emit('like:recipe', notification, like)
@@ -18,7 +18,7 @@ export default function (bus, store){
     function likeComment({notification, like}){
         console.debug('like comment => ', notification, like)
         if(notification.content) {
-            this.$bvToast.toast(notification.content, options)
+            bus.$emit('show:bv-toast', { message: notification.content, options })
             store.commit('notifications/add-unread')
         }
         bus.$emit('like:comment', notification, like)

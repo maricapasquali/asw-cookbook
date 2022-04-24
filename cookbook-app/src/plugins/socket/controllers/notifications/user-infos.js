@@ -6,14 +6,14 @@ export default function (bus, store, router){
 
     function afterUpdatePassword(notification){
         console.debug('update password => ', notification)
-        this.$bvToast.toast(notification.content, options)
+        bus.$emit('show:bv-toast', { message: notification.content, options })
         store.commit('notifications/add-unread')
         bus.$emit('user:update:password', notification)
     }
 
     function onAddStrike({notification, strike}){
         console.debug('strike user => ', notification)
-        this.$bvToast.toast(notification.content, options)
+        bus.$emit('show:bv-toast', { message: notification.content, options })
         bus.$emit('user:strike', notification)
         store.commit('notifications/add-unread')
         if(strike === 3){

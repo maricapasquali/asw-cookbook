@@ -8,7 +8,7 @@ import {socketIO} from "@services/socket";
 export default function installSocket(Vue, {bus, store, router}) {
 
     const notificController = notificationsController(bus, store, router)
-    const mexController = messagesController(bus, store, socketIO)
+    const mexController = messagesController(bus, store, router, socketIO)
     const updController = updatesController(bus, store, router)
     const errsController = errorsController(bus, store, socketIO)
 
