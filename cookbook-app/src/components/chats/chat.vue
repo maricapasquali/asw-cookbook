@@ -356,6 +356,10 @@ export default {
       removeIfPresent(this.writeUsers, w => w._id === leaveUser)
     },
 
+    reEnterInChat(){
+      this.$socket.emit("chat:enter", this._actualInfoChat)
+    },
+
     _initMessages(chatMessages){
       this.messages = chatMessages.map(message => Object.assign(message, {delivered: true}))
       this.readMessages(this.newMessages.reverse())
@@ -498,6 +502,7 @@ export default {
 
     this.$bus.$on('user:update:info', this.onUpdateUserInfo.bind(this))
 
+    this.$bus.$on('chat:re-enter', this.reEnterInChat.bind(this))
 
     console.debug('Created: chat is  ', this.value, ', from link ', this.fromLink)
     this._initialization(this.value)
@@ -512,6 +517,7 @@ export default {
     this.$socket.off('messages', this.receiveMessages.bind(this))
 
     this.$bus.$off('user:update:info', this.onUpdateUserInfo.bind(this))
+    this.$bus.$off('chat:re-enter', this.reEnterInChat.bind(this))
 
     if(this.value) this.$socket.emit('chat:leave', this._actualInfoChat)
   }

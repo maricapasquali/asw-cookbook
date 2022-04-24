@@ -89,7 +89,12 @@ export default {
     updateGUIListener(){
       this.$bus.$on('hide:navigation-bar', () => this.routeWithoutNavigationBar.push(this.$route.name))
       this.$bus.$on('hide:footer', () => this.routeWithoutFooter.push(this.$route.name))
-
+      this.$bus.$on('hide:errors', () => {
+        this.badRequestError.show = false
+        this.unAuthenticatedError.show = false
+        this.forbiddenError.show = false
+        this.serverError.show = false
+      })
       this.$bus.$on('show:error:bad-request', err => this.badRequestError = {show: true, ...err})
       this.$bus.$on('show:error:unauthenticated', err => this.unAuthenticatedError = {show: true, ...err})
       this.$bus.$on('show:error:forbidden', err => this.forbiddenError = {show: true, ...err})

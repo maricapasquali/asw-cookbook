@@ -13,10 +13,10 @@ export default function (io: Server): void {
     io.use(middlewareCheckAuthorization)
       .on('connection', socket => {
 
-          socket.use(([event, value], next) => {
+          socket.use(([event, ...args], next) => {
               let checkIfAuthenticationIsValid = /chat:.*|friendship:.*|recipe:(?!comment$).*|user:update:password|user:strike|food:create|logout/.test(event)
-              console.debug(`Check auth on event '${event}' = ${checkIfAuthenticationIsValid}.`)
-              if(checkIfAuthenticationIsValid) middlewareCheckNoAnonymous(socket, next)
+              console.debug(`Check auth on event '${event}' = ${checkIfAuthenticationIsValid} with args ${JSON.stringify(args)}`)
+              if(checkIfAuthenticationIsValid) middlewareCheckNoAnonymous(socket, next, { previousEmittedEvent: { event, args } })
               else next()
           })
 
@@ -43,7 +43,7 @@ export default function (io: Server): void {
           // ERRORS
           socket.on("error", (error: ExtendedError) => {
               console.debug("Handler errors on socket....")
-              socket.emit('operation:not:authorized', { message: error.message, expired: error.data.expired })
+              socket.emit('operation:not:authorized', { message: error.message, expired: error.data.expired, previousEmittedEvent: error.data.previousEmittedEvent })
           })
       })
 
