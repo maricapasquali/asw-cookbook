@@ -8,6 +8,7 @@ import {
     changeUserRoleInChat,
     isInChat
 } from "../rooms/chat"
+import {IChat} from "../../models/schemas/chat";
 
 export type TypingData = { _id: string, userID: string, typing: boolean }
 
@@ -18,9 +19,13 @@ export default function (io: any, socket: any): void {
 
     const chatRoomName = (chat: ChatInfo): string => {
         let room: string = '';
-        switch (chat.info.type){
-            case "one": room = [Rooms.CHAT_ONE, chat.users.map(u => u._id).join('-')].join('-'); break;
-            case "group" : room = [Rooms.CHAT_GROUP, [chat.info.name, chat.users.map(u => u._id).join('-')].join('-') ].join('-'); break;
+        switch (chat.info.type as IChat.Type){
+            case IChat.Type.ONE:
+                room = [Rooms.CHAT_ONE, chat._id].join('-');
+                break;
+            case IChat.Type.GROUP :
+                room = [Rooms.CHAT_GROUP, chat._id].join('-');
+                break;
         }
         return room
     }
