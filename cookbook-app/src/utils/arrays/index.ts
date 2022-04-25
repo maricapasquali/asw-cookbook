@@ -1,76 +1,7 @@
 import * as _ from 'lodash'
-import { ReaderStream, ReaderStreamImage, ReaderStreamVideo } from "./filesystem";
-import { Validator, EmailValidator, PasswordValidator } from '../../../commons/modules/validator'
+import {isCallable} from "../lang";
 
-declare global {
-    interface Window {
-        clone(from: object): object
-
-        equals(o: object, o1: object): boolean
-
-        isEmpty(v: any): boolean
-
-        isBoolean(v: any): boolean
-
-        isString(v: any): boolean
-
-        isCallable(v: any): boolean
-
-        diff(v1: Array<any>, v2: Array<any>): Array<any>
-
-        pushIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => boolean): boolean
-
-        prependIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => boolean | any): boolean
-
-        removeIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): any
-
-        replaceIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any, newVal: any): any
-
-        prependIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): void
-
-        prepend(v1: Array<any>, index: number): void
-
-        lastOf(v1: Array<any>, filter?: (v: any) => boolean | any): any
-
-        flatten(vector: Array<object>, field: string): Array<object>
-
-        visitUntil(vector: Array<object>, child: object, options: VisitOptions): Array<object>
-
-        dateFormat(timestamp: number, lang: string, seconds?: boolean): string
-
-        ReaderStreamImage: ReaderStream,
-
-        ReaderStreamVideo: ReaderStream,
-
-        EmailValidator: Validator<string>,
-
-        PasswordValidator: Validator<string>
-    }
-}
-
-export function clone(from: object){
-    return _.cloneDeep(from)
-}
-
-export function equals(o: object, o1: object): boolean {
-    return _.isEqual(o, o1)
-}
-
-export function isEmpty(v: any): boolean {
-    return _.isEmpty(v)
-}
-
-export function isBoolean(v: any): boolean {
-    return typeof v === 'boolean'
-}
-
-export function isString(v: any): boolean {
-    return typeof v === 'string'
-}
-
-export function isCallable(v: any): boolean {
-    return typeof v === 'function'
-}
+export declare type VisitOptions = { flatterField: string, finderField: string, mapperField?: string, includeChild?: boolean }
 
 export function diff(v1: Array<any>, v2: Array<any> ): Array<any> {
     return _.difference(v1, v2)
@@ -135,8 +66,6 @@ export function flatten(vector: Array<object>, field: string): Array<object> {
     return _.flatMapDeep(vector, mapper);
 }
 
-export type VisitOptions = { flatterField: string, finderField: string, mapperField?: string, includeChild?: boolean }
-
 export function visitUntil(vector: Array<object>, child: object, options: VisitOptions): Array<object> {
     const { flatterField, finderField, mapperField, includeChild } = options
 
@@ -161,70 +90,4 @@ export function visitUntil(vector: Array<object>, child: object, options: VisitO
         if(_child) _pathResult.push(_child)
     }
     return mapperField && _pathResult.some(v => v.hasOwnProperty(mapperField)) ? _pathResult.map(v => v[mapperField]) : _pathResult
-}
-
-export function dateFormat(timestamp: number, lang: string = 'it', seconds?: boolean ): string {
-    return new Date(timestamp).toLocaleString([lang], {
-        year: 'numeric',
-        day: '2-digit',
-        month:'2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: seconds ? '2-digit':  undefined
-    })
-}
-
-window.clone = clone
-window.equals = equals
-window.isEmpty = isEmpty
-window.isBoolean = isBoolean
-window.isString = isString
-window.isCallable = isCallable
-
-window.diff = diff
-window.pushIfAbsent = pushIfAbsent
-window.prependIfAbsent = prependIfAbsent
-window.removeIfPresent = removeIfPresent
-window.replaceIfPresent = replaceIfPresent
-window.prependIfPresent = prependIfPresent
-window.prepend = prepend
-window.lastOf = lastOf
-window.flatten = flatten
-window.visitUntil = visitUntil
-
-window.dateFormat = dateFormat
-
-
-window.ReaderStreamImage = ReaderStreamImage
-window.ReaderStreamVideo = ReaderStreamVideo
-
-window.EmailValidator = EmailValidator
-window.PasswordValidator = PasswordValidator
-
-
-export default {
-    clone,
-    equals,
-    isEmpty,
-    isBoolean,
-    isString,
-    isCallable,
-
-    diff,
-    pushIfAbsent,
-    prependIfAbsent,
-    removeIfPresent,
-    replaceIfPresent,
-    prependIfPresent,
-    prepend,
-    lastOf,
-    flatten,
-    visitUntil,
-
-    dateFormat,
-
-    ReaderStreamImage,
-    ReaderStreamVideo,
-    EmailValidator,
-    PasswordValidator
 }
