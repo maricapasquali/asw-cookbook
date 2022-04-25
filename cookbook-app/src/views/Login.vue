@@ -4,7 +4,7 @@
       <!-- LOGIN -->
       <wrap-loading v-model="onLogin.processing" >
         <b-card>
-          <div class="text-center"> <h1 class="text-primary"><em>{{ $appName }}</em></h1></div>
+          <div class="text-center"><logo/></div>
           <b-card-body>
             <b-alert :variant="onLogin.error.info? 'info': 'danger'" v-model="onLogin.error.show">{{onLogin.error.msg}}</b-alert>
             <b-form @submit.prevent="onLoginSubmit">

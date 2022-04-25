@@ -4,7 +4,10 @@
      <loading v-model="processing"/>
      <div v-if="!processing">
        <b-card v-if="link.valid">
-         <div class="text-center"> <h1 class="text-primary"><em>{{ $appName }}</em></h1><h3 v-if="changeDefaultPassword"><em>Cambia DEFAULT password</em></h3></div>
+         <div class="text-center">
+           <logo/>
+           <h3 v-if="changeDefaultPassword"><em>Cambia DEFAULT password</em></h3>
+         </div>
          <b-card-body>
            <b-alert variant="danger" v-model="error.show" show>
             <div>

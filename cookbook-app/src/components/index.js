@@ -22,6 +22,7 @@ import NutrientsTable from "@components/app/nutrients-table"
 import CountryImage from "@components/app/country-image"
 import Avatar from "@components/app/avatar"
 import Like from "@components/app/like"
+import Logo from "@components/app/logo"
 import BFriendship from "@components/app/b-friendship"
 
 import SignUp from "@components/login/SignUp";
@@ -102,6 +103,7 @@ const components = {
     CountryImage,
     Avatar,
     Like,
+    Logo,
     BFriendship,
 
     SignUp,
