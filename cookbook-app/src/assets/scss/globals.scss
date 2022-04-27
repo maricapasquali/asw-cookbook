@@ -1,5 +1,6 @@
 @import "vars";
 @import "notification-colors";
+@import "scrollbar";
 
 .hidden {
   display: none;
@@ -53,31 +54,4 @@ fieldset.bordered {
     padding-right: 5px;
     padding-left: 5px;
   }
-}
-
-
-/* FIXME: CSS ScrollBar NOT WORK FOR MOZILLA */
-/* -- ScrollBar -- */
-/* width */
-::-webkit-scrollbar {
-  width: 15px;
-  z-index: 9999999;
-  background-color: #F5F5F5;
-}
-
-/* Track */
-::-webkit-scrollbar-track {
-  background: #C9D6FF;  /* fallback for old browsers */
-  background: -webkit-linear-gradient(to right, #E2E2E2, #C9D6FF);  /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(to right, #E2E2E2, #C9D6FF); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-  border-radius: 10px;
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background:  $component-color;  /* fallback for old browsers */
-  background: -webkit-linear-gradient(to right, #328ffc,  $component-color);  /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(to right, #328ffc,  $component-color); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-  border-radius: 10px;
-
 }
