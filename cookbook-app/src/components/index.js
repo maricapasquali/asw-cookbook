@@ -1,7 +1,7 @@
-import CenterContainer from '@components/center-container'
+import CenterContainer from '@components/center-container';
+import CustomSelect from "@components/custom-select";
 import PreviewUploader from "@components/preview-uploader";
 import Loading from "@components/loading"
-import SelectWithImage from "@components/select-with-image";
 import WrapLoading from "@components/wrap-loading";
 import ElapsedTime from "@components/elapsedTime";
 import MiniTextEditor from "@components/mini-text-editor"
@@ -80,9 +80,9 @@ import ContainerCollapsable from '@components/one-user/container-collapsable'
 
 const components = {
     CenterContainer,
+    CustomSelect,
     PreviewUploader,
     Loading,
-    SelectWithImage,
     WrapLoading,
     ElapsedTime,
     MiniTextEditor,

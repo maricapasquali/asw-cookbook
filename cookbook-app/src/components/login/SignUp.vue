@@ -105,14 +105,11 @@
                     label="Genere"
                     label-for="input-6"
                 >
-
-                  <select-with-image
+                  <custom-select
                       id="input-6"
                       v-model="user.sex"
                       placeholder="Select gender"
-                      type="text"
-                      :options="genders">
-                  </select-with-image>
+                      :options="genders" />
                 </b-form-group>
 
                 <b-form-group
@@ -121,13 +118,11 @@
                     label-for="input-7"
                     class="pr-md-2"
                 >
-                  <select-with-image
+                  <custom-select
                       id="input-7"
                       v-model="user.country"
                       placeholder="Select country"
-                      type="text"
-                      :options="countries">
-                  </select-with-image>
+                      :options="countries" />
                 </b-form-group>
                 <b-form-group
                     id="input-group-8"

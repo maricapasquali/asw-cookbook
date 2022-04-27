@@ -16,11 +16,10 @@
         </b-col>
         <b-col>
           <b-form-group label-for="state-search" label="Stato">
-            <b-input-group>
-              <b-input-group-prepend>
-                <b-input-group-text> <b-icon-search /> </b-input-group-text>
-              </b-input-group-prepend>
-              <b-form-select id="state-search" v-model="filter.state" :options="filterOptions.state" />
+            <b-input-group class="col-12 px-0">
+              <custom-select id="state-search" v-model="filter.state" :options="filterOptions.state">
+                <template #icon-prepend> <b-icon-search /></template>
+              </custom-select>
             </b-input-group>
           </b-form-group>
         </b-col>

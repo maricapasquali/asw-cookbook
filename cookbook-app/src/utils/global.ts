@@ -10,6 +10,7 @@ import {
     prependIfPresent,
     prepend,
     lastOf,
+    recursiveSearch,
     flatten,
     visitUntil,
 } from "./arrays"
@@ -20,8 +21,10 @@ import {
     isBoolean,
     isString,
     isCallable,
+    isDefined,
     dateFormat
 } from "./lang"
+import scrolling, {Scrolling} from "./lang/scrolling";
 
 declare global {
     interface Window {
@@ -36,6 +39,10 @@ declare global {
         isString(v: any): boolean
 
         isCallable(v: any): boolean
+
+        isDefined(v: any): boolean
+
+        scrolling: Scrolling
 
         diff(v1: Array<any>, v2: Array<any>): Array<any>
 
@@ -52,6 +59,8 @@ declare global {
         prepend(v1: Array<any>, index: number): void
 
         lastOf(v1: Array<any>, filter?: (v: any) => boolean | any): any
+
+        recursiveSearch(v1: Array<any>, v: any, field: string): any
 
         flatten(vector: Array<object>, field: string): Array<object>
 
@@ -75,6 +84,8 @@ window.isEmpty = isEmpty
 window.isBoolean = isBoolean
 window.isString = isString
 window.isCallable = isCallable
+window.isDefined = isDefined
+window.scrolling = scrolling
 
 window.diff = diff
 window.pushIfAbsent = pushIfAbsent
@@ -84,6 +95,7 @@ window.replaceIfPresent = replaceIfPresent
 window.prependIfPresent = prependIfPresent
 window.prepend = prepend
 window.lastOf = lastOf
+window.recursiveSearch = recursiveSearch
 window.flatten = flatten
 window.visitUntil = visitUntil
 

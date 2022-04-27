@@ -1,6 +1,10 @@
 @import "vars";
 @import "notification-colors";
 
+.hidden {
+  display: none;
+}
+
 .icon{
   cursor: pointer;
   &:focus {
@@ -26,17 +30,17 @@
   width: 100%;
 }
 
-button.rounded-left {
+.rounded-left {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
-button.rounded-right {
+.rounded-right {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-button.no-rounded {
+.no-rounded {
   border-radius: 0;
 }
 

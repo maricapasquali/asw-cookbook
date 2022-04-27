@@ -24,6 +24,10 @@ export function isCallable(v: any): boolean {
     return typeof v === 'function'
 }
 
+export function isDefined(v: any): boolean {
+    return typeof v !== 'undefined'
+}
+
 export function dateFormat(timestamp: number, lang: string = 'it', seconds?: boolean ): string {
     return new Date(timestamp).toLocaleString([lang], {
         year: 'numeric',

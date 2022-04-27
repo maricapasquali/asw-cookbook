@@ -58,6 +58,11 @@ export function lastOf(v1: Array<any>, filter?: (v: any) => boolean | any): any 
     return _.last(_.filter(v1, filter));
 }
 
+export function recursiveSearch(v1: Array<any>, v: any, field?: string): any {
+    if(v1.find(p => p == v)) return v
+    return recursiveSearch(v1, field ? v[field] : v, field)
+}
+
 export function flatten(vector: Array<object>, field: string): Array<object> {
     const mapper = (obj: object): Array<object> | object => {
         if(!obj[field] || !obj[field].length) return obj;
