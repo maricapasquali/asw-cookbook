@@ -1,5 +1,5 @@
 // Import global utilities
-import "@utils"
+import "@utils/global"
 // Import Vue
 import Vue from 'vue'
 // Import Bootstrap Vue and Icon Plugin

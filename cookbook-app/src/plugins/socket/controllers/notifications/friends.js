@@ -6,7 +6,7 @@ export default function (bus, store){
 
     function friendShipRequest(notification){
         console.debug('friendship request => ', notification)
-        this.$bvToast.toast(notification.content, options)
+        bus.$emit('show:bv-toast', { message: notification.content, options })
         store.commit('notifications/add-unread')
         store.commit('friendships/add', {
                 from: {_id: notification.otherInfo.from },
@@ -21,7 +21,7 @@ export default function (bus, store){
     function friendShipRemove({notification, friendship}){
         console.debug('friendship remove => ', {notification, friendship})
         if(notification) {
-            this.$bvToast.toast(notification.content, options)
+            bus.$emit('show:bv-toast', { message: notification.content, options })
             store.commit('notifications/add-unread')
             store.commit('friendships/remove', notification.otherInfo.exFriend)
             bus.$emit('friendship:remove:' + notification.otherInfo.exFriend, notification) /* for b-friendship */
@@ -33,7 +33,7 @@ export default function (bus, store){
     function friendShipUpdate({notification, friendship}){
         console.debug('friendship update => ', {notification, friendship})
         if(notification) {
-            this.$bvToast.toast(notification.content, options)
+            bus.$emit('show:bv-toast', { message: notification.content, options })
             store.commit('notifications/add-unread')
             let {state, to} = notification.otherInfo
             store.commit('friendships/update', { friendID: to, updatedFriendship: {state} })

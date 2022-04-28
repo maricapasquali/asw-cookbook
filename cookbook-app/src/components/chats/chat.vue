@@ -38,7 +38,7 @@
           </b-col>
 
           <b-col ref="chat-footer" v-if="!value || amINotReaderUser" class="messages-footer" >
-            <chat-footer :disabled="!value" encrypted @send-text="sendMessage" @typing="sendTyping"
+            <chat-footer :disabled="!value" @send-text="sendMessage" @typing="sendTyping"
                          :attachments-items="recipes" :attachment="attachment.link" :attachmentPreview="attachment.preview" attachment-search-field="name" @attachment-click="createLinkToSend"
                          @write="onWriteMessage" >
 

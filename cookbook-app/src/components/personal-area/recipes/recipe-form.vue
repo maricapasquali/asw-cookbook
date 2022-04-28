@@ -19,36 +19,34 @@
           <!-- COUNTRY -->
           <b-col>
             <b-form-group label="Stato" label-for="r-country">
-              <select-with-image
+              <custom-select
                   id="r-country"
                   v-model="recipe.country"
                   placeholder="Seleziona ..."
-                  type="text"
                   :options="countries" />
             </b-form-group>
           </b-col>
           <!-- DIET  -->
           <b-col>
             <b-form-group label="Regime alimentare" label-for="r-diet">
-              <b-form-select id="r-diet" v-model.trim="recipe.diet" :options="diets" >
-                <template #first>
-                  <b-form-select-option value="undefined" disabled> Seleziona ... </b-form-select-option>
-                </template>
-              </b-form-select>
+              <custom-select
+                  id="r-diet"
+                  v-model="recipe.diet"
+                  placeholder="Seleziona ..."
+                  :options="diets" />
             </b-form-group>
           </b-col>
           <!-- CATEGORY  -->
           <b-col>
             <b-form-group label="Categoria" label-for="r-category">
-              <b-form-select id="r-category"
-                             v-model.trim="recipe.category"
-                             :options="recipeCategories"
-                             :state="validation.category"
-                             @change="onInputRecipeCategory" >
-                <template #first>
-                  <b-form-select-option value="undefined" disabled> Seleziona ... </b-form-select-option>
-                </template>
-              </b-form-select>
+              <custom-select
+                  id="r-category"
+                  v-model="recipe.category"
+                  placeholder="Seleziona ..."
+                  :options="recipeCategories"
+                  :state="validation.category"
+                  @change="onInputRecipeCategory"
+              />
             </b-form-group>
           </b-col>
         </b-row>

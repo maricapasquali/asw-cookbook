@@ -1,7 +1,7 @@
-import CenterContainer from '@components/center-container'
+import CenterContainer from '@components/center-container';
+import CustomSelect from "@components/custom-select";
 import PreviewUploader from "@components/preview-uploader";
 import Loading from "@components/loading"
-import SelectWithImage from "@components/select-with-image";
 import WrapLoading from "@components/wrap-loading";
 import ElapsedTime from "@components/elapsedTime";
 import MiniTextEditor from "@components/mini-text-editor"
@@ -22,6 +22,7 @@ import NutrientsTable from "@components/app/nutrients-table"
 import CountryImage from "@components/app/country-image"
 import Avatar from "@components/app/avatar"
 import Like from "@components/app/like"
+import Logo from "@components/app/logo"
 import BFriendship from "@components/app/b-friendship"
 
 import SignUp from "@components/login/SignUp";
@@ -79,9 +80,9 @@ import ContainerCollapsable from '@components/one-user/container-collapsable'
 
 const components = {
     CenterContainer,
+    CustomSelect,
     PreviewUploader,
     Loading,
-    SelectWithImage,
     WrapLoading,
     ElapsedTime,
     MiniTextEditor,
@@ -102,6 +103,7 @@ const components = {
     CountryImage,
     Avatar,
     Like,
+    Logo,
     BFriendship,
 
     SignUp,

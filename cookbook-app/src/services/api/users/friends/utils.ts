@@ -1,4 +1,4 @@
-import {clone} from "../../../../utils";
+import {clone} from "../../../../utils/lang";
 
 type FriendShip = { from?: any, to?: any, user?: any } | any
 
