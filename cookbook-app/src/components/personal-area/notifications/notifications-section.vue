@@ -7,17 +7,9 @@
               <b-col class="px-0" :cols="searchingMode ? 10: 12">
                 <b-form-group label-for="type-search" aria-label="Tipo di notifica">
                   <b-input-group>
-                    <b-input-group-prepend>
-                      <b-input-group-text> <b-icon-search /> </b-input-group-text>
-                    </b-input-group-prepend>
-                    <b-form-select id="type-search" v-model="filter.type" :disabled="pagination.isBusy" >
-                      <template #first>
-                        <b-form-select-option value="" disabled> Seleziona un opzione di ricerca </b-form-select-option>
-                      </template>
-                      <template #default>
-                        <b-form-select-option v-for="type in notificationTypes" :key="type.value" :value="type.value"> {{type.text}} </b-form-select-option>
-                      </template>
-                    </b-form-select>
+                    <custom-select id="type-search" v-model="filter.type" :options="notificationTypes" placeholder="Seleziona un opzione di ricerca" :disabled="pagination.isBusy">
+                      <template #icon-prepend> <b-icon-search /></template>
+                    </custom-select>
                   </b-input-group>
                 </b-form-group>
               </b-col>
@@ -166,7 +158,7 @@ export default {
     },
 
     searchingMode(){
-      return this.filter.type.length > 0
+      return this.filter.type?.length > 0
     }
   },
   filters: {

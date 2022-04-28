@@ -6,7 +6,7 @@
 
     <server-error-handler v-model="serverError"/>
     <bad-request-error-handler v-model="badRequestError"/>
-    <unauthenticated-error-handler v-model="unAuthenticatedError" @force-render-router="forceReloadRoute=true" @close="forceReloadRoute=false"/>
+    <unauthenticated-error-handler v-model="unAuthenticatedError"/>
     <forbidden-error-handler v-model="forbiddenError"/>
     <not-found-error-handler v-model="notFoundResource"/>
   </div>
@@ -87,6 +87,8 @@ export default {
   methods: {
     ...mapActions(['initialization']),
     updateGUIListener(){
+      this.$bus.$on('force:reload-route', force => this.forceReloadRoute = force)
+
       this.$bus.$on('hide:navigation-bar', () => this.routeWithoutNavigationBar.push(this.$route.name))
       this.$bus.$on('hide:footer', () => this.routeWithoutFooter.push(this.$route.name))
       this.$bus.$on('hide:errors', () => {

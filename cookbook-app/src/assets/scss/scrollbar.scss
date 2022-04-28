@@ -1,0 +1,45 @@
+@import "vars";
+
+$scrollbar-width: 15px;
+$scrollbar-border-radius: 10px;
+$scrollbar-z-index: 9999999;
+
+$scrollbar-bg-color-thumb-start: #328ffc;
+$scrollbar-bg-color-thumb: $component-color;
+$scrollbar-bg-color-thumb-webkit: -webkit-linear-gradient(to right, $scrollbar-bg-color-thumb-start,  $scrollbar-bg-color-thumb);
+$scrollbar-bg-color-thumb-others: linear-gradient(to right, $scrollbar-bg-color-thumb-start,  $scrollbar-bg-color-thumb);
+
+$scrollbar-bg-color-track-start: #E2E2E2;
+$scrollbar-bg-color-track: #C9D6FF;
+$scrollbar-bg-color-track-webkit: -webkit-linear-gradient(to right, $scrollbar-bg-color-track-start, $scrollbar-bg-color-track);
+$scrollbar-bg-color-track-others: linear-gradient(to right, $scrollbar-bg-color-track-start, $scrollbar-bg-color-track);
+
+/* Works on Firefox */
+* {
+  scrollbar-color: $scrollbar-bg-color-thumb-start $scrollbar-bg-color-track-start;
+  scrollbar-width: $scrollbar-width;
+}
+
+/* Works on Chrome, Edge, Opera and Safari */
+
+/* width */
+::-webkit-scrollbar {
+  width: $scrollbar-width;
+  z-index: $scrollbar-z-index;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: $scrollbar-bg-color-track;
+  background: $scrollbar-bg-color-track-webkit;
+  background: $scrollbar-bg-color-track-others;
+  border-radius: $scrollbar-border-radius;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: $scrollbar-bg-color-thumb;
+  background: $scrollbar-bg-color-thumb-webkit;
+  background: $scrollbar-bg-color-thumb-others;
+  border-radius: $scrollbar-border-radius;
+}

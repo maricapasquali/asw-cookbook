@@ -3,8 +3,15 @@
     <loading v-model="logoutProcessing" fixed/>
     <!-- NAV BAR -->
     <b-navbar ref="navigator" toggleable="sm" type="dark" :class="classNavigator" fixed="top">
-      <b-navbar-brand v-if="isGuestOrSigned" :to="{name: 'homepage'}" :active="isHomePageActive">{{ $appName }}</b-navbar-brand>
-      <b-navbar-brand v-else :active="isHomePageActive">{{ $appName }} - AMMINISTRAZIONE</b-navbar-brand>
+      <b-navbar-brand v-if="isGuestOrSigned" :to="{name: 'homepage'}" :active="isHomePageActive">
+        <logo dark :height=60 />
+      </b-navbar-brand>
+      <b-navbar-brand v-else :active="isHomePageActive">
+        <b-row align-v="center" cols="1" cols-sm="2">
+          <b-col><logo dark :height=60 /></b-col>
+          <b-col><span>Amministrazione</span></b-col>
+        </b-row>
+      </b-navbar-brand>
 
       <b-navbar-toggle target="nav-collapse">
         <template #default="{ expanded }">
