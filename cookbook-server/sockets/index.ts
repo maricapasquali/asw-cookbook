@@ -14,7 +14,7 @@ export default function (io: Server): void {
       .on('connection', socket => {
 
           socket.use(([event, ...args], next) => {
-              let checkIfAuthenticationIsValid = /chat:.*|friendship:.*|recipe:(?!comment$).*|user:update:password|user:strike|food:create|logout/.test(event)
+              let checkIfAuthenticationIsValid = /chat:.*|friendship:.*|recipe:(?!comment$).*|user:update:password|user:strike|food:create/.test(event)
               console.debug(`Check auth on event '${event}' = ${checkIfAuthenticationIsValid} with args ${JSON.stringify(args)}`)
               if(checkIfAuthenticationIsValid) middlewareCheckNoAnonymous(socket, next, { previousEmittedEvent: { event, args } })
               else next()
