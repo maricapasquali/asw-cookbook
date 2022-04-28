@@ -2,6 +2,7 @@ import registerChatHandlers from './chat'
 import registerNotificationHandlers from './notification'
 import registerUpdateHandlers from './update'
 import registerSessionHandlers from './session'
+import registerCheckerHandlers from './checker'
 
 import {Server} from 'socket.io'
 import {onConnect, onDisconnect} from "./rooms";
@@ -14,7 +15,7 @@ export default function (io: Server): void {
       .on('connection', socket => {
 
           socket.use(([event, ...args], next) => {
-              let checkIfAuthenticationIsValid = /chat:.*|friendship:.*|recipe:(?!comment$).*|user:update:password|user:strike|food:create/.test(event)
+              let checkIfAuthenticationIsValid = /chat:.*|friendship:.*|recipe:(?!comment$).*|user:update:password|user:strike|food:create|check:.*/.test(event)
               console.debug(`Check auth on event '${event}' = ${checkIfAuthenticationIsValid} with args ${JSON.stringify(args)}`)
               if(checkIfAuthenticationIsValid) middlewareCheckNoAnonymous(socket, next, { previousEmittedEvent: { event, args } })
               else next()
@@ -33,6 +34,9 @@ export default function (io: Server): void {
 
           // SESSION (logout)
           registerSessionHandlers(io, socket)
+
+          // CHECKERs
+          registerCheckerHandlers(io, socket)
 
           // DISCONNECT
           socket.on('disconnect', (reason) => {
