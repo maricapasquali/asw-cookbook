@@ -68,8 +68,11 @@ export default {
   },
   methods: {
     checkOldPassword: function (){
-      this.validationOld = PasswordValidator.check(this.oldPassword)
-      /*TODO: EXPLOIT SOCKET FOR CHECK IF OLD PASSWORD IS CORRECT */
+      this.$socket.on("check:old-password:result", res => {
+        console.debug("Old password is correct: ", res)
+        this.validationOld = res
+      })
+      .emit("check:old-password", this.oldPassword)
     },
     close: function (){
       console.debug("close change password modal  ...")
