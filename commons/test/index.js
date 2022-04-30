@@ -1,6 +1,9 @@
 const assert = require('assert');
 
-const {EmailValidator, PasswordValidator} = require('../modules/validator')
+const {
+    EmailValidator,
+    PasswordValidator
+} = require('../modules/validator')
 
 describe('Validator', function (){
     describe('Email', function() {
@@ -13,23 +16,70 @@ describe('Validator', function (){
         });
     });
 
-    describe('Password ', function() {
+    describe("Password", function (){
 
-        const pattern = 'at least 8 characters,' +
-            ' min 1 Uppercase,' +
-            ' min 1 Lowercase,' +
-            ' min 1 Number,' +
-            ' min 1 special character,' +
-            ' only contains symbols from the alphabet, numbers and chosen special characters'
+        const {WEAK, GOOD, MEDIUM, STRONG} = PasswordValidator
 
-        it('should return false when the value does not have ' + pattern, function() {
-            assert.equal(PasswordValidator.check('ciao'), false);
-        });
+        let weakPassword = "pass"
+        let weak1Password = "password"
+        let weak2Password = "password122"
 
-        it('should return true when the value have' + pattern, function() {
-            assert.equal(PasswordValidator.check('Ciao$111'), true);
-        });
+        let goodPassword = "Passwo#1"
+        let good1Password = "MaRWat>1"
 
-    });
+        let mediumPassword = "Ciao$111%-ciao"
+        let medium1Password = "!Kia-ciao$1ci2"
 
+        let strongPassword = "#Ciao$123-ciao---"
+        let strong1Password = "##########Ciao$11"
+        let strong2Password = "<2Super-Mario!!#Bos#1>"
+
+        it(`A empty string should not have strength`, function (){
+            assert.equal(PasswordValidator.strength(""), undefined)
+        })
+
+        it(`A string with only space should not have strength`, function (){
+            assert.equal(PasswordValidator.strength("             "), undefined)
+        })
+
+        it(`'${weakPassword}' should have weak strength`, function (){
+            assert.equal(PasswordValidator.strength(weakPassword), WEAK)
+        })
+
+        it(`'${weak1Password}' should have weak strength`, function (){
+            assert.equal(PasswordValidator.strength(weak1Password), WEAK)
+        })
+
+        it(`'${weak2Password}' should have weak strength`, function (){
+            assert.equal(PasswordValidator.strength(weak2Password), WEAK)
+        })
+
+        it(`'${goodPassword}' should have good strength`, function (){
+            assert.equal(PasswordValidator.strength(goodPassword), GOOD)
+        })
+
+        it(`'${good1Password}' should have good strength`, function (){
+            assert.equal(PasswordValidator.strength(good1Password), GOOD)
+        })
+
+        it(`'${mediumPassword}' should have medium strength`, function (){
+            assert.equal(PasswordValidator.strength(mediumPassword), MEDIUM)
+        })
+
+        it(`'${medium1Password}' should have medium strength`, function (){
+            assert.equal(PasswordValidator.strength(medium1Password), MEDIUM)
+        })
+
+        it(`'${strongPassword}' should have strong strength`, function (){
+            assert.equal(PasswordValidator.strength(strongPassword), STRONG)
+        })
+
+        it(`'${strong1Password}' should have strong strength`, function (){
+            assert.equal(PasswordValidator.strength(strong1Password), STRONG)
+        })
+
+        it(`'${strong2Password}' should have strong strength`, function (){
+            assert.equal(PasswordValidator.strength(strong2Password), STRONG)
+        })
+    })
 })
