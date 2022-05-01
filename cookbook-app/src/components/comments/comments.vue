@@ -17,7 +17,7 @@
 
      <!-- LIST  COMMENTS -->
      <b-row v-for="comment in value" :key="comment._id" class="comment-text" align-h="center" cols="1" cols-sm="1">
-       <b-col class="px-0 mb-2"> <comment :comment="comment" :recipe="recipe" :language="language" :path-hash-comment="pathHashComment"/> </b-col>
+       <b-col class="px-0 mb-2"> <comment :comment="comment" :recipe="recipe" :path-hash-comment="pathHashComment"/> </b-col>
      </b-row>
      <b-row v-if="value.length === 0"> <b-col> <span class="no-comments"> Nessun commento. </span> </b-col> </b-row>
    </b-container>
@@ -32,11 +32,7 @@ export default {
   name: "comments",
   props: {
     value:  Array,
-    recipe: Object,
-    language: {
-      type: String,
-      default: 'it'
-    },
+    recipe: Object
   },
   data(){
     return {

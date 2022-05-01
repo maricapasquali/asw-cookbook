@@ -3,7 +3,7 @@
     <wrap-loading v-model="updatingOrDeleting.process">
       <!-- Modal for reporting-->
       <b-modal v-model="showReportComment" title="Segnala commento"  @ok="report" centered ok-only>
-        <p>Vuoi segnalare il commento di <strong>{{ comment.user | name }}</strong>?</p>
+        <p>Vuoi segnalare il commento di <strong>{{ comment.user | username }}</strong>?</p>
       </b-modal>
 
       <!-- Modal for reporting-->
@@ -15,7 +15,7 @@
 
         <b-row class="comment-user" align-v="center">
           <b-col cols="auto" class="px-0">
-            <avatar :value="isThereProfileImg" :size="40" :user="comment.user && comment.user._id" :userID="userID" :user-id-class="{'text-white':  comment.user}" :link="!!comment.user"/>
+            <avatar :value="isThereProfileImg" :size="40" :user="comment.user && comment.user._id" :userID="userID" user-id-class="text-white" :link="!!comment.user"/>
           </b-col>
         </b-row>
 
@@ -42,7 +42,7 @@
             <b-container fluid class="my-2">
               <b-row cols="1" cols-sm="2" align-v="center">
                 <b-col class="text-left pr-0">
-                  <small class="timestamp">{{ comment.timestamp | dateFormat(language) }}</small>
+                  <small class="timestamp">{{ comment.timestamp | date }}</small>
                 </b-col>
                 <b-col v-if="youCanCommentOrReport" class="text-right pr-1">
                   <b-button-group class="actions" >
@@ -85,7 +85,7 @@
     <b-collapse :id="responsesCommentId" v-model="showConversation">
       <div class="responses" v-if="hasResponses">
         <comment v-for="response in comment.responses" :key="response._id"
-                 :comment="response" :recipe="recipe" :language="language"
+                 :comment="response" :recipe="recipe"
                  :path-hash-comment="pathHashComment"/>
       </div>
     </b-collapse>
@@ -103,7 +103,6 @@ export default {
   props: {
     comment: Object,
     recipe: Object,
-    language: String,
 
     pathHashComment: Array,
   },
@@ -124,14 +123,6 @@ export default {
         process: false,
         success: null
       }
-    }
-  },
-  filters: {
-    name(user){
-      return user ? user.userID : "Anonimo"
-    },
-    dateFormat: function (text, lang){
-      return dateFormat(text, lang)
     }
   },
   computed:{

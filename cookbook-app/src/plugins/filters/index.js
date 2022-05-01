@@ -1,9 +1,17 @@
+import {dateFormat, isDefined} from "@utils/lang";
+
 export default function (Vue, options) {
     Vue.mixin({
         filters: {
-            capitalize(text){
-                if(!text) return text
-                return text.replace(/^\w/, c => c.toUpperCase());
+            username(user){
+                if(!user) return "Anonimo"
+                return isDefined(user.userID) ? user.userID : user
+            },
+            date: function (text){
+                return dateFormat(text, "it")
+            },
+            dateWithSeconds: function (text){
+                return dateFormat(text, "it", true)
             }
         }
     })

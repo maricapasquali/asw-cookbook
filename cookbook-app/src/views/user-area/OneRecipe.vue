@@ -132,7 +132,7 @@
                         <b-col v-if="doc.diet">{{ nameDiet(doc.diet) }} </b-col>
                       </b-row>
                     </b-col>
-                    <b-col class="px-0 text-right"> {{ doc.createdAt | dateFormat }}</b-col>
+                    <b-col class="px-0 text-right"> {{ doc.createdAt | date }}</b-col>
                   </b-row>
                 </b-container>
               </b-col>
@@ -231,11 +231,6 @@ export default {
     value(val, old){
       if(val) this.setRecipe(val)
       this.processing = false
-    }
-  },
-  filters: {
-    dateFormat: function (text){
-      return dateFormat(text)
     }
   },
   methods: {

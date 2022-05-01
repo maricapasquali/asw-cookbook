@@ -13,15 +13,15 @@
                   <span> Utenti segnalanti: </span>
                   <ul>
                     <li v-for="report in doc.reported"  :key="report._id">
-                      <span> {{ report.user | name }} </span>
-                      <span> ({{ report.timestamp | dateFormat }}) </span>
+                      <span> {{ report.user | username }} </span>
+                      <span> ({{ report.timestamp | date }}) </span>
                     </li>
                   </ul>
                 </div>
                 <div>
                   <div>
                     <span> Utente segnalanto: </span>
-                    <strong> {{ doc.user | name}} </strong>
+                    <strong> {{ doc.user | username}} </strong>
                   </div>
                   <div>
                     <b-button v-b-toggle="doc._id" variant="link" class="pl-0 mb-3"> <strong> Commento </strong> </b-button>
@@ -50,12 +50,12 @@
                 <div> Utenti segnalanti:
                   <ul>
                     <li v-for="report in doc.reported"  :key="report._id" >
-                      <span> {{ report.user | name }} </span>
-                      <span> ({{ report.timestamp | dateFormat }}) </span>
+                      <span> {{ report.user | username }} </span>
+                      <span> ({{ report.timestamp | date }}) </span>
                     </li>
                   </ul>
                 </div>
-                <p> Utente segnalanto: <strong>{{doc.user | name}}</strong></p>
+                <p> Utente segnalanto: <strong>{{doc.user | username}}</strong></p>
               </b-card>
             </b-col>
           </b-row>
@@ -75,14 +75,6 @@ export default {
       processing: false,
       docsReported: [],
       docsDeleted: []
-    }
-  },
-  filters: {
-    name(user){
-      return user && user.userID ? user.userID : 'Anonimo'
-    },
-    dateFormat: function (text){
-      return dateFormat(text)
     }
   },
   computed:{

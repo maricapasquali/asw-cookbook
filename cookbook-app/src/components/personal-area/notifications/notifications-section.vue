@@ -62,7 +62,7 @@
                   </b-row>
                   <b-row>
                     <b-col class="text-right mt-3">
-                      <small>{{row.item.timestamp | dateFormat}}</small>
+                      <small>{{ row.item.timestamp | date }}</small>
                     </b-col>
                   </b-row>
                 </b-container>
@@ -159,11 +159,6 @@ export default {
 
     searchingMode(){
       return this.filter.type?.length > 0
-    }
-  },
-  filters: {
-    dateFormat: function (text){
-      return dateFormat(text)
     }
   },
   methods: {

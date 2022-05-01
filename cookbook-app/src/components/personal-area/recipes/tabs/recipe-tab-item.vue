@@ -17,8 +17,8 @@
             <b-row v-if="noMyRecipe">
               <router-link :to="{name: 'single-user', params:{id: item.recipe.owner._id}}">{{item.recipe.owner.userID}}</router-link>
             </b-row>
-            <b-row><small> Data di creazione: {{ item.recipe.createdAt | dateFormat }}</small></b-row>
-            <b-row><small> Data di ultima modifica: {{ item.recipe.updatedAt | dateFormat }}</small></b-row>
+            <b-row><small> Data di creazione: {{ item.recipe.createdAt | date }}</small></b-row>
+            <b-row><small> Data di ultima modifica: {{ item.recipe.updatedAt | date }}</small></b-row>
 
             <b-row class="mt-1"  v-show="item.recipe.shared && item.recipe.likes.length > 0">
               <like v-model="item.recipe.likes" :recipe="item.recipe" noLike variant="light"/>
@@ -149,12 +149,6 @@ export default {
         recipe: null
       }
     }
-  },
-  filters: {
-    dateFormat: function (text){
-      return dateFormat(text)
-    },
-
   },
   computed: {
     ...mapGetters({
