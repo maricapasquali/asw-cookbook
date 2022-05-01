@@ -3,7 +3,8 @@ import {
     Middlewares,
     checkNormalRBAC,
     checkRestrictedRBAC,
-    Middleware
+    Middleware,
+    wrapUpload
 } from "../base";
 import {RBAC} from "../../modules/rbac";
 import Operation = RBAC.Operation;
@@ -36,12 +37,14 @@ export function uploadImageAndTutorial(): Middleware {
             }
         }}
 
-    return fileUploader.mixed(
-        [
-            { name: 'img', maxCount: 1, type: FileType.IMAGE },
-            { name: 'tutorial', maxCount: 1, type: FileType.VIDEO }
-        ],
-        [_configurationImage, _configurationVideo])
+    return wrapUpload(
+        fileUploader.mixed(
+            [
+                { name: 'img', maxCount: 1, type: FileType.IMAGE },
+                { name: 'tutorial', maxCount: 1, type: FileType.VIDEO }
+            ],
+            [_configurationImage, _configurationVideo])
+    )
 }
 
 export function create(): Middlewares {

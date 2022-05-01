@@ -3,6 +3,7 @@ import {Types} from "mongoose";
 import {RBAC} from "../modules/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
+import {MulterError} from "multer"
 
 function _extractAuthorization(req) {
     req.locals = req.locals || {}
@@ -108,3 +109,12 @@ export function checkRequestHeaders(headersToCheck: object): Middleware {
     }
 }
 
+export function wrapUpload(uploader: any): Middleware {
+    return function (req, res, next){
+        uploader(req, res, function (err){
+            if(err) {
+                next({ status: 400, description: err.message, code: err.code })
+            }
+        })
+    }
+}
