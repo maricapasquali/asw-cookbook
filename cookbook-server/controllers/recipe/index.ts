@@ -231,7 +231,6 @@ function update_actual_recipe(req, res){
     let {id, recipeID} = req.params
     if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
-    if(Object.keys(req.body).length === 0) return res.status(400).json({ description: 'Required body'})
 
     const decodedToken = req.locals.user
 
