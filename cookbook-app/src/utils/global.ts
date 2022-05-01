@@ -1,5 +1,14 @@
-import { Validator, EmailValidator, PasswordValidator } from '../../../commons/modules/validator'
-import { ReaderStream, ReaderStreamImage, ReaderStreamVideo } from "./filesystem";
+import {
+    Validator,
+    PasswordValidatorExtended,
+    EmailValidator,
+    PasswordValidator
+} from '../../../commons/modules/validator'
+import {
+    ReaderStream,
+    ReaderStreamImage,
+    ReaderStreamVideo
+} from "./filesystem";
 import {
     VisitOptions,
     diff,
@@ -74,7 +83,7 @@ declare global {
 
         EmailValidator: Validator<string>,
 
-        PasswordValidator: Validator<string>
+        PasswordValidator: PasswordValidatorExtended,
     }
 }
 

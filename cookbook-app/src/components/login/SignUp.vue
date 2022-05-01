@@ -150,7 +150,6 @@
                   id="input-group-9"
                   label="UserID *"
                   label-for="input-9"
-                  class="pr-md-2"
               >
                 <b-form-input
                     id="input-9"
@@ -163,7 +162,7 @@
                 ></b-form-input>
               </b-form-group>
 
-              <input-password @inputPassword="user.hash_password=$event" @checkPassword="validation.check_password=$event"/>
+              <form-inputs-password @inputPassword="user.hash_password=$event" @checkPassword="validation.check_password=$event"/>
 
             </b-card-body>
           </b-card>

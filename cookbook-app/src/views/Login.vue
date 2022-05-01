@@ -28,15 +28,14 @@
                   label="Password"
                   label-for="input-password"
               >
-                <b-form-input
+                <input-password-switch-visibility
                     id="input-password"
                     v-model.trim="credential.password"
                     :state="validationPassword"
                     @input="checkPassword"
-                    type="password"
                     placeholder="Enter password"
                     required
-                ></b-form-input>
+                />
                 <b-form-invalid-feedback :state="validationPassword">
                   La password deve avere almeno 5 caratteri
                 </b-form-invalid-feedback>

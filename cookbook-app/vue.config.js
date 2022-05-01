@@ -53,7 +53,10 @@ module.exports = {
     css: {
         loaderOptions: {
             sass: {
-                additionalData: `@import "@assets/scss/globals.scss";`,
+                additionalData: `
+                    @import 'bootstrap/scss/bootstrap';
+                    @import "@/style/scss/application.scss";
+                `
             },
         },
     },

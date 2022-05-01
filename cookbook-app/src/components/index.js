@@ -14,7 +14,11 @@ import UnAuthenticatedErrorHandler from '@components/app/handler-errors/unauthen
 import ForbiddenErrorHandler from '@components/app/handler-errors/forbidden-error-handler'
 import NotFoundErrorHandler from '@components/app/handler-errors/not-found-error-handler'
 
-import InputPassword from "@components/app/input-password";
+import FormInputsPassword from "@components/app/password/form-inputs-password"
+import InputPasswordSwitchVisibility from "@components/app/password/input-password-switch-visibility"
+import PasswordStrengthBar from "@components/app/password/strength/password-strength-bar"
+import StrengthDescription from "@components/app/password/strength/strength-description";
+
 import ModalAlert from "@components/app/modal-alert"
 import Navigator from "@components/app/navigator"
 import Footer from "@components/app/footer"
@@ -95,7 +99,11 @@ const components = {
     ForbiddenErrorHandler,
     NotFoundErrorHandler,
 
-    InputPassword,
+    FormInputsPassword,
+    InputPasswordSwitchVisibility,
+    PasswordStrengthBar,
+    StrengthDescription,
+
     ModalAlert,
     Navigator,
     Footer,
