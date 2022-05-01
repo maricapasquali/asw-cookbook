@@ -1,4 +1,4 @@
-import {checkRequestHeaders, Middleware, Middlewares, checkRestrictedRBAC} from "../base";
+import {checkRequestHeaders, Middleware, Middlewares, checkRestrictedRBAC, wrapUpload} from "../base";
 import {RBAC} from "../../modules/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
@@ -25,7 +25,7 @@ export function uploadChatImage(): Middleware {
                 return 'chat-image-' + randomString(30) + path.extname(file.originalname)
             }
         }}
-    return fileUploader.single('image', config)
+    return wrapUpload(fileUploader.single('image', config))
 }
 
 export function create(): Middlewares {

@@ -258,7 +258,7 @@ export function update_chat(req, res, err) {
                     }
                 }
                     break;
-                case IChat.Type.GROUP: //TODO: DA RIGUARDARE MEGLIO
+                case IChat.Type.GROUP: //Note: In Client is not implemented action = update-chat-name | add-users | update-chat-image
                 {
 
                     const checkAuthorization = (user: DecodedTokenType) => {

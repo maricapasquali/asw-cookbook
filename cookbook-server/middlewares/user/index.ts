@@ -1,4 +1,4 @@
-import {Middlewares, checkRestrictedRBAC, checkNormalRBAC, Middleware} from "../base";
+import {Middlewares, checkRestrictedRBAC, checkNormalRBAC, Middleware, wrapUpload} from "../base";
 import {RBAC} from "../../modules/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
@@ -11,7 +11,7 @@ export function uploadProfileImage(): Middleware {
                 return randomString(30) + path.extname(file.originalname)
             }
         }}
-    return fileUploader.single('img', config)
+    return wrapUpload(fileUploader.single('img', config))
 }
 
 export function all_user(): Middlewares {
