@@ -10,7 +10,7 @@ import {RBAC} from "../../modules/rbac";
 import Operation = RBAC.Operation;
 import {randomString} from "../../modules/utilities";
 import * as path from "path";
-import {FileUploader} from "../../modules/uploader";
+import {FileUploader, UploaderConfiguration} from "../../modules/uploader";
 import FileType = FileUploader.FileType;
 
 export enum UpdateAction {
@@ -23,19 +23,23 @@ export namespace UpdateAction {
 }
 
 export function uploadImageAndTutorial(): Middleware {
-    let _configurationImage = {
-        ...FileConfigurationImage, ...{
-            newFileName: function (file: any){
-                return 'recipe-' + randomString(30) + path.extname(file.originalname)
-            }
+    let pathname: string = path.resolve('filesystem', 'recipes')
+
+    let _configurationImage: UploaderConfiguration = {
+        type: FileType.IMAGE,
+        dest: path.join(pathname, 'images'),
+        newFileName: function (file: any){
+            return 'recipe-' + randomString(30) + path.extname(file.originalname)
         }
     }
 
-    let _configurationVideo = {...FileConfigurationVideo, ...{
-            newFileName: function (file: any){
-                return 'recipe-tutorial-' + randomString(30) + path.extname(file.originalname)
-            }
-        }}
+    let _configurationVideo: UploaderConfiguration = {
+        type: FileType.VIDEO,
+        dest: path.join(pathname, 'videos'),
+        newFileName: function (file: any){
+            return 'recipe-tutorial-' + randomString(30) + path.extname(file.originalname)
+        }
+    }
 
     return wrapUpload(
         fileUploader.mixed(

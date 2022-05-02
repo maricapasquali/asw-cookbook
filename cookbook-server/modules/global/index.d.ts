@@ -9,10 +9,6 @@ declare global {
 
     var fileUploader: IFileUploader
 
-    var FileConfigurationImage: UploaderConfiguration
-
-    var FileConfigurationVideo: UploaderConfiguration
-
     var tokensManager: IJwtTokensManager
 
     var accessManager: IRbacWithRole

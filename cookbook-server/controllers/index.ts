@@ -10,3 +10,5 @@ export * as userController from "./user"
 export * as friendController from "./user/friend"
 export * as adminController from "./user/admin"
 export * as sessionController from "./user/session"
+
+export * as mediaController from "./media"

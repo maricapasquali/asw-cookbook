@@ -4,6 +4,8 @@ import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
 import {randomString} from "../../modules/utilities";
 import * as path from "path";
+import {FileUploader, UploaderConfiguration} from "../../modules/uploader";
+import FileType = FileUploader.FileType;
 
 export enum UpdateAction{
     UPDATE_USER_ROLE = 'update-user-role',
@@ -20,11 +22,15 @@ export namespace UpdateAction {
 
 
 export function uploadChatImage(): Middleware {
-    let config = {...FileConfigurationImage, ...{
-            newFileName: function (file: any){
-                return 'chat-' + randomString(30) + path.extname(file.originalname)
-            }
-        }}
+    let pathname: string = path.resolve('filesystem', 'chats')
+
+    let config: UploaderConfiguration = {
+        type: FileType.IMAGE,
+        dest: path.join(pathname, 'images'),
+        newFileName: function (file: any){
+            return 'chat-' + randomString(30) + path.extname(file.originalname)
+        }
+    }
     return wrapUpload(fileUploader.single('image', config))
 }
 

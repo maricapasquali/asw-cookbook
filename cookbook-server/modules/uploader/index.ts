@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as multer from 'multer'
+import * as fs from "fs";
 
 export type Mixed = {
     name: string,
@@ -32,9 +33,9 @@ export class FileUploader implements IFileUploader {
         }
 
         let fileStorage = multer.diskStorage({
-            destination: function (req, file, cb){
+            destination: (req, file, cb) => {
                 let configuration = _configuration(file.fieldname)
-                return cb(null,  configuration ? configuration.dest : 'tmp')
+                this._destination(configuration ? configuration.dest : 'tmp', cb)
             },
             filename: (req, file, cb) => this._filename(file, _configuration(file.fieldname), cb)
         });
@@ -58,7 +59,7 @@ export class FileUploader implements IFileUploader {
 
     single(field: string, configuration: UploaderConfiguration): any {
         let fileStorage = multer.diskStorage({
-            destination: configuration.dest,
+            destination: (req, file, cb) => this._destination(configuration.dest, cb),
             filename: (req, file, cb) => this._filename(file, configuration, cb)
         });
 
@@ -79,10 +80,15 @@ export class FileUploader implements IFileUploader {
         }).single(field)
     }
 
+    private _destination(dest: string, cb: (...args: any[]) => void): void {
+        fs.mkdirSync(dest, { recursive: true })
+        cb(null, dest)
+    }
+
     private _filename(file: any, configuration: UploaderConfiguration, cb: (...args: any[]) => void): void {
         configuration.newFileName = configuration.newFileName || ((file: any) => file.originalname + '_' + Date.now() + path.extname(file.originalname).toLowerCase())
         let newFileName: string = configuration.newFileName(file)
-        console.debug(`Rename ${configuration.type}: new path = /${configuration.type}/${newFileName}`)
+        console.debug(`Rename ${configuration.type}: new path = ${path.join(configuration.dest, newFileName)}`)
         cb(null, newFileName)
     }
 
