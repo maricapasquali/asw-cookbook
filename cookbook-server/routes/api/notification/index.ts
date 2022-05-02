@@ -1,5 +1,5 @@
-import {notificationController} from '../../controllers'
-import {notificationMiddleware} from '../../middlewares'
+import {notificationController} from '../../../controllers'
+import {notificationMiddleware} from '../../../middlewares'
 
 export default function (app) {
 

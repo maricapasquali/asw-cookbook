@@ -1,5 +1,5 @@
-import {adminController} from '../../../controllers'
-import {userMiddleware} from "../../../middlewares";
+import {adminController} from '../../../../controllers'
+import {userMiddleware} from "../../../../middlewares";
 
 export default function (app) {
     app.route('/api/admins')

@@ -23,12 +23,12 @@ global.fileUploader = new FileUploader()
 
 global.FileConfigurationImage = {
     type: FileType.IMAGE,
-    dest: path.resolve('images'),
+    dest: path.resolve('filesystem', 'images'),
 }
 
 global.FileConfigurationVideo = {
     type: FileType.VIDEO,
-    dest: path.resolve('videos'),
+    dest: path.resolve('filesystem', 'videos'),
 }
 
 global.EmailValidator = EmailValidator

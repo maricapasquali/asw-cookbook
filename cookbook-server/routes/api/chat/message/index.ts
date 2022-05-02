@@ -1,5 +1,5 @@
-import {messageController} from '../../../controllers'
-import {messageMiddleware} from '../../../middlewares'
+import {messageController} from '../../../../controllers'
+import {messageMiddleware} from '../../../../middlewares'
 
 export default function(app) {
 

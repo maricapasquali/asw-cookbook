@@ -33,7 +33,7 @@ export function uploadImageAndTutorial(): Middleware {
 
     let _configurationVideo = {...FileConfigurationVideo, ...{
             newFileName: function (file: any){
-                return 'tutorial-' + randomString(30) + path.extname(file.originalname)
+                return 'recipe-tutorial-' + randomString(30) + path.extname(file.originalname)
             }
         }}
 

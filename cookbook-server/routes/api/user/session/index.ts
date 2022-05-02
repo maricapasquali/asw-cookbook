@@ -1,5 +1,5 @@
-import {sessionController as userSessionController} from '../../../controllers'
-import {sessionMiddleware} from '../../../middlewares'
+import {sessionController as userSessionController} from '../../../../controllers'
+import {sessionMiddleware} from '../../../../middlewares'
 
 export default function (app) {
 

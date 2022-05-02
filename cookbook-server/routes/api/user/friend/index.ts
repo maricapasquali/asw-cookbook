@@ -1,5 +1,5 @@
-import {friendController} from '../../../controllers'
-import {friendMiddleware} from '../../../middlewares'
+import {friendController} from '../../../../controllers'
+import {friendMiddleware} from '../../../../middlewares'
 
 export default function (app) {
 

@@ -22,7 +22,7 @@ export namespace UpdateAction {
 export function uploadChatImage(): Middleware {
     let config = {...FileConfigurationImage, ...{
             newFileName: function (file: any){
-                return 'chat-image-' + randomString(30) + path.extname(file.originalname)
+                return 'chat-' + randomString(30) + path.extname(file.originalname)
             }
         }}
     return wrapUpload(fileUploader.single('image', config))

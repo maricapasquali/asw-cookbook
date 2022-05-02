@@ -8,7 +8,7 @@ import * as path from "path";
 export function uploadProfileImage(): Middleware {
     let config = {...FileConfigurationImage, ...{
             newFileName: function (file: any){
-                return randomString(30) + path.extname(file.originalname)
+                return 'user-' + randomString(30) + path.extname(file.originalname)
             }
         }}
     return wrapUpload(fileUploader.single('img', config))

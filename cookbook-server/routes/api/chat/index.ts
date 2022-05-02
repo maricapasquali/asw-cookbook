@@ -1,5 +1,5 @@
-import {chatController} from '../../controllers'
-import {chatMiddleware} from '../../middlewares'
+import {chatController} from '../../../controllers'
+import {chatMiddleware} from '../../../middlewares'
 import messageRoute from './message'
 
 export default function(app) {
