@@ -67,10 +67,10 @@ export default {
   },
   filters: {
     limit(text, len){
-      return text.substr(0, len)
+      return text.substring(0, len)
     },
     startFrom(text, ind){
-      return text.substr(ind)
+      return text.substring(ind)
     }
   },
   computed: {

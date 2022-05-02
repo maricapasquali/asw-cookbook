@@ -43,7 +43,7 @@
             </template>
 
             <template #cell(_id)="row">
-              <b-alert :class="classAlert(row.item)" show>
+              <b-alert class="col mb-0 notification" :variant="notificationColor(row.item.type)" show>
                 <b-container>
                   <b-row>
                     <b-col>
@@ -62,7 +62,7 @@
                   </b-row>
                   <b-row>
                     <b-col class="text-right mt-3">
-                      <small>{{row.item.timestamp | dateFormat}}</small>
+                      <small>{{ row.item.timestamp | date }}</small>
                     </b-col>
                   </b-row>
                 </b-container>
@@ -161,11 +161,6 @@ export default {
       return this.filter.type?.length > 0
     }
   },
-  filters: {
-    dateFormat: function (text){
-      return dateFormat(text)
-    }
-  },
   methods: {
     filterNotification(notification){
       return !this.searchingMode || notification.type === this.filter.type
@@ -180,14 +175,6 @@ export default {
       return this.notificationTypes.find(t => t.value === filterType)?.text
     },
 
-    classAlert(doc){
-      return [
-        'col',
-        'mb-0',
-        'notification',
-         this.notificationColor(doc.type)
-      ]
-    },
     isClickableNotification(type){
       return ['friendship', 'food', 'recipe', 'comment', 'report', 'like', 'user-info'].includes(type)
     },
@@ -365,6 +352,54 @@ export default {
 
 .notification{
   cursor: pointer;
+}
+
+.alert-notification-friendship {
+  color: #6d0085;
+  background-color: #ecccff;
+  border-color: #e3b8ff;
+}
+
+.alert-notification-food {
+  color: #008512;
+  background-color: #d3ffcc;
+  border-color: #bfffb8;
+}
+
+.alert-notification-recipe {
+  color: #008562;
+  background-color: #ccffe0;
+  border-color: #b8ffd9;
+}
+
+.alert-notification-comment {
+  color: #001685;
+  background-color: #ccd3ff;
+  border-color: #b8c6ff;
+}
+
+.alert-notification-report{
+  color: #850000;
+  background-color: #ffccd2;
+  border-color: #ffb8ba;
+}
+
+.alert-notification-like{
+  color: #853300;
+  background-color: #ffe1cc;
+  border-color: #ffcdb8;
+}
+
+.alert-notification-user-info{
+  color: #343434;
+  background-color: #f6f6f6;
+  border-color: #d9d9d9;
+}
+
+.alert-notification-strike{
+  color: #856404;
+  background-color: #fff3cd;
+  border-color: #ffeeba;
 }
 
 </style>

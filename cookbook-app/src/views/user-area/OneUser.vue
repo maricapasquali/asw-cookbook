@@ -23,7 +23,7 @@
                             {{ recipe.name }}
                           </router-link>
                         </b-col>
-                        <b-col>  <small>{{recipe.createdAt | dataFormatter}}</small> </b-col>
+                        <b-col>  <small>{{ recipe.createdAt | date }}</small> </b-col>
                       </b-row>
                     </b-col>
                     <b-col class="text-right">
@@ -95,11 +95,6 @@ export default {
 
     allPresent(){
       return this.recipes.length && this.friends.length
-    }
-  },
-  filters: {
-    dataFormatter: function (text){
-      return dateFormat(text)
     }
   },
   data(){

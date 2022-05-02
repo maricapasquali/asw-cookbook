@@ -92,11 +92,6 @@ export default {
       attachment: { id: '', link:'' , preview: {} },
     }
   },
-  filters: {
-    dateFormat: function (text){
-      return dateFormat(text)
-    }
-  },
   watch: {
     messages: {
       deep: true,

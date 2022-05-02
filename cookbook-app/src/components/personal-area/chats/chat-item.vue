@@ -35,7 +35,7 @@
           <b-col>
             <b-row cols="1">
               <b-col><span>{{ name }}</span></b-col>
-              <b-col v-if="(!isChatGroup || withAdmin) && lastAccess"><small class="" >{{ lastAccess |dateFormat  }}</small></b-col>
+              <b-col v-if="(!isChatGroup || withAdmin) && lastAccess"><small class="" >{{ lastAccess | date }}</small></b-col>
             </b-row>
           </b-col>
         </b-row>
@@ -74,11 +74,6 @@ export default {
   props: {
     value: Object,
     skeleton: Boolean
-  },
-  filters: {
-    dateFormat: function (text){
-      return dateFormat(text)
-    }
   },
   data(){
     return {

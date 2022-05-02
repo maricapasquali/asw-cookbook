@@ -87,7 +87,7 @@ export default {
   },
   filters: {
     length(text, len){
-      return text.length > len ? text.substr(0, len) + ' ...': text
+      return text.length > len ? text.substring(0, len) + ' ...': text
     }
   },
   methods: {

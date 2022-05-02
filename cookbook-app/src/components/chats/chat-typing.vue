@@ -1,7 +1,7 @@
 <template>
   <div class="ml-1">
     <span v-for="(user, index) in users" :key="user._id" v-if="user.typing">
-      <strong>{{ user.userID | name }}</strong>
+      <strong>{{ user.userID | username }}</strong>
       <span> sta scrivendo </span>
       <b-icon-three-dots animation="cylon" class="pt-2" />
       <span v-if="index < users.length - 1">, </span>
@@ -15,11 +15,6 @@ export default {
   props: {
     users: Array,
     group: Boolean
-  },
-  filters:{
-    name(text){
-      return text || 'Anonimo'
-    }
   }
 }
 </script>

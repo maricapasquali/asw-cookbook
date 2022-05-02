@@ -83,7 +83,7 @@
                 </b-row>
                 <b-collapse :id="commentsId(doc._id)" class="mt-2">
                   <!-- LIST COMMENT for a RECIPE -->
-                  <comments v-model="doc.comments" :recipe="doc" :language="language" />
+                  <comments v-model="doc.comments" :recipe="doc" />
                 </b-collapse>
               </template>
 

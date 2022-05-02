@@ -80,6 +80,12 @@ export default {
       }
     }
   },
+  filters: {
+    capitalize(text){
+      if(!text) return text
+      return text.replace(/^\w/, c => c.toUpperCase());
+    },
+  },
   computed: {
     validationPassword: function (){
       return this.validation.password && this.validation.diffOld
