@@ -1,6 +1,6 @@
 node_modules
-videos
-images
+/videos
+/images
 
 *.env
 
@@ -9,4 +9,4 @@ images
 
 !test/bdd/*.js
 !test/tdd/*.js
-!views/js/*.js
+!public/js/*.js
