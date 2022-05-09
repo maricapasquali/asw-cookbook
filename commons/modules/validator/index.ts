@@ -1,9 +1,20 @@
 export interface Validator<T> {
+    /**
+     * A regular expression.
+     */
     readonly regex: RegExp
+
+    /**
+     * @param value generic type (as string, number, etc...) to evaluate
+     * @return true if _value_ matches with a regular expression (regex), otherwise false.
+     */
     check(value: T): boolean
 }
 
 // EMAIL
+/**
+ * Implementation of Email Validator.
+ */
 export const EmailValidator: Validator<string> = new class implements Validator<string> {
     readonly regex: RegExp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
     check(value: string): boolean {
@@ -13,11 +24,29 @@ export const EmailValidator: Validator<string> = new class implements Validator<
 
 // PASSWORD
 export interface PasswordStrength {
+    /**
+     * Name of password strength
+     */
     readonly name: string,
+    /**
+     * Minimum length of a password
+     */
     readonly minimumLength: number
+    /**
+     * (Optional) Minimum number of lowercase characters
+     */
     readonly minimumLowerCase?: number
+    /**
+     * (Optional) Minimum number of uppercase characters
+     */
     readonly minimumUpperCase?: number
+    /**
+     * (Optional) Minimum number of numeric characters
+     */
     readonly minimumDigit?: number
+    /**
+     * (Optional) Minimum number of special characters
+     */
     readonly minimumSpecialChar?: number
 }
 
@@ -53,13 +82,59 @@ export namespace PasswordStrength {
     export type CheckEventually = boolean | void
 
     export interface Checker {
+
+        /**
+         * @param value to evaluate
+         * @return true if length of _value_ matches the minimum length,
+         *         otherwise false.
+         */
         length(value: string): CheckAlways
+
+        /**
+         * @param value to evaluate
+         * @return nothing if the minimum number of lowercase characters is not set,
+         *         true if _value_ contains the minimum number of lowercase characters,
+         *         otherwise false.
+         */
         lowercase(value: string): CheckEventually
+
+        /**
+         * @param value to evaluate
+         * @return nothing if the minimum number of uppercase characters is not set,
+         *         true if _value_ contains the minimum number of uppercase characters,
+         *         otherwise false.
+         */
         uppercase(value: string): CheckEventually
+
+        /**
+         * @param value to evaluate
+         * @return nothing if the minimum number of numeric characters is not set,
+         *         true if _value_ contains the minimum number of numeric characters,
+         *         otherwise false.
+         */
         digit(value: string): CheckEventually
+
+        /**
+         * @param value to evaluate
+         * @return nothing if the minimum number of special characters is not set,
+         *         true if _value_ contains the minimum number of special characters,
+         *         otherwise false.
+         */
         specialChars(value: string): CheckEventually
 
+
+        /**
+         * @param value to evaluate
+         * @return true if ALL functions ({@link length}, {@link lowercase}, {@link uppercase}, {@link digit}, {@link specialChars}) return true,
+         *         otherwise false.
+         */
         every(value: string): boolean
+
+        /**
+         * @param value to evaluate
+         * @return true if SOME functions ({@link length}, {@link lowercase}, {@link uppercase}, {@link digit}, {@link specialChars}) return true,
+         *         otherwise false.
+         */
         some(value: string): boolean
     }
 
@@ -84,7 +159,12 @@ export namespace PasswordStrength {
         }
     }
 
-    export abstract class ExtendedConstructor implements PasswordStrength, Checker {
+    export type Extended = PasswordStrength & Checker
+
+    /**
+     * Abstract implementation of {@link PasswordStrength} and {@link PasswordStrength.Checker}
+     */
+    export abstract class ExtendedConstructor implements Extended {
         abstract name: string;
         abstract minimumLength: number;
         minimumLowerCase?: number;
@@ -131,12 +211,25 @@ export namespace PasswordStrength {
         }
     }
 
-    export type Extended = PasswordStrength & Checker
 }
 
 export interface PasswordValidator {
+    /**
+     * List of available strengths.
+     */
     readonly passwordStrengths: PasswordStrength.Extended[]
+
+    /**
+     * @param password to evaluate
+     * @param strength to test the password validity
+     * @return true if the password respect the given strength pattern, otherwise false.
+     */
     check(password: string, strength: PasswordStrength): boolean
+
+    /**
+     * @param password to evaluate
+     * @return the strength of the passed password
+     */
     strength(password: string): PasswordStrength
 }
 
@@ -149,6 +242,9 @@ export type PasswordStrengthDefault = {
 
 export type PasswordValidatorExtended = PasswordValidator & PasswordStrengthDefault
 
+/**
+ * Implementation of Password Validator that implements some password strength (WEAK, GOOD, MEDIUM and STRONG).
+ */
 export const PasswordValidator: PasswordValidatorExtended = new class implements PasswordValidator {
 
     private readonly _passwordStrengths: PasswordStrength.Extended[] = []
