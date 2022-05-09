@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang='it' dir='ltr'>
+
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Email SignUp</title>
+    <link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css' integrity='sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS' crossorigin='anonymous'>
+    <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.8.1/css/all.css' integrity='sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf' crossorigin='anonymous'>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+    <style media="screen">
+        td,
+        th {
+            padding: 10px 20px 10px 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class='container-fluid'>
+    <div class="col">
+        <h1 class="mt-5 mb-5"> <%=app_name%> </h1>
+        <h2 class="mt-5 mb-5"> Creazione account.</h2>
+        <p> Gentile <strong><%=firstname%> <%=lastname%></strong>, </p>
+        <p> il suo account è stato creato.</p>
+        <table id='table-info'>
+            <tbody>
+            <tr>
+                <th>Nome</th>
+                <td id='name'><%=firstname%></td>
+            </tr>
+            <tr>
+                <th>Cognome</th>
+                <td id='lastName'><%=lastname%></td>
+            </tr>
+            <tr>
+                <th>Email</th>
+                <td id='email'><%=email%></td>
+            </tr>
+            <tr>
+                <th>UserID</th>
+                <td id='userID'><%=userID%></td>
+            </tr>
+            <tr>
+                <th id="header-password">Password</th>
+                <td id='password'>********************</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="mt-4 mb-4">
+            <p> Clicca sul pulsante qui sotto per completare la registrazione:</p>
+            <a id='sign-up-conf' class='btn btn-primary' href="<%=url%>">clicca qui</a>
+        </div>
+
+        <p>Il Team <strong><%=app_name%></strong> </p>
+    </div>
+</div>
+</body>
+
+</html>

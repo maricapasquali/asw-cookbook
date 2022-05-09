@@ -1,36 +1,24 @@
 {
-  "name": "Cookbook",
+  "name": "asw-cookbook",
   "version": "1.0.0",
+  "description": "CookBook is a web app for those who love to cook and/or eat healthy.\r The platform aims to offer the exchange of recipes (traditional or customized) of all sorts of food (appetizers, first courses, main courses, desserts, drinks, condiments, ...)\r ## Requirements\r - docker-compose",
+  "main": "index.js",
   "scripts": {
-    "build": "tsc --build & vue-cli-service build",
-    "start-server": "node cookbook-server/index.js",
-    "start-app": "node cookbook-app/index.js",
-    "dev-build-modules": "tsc --build",
-    "dev-server": "nodemon cookbook-server/index.js",
-    "dev-app": "vue-cli-service serve"
+    "install:sub-projects": "cd ./commons && npm install && cd ../cookbook-app && npm install && cd ../cookbook-server && npm install && cd ../environment && npm install",
+    "build": "cd ./commons && npm run modules:build && cd ../cookbook-server && npm run server:build && cd ../cookbook-app && npm run client:build:tsc && npm run client:build:production",
+    "server:start": "cd ./cookbook-server && npm run server:start",
+    "client:start": "cd ./cookbook-app && npm run client:start",
+    "dev:server:start": "cd ./cookbook-server && npm run dev:server:watches",
+    "dev:client:start": "cd ./cookbook-app && npm run dev:client:watches"
   },
-  "nodemonConfig": {
-    "watch": [
-      "cookbook-server"
-    ]
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maricapasquali/asw-cookbook.git"
   },
   "author": "Marica Pasquali",
   "license": "ISC",
-  "dependencies": {
-    "axios": "^0.21.1",
-    "cors": "^2.8.5",
-    "dotenv": "^10.0.0",
-    "express": "^4.17.1",
-    "mongoose": "^5.13.5",
-    "serve-static": "^1.14.1",
-    "swagger-ui-express": "^4.1.6",
-    "vue": "^2.6.14",
-    "yamljs": "^0.3.0"
+  "bugs": {
+    "url": "https://github.com/maricapasquali/asw-cookbook/issues"
   },
-  "devDependencies": {
-    "@vue/cli-service": "^4.5.13",
-    "nodemon": "^2.0.12",
-    "typescript": "^4.3.5",
-    "vue-template-compiler": "^2.6.14"
-  }
+  "homepage": "https://github.com/maricapasquali/asw-cookbook#readme"
 }

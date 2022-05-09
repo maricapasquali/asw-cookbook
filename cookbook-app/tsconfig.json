@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "sourceMap": true,
+  },
+  "include": [
+    "src/services/**/*",
+    "src/utils/**/*"
+  ],
+  "exclude": ["node_modules"]
+}

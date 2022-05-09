@@ -348,7 +348,21 @@ components:
             $ref: "#/components/schemas/message"
       required:
         - users
-    
+
+    chat_without_messages:
+      type: object
+      properties:
+        info:
+          $ref: "#/components/schemas/chat/properties/info"
+        users:
+          $ref: "#/components/schemas/chat/properties/users"
+        unreadMessages:
+          type: number
+          description: number of unread message for a chat
+        started:
+          type: boolean
+          description: if it is true some messages have been sent, otherwise there are no messages
+
     message:
       type: object
       properties:
@@ -596,6 +610,20 @@ components:
               - partial
           value:
             type: string
+    noMessages:
+#      name: unread-messages
+      name: no-messages
+      in: query
+#      description: filter chats with unread messages
+      description: >
+        it excludes messages, but includes other information about messages:
+
+        - _unreadMessages_ : number of unread messages
+
+        - _started_ : it indicates if there are any messages in the chat
+      required: false
+      schema:
+        type: boolean
 
   securitySchemes:
     BasicAuth:
@@ -606,10 +634,73 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT  
-  
-paths:
 
-#USERS
+tags:
+  - name: Admins
+  - name: Users
+  - name: Session
+  - name: Recipes
+  - name: Comments
+  - name: Reports
+  - name: Likes
+  - name: Foods
+  - name: Shopping List
+  - name: Friends
+  - name: Chats
+  - name: Messages
+  - name: Notifications
+
+paths:
+  #ADMINS
+  /admins:
+    post:
+      description: Signing up of an admin on the platform
+      tags:
+        - Admins
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                img:
+                  $ref: "#/components/schemas/user/properties/information/properties/img"
+                firstname:
+                  $ref: "#/components/schemas/user/properties/information/properties/firstname"
+                lastname:
+                  $ref: "#/components/schemas/user/properties/information/properties/lastname"
+                email:
+                  $ref: "#/components/schemas/user/properties/information/properties/email"
+                tel_number:
+                  $ref: "#/components/schemas/user/properties/information/properties/tel_number"
+                birth_date:
+                  $ref: "#/components/schemas/user/properties/information/properties/birth_date"
+
+      responses:
+        201:
+          description: Admin has been signed up
+          headers:
+            Access-Control-Allow-Origin:
+              description: allowed only from the same origin
+              schema:
+                type: string
+                example: https://localhost:3000
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userID:
+                    description: admin's identifier
+                    type: string
+        400:
+          $ref: "#/components/responses/bad_request"
+        500:
+          $ref: "#/components/responses/general_error"
+
+
+  #USERS
   /users:          
     post:
       description: Signing up of a user on the platform
@@ -776,6 +867,8 @@ paths:
           $ref: "#/components/responses/bad_request"
         404:
           description: Link not valid or User not found
+        410:
+          description: Link is expired
         500:    
           $ref: "#/components/responses/general_error"
 
@@ -921,6 +1014,8 @@ paths:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
           description: "User not found"
+        409:
+          description: Old username or password is uncorrect
         500:
           $ref: "#/components/responses/general_error"
 
@@ -984,6 +1079,9 @@ paths:
         - name: nickname
           in: query
           required: true
+        - name: key
+          in: query
+          required: true
       responses:
         200:
           description: ''
@@ -999,7 +1097,7 @@ paths:
         400:
           $ref: "#/components/responses/bad_request"
         404:
-          description: User not found
+          description: User/Request not found
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1047,8 +1145,40 @@ paths:
           $ref: "#/components/responses/bad_request"
         403:
           description: User not authorized or User yet to be verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  remainAttempts:
+                    type: number
+                    description: number of remain attempt to try access
         404:
           description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  remainAttempts:
+                    type: number
+                    description: number of remain attempt to try access
+        409:
+          description: Finished login attempts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  tryAgainIn:
+                    type: number
+                    description: minutes you must wait before trying to log in again
         500:
           $ref: "#/components/responses/general_error"
   /users/{id}/logout:
@@ -1064,6 +1194,8 @@ paths:
       responses:
         200:
           description: User is logged out
+        204:
+          description: User is already logged out
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1072,8 +1204,6 @@ paths:
           $ref: "#/components/responses/forbidden_delete_error"
         404:
           description: User not found
-        409:
-          description: User is already logged out
         500:
           $ref: "#/components/responses/general_error"
   /users/{id}/refresh-token:
@@ -1105,6 +1235,8 @@ paths:
                 properties:
                   access_token:
                     type: string
+        204:
+          description: Access token is still valid
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1113,8 +1245,6 @@ paths:
           $ref: "#/components/responses/forbidden_post_error"
         404:
           description: User not found
-        409:
-          description: Access token is still valid
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1268,6 +1398,8 @@ paths:
           $ref: "#/components/responses/forbidden_post_error"
         404:
           description: User not found
+        409:
+          description: Recipe has been already inserted
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1444,8 +1576,8 @@ paths:
                   - $ref: "#/components/schemas/recipe"
                   - type: object
                     properties:
-                      updatedPermission:
-                        $ref: "#/components/schemas/recipe/properties/permission"
+                      updatedRecipe:
+                        $ref: "#/components/schemas/recipe"
         204:
           description: Permission of recipe hasn't been updated
         400:
@@ -1456,6 +1588,8 @@ paths:
           $ref: "#/components/responses/forbidden_patch_put_error"
         404:
           description: Recipe not found or Users are not found
+        409:
+          description: Shared recipe already exists with this name
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1584,6 +1718,8 @@ paths:
       responses:
         200:
           description: Comment has been reported / Comment has been un-reported / Content of comment has been updated
+        204:
+          description: You have already reported it
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -2029,6 +2165,14 @@ paths:
           description: User not found
         409:
           description: Request has already been sent/exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  actualState:
+                    type: string
+                    description: friendship state
         500:
           $ref: "#/components/responses/general_error"
 
@@ -2084,8 +2228,6 @@ paths:
           $ref: "#/components/responses/bad_request"
         401:
           $ref: "#/components/responses/unauthorized_error"
-        404:
-          description: User not found
         500:
           $ref: "#/components/responses/general_error"  
     
@@ -2133,6 +2275,14 @@ paths:
           description: Friend not found
         409:
           description: Request has already been changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  actualState:
+                    type: string
+                    description: friendship state
         500:
           $ref: "#/components/responses/general_error"
     delete:
@@ -2236,12 +2386,7 @@ paths:
                   - partial
               value:
                type: string
-        - name: unread-messages
-          in: query
-          description: filter chats with unread messages
-          required: false
-          schema:
-            type: boolean
+        - $ref: "#/components/parameters/noMessages"
 
       responses:
         200:
@@ -2255,7 +2400,10 @@ paths:
                     type: array
                     required: true
                     items:
-                      $ref: "#/components/schemas/chat"
+                      oneOf:
+                        - $ref: "#/components/schemas/chat"
+                        - $ref: "#/components/schemas/chat_without_messages"
+
                   total:
                     type: number
                     description: Number of chats
@@ -2289,13 +2437,17 @@ paths:
         - Chats
       security:
         - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/noMessages"
       responses:
         200:
           description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/chat"  
+                oneOf:
+                  - $ref: "#/components/schemas/chat"
+                  - $ref: "#/components/schemas/chat_without_messages"
         400:
           $ref: "#/components/responses/bad_request"               
         401:
@@ -2438,7 +2590,7 @@ paths:
         - BearerAuth: []
       responses:
         200:
-          description: Chat has been deleted    
+          description: Chat has been deleted
         400:
           $ref: "#/components/responses/bad_request"         
         401:
@@ -2495,7 +2647,32 @@ paths:
           description: Chat not found
         500:
           $ref: "#/components/responses/general_error"
-
+    get:
+      description: ""
+      tags:
+        - Messages
+        - Chats
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/message"
+        400:
+          $ref: "#/components/responses/bad_request"
+        401:
+          $ref: "#/components/responses/unauthorized_error"
+        403:
+          $ref: "#/components/responses/forbidden_get_error"
+        404:
+          description: Chat not found
+        500:
+          $ref: "#/components/responses/general_error"
     put:
       description: "Read messages."
       tags:
