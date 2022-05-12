@@ -30,12 +30,13 @@ export default {
   methods: {
     setLogo(_dark){
       try {
-        this.$data._logo = _dark ? require("@assets/logo/dark-logo.png") : require("@assets/logo/light-logo.png")
+        this.$data._logo = `/images/logo/${_dark ? "dark": "light"}-logo.png`
       } catch (e) {
         this.imgNotFound()
       }
     },
-    imgNotFound(){
+    imgNotFound(e){
+      console.error(e)
       this.$data._logo = ""
     }
   },
