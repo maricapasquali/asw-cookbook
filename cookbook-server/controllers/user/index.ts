@@ -5,7 +5,7 @@ import {Chat, EmailLink, Friend, Notification, ShoppingList, User} from '../../m
 import {DecodedTokenType} from '../../modules/jwt.token'
 import {RBAC} from '../../modules/rbac'
 import {IUser, SignUp} from "../../models/schemas/user";
-import {EraseUserEmail, ResetPasswordEmail, SignUpEmail, TemplateEmail} from "../../modules/mailer/templates";
+import {TemplateEmail} from "../../modules/mailer/templates";
 import {Types} from "mongoose";
 import {IChat} from "../../models/schemas/chat";
 import {Pagination} from "../../modules/pagination";
@@ -30,7 +30,7 @@ const send_email_signup = function (user) {
     })
     emailLink.save().then((_email_link) =>{
 
-        const signUpEmail: TemplateEmail = new SignUpEmail({
+        const signUpEmail: TemplateEmail = TemplateEmail.createSignUpEmail({
             app_name: app_name,
             firstname: user.information.firstname,
             lastname: user.information.lastname,
@@ -39,16 +39,10 @@ const send_email_signup = function (user) {
             url: client_origin + pathname + '?key=' + randomKey + "&email=" + user.information.email+"&userID="+user.credential.userID
         })
 
-        let html: string = signUpEmail.toHtml()
-        let text: string = signUpEmail.toText()
-
-        mailer.save(`signup-${user._id}.html`, html) //FOR DEVELOP
         mailer.send({
             to: user.information.email,
             subject: 'CookBook - Registazione',
-            html: html,
-            text: text
-        })
+        }, signUpEmail, {savedJSON: {filename: `signup-${user._id}` } /*FOR DEVELOP*/})
 
     }, err => console.error(err.message))
 
@@ -276,25 +270,18 @@ function deleteUserRef(user: IUser): void {
             err => console.error('Delete chats one  of user ', userID, ' : ', err))
 }
 function send_email_erase_user(user: IUser): void {
-    const eraseUserEmail: TemplateEmail = new EraseUserEmail({
+    const eraseUserEmail: TemplateEmail = TemplateEmail.createEraseUserEmail({
         app_name: app_name,
         firstname: user.information.firstname,
         lastname: user.information.lastname,
         userID: user.credential.userID,
         email: user.information.email
     })
-
-    let html: string = eraseUserEmail.toHtml()
-    let text: string = eraseUserEmail.toText()
-
-    mailer.save(`erase-user-${user._id}.html`, html) //FOR DEVELOP
-
     mailer.send({
         to: user.information.email,
         subject: 'CookBook - Cancellazione account',
-        html: html,
-        text: text
-    })
+    }, eraseUserEmail, {savedJSON: {filename: `erase-user-${user._id}`} /*FOR DEVELOP*/})
+
 }
 //use token
 export function delete_user(req, res){
@@ -445,23 +432,17 @@ export function send_email_password(req, res){
                      .then((_emailLink) => {
                         res.status(200).json({send: true});
 
-                        const resetPswEmail: TemplateEmail = new ResetPasswordEmail({
-                            app_name: app_name,
-                            user_name: user.information.firstname + ' '+user.information.lastname,
-                            url: client_origin + pathname + '?key=' + randomKey
-                        })
-
-                        let html: string = resetPswEmail.toHtml()
-                        let text: string = resetPswEmail.toText()
-
-                        mailer.save(`reset-pass-${user._id}.html`, html) //FOR DEVELOP
+                        const resetPswEmail: TemplateEmail = TemplateEmail.createResetPasswordEmail({
+                             app_name: app_name,
+                             user_name: user.information.firstname + ' '+user.information.lastname,
+                             url: client_origin + pathname + '?key=' + randomKey
+                        });
 
                         mailer.send({
                             to: email,
                             subject: 'CookBook - Reset Password',
-                            html: html,
-                            text: text
-                        })
+                        }, resetPswEmail, { savedJSON: {filename: `reset-pass-${user._id}`} /*FOR DEVELOP*/ })
+
                 }, err => res.status(500).json({description: err.message}))
         }, err => res.status(500).json({description: err.message}))
 }

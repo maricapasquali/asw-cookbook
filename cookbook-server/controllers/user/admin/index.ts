@@ -5,10 +5,10 @@ import {RBAC} from "../../../modules/rbac";
 import Role = RBAC.Role;
 import {MongooseDuplicateError, MongooseValidationError} from "../../../modules/custom.errors";
 import {User} from "../../../models";
-import {SignUpAdminEmail, TemplateEmail} from "../../../modules/mailer/templates";
+import {TemplateEmail} from "../../../modules/mailer/templates";
 
 const send_email_signup = function (user) {
-    const signUpEmail: TemplateEmail = new SignUpAdminEmail({
+    const signUpEmail: TemplateEmail = TemplateEmail.createSignUpAdminEmail({
         app_name: app_name,
         firstname: user.information.firstname,
         lastname: user.information.lastname,
@@ -16,17 +16,10 @@ const send_email_signup = function (user) {
         userID: user.credential.userID,
         passwordDefault: user.passwordDefault
     })
-
-    let html: string = signUpEmail.toHtml()
-    let text: string = signUpEmail.toText()
-
-    mailer.save(`signup-admin-${user._id}.html`, html) //FOR DEVELOP
     mailer.send({
         to: user.information.email,
         subject: 'CookBook - Registazione Amministratore',
-        html: html,
-        text: text
-    })
+    }, signUpEmail, {savedJSON: {filename: `signup-admin-${user._id}`} /*FOR DEVELOP*/})
 }
 
 export function signup(req, res) {
