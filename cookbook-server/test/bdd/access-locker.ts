@@ -1,28 +1,28 @@
-const should = require("chai").should();
-
-const {
+import {should} from "chai"
+import {
     MINUTE_IN_SEC,
     MINUTE_IN_MS,
     sleep,
     convertInSeconds
-} = require("../helpers")
-const {
+} from "../helpers"
+import {
     tryAgainSeconds,
     ip1,
     tryAgainAfter,
     maxNumberAttempt
-} = require("../helpers/access-locker.helpers")
-const {AccessLocker} = require("../../modules/access.locker");
+} from "../helpers/access-locker.helpers"
+import {AccessLocker, IAccessLocker} from "../../modules/access.locker"
+
+should()
 
 describe('AccessLocker', function (){
 
     this.timeout(MINUTE_IN_MS);
 
-    let locker
+    let locker: IAccessLocker
 
     beforeEach(function (){
         locker = new AccessLocker(maxNumberAttempt, tryAgainSeconds / MINUTE_IN_SEC)
-            //getLocker()
         locker.insert(ip1)
     })
 

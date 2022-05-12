@@ -1,29 +1,27 @@
-const {assert} = require('chai');
-const {
+import {assert} from "chai"
+import {
     TIMEOUT_DATABASE,
     isTestingMode,
     ObjectId,
     connectDatabase,
     disconnectDatabase,
     dropDatabase
-} = require("../helpers")
-const {
+} from "../helpers"
+import {
     kira,
     kyle,
     marica,
     insertSomeUsers,
-} = require("../helpers/notification.helpers")
+} from "../helpers/notification.helpers"
 
-const {create_notification} = require("../../controllers/notification")
-const {Notification} = require("../../models/schemas/notification")
+import {create_notification} from "../../controllers/notification"
+import {Notification} from "../../models/schemas/notification"
 
 describe('Notification', function (){
 
     this.timeout(TIMEOUT_DATABASE)
 
     before(function () {
-        console.log(global.PasswordValidator)
-        console.log(global.EmailValidator)
         if(!isTestingMode) {
             console.log("All Tests ignored..")
             this.skip()

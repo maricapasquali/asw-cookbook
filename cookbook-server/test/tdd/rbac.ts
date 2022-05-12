@@ -1,10 +1,10 @@
-const {RBAC, createRBAC} = require("../../modules/rbac");
-const {assert} = require("chai");
+import {RBAC, createRBAC, IRbacWithRole} from "../../modules/rbac"
+import {assert} from "chai"
 
 suite('RBAC', function () {
-    let accessManager
-    let admin
-    let signed
+    let accessManager: IRbacWithRole
+    let admin: string
+    let signed: string
 
     suiteSetup(function () {
         accessManager = createRBAC()

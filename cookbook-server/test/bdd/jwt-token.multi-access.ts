@@ -1,9 +1,7 @@
-const should = require("chai").should()
-const {assert} = require("chai");
-const {v4} = require("uuid")
-const {JwtTokensManager} = require("../../modules/jwt.token")
-
-const {
+import {assert, should} from "chai"
+import {v4} from  "uuid"
+import {IJwtTokensManager, JwtTokensManager, Tokens} from "../../modules/jwt.token"
+import {
     CHECKER_LIST_ALL,
     CHECKER_LIST_SOME,
     PROPERTY_TOKEN_ACCESS,
@@ -20,24 +18,25 @@ const {
     checkContent,
     checkTokenValidity,
     updateAccessTokenInDevice1
-} = require("../helpers/jwt-token.multi-access.helpers")
+} from "../helpers/jwt-token.multi-access.helpers"
 
+should()
 
 describe('Jwt Token (Multi-Access)', function (){
 
-    let tokenManager
-    let token1_dev1
-    let token2_dev1
-    let token1_dev2
-    let token2_dev2
+    let tokenManager: IJwtTokensManager
+    let token1_dev1: Tokens
+    let token2_dev1: Tokens
+    let token1_dev2: Tokens
+    let token2_dev2: Tokens
 
     before(function (){
 
         console.debug('----------------------------- SET ENVIRONMENTS ----------------------------')
         tokenManager = new JwtTokensManager('client', 'server')
 
-        const device1 = v4()
-        const device2 = v4()
+        const device1: string = v4()
+        const device2: string = v4()
 
         token1_dev1 = tokenManager.createNewTokens({...user1, device: device1})
         token2_dev1 = tokenManager.createNewTokens({...user2, device: device1})
@@ -149,7 +148,7 @@ describe('Jwt Token (Multi-Access)', function (){
 
 
             assert(tokenManager.tokens(user1._id).isRevoked(token1_dev1))
-            assert(tokenManager.tokens(user2._id).isRevoked(user2._id, token2_dev1))
+            assert(tokenManager.tokens(user2._id).isRevoked(token2_dev1))
             assert(!tokenManager.tokens(user1._id).isRevoked(new_token1_dev1))
             assert(!tokenManager.tokens(user2._id).isRevoked(new_token2_dev1))
 
