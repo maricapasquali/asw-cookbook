@@ -7,13 +7,11 @@ const DEVELOPMENT = "development"
 myEnv = dotenv.config({ path: path.join(__dirname, '.env') })
 dotenvExpand.expand(myEnv)
 
-let _environment;
+const protocol = "https"
 
-let protocol_server
 let hostname_server
 let port_server
 
-let protocol_client
 let hostname_client
 let port_client
 
@@ -22,39 +20,35 @@ if(process.env.DOCKER_CONTAINER_ENV) {
     let isDevMode = process.env.NODE_ENV === DEVELOPMENT
     const _dev = isDevMode ? "-dev" : ''
 
-    protocol_server = process.env.SERVER_PROTOCOL || "https"
     hostname_server = "server-app" + _dev
     port_server = isDevMode ? 3001 : 3000
 
-    protocol_client = process.env.CLIENT_PROTOCOL || "https"
     hostname_client = "client-app" + _dev
     port_client = isDevMode ? 5001 : 5000
 
 } else {
 
-    protocol_server = process.env.COOKBOOK_SERVER_PROTOCOL || process.env.VUE_APP_COOKBOOK_SERVER_PROTOCOL || "https"
     hostname_server = process.env.COOKBOOK_SERVER_HOSTNAME || process.env.VUE_APP_COOKBOOK_SERVER_HOSTNAME || "localhost"
     port_server = parseInt(process.env.COOKBOOK_SERVER_PORT || process.env.VUE_APP_COOKBOOK_SERVER_PORT) || 3000
 
-    protocol_client = process.env.COOKBOOK_CLIENT_PROTOCOL || process.env.VUE_APP_COOKBOOK_CLIENT_PROTOCOL || "https"
     hostname_client = process.env.COOKBOOK_CLIENT_HOSTNAME || process.env.VUE_APP_COOKBOOK_CLIENT_HOSTNAME || "localhost"
     port_client = parseInt(process.env.COOKBOOK_CLIENT_PORT || process.env.VUE_APP_COOKBOOK_CLIENT_PORT) || 5000
 }
 
 const databaseURI = (process.env.NODE_ENV === "test" ? process.env.DATABASE_TEST_URI || "mongodb://localhost:27017/cookbook-test" : process.env.DATABASE_URI || "mongodb://localhost:27017/cookbook" )
 
-const server_origin = `${protocol_server}://${hostname_server}:${port_server}`
+const server_origin = `${protocol}://${hostname_server}:${port_server}`
 const api_pathname = "/api"
 const images_pathname = "/images"
 const videos_pathname = "/videos"
 
-const client_origin = `${protocol_client}://${hostname_client}:${port_client}`
+const client_origin = `${protocol}://${hostname_client}:${port_client}`
 
-_environment = {
+let _environment = {
     appName: 'CookBook',
     mode: process.env.NODE_ENV || DEVELOPMENT,
     server: {
-        protocol: protocol_server,
+        protocol: protocol,
         hostname: hostname_server,
         port: port_server,
         origin: server_origin,
@@ -65,7 +59,7 @@ _environment = {
         }
     },
     client: {
-        protocol: protocol_client,
+        protocol: protocol,
         hostname: hostname_client,
         port: port_client,
         origin: client_origin
