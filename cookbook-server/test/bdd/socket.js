@@ -1,5 +1,4 @@
-const assert = require("assert");
-const {expect} = require("chai");
+const {expect, assert} = require("chai");
 const should = require("chai").should();
 const {
     TIMEOUT_DATABASE,

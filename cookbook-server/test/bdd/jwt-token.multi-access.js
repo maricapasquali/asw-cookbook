@@ -1,5 +1,5 @@
 const should = require("chai").should()
-const assert = require("assert");
+const {assert} = require("chai");
 const {v4} = require("uuid")
 const {JwtTokensManager} = require("../../modules/jwt.token")
 

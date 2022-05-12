@@ -1,7 +1,4 @@
-const assert = require('assert');
-const {create_notification} = require("../../controllers/notification")
-const {Notification} = require("../../models/schemas/notification")
-
+const {assert} = require('chai');
 const {
     TIMEOUT_DATABASE,
     isTestingMode,
@@ -17,11 +14,16 @@ const {
     insertSomeUsers,
 } = require("../helpers/notification.helpers")
 
+const {create_notification} = require("../../controllers/notification")
+const {Notification} = require("../../models/schemas/notification")
+
 describe('Notification', function (){
 
     this.timeout(TIMEOUT_DATABASE)
 
     before(function () {
+        console.log(global.PasswordValidator)
+        console.log(global.EmailValidator)
         if(!isTestingMode) {
             console.log("All Tests ignored..")
             this.skip()

@@ -1,5 +1,5 @@
 const {RBAC, createRBAC} = require("../../modules/rbac");
-const assert = require("assert");
+const {assert} = require("chai");
 
 suite('RBAC', function () {
     let accessManager
