@@ -1,14 +1,12 @@
-const assert = require("assert");
-const {expect} = require("chai");
-const should = require("chai").should();
-const {
+import {expect, assert} from "chai"
+import {
     TIMEOUT_DATABASE,
     isTestingMode,
     connectDatabase,
     dropDatabase,
     disconnectDatabase
-} = require("../helpers");
-const {
+} from "../helpers"
+import {
     SocketEvent,
     insertSomeUsers,
     startServer,
@@ -36,8 +34,8 @@ const {
     connectClient,
     disconnectClient,
     firedEvent
-} = require("../helpers/socket.helpers");
-const {IChat} = require("../../models/schemas/chat");
+} from "../helpers/socket.helpers"
+import {IChat} from "../../models/schemas/chat"
 
 describe("Socket", function() {
 
@@ -289,7 +287,7 @@ describe("Socket", function() {
                         let user1 = getUserIdentifierOfClient(_pos1)
                         let user2 = getUserIdentifierOfClient(_pos2)
 
-                        const leaveChatGroup = (client, _leavedUsers = []) => {
+                        const leaveChatGroup = (client, _leavedUsers = []): Promise<any> => {
 
                             let othersUsersInChats = getClientsOnChat(typeChat, c => c !== client && !Array.from(_leavedUsers).includes( getUserInfoOfClientInChat(c, typeChat)?._id) )
 
@@ -711,7 +709,7 @@ describe("Socket", function() {
 
                         const operationNotAuth = client => subscribeEventOnce(client, SocketEvent.OPERATION_NOT_AUTHORIZED, () => assert.fail(firedEvent(SocketEvent.OPERATION_NOT_AUTHORIZED)))
 
-                        const typingInChatGroup = (client, typing) => new Promise((resolve, reject) => {
+                        const typingInChatGroup = (client, typing): Promise<{_id: string, typing: boolean}> => new Promise((resolve, reject) => {
                             let userinfo = getUserInfoOfClientInChat(client, typeChat)
                             let otherClients = getClientsOnChat(typeChat, c => c !== client)
 

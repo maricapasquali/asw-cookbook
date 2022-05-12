@@ -1,21 +1,21 @@
-const assert = require('assert');
-const {create_notification} = require("../../controllers/notification")
-const {Notification} = require("../../models/schemas/notification")
-
-const {
+import {assert} from "chai"
+import {
     TIMEOUT_DATABASE,
     isTestingMode,
     ObjectId,
     connectDatabase,
     disconnectDatabase,
     dropDatabase
-} = require("../helpers")
-const {
+} from "../helpers"
+import {
     kira,
     kyle,
     marica,
     insertSomeUsers,
-} = require("../helpers/notification.helpers")
+} from "../helpers/notification.helpers"
+
+import {create_notification} from "../../controllers/notification"
+import {Notification} from "../../models/schemas/notification"
 
 describe('Notification', function (){
 

@@ -3,9 +3,10 @@
     "module": "commonjs",
     "target": "es6",
     "sourceMap": true,
-    "types": ["./modules/global"]
+    "types": ["./modules/global", "@types/mocha", "@types/chai"]
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "test"
   ]
 }

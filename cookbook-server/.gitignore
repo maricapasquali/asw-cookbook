@@ -5,6 +5,4 @@ node_modules
 **/*.js
 **/*.js.map
 
-!test/bdd/*.js
-!test/tdd/*.js
 !public/js/*.js

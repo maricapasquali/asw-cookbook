@@ -12,6 +12,15 @@ $(function() {
     const resetPreviewImageBtn = $("#reset-preview")
     const loadPreviewImageBtn = $("#load-preview")
 
+    const reader = new FileReader();
+    reader.onload = function(e){
+        const image_base64 = e.target.result;
+        preview.attr("src", image_base64);
+        preview.show()
+        preview.prev().hide()
+        resetPreviewImageBtn.show()
+    };
+
     // FUNCTIONS
     function initialization(){
         spinner.hide()
@@ -44,33 +53,44 @@ $(function() {
         let target = event.target
 
         if (target.checkValidity()) {
-            startRequest()
-            let formData = new FormData(target)
-            // for(const [k, v] of formData.entries()) console.debug(k, ' -> ', v);
-            axios.post('/api/admins', formData)
-                .then(({data}) => {
-                    console.debug("User id = ", data?.userID)
-                    $(".alert-success").show()
-                })
-                .catch(err => {
 
-                    console.error(err)
-                    switch (err?.response?.status){
-                        case 400:
-                            let warning = $(".alert-warning")
-                            warning.find("span").html(err?.response?.data?.description)
-                            warning.show()
-                            break
-                        default:
-                            let _error = err?.response?.data?.description || err?.response?.statusText || err?.message || 'Unknown error'
-                            let danger = $(".alert-danger")
-                            danger.find("span").html(_error)
-                            danger.show()
-                            break
-                    }
-                })
-                .finally(() => endRequest())
-        } else {
+            let formData = new FormData(target)
+            if(formData.get('img').size === 0) formData.delete("img")
+            if(!formData.get('tel_number')) formData.delete("tel_number")
+            if(!formData.get('birth_date')) formData.delete("birth_date")
+
+            //for(const [k, v] of formData.entries()) console.debug(k, ' -> ', v);
+
+            $.post({
+                url: "/api/admins",
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: "json",
+                beforeSend: startRequest
+            }).done(function(data) {
+                console.debug("User id = ", data?.userID)
+                $(".alert-success").show()
+            }).fail(function(jqXHR) {
+                switch (jqXHR?.status){
+                    case 400:
+                        let warning = $(".alert-warning")
+                        warning.find("span").html(jqXHR?.responseJSON?.description)
+                        warning.show()
+                        break
+                    default:
+                        let _error = jqXHR?.responseJSON?.description || jqXHR?.statusText || 'Unknown error'
+                        let danger = $(".alert-danger")
+                        danger.find("span").html(_error)
+                        danger.show()
+                        break
+                }
+            }).always(function (){
+                endRequest()
+            });
+
+        }
+        else {
             event.stopPropagation()
         }
         target.classList.add('was-validated')
@@ -95,17 +115,9 @@ $(function() {
     }
 
     function loadNewImage(event){
-        const input = $(event.currentTarget);
-        const file = input[0].files[0];
-        const reader = new FileReader();
-        reader.onload = function(e){
-            const image_base64 = e.target.result;
-            preview.attr("src", image_base64);
-            preview.show()
-            preview.prev().hide()
-            resetPreviewImageBtn.show()
-        };
-        reader.readAsDataURL(file);
+        const file = $(event.currentTarget)[0].files[0];
+        if(/image\/.*/.test(file.type)) reader.readAsDataURL(file);
+        else resetPreviewImage(event)
     }
 
     function triggerLoadNewImage(event){

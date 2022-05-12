@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt'
 import {newUser} from "../utils.user.controller";
 import {RBAC} from "../../../modules/rbac";
 import Role = RBAC.Role;
-import {MongooseValidationError} from "../../../modules/custom.errors";
+import {MongooseDuplicateError, MongooseValidationError} from "../../../modules/custom.errors";
 import {User} from "../../../models";
 import {SignUpAdminEmail, TemplateEmail} from "../../../modules/mailer/templates";
 
@@ -60,6 +60,7 @@ export function signup(req, res) {
                         return res.status(201).json({userID: admin._id})
                     }, err => {
                         if(MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
+                        if(MongooseDuplicateError.is(err)) return res.status(400).json({description: "Administrator [ email = " +email  + "] has already inserted."  })
                         res.status(500).json({code: 0, description: err.message})
                     })
 

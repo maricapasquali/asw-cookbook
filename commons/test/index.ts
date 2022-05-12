@@ -1,18 +1,18 @@
-const assert = require('assert');
+import  {assert, expect} from 'chai'
 
-const {
+import  {
     EmailValidator,
     PasswordValidator
-} = require('../modules/validator')
+} from '../modules/validator'
 
 describe('Validator', function (){
     describe('Email', function() {
         it('should return false when the value is not valid', function() {
-            assert.equal(EmailValidator.check('mario@'), false);
+            expect(EmailValidator.check('mario@')).false
         });
 
         it('should return true when the value is valid', function() {
-            assert.equal(EmailValidator.check('mario@gmail.com'), true);
+            expect(EmailValidator.check('mario@gmail.com')).true
         });
     });
 
@@ -35,11 +35,11 @@ describe('Validator', function (){
         let strong2Password = "<2Super-Mario!!#Bos#1>"
 
         it(`A empty string should not have strength`, function (){
-            assert.equal(PasswordValidator.strength(""), undefined)
+            expect(PasswordValidator.strength("")).undefined
         })
 
         it(`A string with only space should not have strength`, function (){
-            assert.equal(PasswordValidator.strength("             "), undefined)
+            expect(PasswordValidator.strength("             ")).undefined
         })
 
         it(`'${weakPassword}' should have weak strength`, function (){

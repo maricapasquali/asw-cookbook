@@ -5,6 +5,7 @@ import {JwtTokensManager} from "../jwt.token";
 import {createRBAC} from "../rbac";
 import {Mailer} from "../mailer";
 import {FileUploader} from "../uploader";
+import * as path from "path";
 
 global.configuration = config
 
@@ -14,7 +15,7 @@ global.tokensManager = new JwtTokensManager(config.client.origin, config.server[
 
 global.accessManager = createRBAC()
 
-global.mailer = new Mailer(`no-reply@${config.appName.toLowerCase()}.com`)
+global.mailer = new Mailer(`no-reply@${config.appName.toLowerCase()}.com`, path.resolve('filesystem', 'emails'))
 
 global.fileUploader = new FileUploader()
 
