@@ -1,9 +1,9 @@
-const {assert, expect} = require('chai');
+import  {assert, expect} from 'chai'
 
-const {
+import  {
     EmailValidator,
     PasswordValidator
-} = require('../modules/validator')
+} from '../modules/validator'
 
 describe('Validator', function (){
     describe('Email', function() {
