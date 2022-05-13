@@ -11,8 +11,6 @@ services:
       target: production
     ports:
      - "5000:5000"
-    env_file:
-      - docker.prod.env
     networks:
       - cookbook
     depends_on:
@@ -29,8 +27,6 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URI=mongodb://database-app/cookbook
-    env_file:
-      - docker.prod.env
     networks:
       - cookbook
     links:

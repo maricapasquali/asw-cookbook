@@ -13,8 +13,6 @@ services:
       - "5001:5001"
     volumes:
       - ./:/app
-    env_file:
-      - docker.dev.env
     networks:
       - cookbook-dev
     depends_on:
@@ -34,8 +32,6 @@ services:
       - /app/cookbook-server/node_modules/bcrypt
     environment:
       - DATABASE_URI=mongodb://database-app-dev/cookbook
-    env_file:
-     - docker.dev.env
     networks:
       - cookbook-dev
     links:

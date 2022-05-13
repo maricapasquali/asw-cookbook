@@ -14,7 +14,6 @@ module.exports = {
         resolve: {
             alias: {
                 '@environment': path.resolve(__dirname, "..", "environment"),
-                '@commons': path.resolve(__dirname, "..", "commons", "modules"),
                 '@': path.resolve(__dirname, 'src'),
                 '@api': path.resolve(__dirname, 'src/services/api'),
                 '@assets': path.resolve(__dirname, 'src/assets'),

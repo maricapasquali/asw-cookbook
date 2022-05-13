@@ -14,8 +14,8 @@ import {
     insertSomeUsers,
 } from "../helpers/notification.helpers"
 
-import {create_notification} from "../../controllers/notification"
-import {Notification} from "../../models/schemas/notification"
+import {create_notification} from "../../src/controllers/notification"
+import {Notification} from "../../src/models/schemas/notification"
 
 describe('Notification', function (){
 

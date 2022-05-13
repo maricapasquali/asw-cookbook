@@ -9,7 +9,8 @@
     "client:start": "cross-env NODE_ENV=production node .",
     "dev:client:tsc": "tsc --build -w",
     "dev:client:serve": "vue-cli-service serve",
-    "dev:client:watches": "concurrently \"npm:dev:client:tsc\" \"npm:dev:client:serve\""
+    "dev:client:watches": "concurrently \"npm:dev:client:tsc\" \"npm:dev:client:serve\"",
+    "clean": "tsc --build --clean"
   },
   "author": "Marica Pasquali",
   "license": "ISC",

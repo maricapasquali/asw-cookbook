@@ -1,6 +1,6 @@
-import {Validator} from "../../../commons/modules/validator";
+import {Validator} from "../../../shared/src/validator";
 
-import {IFileUploader, UploaderConfiguration} from "../uploader";
+import {IFileUploader} from "../uploader";
 import {IJwtTokensManager} from "../jwt.token";
 import {IRbacWithRole} from "../rbac";
 import {IMailer} from "../mailer";

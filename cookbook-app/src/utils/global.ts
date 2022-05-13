@@ -3,7 +3,7 @@ import {
     PasswordValidatorExtended,
     EmailValidator,
     PasswordValidator
-} from '../../../commons/modules/validator'
+} from '../../../shared/src/validator'
 import {
     ReaderStream,
     ReaderStreamImage,
