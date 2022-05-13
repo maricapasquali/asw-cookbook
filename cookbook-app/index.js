@@ -5,7 +5,7 @@ const path = require('path');
 const serveStatic = require('serve-static');
 const history = require('connect-history-api-fallback');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const {Hosting} = require('../commons/modules/hosting')
+const {Hosting} = require('../shared/src/hosting')
 const config = require('../environment/env.config')
 
 const optionsProxy =  {

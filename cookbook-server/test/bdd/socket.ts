@@ -35,7 +35,7 @@ import {
     disconnectClient,
     firedEvent
 } from "../helpers/socket.helpers"
-import {IChat} from "../../models/schemas/chat"
+import {IChat} from "../../src/models/schemas/chat"
 
 describe("Socket", function() {
 

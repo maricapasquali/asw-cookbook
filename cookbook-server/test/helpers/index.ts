@@ -1,7 +1,7 @@
 import "../../modules/global"
 
 import {Types} from "mongoose";
-import {connect, disconnect, drop} from "../../database"
+import {connect, disconnect, drop} from "../../src/database"
 
 /* -- EXPORTED FUNCTIONALITY -- */
 export const SECOND_IN_MS: number = 1000

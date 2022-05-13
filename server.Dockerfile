@@ -3,21 +3,23 @@ ENV DOCKER_CONTAINER_ENV true
 
 FROM base as production
 
+WORKDIR /app
+COPY ./tsconfig.json .
+
 WORKDIR /app/environment
-COPY ./environment/package*.json .
+COPY ./environment/package*.json ./
 RUN npm install
 COPY ./environment .
 
-WORKDIR /app/commons
-COPY ./commons/package*.json .
+WORKDIR /app/shared
+COPY ./shared/package*.json ./
 RUN npm install
-COPY ./commons .
-RUN npm run modules:build
+COPY shared .
+RUN npm run shared:build
 
 WORKDIR /app/cookbook-server
-COPY ./cookbook-server/package*.json .
-RUN npm install
 COPY ./cookbook-server .
+RUN npm install
 
 ENV NODE_ENV production
 

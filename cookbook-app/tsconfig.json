@@ -1,12 +1,7 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es6",
-    "sourceMap": true,
-  },
+  "extends": "../tsconfig.json",
   "include": [
     "src/services/**/*",
     "src/utils/**/*"
-  ],
-  "exclude": ["node_modules"]
+  ]
 }

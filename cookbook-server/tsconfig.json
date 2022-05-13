@@ -1,12 +1,12 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es6",
-    "sourceMap": true,
     "types": ["./modules/global", "@types/mocha", "@types/chai"]
   },
-  "exclude": [
-    "node_modules",
-    "test"
+  "include": [
+    "src",
+    "modules",
+    "index.ts",
+    "static/index.ts"
   ]
 }

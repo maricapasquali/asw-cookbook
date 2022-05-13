@@ -4,5 +4,3 @@ node_modules
 
 **/*.js
 **/*.js.map
-
-!public/js/*.js

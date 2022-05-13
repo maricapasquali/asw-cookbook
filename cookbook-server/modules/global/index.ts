@@ -1,5 +1,5 @@
 import * as config from "../../../environment/env.config";
-import {EmailValidator} from "../../../commons/modules/validator";
+import {EmailValidator} from "../../../shared/src/validator";
 
 import {JwtTokensManager} from "../jwt.token";
 import {createRBAC} from "../rbac";

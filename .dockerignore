@@ -1,21 +1,18 @@
-#COMMONS
-commons/node_modules
+#SHARED
+shared/node_modules
 
-commons/modules/**/*.js
-commons/modules/**/*.js.map
+shared/src/**/*.js
+shared/src/**/*.js.map
 
 #CLIENT
 cookbook-app/node_modules
 cookbook-app/dist
 
-cookbook-app/src/api/**/*.js
-cookbook-app/src/api/**/*.js.map
+cookbook-app/src/services/**/*.js
+cookbook-app/src/services/**/*.js.map
 
-cookbook-app/src/modules/**/*.js
-cookbook-app/src/modules/**/*.js.map
-
-cookbook-app/src/socket/**.js
-cookbook-app/src/socket/**.js.map
+cookbook-app/src/utils/**/*.js
+cookbook-app/src/utils/**/*.js.map
 
 
 #SERVER
@@ -23,8 +20,6 @@ cookbook-server/node_modules
 
 cookbook-server/**/*.js
 cookbook-server/**/*.js.map
-
-!cookbook-server/views/js/*.js
 
 #ENVIRONMENT
 
