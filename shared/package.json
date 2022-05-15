@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "shared:build": "tsc --build",
+    "build": "tsc --build",
     "dev:shared:build": "tsc --build -w",
     "test": "mocha --require ts-node/register test/*.ts",
     "clean": "tsc --build --clean"

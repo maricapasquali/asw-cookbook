@@ -15,7 +15,7 @@ WORKDIR /app/shared
 COPY shared/package*.json ./
 RUN npm install
 COPY shared .
-RUN npm run shared:build
+RUN npm run build
 
 WORKDIR /app/cookbook-app
 COPY ./cookbook-app/package*.json ./
@@ -24,9 +24,8 @@ COPY ./cookbook-app .
 
 ENV NODE_ENV production
 
-RUN npm run client:build:tsc
-RUN npm run client:build:production
-CMD [ "npm", "run", "client:start" ]
+RUN npm run build
+CMD [ "npm", "start" ]
 
 
 FROM base as development

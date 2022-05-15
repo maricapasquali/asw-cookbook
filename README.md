@@ -11,7 +11,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
 
 - _production_ mode
   ```
-      docker-compose build .
+      docker-compose build
   ```
 - _development_ mode
   ```
@@ -58,7 +58,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
 ## Installation
 
 ```
-npm run install:sub-projects
+npm install
 ```
 
 ## Build and Run

@@ -3,14 +3,19 @@
   "version": "1.0.0",
   "description": "CookBook is a web app for those who love to cook and/or eat healthy.\r The platform aims to offer the exchange of recipes (traditional or customized) of all sorts of food (appetizers, first courses, main courses, desserts, drinks, condiments, ...)\r ## Requirements\r - docker-compose",
   "scripts": {
-    "install:sub-projects": "(cd shared && npm install) && (cd environment && npm install) && (cd cookbook-app && npm install) && (cd cookbook-server && npm install)",
-    "build": "(cd shared && npm run shared:build) && (cd cookbook-server && npm run server:build) && (cd cookbook-app && npm run client:build:tsc && npm run client:build:production)",
-    "server:start": "cd cookbook-server && npm run server:start",
-    "client:start": "cd cookbook-app && npm run client:start",
-    "dev:server:start": "cd cookbook-server && npm run dev:server:watches",
-    "dev:client:start": "cd cookbook-app && npm run dev:client:watches",
-    "clean:typescrypt" : "(cd shared && npm run clean) && (cd cookbook-app && npm run clean) && (cd cookbook-server && npm run clean)"
+    "build": "npm run build -ws --if-present",
+    "server:start": "npm start -w cookbook-server",
+    "client:start": "npm start -w cookbook-app",
+    "dev:server:start": "npm run dev:server:watches -w cookbook-server",
+    "dev:client:start": "npm run dev:client:watches -w cookbook-app",
+    "clean:typescrypt" : "npm run clean -ws --if-present"
   },
+  "workspaces": [
+    "shared",
+    "environment",
+    "cookbook-server",
+    "cookbook-app"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/maricapasquali/asw-cookbook.git"

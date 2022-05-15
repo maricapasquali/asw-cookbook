@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "(cd static && npm install)",
-    "server:build": "tsc --build && tsc --project static/ts/tsconfig.json",
-    "server:start": "cross-env NODE_ENV=production node .",
-    "dev:server:tsc": "concurrently -n watch:server,watch:static 'tsc --build -w' 'tsc --project static/ts/tsconfig.json -w'",
+    "build": "tsc --build && tsc --project static/ts",
+    "start": "cross-env NODE_ENV=production node .",
+    "dev:server:tsc": "concurrently -n watch:server,watch:static 'tsc --build -w' 'tsc --project static/ts -w'",
     "dev:server:nodemon": "nodemon .",
     "dev:server:watches": "concurrently \"npm:dev:server:tsc\" \"npm:dev:server:nodemon\"",
     "test:tdd": "cross-env NODE_ENV=test mocha --require ts-node/register --ui tdd ./test/tdd/*.ts",

@@ -17,6 +17,7 @@ cookbook-app/src/utils/**/*.js.map
 
 #SERVER
 cookbook-server/node_modules
+cookbook-server/static/node_modules
 
 cookbook-server/**/*.js
 cookbook-server/**/*.js.map
