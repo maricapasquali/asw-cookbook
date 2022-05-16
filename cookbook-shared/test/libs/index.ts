@@ -3,7 +3,7 @@ import  {assert, expect} from 'chai'
 import  {
     EmailValidator,
     PasswordValidator
-} from '../src/validator'
+} from '../../libs/validator'
 
 describe('Validator', function (){
     describe('Email', function() {

@@ -38,8 +38,7 @@ import Components from "@components"
 // Import my Plugins
 import AppPlugins from '@plugins'
 // Import Environment Variables
-import * as envConfig from "@environment/env.config";
-
+import envConfig from "cookbook-shared/environment";
 // Make BootstrapVue available throughout your project
 Vue.use(BootstrapVue)
 // Optionally install the BootstrapVue icon components plugin

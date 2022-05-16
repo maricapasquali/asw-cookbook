@@ -1,8 +1,8 @@
 #SHARED
-shared/node_modules
+cookbook-shared/node_modules
 
-shared/src/**/*.js
-shared/src/**/*.js.map
+cookbook-shared/src/**/*.js
+cookbook-shared/src/**/*.js.map
 
 #CLIENT
 cookbook-app/node_modules
@@ -21,7 +21,3 @@ cookbook-server/static/node_modules
 
 cookbook-server/**/*.js
 cookbook-server/**/*.js.map
-
-#ENVIRONMENT
-
-environment/node_modules

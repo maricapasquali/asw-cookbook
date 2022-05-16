@@ -13,7 +13,7 @@
     "test:tdd": "cross-env NODE_ENV=test mocha --require ts-node/register --ui tdd ./test/tdd/*.ts",
     "test:bdd": "cross-env NODE_ENV=test mocha --require ts-node/register --ui bdd ./test/bdd/*.ts",
     "test": "cross-env NODE_ENV=test npm run test:tdd && npm run test:bdd",
-    "clean": "tsc --build --clean && (cd static/ts && tsc --build --clean)"
+    "clean": "tsc --build --clean && (cd static && npm run clean)"
   },
   "nodemonConfig": {
     "ext": "js"

@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as cors from 'cors';
 import {Server} from "socket.io";
 
-import {Hosting, HTTPSOptions} from "../shared/src/hosting"
+import {Hosting, HTTPSOptions} from "cookbook-shared/libs/hosting"
 import * as database from './src/database'
 import routes from './src/routes'
 import socket from './src/sockets'

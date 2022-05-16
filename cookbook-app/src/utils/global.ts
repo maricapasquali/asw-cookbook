@@ -3,7 +3,7 @@ import {
     PasswordValidatorExtended,
     EmailValidator,
     PasswordValidator
-} from '../../../shared/src/validator'
+} from 'cookbook-shared/libs/validator'
 import {
     ReaderStream,
     ReaderStreamImage,

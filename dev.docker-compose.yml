@@ -7,8 +7,8 @@ services:
     image: marica/web-app-client-dev
     build:
       context: .
-      dockerfile: client.Dockerfile
-      target: development
+      dockerfile: dev.Dockerfile
+      target: client
     ports:
       - "5001:5001"
     volumes:
@@ -23,13 +23,12 @@ services:
     image: marica/web-app-server-dev
     build:
       context: .
-      dockerfile: server.Dockerfile
-      target: development
+      dockerfile: dev.Dockerfile
+      target: server
     ports:
       - "3001:3001"
     volumes:
       - ./:/app
-      - /app/cookbook-server/node_modules/bcrypt
     environment:
       - DATABASE_URI=mongodb://database-app-dev/cookbook
     networks:

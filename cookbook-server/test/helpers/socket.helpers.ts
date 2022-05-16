@@ -5,7 +5,7 @@ import * as express from "express";
 import * as fs from "fs";
 import * as  path from "path";
 import sockets from "../../src/sockets";
-import {Hosting} from "../../../shared/src/hosting";
+import {Hosting} from "cookbook-shared/libs/hosting";
 import {Chat, User} from "../../src/models";
 import {ChatPopulationPipeline, IChat} from "../../src/models/schemas/chat";
 import Rooms from "../../src/sockets/rooms";
