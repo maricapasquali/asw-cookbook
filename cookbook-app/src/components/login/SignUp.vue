@@ -107,7 +107,7 @@
                 >
                   <custom-select
                       id="input-6"
-                      v-model="user.sex"
+                      v-model="user.gender"
                       placeholder="Select gender"
                       :options="genders" />
                 </b-form-group>
@@ -194,8 +194,8 @@ export default {
         email: '',
         tel_number: '',
         birth_date: '',
-        sex: '',
-        country: '',
+        gender: null,
+        country: null,
         occupation: '',
         userID: '',
         hash_password: '',

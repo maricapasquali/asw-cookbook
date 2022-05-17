@@ -74,7 +74,7 @@
                     <b-col><b>Data di nascita</b></b-col>
                     <b-col><p>{{ user.information.birth_date | localDate(user.information.country) }}</p></b-col>
                   </b-row>
-                  <b-row v-if="user.information.sex" cols="1" cols-md="2">
+                  <b-row v-if="user.information.gender" cols="1" cols-md="2">
                     <b-col><b>Genere</b></b-col>
                     <b-col><p>{{gender}}</p></b-col>
                   </b-row>
@@ -173,7 +173,7 @@ export default {
       return this.user._id.length === 0;
     },
     gender: function (){
-      return this.getGenderByValue(this.user.information.sex)?.text
+      return this.getGenderByValue(this.user.information.gender)?.text
     },
     isOtherUser: function (){
       return this.userIdentifier !== this.id
@@ -247,13 +247,6 @@ export default {
   border: 1px dashed black;
   border-radius: 10px;
   background: $component-color;
-  //padding-top: 10px;
   color: white;
-  //& > div {
-  //  padding: 10px;
-  //  & > p {
-  //    padding-left: 20px;
-  //  }
-  //}
 }
 </style>

@@ -18,6 +18,7 @@ class Country implements ICountry {
     }
 }
 
+export const None = new Country("", "-- None --", null)
 export const Italy = new Country("IT", "Italia", require("@assets/icons/flags/italy_flag.png"), {class: 'Italy'})
 export const USA = new Country("US", "Stati Uniti d'America", require("@assets/icons/flags/united_states_flag.png"), {class: 'United States'})
 export const Spain = new Country("ES", "Spagna", require("@assets/icons/flags/spain_flag.png"), {class: 'Spain'})
@@ -30,7 +31,7 @@ export const Portugal = new Country("PT", "Portogallo", require("@assets/icons/f
 export const Brazil = new Country("BR", "Brasile", require("@assets/icons/flags/brazil_flag.png"), {class: 'Brazil'})
 export const Russia = new Country("RU", "Russia", require("@assets/icons/flags/russia_flag.png"), {class: 'Russian'})
 
-export default [
+const countries: Country[] =  [
     Italy,
     USA,
     Spain,
@@ -43,3 +44,7 @@ export default [
     Brazil,
     Russia
 ].sort((c1, c2) => c1.text.localeCompare(c2.text))
+
+countries.unshift(None)
+
+export default countries
