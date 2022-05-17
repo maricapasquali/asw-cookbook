@@ -1,4 +1,5 @@
 # Ignore everything in this directory
-users
+*
 # Except this file
 !.gitignore
+!emails
