@@ -543,6 +543,8 @@ components:
       required: false
       schema:
         type: array
+        items:
+          type: string
         example:
           - IT
           - US
@@ -790,7 +792,6 @@ paths:
                 properties:
                   items:
                     type: array
-                    required: true
                     items:
                       type: object
                       properties:
@@ -805,10 +806,8 @@ paths:
                   total:
                     type: number
                     description: Number of all user
-                    required: true
                   paginationInfo:
                     type: object
-                    required: false
                     properties:
                       page:
                         type: number
@@ -816,6 +815,9 @@ paths:
                       limit:
                         type: number
                         description: the maximum number of user to take
+                required:
+                 - items
+                 - total
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -867,6 +869,8 @@ paths:
           $ref: "#/components/responses/bad_request"
         404:
           description: Link not valid or User not found
+        410:
+          description: Link is expired
         500:    
           $ref: "#/components/responses/general_error"
 
@@ -1056,6 +1060,8 @@ paths:
         - name: key
           in: query
           required: true
+          schema:
+            type: string
       responses:
         200:
           description: Link is valid
@@ -1077,6 +1083,13 @@ paths:
         - name: nickname
           in: query
           required: true
+          schema:
+            type: string
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         200:
           description: ''
@@ -1092,7 +1105,7 @@ paths:
         400:
           $ref: "#/components/responses/bad_request"
         404:
-          description: User not found
+          description: User/Request not found
         500:
           $ref: "#/components/responses/general_error"
 
@@ -1269,16 +1282,13 @@ paths:
                 properties:
                   items:
                     type: array
-                    required: true
                     items:
                       $ref: "#/components/schemas/recipe"
                   total:
                     type: number
                     description: Number of all recipe
-                    required: true
                   paginationInfo:
                     type: object
-                    required: false
                     properties:
                       page:
                         type: number
@@ -1286,6 +1296,9 @@ paths:
                       limit:
                         type: number
                         description: the maximum number of recipe to take
+                required:
+                 - items
+                 - total
         401:
           $ref: "#/components/responses/unauthorized_error"
         500:
@@ -1423,16 +1436,13 @@ paths:
                 properties:
                   items:
                     type: array
-                    required: true
                     items:
                       $ref: "#/components/schemas/recipe"
                   total:
                     type: number
                     description: Number of all 'type' recipe
-                    required: true
                   paginationInfo:
                     type: object
-                    required: false
                     properties:
                       page:
                         type: number
@@ -1440,7 +1450,9 @@ paths:
                       limit:
                         type: number
                         description: the maximum number of recipe to take
-
+                required:
+                 - items
+                 - total
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -1927,16 +1939,13 @@ paths:
               properties:
                 items:
                   type: array
-                  required: true
                   items:
                     $ref: "#/components/schemas/food"
                 total:
                   type: number
                   description: Number of all foods
-                  required: true
                 paginationInfo:
                   type: object
-                  required: false
                   properties:
                     page:
                       type: number
@@ -1944,6 +1953,9 @@ paths:
                     limit:
                       type: number
                       description: the maximum number of food to take
+              required:
+                 - items
+                 - total
       400:
         $ref: "#/components/responses/bad_request"
       401:
@@ -2202,16 +2214,13 @@ paths:
                 properties:
                   items:
                     type: array
-                    required: true
                     items:
                       $ref: "#/components/schemas/friend"
                   total:
                     type: number
                     description: Number of friends
-                    required: true
                   paginationInfo:
                     type: object
-                    required: false
                     properties:
                       page:
                         type: number
@@ -2219,6 +2228,9 @@ paths:
                       limit:
                         type: number
                         description: the maximum number of friend to take
+                required:
+                 - items
+                 - total
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -2393,7 +2405,6 @@ paths:
                 properties:
                   items:
                     type: array
-                    required: true
                     items:
                       oneOf:
                         - $ref: "#/components/schemas/chat"
@@ -2402,10 +2413,8 @@ paths:
                   total:
                     type: number
                     description: Number of chats
-                    required: true
                   paginationInfo:
                     type: object
-                    required: false
                     properties:
                       page:
                         type: number
@@ -2413,6 +2422,9 @@ paths:
                       limit:
                         type: number
                         description: the maximum number of chats to take
+                required:
+                 - items
+                 - total
         400:
           $ref: "#/components/responses/bad_request"
         401:
@@ -2742,16 +2754,13 @@ paths:
                 properties:
                   items:
                     type: array
-                    required: true
                     items:
                       $ref: "#/components/schemas/notification"
                   total:
                     type: number
                     description: Number of notifications
-                    required: true
                   paginationInfo:
                     type: object
-                    required: false
                     properties:
                       page:
                         type: number
@@ -2759,6 +2768,9 @@ paths:
                       limit:
                         type: number
                         description: the maximum number of notification to take
+                required:
+                 - items
+                 - total
         400:
           $ref: "#/components/responses/bad_request"
         401:

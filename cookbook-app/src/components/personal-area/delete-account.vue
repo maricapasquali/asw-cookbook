@@ -76,7 +76,7 @@ export default {
             this.show = false
          })
          .catch(err => {
-            let message = this.handleRequestErrors.users.deleteAccount(err)
+            let message = this.$store.$api.errorsHandler.users.deleteAccount(err)
             if(message) this.error = {show: true, message}
          })
          .finally(() => this.processing = false)

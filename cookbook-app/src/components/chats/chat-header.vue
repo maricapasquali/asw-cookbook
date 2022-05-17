@@ -21,7 +21,7 @@
         <strong class="username">{{ receiverName }}</strong>
       </b-col>
       <b-col v-show="(!isChatGroup || withAdmin) && lastAccess"  class="text-center">
-        <p class="last-access mb-0"> {{ lastAccess | dateFormat }} </p>
+        <p class="last-access mb-0"> {{ lastAccess | dateWithSeconds }} </p>
       </b-col>
     </b-row>
   </b-skeleton-wrapper>
@@ -32,7 +32,7 @@
 
 import {mapGetters} from "vuex";
 
-import ChatMixin from '@components/mixins/chat.mixin'
+import {ChatMixin} from '@mixins'
 import ChatTyping from "./chat-typing";
 
 export default {
@@ -41,11 +41,6 @@ export default {
   components: {ChatTyping},
   props: {
     value: Object
-  },
-  filters: {
-    dateFormat: function (text){
-      return dateFormat(text)
-    }
   },
   data(){
     return {

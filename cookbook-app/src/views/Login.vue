@@ -4,7 +4,7 @@
       <!-- LOGIN -->
       <wrap-loading v-model="onLogin.processing" >
         <b-card>
-          <div class="text-center"> <h1 class="text-primary"><em>{{ app_name }}</em></h1></div>
+          <div class="text-center"><logo/></div>
           <b-card-body>
             <b-alert :variant="onLogin.error.info? 'info': 'danger'" v-model="onLogin.error.show">{{onLogin.error.msg}}</b-alert>
             <b-form @submit.prevent="onLoginSubmit">
@@ -28,15 +28,14 @@
                   label="Password"
                   label-for="input-password"
               >
-                <b-form-input
+                <input-password-switch-visibility
                     id="input-password"
                     v-model.trim="credential.password"
                     :state="validationPassword"
                     @input="checkPassword"
-                    type="password"
                     placeholder="Enter password"
                     required
-                ></b-form-input>
+                />
                 <b-form-invalid-feedback :state="validationPassword">
                   La password deve avere almeno 5 caratteri
                 </b-form-invalid-feedback>
@@ -211,7 +210,7 @@ export default {
          })
          .catch(err =>{
            this.resetPassword.error.show = true
-           this.resetPassword.error.msg = this.handleRequestErrors.users.emailResetPassword(err)
+           this.resetPassword.error.msg = this.$store.$api.errorsHandler.users.emailResetPassword(err)
          })
          .finally(() => this.resetPassword.processing = false)
     },
@@ -220,7 +219,7 @@ export default {
       this.onLogin.processing = true
       this.login(this.credential)
           .then(({location, session}) => {
-            console.log('LOCATION ', location)
+            console.debug('LOCATION ', location)
             this.$router.replace(location)
             this.$broadcastChannel.postMessage({login: session})
             console.debug('Store state: ', this.$store.state)
@@ -228,7 +227,7 @@ export default {
           .catch(err => {
             this.onLogin.error.show = true
             this.onLogin.error.info = err.response?.status === 409
-            this.onLogin.error.msg = this.handleRequestErrors.session.login(err)
+            this.onLogin.error.msg = this.$store.$api.errorsHandler.session.login(err)
           })
           .then(() => this.onLogin.processing = false)
     }

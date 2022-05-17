@@ -132,7 +132,7 @@
                         <b-col v-if="doc.diet">{{ nameDiet(doc.diet) }} </b-col>
                       </b-row>
                     </b-col>
-                    <b-col class="px-0 text-right"> {{ doc.createdAt | dateFormat }}</b-col>
+                    <b-col class="px-0 text-right"> {{ doc.createdAt | date }}</b-col>
                   </b-row>
                 </b-container>
               </b-col>
@@ -191,11 +191,10 @@
 
 import {mapGetters} from "vuex";
 import NotFound from "../404";
-import {QueuePendingRequests} from "@api/request";
-import UserMixin from "@components/mixins/user.mixin"
+import {UserMixin, PendingRequestMixin} from "@mixins"
 export default {
   name: "OneRecipe",
-  mixins: [UserMixin],
+  mixins: [UserMixin, PendingRequestMixin],
   props: {
     value: Object | Boolean
   },
@@ -203,7 +202,6 @@ export default {
   data(){
     return {
       loading: true,
-      pendingRequests: null,
       itemsBreadcrumb: [],
       processing: true,
       doc: ''
@@ -235,11 +233,6 @@ export default {
       this.processing = false
     }
   },
-  filters: {
-    dateFormat: function (text){
-      return dateFormat(text)
-    }
-  },
   methods: {
     nameCategory(text){
       return this.getRecipeCategoryByValue(text)?.text || ''
@@ -264,13 +257,13 @@ export default {
     },
     getRecipe() {
       let _idRequest = 'one-recipe'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _idRequest)
+      let options = this.makeRequestOptions(_idRequest)
 
       let {id, recipe_id} = this.$route.params;
       this.processing = true
       this.$store.dispatch('recipes/one-shared', {ownerID: id, recipeID: recipe_id, options})
          .then(({data}) => this.setRecipe(data))
-         .catch(err => this.handleRequestErrors.recipes.getRecipe(err))
+         .catch(err => this.$store.$api.errorsHandler.recipes.getRecipe(err))
          .then(processingEnd => this.processing = !processingEnd)
          .then(() => this.pendingRequests.remove(_idRequest))
     },
@@ -311,7 +304,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     this.$bus.$on('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 
@@ -325,7 +317,6 @@ export default {
     }
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('One recipe cancel.')
     this.$bus.$off('recipe:update', this.onUpdatedRecipeListeners.bind(this))
     this.$bus.$off('recipe:delete', this.onDeletedRecipeListeners.bind(this))
 

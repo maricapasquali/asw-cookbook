@@ -22,7 +22,7 @@
         <b-col>
           <b-form-group label-for="input-country">
             <template #label> <b>Paese</b> </template>
-            <select-with-image id="input-country" placeholder="Seleziona paese ..." v-model="changeableUser.information.country" :options="countries"></select-with-image>
+            <custom-select id="input-country" placeholder="Seleziona paese ..." v-model="changeableUser.information.country" :options="countries" />
           </b-form-group>
         </b-col>
         <b-col>
@@ -46,7 +46,7 @@
         <b-col>
           <b-form-group label-for="input-gender">
             <template #label> <b>Genere</b> </template>
-            <select-with-image id="input-gender" placeholder="Seleziona genere ..." v-model="changeableUser.information.sex" :options="genders"></select-with-image>
+            <custom-select id="input-gender" placeholder="Seleziona genere ..." v-model="changeableUser.information.sex" :options="genders" />
           </b-form-group>
         </b-col>
         <b-col>
@@ -165,7 +165,7 @@ export default {
               this.$socket.emit('user:update:info', { _id: this.user._id, information: response.data.info } )
               this.$emit('save', response.data.info)
             })
-            .catch(this.handleRequestErrors.users.updateUser)
+            .catch(this.$store.$api.errorsHandler.users.updateUser)
             .finally(() => this.processing = false)
       }
     }

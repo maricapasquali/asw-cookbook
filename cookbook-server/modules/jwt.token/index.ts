@@ -6,17 +6,8 @@ import * as _ from "lodash"
 export type DecodedTokenType = { _id: string, role: string }
 type TokenPayload = DecodedTokenType | any
 
-type Tokens = { access: string, refresh: string }
+export type Tokens = { access: string, refresh: string }
 type RevokeToken = Tokens | { access: string } | { refresh: string } | string
-
-export interface IJwtTokensManager {
-    createNewTokens(data: TokenPayload): Tokens
-    createToken(data: TokenPayload, timeout?: string): string
-    checkValidityOfToken(token: string): DecodedTokenType | false
-    getDecodedToken(token: string): DecodedTokenType
-
-    tokens(id: string): IFolderTokens
-}
 
 export interface IFolderTokens {
     id: string
@@ -26,6 +17,7 @@ export interface IFolderTokens {
     revoke(token: RevokeToken): boolean
     revokeAll(id: string): boolean
     isRevoked(token: RevokeToken): boolean
+    findAccessTokenByRefreshToken(refresh: string): string
 }
 
 class FolderTokens implements IFolderTokens {
@@ -69,6 +61,11 @@ class FolderTokens implements IFolderTokens {
         return this._whiteList.splice(0).length === len
     }
 
+    findAccessTokenByRefreshToken(refresh: string): string {
+        let _index = this._index({refresh})
+        if(_index !== -1) return this._whiteList[_index].access
+    }
+
     private _index(token: RevokeToken){
         let _tokenIndex
         if(typeof token === 'string') _tokenIndex = this._whiteList.findIndex(t => t.refresh === token || t.access === token)
@@ -81,6 +78,15 @@ class FolderTokens implements IFolderTokens {
     }
 }
 
+export interface IJwtTokensManager {
+    createNewTokens(data: TokenPayload): Tokens
+    createToken(data: TokenPayload, timeout?: string): string
+    isExpired(token: string): boolean
+    checkValidityOfToken(token: string): DecodedTokenType | false
+    getDecodedToken(token: string): DecodedTokenType
+
+    tokens(id: string): IFolderTokens
+}
 
 export class JwtTokensManager implements IJwtTokensManager {
     private readonly privateKey;
@@ -114,11 +120,20 @@ export class JwtTokensManager implements IJwtTokensManager {
         return sign(data, this.privateKey, Object.assign({expiresIn: timeout || "30 minutes"}, this.signOptions))
     }
 
+    isExpired(token: string): boolean {
+        try {
+            return !verify(token, this.privateKey)
+        }catch (e){
+            console.error(e)
+            return true
+        }
+    }
+
     checkValidityOfToken(token: string): DecodedTokenType | false {
         console.debug('Verify token...')
         try {
             let decodedToken: DecodedTokenType = this.getDecodedToken(token)
-            return decodedToken && !this.tokens(decodedToken._id).isRevoked(token) && verify(token, this.privateKey)
+            return !!decodedToken && !this.tokens(decodedToken._id).isRevoked(token) && verify(token, this.privateKey)
         }catch (e){
             console.error(e)
             return false

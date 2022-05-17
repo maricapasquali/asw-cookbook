@@ -74,13 +74,13 @@ export default {
 
       this.$store.dispatch('users/update-username', { oldUsername: this.old_userID, newUsername: this.userID })
          .then(response => {
-            console.log("CHANGE USER ID...")
+            console.debug("CHANGE USER ID...")
             this.$emit("onChangeUserID", this.userID)
             this.$socket.emit('user:update:info', { _id: this.id, userID: this.userID })
             this.show = false
          })
          .catch(err => {
-           let message = this.handleRequestErrors.users.changeUserID(err)
+           let message = this.$store.$api.errorsHandler.users.changeUserID(err)
            if(message) this.error = {show: true, message}
          })
          .finally(() => this.processing = false)

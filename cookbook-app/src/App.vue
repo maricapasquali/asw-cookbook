@@ -6,7 +6,7 @@
 
     <server-error-handler v-model="serverError"/>
     <bad-request-error-handler v-model="badRequestError"/>
-    <unauthenticated-error-handler v-model="unAuthenticatedError" @force-render-router="forceReloadRoute=true" @close="forceReloadRoute=false"/>
+    <unauthenticated-error-handler v-model="unAuthenticatedError"/>
     <forbidden-error-handler v-model="forbiddenError"/>
     <not-found-error-handler v-model="notFoundResource"/>
   </div>
@@ -71,14 +71,14 @@ export default {
   watch:{
     accessToken(val){
       console.debug('CHANGE ACCESS TOKEN ... ',  this.$socket)
-      this.$socket.connectStart({
+      this.$socket.updateAuthorization({
         key: val,
         userinfo: this.isLoggedIn ? { _id: this.userIdentifier, userID: this.username, isAdmin: this.isAdmin} : undefined
       })
     },
     username(val){
       console.debug('CHANGE USER ID ... ',  this.$socket)
-      this.$socket.connectStart({
+      this.$socket.updateAuthorization({
         key: this.accessToken,
         userinfo: this.isLoggedIn ? { _id: this.userIdentifier, userID: val, isAdmin: this.isAdmin} : undefined
       })
@@ -87,99 +87,36 @@ export default {
   methods: {
     ...mapActions(['initialization']),
     updateGUIListener(){
+      this.$bus.$on('force:reload-route', force => this.forceReloadRoute = force)
+
       this.$bus.$on('hide:navigation-bar', () => this.routeWithoutNavigationBar.push(this.$route.name))
       this.$bus.$on('hide:footer', () => this.routeWithoutFooter.push(this.$route.name))
-
+      this.$bus.$on('hide:errors', () => {
+        this.badRequestError.show = false
+        this.unAuthenticatedError.show = false
+        this.forbiddenError.show = false
+        this.serverError.show = false
+      })
       this.$bus.$on('show:error:bad-request', err => this.badRequestError = {show: true, ...err})
       this.$bus.$on('show:error:unauthenticated', err => this.unAuthenticatedError = {show: true, ...err})
       this.$bus.$on('show:error:forbidden', err => this.forbiddenError = {show: true, ...err})
       this.$bus.$on('show:error:not-found', err => this.notFoundResource = {show: true, ...err})
       this.$bus.$on('show:error:server-internal', err => this.serverError = {show: true, ...err})
 
-    },
-    registerFriendShipListener(){
-      this.$socket.on('friendship:request', this.$bus.notification.friendShipRequest.bind(this))
-      this.$socket.on('friendship:update', this.$bus.notification.friendShipUpdate.bind(this))
-      this.$socket.on('friendship:remove', this.$bus.notification.friendShipRemove.bind(this))
-    },
-    registerFoodListener(){
-      this.$socket.on('food:create', this.$bus.notification.foodCreate.bind(this))
-      this.$socket.on('food:update', this.$bus.update.updateFood.bind(this))
-    },
-    registerShoppingListListener(){
-      this.$socket.on('shopping-list:add', this.$bus.update.addInShoppingList.bind(this))
-      this.$socket.on('shopping-list:update', this.$bus.update.updatePointInShoppingList.bind(this))
-      this.$socket.on('shopping-list:remove', this.$bus.update.removePointInShoppingList.bind(this))
-    },
-    registerCommentListener(){
-      this.$socket.on('comment:response', this.$bus.notification.commentResponse.bind(this))
-      this.$socket.on('comment:report', this.$bus.notification.commentReport.bind(this))
-      this.$socket.on('comment:update', this.$bus.update.updateComment.bind(this))
-      this.$socket.on('comment:delete', this.$bus.update.deleteComment.bind(this))
-      this.$socket.on('comment:unreport', this.$bus.update.unReportComment.bind(this))
-    },
-    registerLikeListener(){
-      this.$socket.on('like:recipe', this.$bus.notification.likeRecipe.bind(this))
-      this.$socket.on('like:comment', this.$bus.notification.likeComment.bind(this))
-      this.$socket.on('unlike:recipe', this.$bus.update.unlikeRecipe.bind(this))
-      this.$socket.on('unlike:comment', this.$bus.update.unlikeComment.bind(this))
-    },
-    registerRecipeListener(){
-      this.$socket.on('recipe:comment', this.$bus.notification.recipeComment.bind(this))
-      this.$socket.on('recipe:create', this.$bus.notification.createSharedRecipe.bind(this))
-      this.$socket.on('recipe:create:saved', this.$bus.notification.createSavedRecipe.bind(this))
-      this.$socket.on('recipe:update', this.$bus.notification.updateSharedRecipe.bind(this))
-      this.$socket.on('recipe:delete', this.$bus.notification.deleteSharedRecipe.bind(this))
-
-      this.$socket.on('recipe:add:permission', this.$bus.update.addRecipePermission.bind(this))
-    },
-    registerUserInfoListener(){
-      this.$socket.on('user:update:password', this.$bus.notification.afterUpdatePassword.bind(this))
-      this.$socket.on('user:strike', this.$bus.notification.onAddStrike.bind(this))
-
-      this.$socket.on('user:signup', this.$bus.update.signupUser.bind(this))
-      this.$socket.on('user:checked', this.$bus.update.checkUser.bind(this))
-      this.$socket.on('user:update:info', this.$bus.update.updateInfoUser.bind(this))
-      this.$socket.on('user:delete', this.$bus.update.deleteUser.bind(this))
-    },
-
-    registerUserOnlineOfflineListener(){
-      this.$socket.on('all:users:online', users => this.$store.commit('users/set-onlines', users))
-      this.$socket.on('user:online', _id => this.$store.commit('users/add-online', _id))
-      this.$socket.on('user:offline', (_id, _date) => this.$store.commit('users/remove-online', {_id, _date}))
-    },
-
-    registerCheckAccessTokenListener(){
-      this.$socket.on('operation:not:authorized', ({ expired, message }) => {
-        if(expired) this.unAuthenticatedError = { show: true, message }
-        else this.forbiddenError = { show: true, message }
-      })
-    },
-
-    registerChatMessageListener(){
-      this.$socket.on('push-messages', this.$bus.chat.pushMessages.bind(this))
-      this.$socket.on('read-messages', this.$bus.chat.readMessages.bind(this))
-    },
-
-    registerSessionListener(){
-      this.$broadcastChannel.onmessage = event => {
-        const {login} = event.data
-        if(login){
-          this.$store.dispatch("initialization", login)
-              .then(() => this.$router.go(0))
-              .catch(err => console.error('Broadcast login error: ', err))
-        }
-      }
-
-      this.$socket.on('logout', () => {
-        console.debug("Logout ok.")
-        this.$store.dispatch('reset')
-        this.$router.replace({name: 'homepage'})
-      })
+      this.$bus.$on('show:bv-toast', ({ message, options }) => this.$bvToast.toast(message, options))
+      this.$bus.$on('hide:bv-toast', id => this.$bvToast.hide(id))
     }
   },
   created() {
-    console.log('App created ')
+    console.debug('App created ')
+
+    console.debug('Vue ', this)
+    console.debug('Store ', this.$store)
+    console.debug('Api ', this.$store.$api)
+    console.debug('Socket ', this.$socket)
+    console.debug('Bus ', this.$bus)
+    console.debug('window ', window)
+
     let _routeWithout = [undefined, 'login', 'end-signup', 'reset-password', 'reset-password', 'change-password', 'chat']
     this.routeWithoutNavigationBar = clone(_routeWithout)
     this.routeWithoutFooter = clone(_routeWithout)
@@ -187,27 +124,11 @@ export default {
     this.updateGUIListener()
 
     this.initialization()
-        .then(vl => console.log('Initialization ok : Store State ', this.$store.state))
+        .then(vl => console.debug('Initialization ok : Store State ', this.$store.state))
         .catch(err => {
           console.error('Something wrong during the initialization: ', err.message)
           console.error(err.response)
         })
-
-    this.registerFriendShipListener()
-    this.registerFoodListener()
-    this.registerShoppingListListener()
-    this.registerCommentListener()
-    this.registerLikeListener()
-    this.registerRecipeListener()
-    this.registerUserInfoListener()
-    this.registerChatMessageListener()
-    this.registerUserOnlineOfflineListener()
-    this.registerCheckAccessTokenListener()
-    this.registerSessionListener()
-
-    console.debug('Store ', this.$store)
-    console.debug('Socket ', this.$socket)
-    console.debug('Bus ', this.$bus)
 
     const isRedirectedToPersonalArea = (route) => {
       return this.isLoggedIn && (

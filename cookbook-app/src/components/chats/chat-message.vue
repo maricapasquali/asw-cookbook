@@ -25,7 +25,7 @@
         </b-row>
       </b-col>
       <b-col :class="classMessageFooter">
-        <small> {{ message.timestamp | dateFormat }}</small>
+        <small> {{ message.timestamp | dateWithSeconds }}</small>
       </b-col>
     </b-row>
   </div>
@@ -49,16 +49,8 @@ export default {
   },
   watch: {
     value(val, old){
-      console.log('Message is changed ', val)
+      console.debug('Message is changed ', val)
       this.message = val
-    }
-  },
-  filters: {
-    dateFormat: function (timestamp){
-      return dateFormat(timestamp, 'it', true)
-    },
-    remove(text, attachment){
-      return attachment ? text.replace(attachment, ''): text
     }
   },
   computed: {

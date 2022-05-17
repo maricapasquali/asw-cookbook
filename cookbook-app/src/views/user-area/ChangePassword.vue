@@ -4,7 +4,10 @@
      <loading v-model="processing"/>
      <div v-if="!processing">
        <b-card v-if="link.valid">
-         <div class="text-center"> <h1 class="text-primary"><em>{{ app_name }}</em></h1><h3 v-if="changeDefaultPassword"><em>Cambia DEFAULT password</em></h3></div>
+         <div class="text-center">
+           <logo/>
+           <h3 v-if="changeDefaultPassword"><em>Cambia DEFAULT password</em></h3>
+         </div>
          <b-card-body>
            <b-alert variant="danger" v-model="error.show" show>
             <div>
@@ -162,7 +165,7 @@ export default {
         this.$store.dispatch('users/reset-password/check-link', this.$route.query.key)
             .then(() => this.link.valid = true)
             .catch(err => {
-                this.link.msg = this.handleRequestErrors.users.checkLinkResetPassword(err)
+                this.link.msg = this.$store.$api.errorsHandler.users.checkLinkResetPassword(err)
                 this.link.valid = false
             })
             .finally(() => this.processing = false)
@@ -177,11 +180,11 @@ export default {
       if(this.validation.userID){
         this.processing = true
 
-        this.$store.dispatch('users/reset-password/exist-with-username', this.userID)
+        this.$store.dispatch('users/reset-password/exist-with-username', {userID:this.userID, key: this.$route.query.key})
             .then(response => this.success.userID = true)
             .catch(err => {
               this.error.show = true
-              this.error.msg = this.handleRequestErrors.users.getUserFromNickname(err)
+              this.error.msg = this.$store.$api.errorsHandler.users.getUserFromNickname(err)
             })
             .then(() => this.processing = false)
       }
@@ -201,7 +204,7 @@ export default {
                 if(res?.status === 200){
                   this.$router.replace(this.changeDefaultPassword ? {name:'p-user-account', params: {id: this._id}} : {name: 'login'})
                 } else {
-                  let msg = this.handleRequestErrors.users.resetPassword(res)
+                  let msg = this.$store.$api.errorsHandler.users.resetPassword(res)
                   if(msg) this.error = { show: true, msg , tryAgain: res.response?.status === 401 }
                   this.validation.password = false
                 }

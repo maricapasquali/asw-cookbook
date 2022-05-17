@@ -24,7 +24,7 @@
 
 <script>
 import {mapGetters} from "vuex";
-import ChatMixin from '@components/mixins/chat.mixin'
+import {ChatMixin} from "@mixins"
 export default {
   name: "b-friendship",
   mixins: [ChatMixin],
@@ -78,11 +78,11 @@ export default {
     sendRequestFriendShip(){
       this.$store.dispatch('friendships/request-to', this.otherUser._id)
           .then(({ data }) => {
-            console.log('Request friendship pending. ')
+            console.debug('Request friendship pending. ')
             this.$socket.emit('friendship:request', data)
             return true
           })
-          .catch(err => this.handleRequestErrors.friends.requestFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .catch(err => this.$store.$api.errorsHandler.friends.requestFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
           .then(this._setActualState)
     },
 
@@ -90,23 +90,23 @@ export default {
     sendRemoveFriendShip(){
       this.$store.dispatch('friendships/break-up-with', this.otherUser._id)
           .then(({data}) => {
-            console.log('Friendship is over. ')
+            console.debug('Friendship is over. ')
             this.justFollow = false
             this.isMyFriend = false
             this.$socket.emit('friendship:remove', this.otherUser)
           })
-          .catch(err => this.handleRequestErrors.friends.breakFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .catch(err => this.$store.$api.errorsHandler.friends.breakFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
     },
 
     //UPDATE
     _updateFriendShip(state){
       this.$store.dispatch('friendships/update-request', {userID: this.otherUser._id, state})
           .then(({data}) => {
-            console.log('State friendship is '+state+'. ')
+            console.debug('State friendship is '+state+'. ')
             this.$socket.emit('friendship:update', data)
             return state
           })
-          .catch(err => this.handleRequestErrors.friends.updateFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
+          .catch(err => this.$store.$api.errorsHandler.friends.updateFriendShip(err, { _forbiddenPage: !this.isAccessibleArea }))
           .then(this._setActualState)
     },
     rejectRequest(){
@@ -185,7 +185,7 @@ export default {
       if(this.friends.length === 0) {
         this.$store.dispatch('friendships/own')
             .then(({data}) => this._setFriendShip())
-            .catch(this.handleRequestErrors.friends.getFriendOf)
+            .catch(this.$store.$api.errorsHandler.friends.getFriendOf)
       }
       else this._setFriendShip()
     }

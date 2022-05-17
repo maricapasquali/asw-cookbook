@@ -14,7 +14,7 @@
 import {mapGetters} from "vuex";
 import NotFound from "./404";
 
-import ChatMixin from '@components/mixins/chat.mixin'
+import {ChatMixin} from '@mixins'
 
 export default {
   name: "OneChat",
@@ -46,7 +46,7 @@ export default {
               this.chat = data
               console.debug(this.chat)
             })
-            .catch(this.handleRequestErrors.chats.getChat)
+            .catch(this.$store.$api.errorsHandler.chats.getChat)
             .then(_notFound => this.notFound = _notFound)
       }
       else this.$router.replace({ name: 'login' });

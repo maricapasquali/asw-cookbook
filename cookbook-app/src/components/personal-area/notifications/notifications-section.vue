@@ -7,17 +7,9 @@
               <b-col class="px-0" :cols="searchingMode ? 10: 12">
                 <b-form-group label-for="type-search" aria-label="Tipo di notifica">
                   <b-input-group>
-                    <b-input-group-prepend>
-                      <b-input-group-text> <b-icon-search /> </b-input-group-text>
-                    </b-input-group-prepend>
-                    <b-form-select id="type-search" v-model="filter.type" :disabled="pagination.isBusy" >
-                      <template #first>
-                        <b-form-select-option value="" disabled> Seleziona un opzione di ricerca </b-form-select-option>
-                      </template>
-                      <template #default>
-                        <b-form-select-option v-for="type in notificationTypes" :key="type.value" :value="type.value"> {{type.text}} </b-form-select-option>
-                      </template>
-                    </b-form-select>
+                    <custom-select id="type-search" v-model="filter.type" :options="notificationTypes" placeholder="Seleziona un opzione di ricerca" :disabled="pagination.isBusy">
+                      <template #icon-prepend> <b-icon-search /></template>
+                    </custom-select>
                   </b-input-group>
                 </b-form-group>
               </b-col>
@@ -51,7 +43,7 @@
             </template>
 
             <template #cell(_id)="row">
-              <b-alert :class="classAlert(row.item)" show>
+              <b-alert class="col mb-0 notification" :variant="notificationColor(row.item.type)" show>
                 <b-container>
                   <b-row>
                     <b-col>
@@ -70,7 +62,7 @@
                   </b-row>
                   <b-row>
                     <b-col class="text-right mt-3">
-                      <small>{{row.item.timestamp | dateFormat}}</small>
+                      <small>{{ row.item.timestamp | date }}</small>
                     </b-col>
                   </b-row>
                 </b-container>
@@ -108,10 +100,11 @@
 <script>
 
 import {mapGetters} from "vuex";
-import {QueuePendingRequests} from "@api/request";
+import {PendingRequestMixin} from "@mixins"
 
 export default {
   name: "notifications-section",
+  mixins: [PendingRequestMixin],
   data(){
     return {
       docs: [],
@@ -165,12 +158,7 @@ export default {
     },
 
     searchingMode(){
-      return this.filter.type.length > 0
-    }
-  },
-  filters: {
-    dateFormat: function (text){
-      return dateFormat(text)
+      return this.filter.type?.length > 0
     }
   },
   methods: {
@@ -187,14 +175,6 @@ export default {
       return this.notificationTypes.find(t => t.value === filterType)?.text
     },
 
-    classAlert(doc){
-      return [
-        'col',
-        'mb-0',
-        'notification',
-         this.notificationColor(doc.type)
-      ]
-    },
     isClickableNotification(type){
       return ['friendship', 'food', 'recipe', 'comment', 'report', 'like', 'user-info'].includes(type)
     },
@@ -266,7 +246,7 @@ export default {
 
     getNotifications(){
       let _id = 'notifications-all'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
+      let options = this.makeRequestOptions(_id)
 
       this.pagination.isBusy = true
       this.$store.dispatch('notifications/all', {options})
@@ -276,7 +256,7 @@ export default {
             return true
           })
           .catch(err => {
-           this.handleRequestErrors.notifications.getNotifications(err)
+           this.$store.$api.errorsHandler.notifications.getNotifications(err)
            return false
           })
           .then(processEnd => this.pagination.isBusy = !processEnd)
@@ -292,28 +272,28 @@ export default {
     },
 
     updateNotification(doc){
-      console.log(doc._id + ' mark as read .')
+      console.debug(doc._id + ' mark as read .')
       this.$store
           .dispatch('notifications/read', doc._id)
           .then(({data}) => {
               doc.read = true
-              console.log(data)
+              console.debug(data)
           })
           .catch(err => {
             doc.read = false // doc.read = !doc.read
-            this.handleRequestErrors.notifications.updateNotification(err)
+            this.$store.$api.errorsHandler.notifications.updateNotification(err)
           })
     },
 
     deleteNotification(index){
       let notification =  this.docs[index]
-      console.log('Delete: ', notification._id)
+      console.debug('Delete: ', notification._id)
       this.$store
           .dispatch('notifications/remove', notification)
           .then(({data}) => {
             this.docs.splice(index, 1)
           })
-          .catch(this.handleRequestErrors.notifications.deleteNotification)
+          .catch(this.$store.$api.errorsHandler.notifications.deleteNotification)
     },
 
     addNotification(notification){
@@ -337,8 +317,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
-
     this.setNotificationsType()
 
     this.getNotifications()
@@ -348,7 +326,6 @@ export default {
     }
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all notifications cancel')
     for (const eventName of this.events) {
       this.$bus.$off(eventName, this.addNotification.bind(this))
     }
@@ -375,6 +352,54 @@ export default {
 
 .notification{
   cursor: pointer;
+}
+
+.alert-notification-friendship {
+  color: #6d0085;
+  background-color: #ecccff;
+  border-color: #e3b8ff;
+}
+
+.alert-notification-food {
+  color: #008512;
+  background-color: #d3ffcc;
+  border-color: #bfffb8;
+}
+
+.alert-notification-recipe {
+  color: #008562;
+  background-color: #ccffe0;
+  border-color: #b8ffd9;
+}
+
+.alert-notification-comment {
+  color: #001685;
+  background-color: #ccd3ff;
+  border-color: #b8c6ff;
+}
+
+.alert-notification-report{
+  color: #850000;
+  background-color: #ffccd2;
+  border-color: #ffb8ba;
+}
+
+.alert-notification-like{
+  color: #853300;
+  background-color: #ffe1cc;
+  border-color: #ffcdb8;
+}
+
+.alert-notification-user-info{
+  color: #343434;
+  background-color: #f6f6f6;
+  border-color: #d9d9d9;
+}
+
+.alert-notification-strike{
+  color: #856404;
+  background-color: #fff3cd;
+  border-color: #ffeeba;
 }
 
 </style>

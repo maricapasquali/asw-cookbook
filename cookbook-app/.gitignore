@@ -1,0 +1,8 @@
+node_modules
+dist
+
+src/utils/**/*.js
+src/utils/**/*.js.map
+
+src/services/**/**.js
+src/services/**/**.js.map

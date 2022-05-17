@@ -1,21 +1,22 @@
-import * as utils from '~/utils'
-import filesystem from '~/filesystem'
+import BroadcastChannelPlugin from './broadcast-channel'
+import DirectivePlugin from './directives'
+import EventBusPlugin, {eventBus} from './event-bus'
+import SocketPlugin from './socket'
+import FiltersPlugin from './filters'
 
-import * as config from '@root-project/env.config'
-import validators from '@root-project/modules/validator'
+export default function installAppPlugins(Vue, {configurationEnvironment, store, router}){
 
-export default function installAppPlugins(Vue, options){
-    Vue.prototype.app_name = config.appName
+    Vue.prototype.$appName = configurationEnvironment.appName
 
-    let channel = new BroadcastChannel(config.appName)
-    channel.onmessage = event => {
-        console.error("[Broadcast channel] => Error: ", event)
-    }
-    Vue.prototype.$broadcastChannel = channel
+    console.debug('Install plugin App Utilities ...')
 
-    Object.assign(window, utils)
-    Object.assign(window, filesystem)
-    Object.assign(window, validators)
+    Vue.use(FiltersPlugin)
 
-    console.log('Install plugin App Utilities ...')
+    Vue.use(DirectivePlugin)
+
+    Vue.use(BroadcastChannelPlugin, { appName: configurationEnvironment.appName, store, router })
+
+    Vue.use(EventBusPlugin)
+
+    Vue.use(SocketPlugin, { bus: eventBus, store, router })
 }

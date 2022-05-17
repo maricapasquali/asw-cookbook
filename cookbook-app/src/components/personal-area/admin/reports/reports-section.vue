@@ -13,15 +13,15 @@
                   <span> Utenti segnalanti: </span>
                   <ul>
                     <li v-for="report in doc.reported"  :key="report._id">
-                      <span> {{ report.user | name }} </span>
-                      <span> ({{ report.timestamp | dateFormat }}) </span>
+                      <span> {{ report.user | username }} </span>
+                      <span> ({{ report.timestamp | date }}) </span>
                     </li>
                   </ul>
                 </div>
                 <div>
                   <div>
                     <span> Utente segnalanto: </span>
-                    <strong> {{ doc.user | name}} </strong>
+                    <strong> {{ doc.user | username}} </strong>
                   </div>
                   <div>
                     <b-button v-b-toggle="doc._id" variant="link" class="pl-0 mb-3"> <strong> Commento </strong> </b-button>
@@ -50,12 +50,12 @@
                 <div> Utenti segnalanti:
                   <ul>
                     <li v-for="report in doc.reported"  :key="report._id" >
-                      <span> {{ report.user | name }} </span>
-                      <span> ({{ report.timestamp | dateFormat }}) </span>
+                      <span> {{ report.user | username }} </span>
+                      <span> ({{ report.timestamp | date }}) </span>
                     </li>
                   </ul>
                 </div>
-                <p> Utente segnalanto: <strong>{{doc.user | name}}</strong></p>
+                <p> Utente segnalanto: <strong>{{doc.user | username}}</strong></p>
               </b-card>
             </b-col>
           </b-row>
@@ -66,24 +66,15 @@
 </template>
 
 <script>
-import {QueuePendingRequests} from "@api/request";
-
+import {PendingRequestMixin} from "@mixins"
 export default {
   name: "reports-section",
+  mixins: [PendingRequestMixin],
   data(){
     return {
-      pendingRequests: null,
       processing: false,
       docsReported: [],
       docsDeleted: []
-    }
-  },
-  filters: {
-    name(user){
-      return user && user.userID ? user.userID : 'Anonimo'
-    },
-    dateFormat: function (text){
-      return dateFormat(text)
     }
   },
   computed:{
@@ -100,11 +91,11 @@ export default {
 
     getReports: function (){
       let _id = 'reported-comments'
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, _id)
+      let options = this.makeRequestOptions(_id)
       this.processing = true
       this.$store.dispatch('comments/reported', {options})
          .then(({data}) => {
-           console.log(data)
+           console.debug(data)
            this.docsReported = []
            this.docsDeleted = []
            data.forEach(comment => {
@@ -112,7 +103,7 @@ export default {
              else this.docsDeleted.push(comment)
            })
          })
-         .catch(this.handleRequestErrors.comments.getReportedComment)
+         .catch(this.$store.$api.errorsHandler.comments.getReportedComment)
          .finally(() => {
             this.processing = false
             this.pendingRequests.remove(_id)
@@ -124,26 +115,26 @@ export default {
       let recipe = comment.recipe
       this.$store.dispatch('comments/remove', {ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id})
          .then(({data}) =>{
-            console.log(data)
+            console.debug(data)
             this.docsDeleted.push(this.docsReported[index])
             this.docsReported.splice(index, 1)
 
             this.$socket.emit('comment:delete', comment._id)
             if(comment.user) this.$socket.emit('user:strike', comment.user._id)
          })
-         .catch(this.handleRequestErrors.comments.deleteComment)
+         .catch(this.$store.$api.errorsHandler.comments.deleteComment)
     },
     unreported(index){
       let comment = this.docsReported[index]
       let recipe = comment.recipe
       this.$store.dispatch('comments/un-report', {ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id})
          .then(({data}) =>{
-           console.log(data)
+           console.debug(data)
            this.docsReported.splice(index, 1)
 
            this.$socket.emit('comment:unreport', comment._id)
          })
-         .catch(this.handleRequestErrors.comments.updateComment)
+         .catch(this.$store.$api.errorsHandler.comments.updateComment)
     },
 
     /*Listeners update*/
@@ -186,7 +177,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('comment:report', this.getReports.bind(this) )
 
     this.$bus.$on('comment:delete',  this.renderDeleteComment.bind(this))
@@ -198,7 +188,6 @@ export default {
     this.getReports()
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('all reported cancel.')
     this.$bus.$off('comment:report', this.getReports.bind(this) )
 
     this.$bus.$off('comment:delete',  this.renderDeleteComment.bind(this))

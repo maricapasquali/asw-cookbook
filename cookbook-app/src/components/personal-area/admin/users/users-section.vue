@@ -102,15 +102,13 @@
 <script>
 
 import {mapGetters} from "vuex";
-import ChatMixin from '@components/mixins/chat.mixin'
-import {QueuePendingRequests} from "@api/request";
+import {ChatMixin, PendingRequestMixin} from "@mixins"
 export default {
   name: "users-section",
-  mixins: [ChatMixin],
+  mixins: [ChatMixin, PendingRequestMixin],
   data(){
     return {
       _stacked: false,
-      pendingRequests: null,
       idRequest: 'users-all',
 
       pagination: {
@@ -217,11 +215,11 @@ export default {
       this.pendingRequests.cancel(this.idRequest, 'search user abort.')
     },
     getUser(ctx) {
-      let options = QueuePendingRequests.makeOptions(this.pendingRequests, this.idRequest)
+      let options = this.makeRequestOptions(this.idRequest)
 
       this.pagination.isBusy = true
       let {currentPage, perPage} = ctx
-      console.log('FILTERS ' , ctx.filter)
+      console.debug('FILTERS ' , ctx.filter)
       let paginationOption = {
         page: currentPage || this.pagination.currentPage,
         limit: perPage || this.pagination.for_page
@@ -233,12 +231,12 @@ export default {
 
       return this.$store.dispatch('users/all', { filters: filter || {}, pagination: paginationOption, options })
                 .then(({data}) => {
-                   console.log(data)
+                   console.debug(data)
                    this.pagination.totals = data.total
                    return data.items.map(u => this.remapping(u))
                 })
                .catch(err => {
-                 this.handleRequestErrors.users.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
+                 this.$store.$api.errorsHandler.users.getUsersWithAndWithoutFilters(err, {_forbiddenPage: true})
                  return []
                })
                .finally(() => {
@@ -252,13 +250,13 @@ export default {
       this.deleteAccount = { show: true, user: user }
     },
     afterDeleteAccount(){
-      console.log('Delete account of ' + this.deleteAccount.user.userID)
+      console.debug('Delete account of ' + this.deleteAccount.user.userID)
       this.$refs.userTable.refresh()
     },
 
     /* Listeners update */
     fetchUsers(user) {
-      console.log('user : ', user)
+      console.debug('user : ', user)
       if(user){
         if (typeof user === 'string' || this.isPending(user.signup)) {
           let table = this.$refs.userTable
@@ -267,7 +265,7 @@ export default {
         else if (this.isChecked(user.signup)) {
           const _user = this.$refs.userTable.localItems.find(f => f.details._id === user._id)
           const index = this.$refs.userTable.localItems.indexOf(_user)
-          console.log('checked user : ', _user, ', index ', index)
+          console.debug('checked user : ', _user, ', index ', index)
           if (index !== -1) {
             this.$refs.userTable.localItems.splice(index, 1, this.remapping(user))
             this.$set(this.$refs.userTable.localItems[index], '_showDetails', _user._showDetails)
@@ -292,13 +290,11 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('user:signup', this.fetchUsers.bind(this))
     this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
     this.$bus.$on('user:delete', this.fetchUsers.bind(this))
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('(admin) all users cancel.')
     this.$bus.$off('user:signup', this.fetchUsers.bind(this))
     this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
     this.$bus.$off('user:delete', this.fetchUsers.bind(this))

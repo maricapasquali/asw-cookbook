@@ -1,0 +1,14 @@
+{
+  "from": "no-reply@cookbook.com",
+  "to": "marica.alex097@gmail.com",
+  "subject": "CookBook - Registazione Amministratore",
+  "template": "signup-admin.ejs",
+  "context": {
+    "app_name": "CookBook",
+    "firstname": "marica",
+    "lastname": "pasquali",
+    "email": "marica.alex097@gmail.com",
+    "userID": "marica-admin",
+    "passwordDefault": "admin"
+  }
+}

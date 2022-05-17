@@ -3,30 +3,42 @@ const app = express();
 const fs = require('fs');
 const path = require('path');
 const serveStatic = require('serve-static');
-const {Hosting} = require('../modules/hosting')
-const config = require('../env.config')
-
 const history = require('connect-history-api-fallback');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+const {Hosting} = require('cookbook-shared/libs/hosting')
+const config = require('cookbook-shared/environment').default
+
+const optionsProxy =  {
+    ssl: {
+        key: fs.readFileSync(path.resolve("sslcert", "proxy.key.pem"), 'utf8'),
+        cert: fs.readFileSync(path.resolve("sslcert", "proxy.cert.pem"), 'utf8')
+    },
+    target: config.server.origin,
+    secure: false, // because in ssl there is self signed certificate,
+    logLevel: config.mode === "development" ? "debug": "silent"
+}
+
+const proxyMiddleware = createProxyMiddleware(optionsProxy)
+const wsProxyMiddleware = createProxyMiddleware(Object.assign(optionsProxy, { ws: true }))
+
+app.use(/^\/(api|images|videos)\/.*$/, proxyMiddleware);
+app.use('/socket.io', wsProxyMiddleware);
 
 app.use(history())
-
 app.use(serveStatic(path.join(__dirname , "dist")));
 
-app.use(function (req, res) {
-    res.status(404).send("404 - Page not found");
-});
+const optionsHttps = {
+    key: fs.readFileSync(path.join(__dirname,"sslcert","privatekey.pem")),
+    cert: fs.readFileSync(path.join(__dirname,"sslcert","cert.pem"))
+}
 
-const ClientConfiguration = config.client
-new Hosting(app)
-    .setHttpsOptions(() => {
-        return {
-            key: fs.readFileSync(path.join(__dirname,"sslcert","privatekey.pem")),
-            cert: fs.readFileSync(path.join(__dirname,"sslcert","cert.pem"))
-        }
-    })
-    .setHostName(ClientConfiguration.hostname)
-    .setPort(ClientConfiguration.port)
+Hosting
+    .createHttpsServer(app, optionsHttps)
+    .setHostName(config.client.hostname)
+    .setPort(config.client.port)
     .build()
     .listen((hosting) => {
         console.log(`Client running at ${hosting.origin}`);
+
+        hosting.server.on('upgrade', wsProxyMiddleware.upgrade);
     });

@@ -45,7 +45,7 @@ export default {
     'paper-plan-icon': PaperPlan
   },
   props: {
-    encrypted: Boolean,
+    encrypted: Boolean, /* Note: message encryption is not implemented */
     disabled: Boolean,
 
     attachmentsItems: Array,
@@ -103,7 +103,8 @@ export default {
         return
       }
       if(this.isValidText){
-        //TODO: IF SET encrypted, You encrypt MESSAGE
+        if(this.encrypted) throw new Error("Message encryption is not implemented.")
+
         this.$emit('send-text', this.text, this.includeAttachment ? this.$data._attachment : undefined)
         this.text = ''
       }

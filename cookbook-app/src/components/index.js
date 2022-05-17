@@ -1,11 +1,7 @@
-// DIRECTIVES
-import directives from '@components/directives'
-
-//COMPONENTS
-import CenterContainer from '@components/center-container'
+import CenterContainer from '@components/center-container';
+import CustomSelect from "@components/custom-select";
 import PreviewUploader from "@components/preview-uploader";
 import Loading from "@components/loading"
-import SelectWithImage from "@components/select-with-image";
 import WrapLoading from "@components/wrap-loading";
 import ElapsedTime from "@components/elapsedTime";
 import MiniTextEditor from "@components/mini-text-editor"
@@ -18,7 +14,11 @@ import UnAuthenticatedErrorHandler from '@components/app/handler-errors/unauthen
 import ForbiddenErrorHandler from '@components/app/handler-errors/forbidden-error-handler'
 import NotFoundErrorHandler from '@components/app/handler-errors/not-found-error-handler'
 
-import InputPassword from "@components/app/input-password";
+import FormInputsPassword from "@components/app/password/form-inputs-password"
+import InputPasswordSwitchVisibility from "@components/app/password/input-password-switch-visibility"
+import PasswordStrengthBar from "@components/app/password/strength/password-strength-bar"
+import StrengthDescription from "@components/app/password/strength/strength-description";
+
 import ModalAlert from "@components/app/modal-alert"
 import Navigator from "@components/app/navigator"
 import Footer from "@components/app/footer"
@@ -26,6 +26,7 @@ import NutrientsTable from "@components/app/nutrients-table"
 import CountryImage from "@components/app/country-image"
 import Avatar from "@components/app/avatar"
 import Like from "@components/app/like"
+import Logo from "@components/app/logo"
 import BFriendship from "@components/app/b-friendship"
 
 import SignUp from "@components/login/SignUp";
@@ -83,9 +84,9 @@ import ContainerCollapsable from '@components/one-user/container-collapsable'
 
 const components = {
     CenterContainer,
+    CustomSelect,
     PreviewUploader,
     Loading,
-    SelectWithImage,
     WrapLoading,
     ElapsedTime,
     MiniTextEditor,
@@ -98,7 +99,11 @@ const components = {
     ForbiddenErrorHandler,
     NotFoundErrorHandler,
 
-    InputPassword,
+    FormInputsPassword,
+    InputPasswordSwitchVisibility,
+    PasswordStrengthBar,
+    StrengthDescription,
+
     ModalAlert,
     Navigator,
     Footer,
@@ -106,6 +111,7 @@ const components = {
     CountryImage,
     Avatar,
     Like,
+    Logo,
     BFriendship,
 
     SignUp,
@@ -163,7 +169,6 @@ const components = {
 
 export default function install(Vue, options){
     Object.values(components).forEach(comp => Vue.component(comp.name, comp))
-    Object.entries(directives).forEach(([id, directive]) => Vue.directive(id, directive))
 
-    console.log('Install plugin Custom Components and directives ...')
+    console.debug('Install plugin Custom Components ...')
 }

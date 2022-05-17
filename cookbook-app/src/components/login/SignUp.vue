@@ -105,14 +105,11 @@
                     label="Genere"
                     label-for="input-6"
                 >
-
-                  <select-with-image
+                  <custom-select
                       id="input-6"
                       v-model="user.sex"
                       placeholder="Select gender"
-                      type="text"
-                      :options="genders">
-                  </select-with-image>
+                      :options="genders" />
                 </b-form-group>
 
                 <b-form-group
@@ -121,13 +118,11 @@
                     label-for="input-7"
                     class="pr-md-2"
                 >
-                  <select-with-image
+                  <custom-select
                       id="input-7"
                       v-model="user.country"
                       placeholder="Select country"
-                      type="text"
-                      :options="countries">
-                  </select-with-image>
+                      :options="countries" />
                 </b-form-group>
                 <b-form-group
                     id="input-group-8"
@@ -155,7 +150,6 @@
                   id="input-group-9"
                   label="UserID *"
                   label-for="input-9"
-                  class="pr-md-2"
               >
                 <b-form-input
                     id="input-9"
@@ -168,7 +162,7 @@
                 ></b-form-input>
               </b-form-group>
 
-              <input-password @inputPassword="user.hash_password=$event" @checkPassword="validation.check_password=$event"/>
+              <form-inputs-password @inputPassword="user.hash_password=$event" @checkPassword="validation.check_password=$event"/>
 
             </b-card-body>
           </b-card>
@@ -255,12 +249,12 @@ export default {
     },
 
     signup: function (){
-      console.log('signup')
+      console.debug('signup')
       const formData = new FormData()
       Object.entries(this.user)
             .filter(([k,v]) => (v && v.length > 0) || (v instanceof File && v.size >0))
             .forEach(([k, v]) => formData.append(k, v))
-      //for(const [k, v] of formData.entries()) console.log(k, ' -> ', v);
+      //for(const [k, v] of formData.entries()) console.debug(k, ' -> ', v);
 
       this.processing = true
       this.registerUser(formData)
@@ -271,7 +265,7 @@ export default {
          })
          .catch(err => {
             this.error.show = true
-            this.error.msg = this.handleRequestErrors.users.signUp(err)
+            this.error.msg = this.$store.$api.errorsHandler.users.signUp(err)
          })
          .then(() => this.processing = false)
     },

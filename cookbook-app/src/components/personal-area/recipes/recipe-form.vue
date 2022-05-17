@@ -19,36 +19,34 @@
           <!-- COUNTRY -->
           <b-col>
             <b-form-group label="Stato" label-for="r-country">
-              <select-with-image
+              <custom-select
                   id="r-country"
                   v-model="recipe.country"
                   placeholder="Seleziona ..."
-                  type="text"
                   :options="countries" />
             </b-form-group>
           </b-col>
           <!-- DIET  -->
           <b-col>
             <b-form-group label="Regime alimentare" label-for="r-diet">
-              <b-form-select id="r-diet" v-model.trim="recipe.diet" :options="diets" >
-                <template #first>
-                  <b-form-select-option value="undefined" disabled> Seleziona ... </b-form-select-option>
-                </template>
-              </b-form-select>
+              <custom-select
+                  id="r-diet"
+                  v-model="recipe.diet"
+                  placeholder="Seleziona ..."
+                  :options="diets" />
             </b-form-group>
           </b-col>
           <!-- CATEGORY  -->
           <b-col>
             <b-form-group label="Categoria" label-for="r-category">
-              <b-form-select id="r-category"
-                             v-model.trim="recipe.category"
-                             :options="recipeCategories"
-                             :state="validation.category"
-                             @change="onInputRecipeCategory" >
-                <template #first>
-                  <b-form-select-option value="undefined" disabled> Seleziona ... </b-form-select-option>
-                </template>
-              </b-form-select>
+              <custom-select
+                  id="r-category"
+                  v-model="recipe.category"
+                  placeholder="Seleziona ..."
+                  :options="recipeCategories"
+                  :state="validation.category"
+                  @change="onInputRecipeCategory"
+              />
             </b-form-group>
           </b-col>
         </b-row>
@@ -401,17 +399,17 @@ export default {
       // const formData = this._formData(options)
       this._formData(options)
           .then(formData => {
-            console.log('Ready form data ')
+            console.debug('Ready form data ')
             let request
             this.processing = true
 
             if(options.new === false){
-              console.log('Changed recipe ')
+              console.debug('Changed recipe ')
               // console.debug(this.recipe)
               request = this.$store.dispatch('recipes/update', {_id: this.value._id, body: formData})
             }
             else{
-              console.log('New recipe ')
+              console.debug('New recipe ')
               // console.debug(this.recipe)
               request = this.$store.dispatch('recipes/create', formData)
             }
@@ -427,18 +425,18 @@ export default {
                       let event
                       if(data.shared === false) {
                         event = 'recipe:create:saved'
-                        console.log('Saved a private copy of a shared recipe.')
+                        console.debug('Saved a private copy of a shared recipe.')
                       }
                       if(data.shared === true){
                         event = 'recipe:create'
-                        console.log('Create a new shared recipe from a old shared recipe.')
+                        console.debug('Create a new shared recipe from a old shared recipe.')
                       }
                       if(event) this.$socket.emit(event, data)
                     } else {
-                      console.log('Update a ' + (data.shared ? 'shared' : 'saved') + ' recipe.')
+                      console.debug('Update a ' + (data.shared ? 'shared' : 'saved') + ' recipe.')
                       this.$socket.emit('recipe:update', data)
                       if(this.value.shared === false && data.shared === true) {
-                        console.log('Share and/or update a saved recipe.')
+                        console.debug('Share and/or update a saved recipe.')
                         this.$socket.emit('recipe:create', data)
                       }
                     }
@@ -451,8 +449,8 @@ export default {
 
                 })
                 .catch(err => {
-                  if(options.new === false) this.handleRequestErrors.recipes.updateRecipe(err)
-                  else this.handleRequestErrors.recipes.createRecipe(err)
+                  if(options.new === false) this.$store.$api.errorsHandler.recipes.updateRecipe(err)
+                  else this.$store.$api.errorsHandler.recipes.createRecipe(err)
                 })
                 .finally(() => this.processing = false)
           })
@@ -491,9 +489,9 @@ export default {
       if(!(copyRecipe.tutorial instanceof File)) delete copyRecipe.tutorial
 
       Object.entries(copyRecipe).forEach(([k, v]) => addOnFormData(k, v))
-      for(const i of formData.entries()) console.log(i)
+      for(const i of formData.entries()) console.debug(i)
 
-      console.log(options.new ? 'Create ...': 'Update ...')
+      console.debug(options.new ? 'Create ...': 'Update ...')
       return formData;
     },
 

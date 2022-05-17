@@ -8,7 +8,7 @@
            :centered="centered"
            @close="clickClose">
     <b-alert v-model="value" :variant="variant" class="text-center" centered>
-      <h1>{{app_name}}</h1>
+      <h1>{{$appName}}</h1>
       <slot name="msg"></slot>
     </b-alert>
   </b-modal>
@@ -39,7 +39,7 @@ export default {
     },
     clickClose: function (e){
       if(this.closable) e.preventDefault()
-      console.log('Close Modal Error...')
+      console.debug('Close Modal Error...')
       this.$emit('close')
     }
   }

@@ -97,16 +97,14 @@
 
 <script>
 
-import UserMixin from "@components/mixins/user.mixin"
-import {QueuePendingRequests} from "@api/request";
+import {UserMixin, PendingRequestMixin} from "@mixins"
 
 export default {
   name: "search-users",
-  mixins: [UserMixin],
+  mixins: [UserMixin, PendingRequestMixin],
   data(){
     return {
       skeleton: 6,
-      pendingRequests: null,
 
       processing: true,
       search: {
@@ -144,11 +142,11 @@ export default {
        this.$router.push({query: { name: this.search.value }})
 
        let _id = 'search-users'
-       let options = this._optionsUsers(_id, 'search users abort.')
+       let options = this.makeRequestOptions(_id, {message: 'search users abort.'})
 
        this.$store.dispatch('users/search-for-username', { search: 'partial', username: this.search.value, options })
           .then(({data}) => this.users = data.items)
-          .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
+          .catch(this.$store.$api.errorsHandler.users.getUsersWithAndWithoutFilters)
           .finally(() => {
             this.search.processing = false
             this.pendingRequests.remove(_id)
@@ -164,10 +162,6 @@ export default {
       }
     },
     // USERS
-    _optionsUsers(_id, message){
-      return QueuePendingRequests.makeOptions(this.pendingRequests, _id, {message})
-    },
-
     getUsers(currentPage, limit){
       const page = currentPage || 1
       const _limit = limit || this.pagination.limit
@@ -180,14 +174,14 @@ export default {
         query = {userID: { search: 'partial', value: this.$route.query.name }}
         pagination = {}
         this.search.mode = true
-        console.log('Serch mode = ', query.userID)
+        console.debug('Serch mode = ', query.userID)
       }else {
         this.search.mode = false
         this.search.value = ''
       }
 
       let _id = 'users'
-      let options = this._optionsUsers(_id, 'get users abort.')
+      let options = this.makeRequestOptions(_id, {message: 'get users abort.'})
       this.$store.dispatch('users/search', { query, pagination, options })
          .then(({data}) => {
             let _data = data.items
@@ -202,7 +196,7 @@ export default {
            console.debug('Total = ', this.total)
 
          })
-         .catch(this.handleRequestErrors.users.getUsersWithAndWithoutFilters)
+         .catch(this.$store.$api.errorsHandler.users.getUsersWithAndWithoutFilters)
          .finally(() => {
            this.processing = false
            this.processingOthers = false
@@ -248,7 +242,6 @@ export default {
     }
   },
   created() {
-    this.pendingRequests = QueuePendingRequests.create()
     this.$bus.$on('user:checked', this.fetchUsers.bind(this))
 
     this.$bus.$on('user:update:info', this.onUpdateInfos.bind(this))
@@ -259,7 +252,6 @@ export default {
     window.onpopstate = function (e){ this.getUsers() }.bind(this)
   },
   beforeDestroy() {
-    this.pendingRequests.cancelAll('Search users cancel operation.')
 
     this.$bus.$off('user:checked', this.fetchUsers.bind(this))
     this.$bus.$off('user:update:info', this.onUpdateInfos.bind(this))
