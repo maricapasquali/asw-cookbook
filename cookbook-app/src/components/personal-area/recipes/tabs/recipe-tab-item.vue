@@ -201,8 +201,10 @@ export default {
   },
   methods: {
     tutorialNotFound(e){
-      console.error('tutorial ('+e.target.src+') not found')
-      e.target.parentNode.parentNode.remove()
+      if(e && e.target){
+        console.error('tutorial ('+e.target.src+') not found')
+        e.target.parentNode?.parentNode?.remove()
+      }
     },
 
     /* - SAVED RECIPE: SHARE ONLY */

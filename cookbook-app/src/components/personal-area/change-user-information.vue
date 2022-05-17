@@ -46,7 +46,7 @@
         <b-col>
           <b-form-group label-for="input-gender">
             <template #label> <b>Genere</b> </template>
-            <custom-select id="input-gender" placeholder="Seleziona genere ..." v-model="changeableUser.information.sex" :options="genders" />
+            <custom-select id="input-gender" placeholder="Seleziona genere ..." v-model="changeableUser.information.gender" :options="genders" />
           </b-form-group>
         </b-col>
         <b-col>
@@ -117,7 +117,7 @@ export default {
       return this.user.information.img
     },
     gender: function (){
-      return this.getGenderByValue(this.user.information.sex)?.text
+      return this.getGenderByValue(this.user.information.gender)?.text
     },
     isChangedSomething: function (){
       return !equals(this.changeableUser.information, this.user.information) &&
