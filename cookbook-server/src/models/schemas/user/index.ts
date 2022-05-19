@@ -12,7 +12,7 @@ export interface IUser extends Document{
         email: string
         tel_number?:string
         birth_date?:string
-        sex?:string
+        gender?:string
         country?:string
         occupation?:string
     },
@@ -97,7 +97,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
             type: String,
             required: false
         },
-        sex: {
+        gender: {
             type: String,
             required: false,
             enum: ['', 'female', 'male', 'other'],

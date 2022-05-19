@@ -1,4 +1,4 @@
-import {Validator} from "../../../shared/src/validator";
+import {Validator} from "cookbook-shared/libs/validator";
 
 import {IFileUploader} from "../uploader";
 import {IJwtTokensManager} from "../jwt.token";

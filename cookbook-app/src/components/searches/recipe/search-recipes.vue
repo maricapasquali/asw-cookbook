@@ -282,7 +282,7 @@ export default {
          .then(({data}) => {
            console.debug('Result rest api = ', data)
 
-           this.countries = data.filter(cn => this.getCountryByValue(cn.country))
+           this.countries = data.filter(cn => this.getCountryByValue(cn.country)?.value)
                .map(cn => ({...this.getCountryByValue(cn.country), ...{recipes: cn.number}}))
 
            if(this.withHistory) this._setFiltersFromRoute()

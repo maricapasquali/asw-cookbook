@@ -1,5 +1,5 @@
-import * as config from "../../../environment/env.config";
-import {EmailValidator} from "../../../shared/src/validator";
+import config from "cookbook-shared/environment";
+import {EmailValidator} from "cookbook-shared/libs/validator";
 
 import {JwtTokensManager} from "../jwt.token";
 import {createRBAC} from "../rbac";

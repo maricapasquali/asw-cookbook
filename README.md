@@ -11,11 +11,11 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
 
 - _production_ mode
   ```
-      docker-compose build .
+      docker-compose -f ./prod.docker-compose.yml build
   ```
 - _development_ mode
   ```
-      docker-compose -f ./docker-compose.dev.yml build
+      docker-compose -f ./dev.docker-compose.yml build
   ```
 
 ## Create and Run _Containers_
@@ -23,12 +23,12 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
 - _production_ mode
 
   ```
-     docker-compose up -d
+     docker-compose -f ./prod.docker-compose.yml up -d
   ```
 
 - _development_ mode
   ```
-     docker-compose -f ./docker-compose.dev.yml up -d
+     docker-compose -f ./dev.docker-compose.yml up -d
   ```
   - To populate database, look at the [_**Database Population (Example)**_](#database-population-example)
 
@@ -43,12 +43,12 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
 - _production_ mode
 
   ```
-     docker-compose down
+     docker-compose -f ./prod.docker-compose.yml down
   ```
 
 - _development_ mode
   ```
-     docker-compose -f ./docker-compose.dev.yml down
+     docker-compose -f ./dev.docker-compose.yml down
   ```
 
 # Using NPM
@@ -58,7 +58,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
 ## Installation
 
 ```
-npm run install:sub-projects
+npm install
 ```
 
 ## Build and Run
@@ -70,19 +70,22 @@ npm run install:sub-projects
   ```
 
   ```
-  npm run server:start
+  npm run start:server
   ```
 
   ```
-  npm run client:start
+  npm run start:client
   ```
 
 - _development_ mode
   ```
-  npm run dev:server:start
+  npm run dev:shared
   ```
   ```
-  npm run dev:client:start
+  npm run dev:server
+  ```
+  ```
+  npm run dev:client
   ```
 
 # Database Population (Example)

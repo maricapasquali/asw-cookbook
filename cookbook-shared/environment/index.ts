@@ -1,19 +1,18 @@
-const dotenv = require("dotenv");
-const dotenvExpand = require('dotenv-expand')
-const path = require("path");
+import * as dotenv from "dotenv"
+import * as dotenvExpand from "dotenv-expand"
+import * as path from "path"
 
 const DEVELOPMENT = "development"
 
-myEnv = dotenv.config({ path: path.join(__dirname, '.env') })
-dotenvExpand.expand(myEnv)
+dotenvExpand.expand(dotenv.config({ path: path.join(__dirname, '.env') }))
 
 const protocol = "https"
 
-let hostname_server
-let port_server
+let hostname_server: string
+let port_server: number
 
-let hostname_client
-let port_client
+let hostname_client: string
+let port_client: number
 
 if(process.env.DOCKER_CONTAINER_ENV) {
 
@@ -29,10 +28,10 @@ if(process.env.DOCKER_CONTAINER_ENV) {
 } else {
 
     hostname_server = process.env.COOKBOOK_SERVER_HOSTNAME || process.env.VUE_APP_COOKBOOK_SERVER_HOSTNAME || "localhost"
-    port_server = parseInt(process.env.COOKBOOK_SERVER_PORT || process.env.VUE_APP_COOKBOOK_SERVER_PORT) || 3000
+    port_server = +process.env.COOKBOOK_SERVER_PORT || +process.env.VUE_APP_COOKBOOK_SERVER_PORT || 3000
 
     hostname_client = process.env.COOKBOOK_CLIENT_HOSTNAME || process.env.VUE_APP_COOKBOOK_CLIENT_HOSTNAME || "localhost"
-    port_client = parseInt(process.env.COOKBOOK_CLIENT_PORT || process.env.VUE_APP_COOKBOOK_CLIENT_PORT) || 5000
+    port_client = +process.env.COOKBOOK_CLIENT_PORT || +process.env.VUE_APP_COOKBOOK_CLIENT_PORT || 5000
 }
 
 const databaseURI = (process.env.NODE_ENV === "test" ? process.env.DATABASE_TEST_URI || "mongodb://localhost:27017/cookbook-test" : process.env.DATABASE_URI || "mongodb://localhost:27017/cookbook" )
@@ -44,7 +43,7 @@ const videos_pathname = "/videos"
 
 const client_origin = `${protocol}://${hostname_client}:${port_client}`
 
-let _environment = {
+let environment = {
     appName: 'CookBook',
     mode: process.env.NODE_ENV || DEVELOPMENT,
     server: {
@@ -69,8 +68,11 @@ let _environment = {
     }
 }
 
-if(_environment.mode !== DEVELOPMENT) console.debug = function (...args){}
+if(environment.mode !== DEVELOPMENT) {
+    console.debug = function (...args){}
+    console.error = function (...args){}
+}
 
-console.debug("Environment = ", _environment)
+console.debug("Environment = ", environment)
 
-module.exports = _environment
+export default environment

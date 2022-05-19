@@ -1,12 +1,12 @@
 {
-  "name": "shared",
+  "name": "cookbook-shared",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "shared:build": "tsc --build",
-    "dev:shared:build": "tsc --build -w",
-    "test": "mocha --require ts-node/register test/*.ts",
+    "build": "tsc --build",
+    "dev:shared:watches": "tsc --build -w",
+    "test": "mocha --require ts-node/register test/**/*.ts",
     "clean": "tsc --build --clean"
   },
   "author": "Marica Pasquali",
@@ -19,5 +19,9 @@
     "mocha": "^9.2.2",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "dotenv-expand": "^8.0.3"
   }
 }
