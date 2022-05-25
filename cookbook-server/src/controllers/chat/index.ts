@@ -6,7 +6,7 @@ import {RBAC} from "../../../modules/rbac";
 import ObjectId = Types.ObjectId;
 import {MongooseValidationError} from "../../../modules/custom.errors";
 import * as _ from "lodash"
-import {decodeToArray, isTrue} from "../../../modules/utilities";
+import {decodeToArray, decodeToBoolean} from "../../../modules/utilities";
 import Role = RBAC.Role;
 import {DecodedTokenType} from "../../../modules/jwt.token";
 import {chatMiddleware} from "../../middlewares";
@@ -139,6 +139,14 @@ export function list_chat(req, res) {
     const {id} = req.params
     let  {page, limit, name} = req.query
     let noMessages = req.query['no-messages']
+    if(noMessages){
+        try {
+            noMessages = decodeToBoolean(noMessages)
+        }
+        catch (e){
+            return res.status(400).json({ description: 'Query parameter \'no-messages\' must be a boolean.'})
+        }
+    }
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
 
     const user = req.locals.user
@@ -177,7 +185,7 @@ export function list_chat(req, res) {
                 return c2TimeStamp - c1Timestamp
             })
 
-            if(isTrue(noMessages)) _chats = _chats.map(chat => remapWithoutMessages(chat, user._id))
+            if(noMessages) _chats = _chats.map(chat => remapWithoutMessages(chat, user._id))
 
             return res.status(200).json(Pagination.ofArray(_chats, page && limit ? { page: +page, limit: +limit } : undefined))
         }, err => res.status(500).json({ description: err.message}))
@@ -188,7 +196,14 @@ export function chat(req, res) {
     if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
     if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
     let noMessages = req.query['no-messages']
-
+    if(noMessages){
+        try {
+            noMessages = decodeToBoolean(noMessages)
+        }
+        catch (e){
+            return res.status(400).json({ description: 'Query parameter \'no-messages\' must be a boolean.'})
+        }
+    }
     const user = req.locals.user
 
     Chat.findOne()
@@ -196,7 +211,7 @@ export function chat(req, res) {
         .where('_id').equals(chatID)
         .then(chat => {
             if(!chat) return res.status(404).json({description: 'Chat is not found.'})
-            return res.status(200).json(isTrue(noMessages) ? remapWithoutMessages(chat, user._id) : chat )
+            return res.status(200).json(noMessages ? remapWithoutMessages(chat, user._id) : chat )
         }, err => res.status(500).json({ description: err.message }))
 }
 

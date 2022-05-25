@@ -5,6 +5,9 @@ import {IJwtTokensManager} from "../jwt.token";
 import {IRbacWithRole} from "../rbac";
 import {IMailer} from "../mailer";
 
+/**
+ * Global variables.
+ */
 declare global {
 
     var fileUploader: IFileUploader

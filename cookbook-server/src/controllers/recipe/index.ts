@@ -249,7 +249,7 @@ function update_actual_recipe(req, res){
                     if(!doc) return res.status(404).json({description: 'Recipe is not found'})
 
                     if(!(decodedToken._id == doc.owner._id || doc.permission.find(p => p.user._id == decodedToken._id && GrantedType.isWritePermission(p.granted))))
-                        return res.status(403).json({description: 'User is not allowed to update this resource'})
+                        return res.status(403).json({description: 'User is not allowed to update this recipe'})
 
                     updated.updatedAt = Date.now()
                     let newDoc = new Recipe(Object.assign(doc, updated))
@@ -359,7 +359,7 @@ export function delete_recipe(req, res){
             if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
 
             if(!(decodedToken._id == recipe.owner._id || recipe.permission.find(p => p.user._id == decodedToken._id && GrantedType.isRootPermission(p.granted))))
-                return res.status(403).json({description: 'User is not allowed to delete this resource'})
+                return res.status(403).json({description: 'User is not allowed to delete this recipe'})
 
             recipe.remove()
                 .then(doc => res.status(200).json({description: 'Recipe has been deleted', deletedDoc: doc}),
