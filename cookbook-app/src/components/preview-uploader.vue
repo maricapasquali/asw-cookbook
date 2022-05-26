@@ -6,9 +6,9 @@
    <b-row>
      <b-form-file :id="id" v-show="false" @change="loadFile" ref="uploader" :accept="accept" />
      <b-col v-if="videoType && load_file_preview">
-       <video class="video-preview" :src="load_file_preview" controls/>
+       <video class="video-preview" :src="load_file_preview" controls @error="notFound"/>
      </b-col>
-     <b-avatar v-else :icon="icon" :square="!avatar" variant="dark" :src="load_file_preview" :size="load_file_preview? 200: 100"  class="mx-auto" @click.native="openZoomImage"/>
+     <b-avatar v-else :title="title" :icon="icon" :square="!avatar" variant="dark" :src="load_file_preview" :size="load_file_preview? 200: 100"  class="mx-auto" @click.native="openZoomImage" @img-error="notFound"/>
    </b-row>
    <b-row class="mt-1">
      <b-button-group class="mx-auto">
@@ -70,9 +70,12 @@ export default {
     isRemovable(){
       return this.removable && this.default;
     },
-
+    title(){
+      if(this.default && this.load_file_preview == null) return this.default + " NOT FOUND."
+    },
     icon(){
       if(this.avatar) return ''
+      if(this.default && this.load_file_preview == null) return 'file-earmark-x-fill'
       if(this.imageType) return 'file-image'
       if(this.videoType) return 'file-earmark-play'
       return 'file'
@@ -95,6 +98,10 @@ export default {
     },
     clickLoad: function (){
       this.$refs.uploader.$el.firstChild.click()
+    },
+    notFound(event){
+      console.error(this.fileType + " (" + event?.target?.src + ") not found.. ")
+      this.load_file_preview = null
     },
 
     // CANCEL
@@ -122,7 +129,7 @@ export default {
     removeImage: function (){
       if(this.isRemovable){
         this.remove = true
-        this.load_file_preview = null
+        this.load_file_preview = ''
         this.$emit('selectFile', new File([], ''));
       }
     },

@@ -11,10 +11,13 @@ export default function (app){
         signupAdmins: '/admins/signup',
 
         filesystem : {
+            icons: '/icons/:filename',
             images: '/images/:filename',
             videos: '/videos/:filename',
         }
     }
+
+    app.get(routes.filesystem.icons, mediaController.sendIcon)
 
     app.get(routes.filesystem.images, mediaController.sendImage)
 

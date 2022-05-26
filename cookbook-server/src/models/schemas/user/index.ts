@@ -1,6 +1,7 @@
 import {Document, Schema} from "mongoose";
 import {RBAC} from "../../../../modules/rbac";
 import Role = RBAC.Role;
+import {Countries, Genders} from "cookbook-shared/assets";
 
 export interface IUser extends Document{
     signup: string,
@@ -100,11 +101,12 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         gender: {
             type: String,
             required: false,
-            enum: ['', 'female', 'male', 'other'],
+            enum: Genders.map(gender => gender.value),
         },
         country: {
             type: String,
             required: false,
+            enum: Countries.map(country => country.value)
         },
         occupation: {
             type: String,
