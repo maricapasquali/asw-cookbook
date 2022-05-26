@@ -7,17 +7,25 @@ enum MediaResource {
     USERS = "users"
 }
 namespace MediaResource {
+    const _rootDir: string = path.resolve("src", "filesystem")
+
     type Path = { path(filename: string, resource?: MediaResource): string }
 
     export const Image: Path = {
         path(filename: string, resource?: MediaResource): string {
-            return path.resolve("filesystem", resource || "", "images", filename)
+            return path.resolve(_rootDir, resource || "", "images", filename)
         }
     }
 
     export const Video: Path = {
         path(filename: string, resource?: MediaResource): string {
-            return path.resolve("filesystem", resource || "", "videos", filename)
+            return path.resolve(_rootDir, resource || "", "videos", filename)
+        }
+    }
+
+    export const Icon: Path = {
+        path(filename: string): string {
+            return path.resolve(_rootDir, "icons", filename)
         }
     }
 }
@@ -42,6 +50,12 @@ export function sendImage(req, res, next) {
         case 'chat': pathFile = MediaResource.Image.path(req.params.filename, MediaResource.CHATS); break;
     }
     console.debug("Image: File path = ", pathFile)
+    sendFileOf(pathFile, res)
+}
+
+export function sendIcon(req, res) {
+    let pathFile: string = MediaResource.Icon.path(req.params.filename)
+    console.debug("Icon: File path = ", pathFile)
     sendFileOf(pathFile, res)
 }
 

@@ -8,6 +8,7 @@ import {Comment} from "../../index";
 import {IPermission, PermissionSchema} from "./permission";
 import {IIngredient, IngredientSchema} from "./ingredient";
 import GrantedType = IPermission.GrantedType;
+import {Countries, Diets, RecipeCategories} from "cookbook-shared/assets";
 
 export interface IRecipe extends Document {
     owner: IUser['_id'],
@@ -51,14 +52,14 @@ export const RecipeSchema: Schema<IRecipe> = new Schema<IRecipe>({
     category: {
         type: String,
         required: true,
-        enum: ['appetizers', 'first courses', 'second courses', 'desserts', 'drink', 'side dish']
+        enum: RecipeCategories.map(category => category.value)
     },
 
     img: { type: String, required: false },
     tutorial: { type: String, required: false },
     note: { type: String, required: false },
-    country: { type: String, required: false },
-    diet: { type: String, required: false, enum: ['', 'gluten free', 'lactose free', 'light', 'vegetarian', 'vegan'] },
+    country: { type: String, required: false, enum: Countries.map(country => country.value) },
+    diet: { type: String, required: false, enum: Diets.map(diet => diet.value) },
     likes: { type: [LikeSchema], required: false, default: [] },
     comments: { type: [Schema.Types.ObjectId] , required: false, default: [], ref: 'Comment' },
 })

@@ -43,7 +43,7 @@ export default {
   methods: {
     select(val){
       let _selected = this.getCountryByValue(val)
-      if(_selected.value) this.selected = _selected
+      if(_selected?.value) this.selected = _selected
     }
   },
   mounted() {
