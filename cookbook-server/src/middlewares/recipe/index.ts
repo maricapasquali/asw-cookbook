@@ -12,6 +12,7 @@ import {randomString} from "../../../modules/utilities";
 import * as path from "path";
 import {FileUploader, UploaderConfiguration} from "../../../modules/uploader";
 import FileType = FileUploader.FileType;
+import {FilesystemResource} from "../../filesystem";
 
 export enum UpdateAction {
     PERMISSION = 'permission'
@@ -23,11 +24,9 @@ export namespace UpdateAction {
 }
 
 export function uploadImageAndTutorial(): Middleware {
-    let pathname: string = path.resolve('filesystem', 'recipes')
-
     let _configurationImage: UploaderConfiguration = {
         type: FileType.IMAGE,
-        dest: path.join(pathname, 'images'),
+        dest: FilesystemResource.RECIPES.Image(),
         newFileName: function (file: any){
             return 'recipe-' + randomString(30) + path.extname(file.originalname)
         }
@@ -35,7 +34,7 @@ export function uploadImageAndTutorial(): Middleware {
 
     let _configurationVideo: UploaderConfiguration = {
         type: FileType.VIDEO,
-        dest: path.join(pathname, 'videos'),
+        dest: FilesystemResource.RECIPES.Video(),
         newFileName: function (file: any){
             return 'recipe-tutorial-' + randomString(30) + path.extname(file.originalname)
         }
