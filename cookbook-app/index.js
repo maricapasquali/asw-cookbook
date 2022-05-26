@@ -21,7 +21,7 @@ const optionsProxy =  {
 const proxyMiddleware = createProxyMiddleware(optionsProxy)
 const wsProxyMiddleware = createProxyMiddleware(Object.assign(optionsProxy, { ws: true }))
 
-app.use(/^\/(api|images|videos)\/.*$/, proxyMiddleware);
+app.use(/^\/(api|images|videos|icons)\/.*$/, proxyMiddleware);
 app.use('/socket.io', wsProxyMiddleware);
 
 app.use(history())

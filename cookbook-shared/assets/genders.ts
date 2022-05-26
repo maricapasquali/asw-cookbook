@@ -16,9 +16,9 @@ class Gender implements IGender {
 }
 
 export const None = new Gender("", "-- None --");
-export const Female = new Gender("female", "Femmina", require('@assets/icons/genders/female.png'));
-export const Male = new Gender("male", "Maschio", require('@assets/icons/genders/male.png'));
-export const Other = new Gender("other", "Altro", require('@assets/icons/genders/other.png'));
+export const Female = new Gender("female", "Femmina", '/icons/female.png');
+export const Male = new Gender("male", "Maschio", '/icons/male.png');
+export const Other = new Gender("other", "Altro", '/icons/other.png');
 
 export default [
     None,

@@ -80,6 +80,10 @@ module.exports = {
                 target: config.server.origin,
                 changeOrigin: true,
             },
+            '^/icons': {
+                target: config.server.origin,
+                changeOrigin: true,
+            },
             '^/videos': {
                 target: config.server.origin,
                 changeOrigin: true,
