@@ -6,12 +6,13 @@ import {randomString} from "../../../modules/utilities";
 import * as path from "path";
 import {FileUploader, UploaderConfiguration} from "../../../modules/uploader";
 import FileType = FileUploader.FileType;
+import {FilesystemResource} from "../../filesystem";
 
 export function uploadProfileImage(): Middleware {
-    let pathname: string = path.resolve('filesystem', 'users')
+
     let config: UploaderConfiguration = {
         type: FileType.IMAGE,
-        dest: path.join(pathname, 'images'),
+        dest: FilesystemResource.USERS.Image(),
         newFileName: function (file: any){
             return 'user-' + randomString(30) + path.extname(file.originalname)
         }

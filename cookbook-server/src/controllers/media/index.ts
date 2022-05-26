@@ -1,34 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-
-enum MediaResource {
-    RECIPES = "recipes",
-    CHATS = "chats",
-    USERS = "users"
-}
-namespace MediaResource {
-    const _rootDir: string = path.resolve("src", "filesystem")
-
-    type Path = { path(filename: string, resource?: MediaResource): string }
-
-    export const Image: Path = {
-        path(filename: string, resource?: MediaResource): string {
-            return path.resolve(_rootDir, resource || "", "images", filename)
-        }
-    }
-
-    export const Video: Path = {
-        path(filename: string, resource?: MediaResource): string {
-            return path.resolve(_rootDir, resource || "", "videos", filename)
-        }
-    }
-
-    export const Icon: Path = {
-        path(filename: string): string {
-            return path.resolve(_rootDir, "icons", filename)
-        }
-    }
-}
+import {FilesystemResource} from "../../filesystem";
 
 function sendFileOf(path: string, res: any): void {
     fs.promises.access(path, fs.constants.R_OK)
@@ -43,18 +15,18 @@ export function sendImage(req, res, next) {
     if(!path.extname(req.params.filename)) return next()
 
     const resource = req.params.filename.split("-")[0]
-    let pathFile: string = MediaResource.Image.path(req.params.filename)
+    let pathFile: string = FilesystemResource.Image.path(req.params.filename)
     switch(resource){
-        case 'user': pathFile = MediaResource.Image.path(req.params.filename, MediaResource.USERS); break;
-        case 'recipe': pathFile = MediaResource.Image.path(req.params.filename, MediaResource.RECIPES); break;
-        case 'chat': pathFile = MediaResource.Image.path(req.params.filename, MediaResource.CHATS); break;
+        case 'user': pathFile = FilesystemResource.USERS.Image(req.params.filename); break;
+        case 'recipe': pathFile = FilesystemResource.RECIPES.Image(req.params.filename); break;
+        case 'chat': pathFile = FilesystemResource.CHATS.Image(req.params.filename); break;
     }
     console.debug("Image: File path = ", pathFile)
     sendFileOf(pathFile, res)
 }
 
 export function sendIcon(req, res) {
-    let pathFile: string = MediaResource.Icon.path(req.params.filename)
+    let pathFile: string = FilesystemResource.Icon.path(req.params.filename)
     console.debug("Icon: File path = ", pathFile)
     sendFileOf(pathFile, res)
 }
@@ -63,9 +35,9 @@ export function sendVideo(req, res, next) {
     if(!path.extname(req.params.filename)) return next()
 
     const resource = req.params.filename.split("-")[0]
-    let pathFile: string = MediaResource.Video.path(req.params.filename)
+    let pathFile: string = FilesystemResource.Video.path(req.params.filename)
     switch(resource){
-        case 'recipe': pathFile = MediaResource.Video.path(req.params.filename, MediaResource.RECIPES); break;
+        case 'recipe': pathFile = FilesystemResource.RECIPES.Video(req.params.filename); break;
     }
     console.debug("Video: File path = ", pathFile)
     sendFileOf(pathFile, res)
