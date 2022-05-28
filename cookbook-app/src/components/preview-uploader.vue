@@ -117,11 +117,11 @@ export default {
       if(this.imageType) return ReaderStreamImage.read(file, this.setFile.bind(this, file))
       if(this.videoType) return ReaderStreamVideo.read(file, this.setFile.bind(this, file))
     },
-    setFile(file, event){
+    setFile(file, result){
       console.debug('File = ' , file)
       this.$emit('selectFile', file)
       console.debug(`Load file ${file.type} preview...`)
-      this.load_file_preview = event.target.result
+      this.load_file_preview = result
       this.remove = false
     },
 

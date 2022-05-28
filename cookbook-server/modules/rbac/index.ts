@@ -1,13 +1,38 @@
 export interface IRbac {
+
+    /**
+     * Permissions the user obtains through the assigned role
+     */
     acl: RBAC.Authorization[]
+
+    /**
+     * @param role user role included in {@link RBAC.Role}
+     * @param operation operation to apply to the resource ({@link RBAC.Operation})
+     * @param resource resource to which to apply the operation ({@link RBAC.Resource})
+     * @param others if true, the user can apply the _operation_ even if they are not the owner of the resource
+     * @return true if all parameters (role, operation, resource, others?) match a record in the authorization list, otherwise false.
+     */
     isAuthorized(role: string, operation: RBAC.Operation, resource: RBAC.Resource, others?: boolean): boolean
 }
 
 export interface IRbacWithRole extends IRbac {
+
+    /**
+     * @param user to check
+     * @return true if _user.role_ is instance of {@link Role.SIGNED}, otherwise false.
+     */
     isSignedUser(user: { _id?: string, role: string } ): boolean
+
+    /**
+     * @param user to check
+     * @return true if _user.role_ is instance of {@link Role.ADMIN}, otherwise false.
+     */
     isAdminUser(user: { _id?: string, role: string } ): boolean
 }
 
+/**
+ * An implementation of {@link IRbacWithRole}
+ */
 export class RBAC implements IRbacWithRole {
     private readonly accessControlList: RBAC.Authorization[]
 
@@ -35,36 +60,60 @@ export class RBAC implements IRbacWithRole {
 
 export namespace RBAC {
 
+    /**
+     * {@link RBAC.Role} represents all the roles the user can take on the platform (only one role at a time).
+     */
     export enum Role {
         ADMIN = "admin",
         SIGNED = "signed"
     }
 
     export namespace Role {
-        export function values(): Array<Role> {
+        /**
+         * @return a list of all {@link Role}'s enumeration values.
+         */
+        export function values(): Role[] {
             return Object.entries(Role).filter(([k, v]) => typeof v === 'string').map(([k, v]) => Role[k])
         }
 
+        /**
+         * @param val string to convert
+         * @return a {@link Role} instance of the string _val_
+         */
         export function as(val: string): Role {
             return val as Role
         }
 
+        /**
+         * @param role string to check
+         * @return true if _role_ is instance of {@link Role.SIGNED}, otherwise false.
+         */
         export function isSigned(role: string): boolean {
             return Role.as(role) === Role.SIGNED
         }
 
+        /**
+         * @param role string to check
+         * @return true if _role_ is instance of {@link Role.ADMIN}, otherwise false.
+         */
         export function isAdmin(role: string): boolean {
             return Role.as(role) === Role.ADMIN
         }
     }
 
+    /**
+     * {@link RBAC.Operation} represents all the operations the user can apply to resources (only one operation at a time).
+     */
     export enum Operation {
         CREATE = "create",
         RETRIEVE = "retrieve",
         UPDATE = "update",
-        DELETE= "delete"
+        DELETE = "delete"
     }
 
+    /**
+     * {@link RBAC.Resource} represents all considering resources in the platform.
+     */
     export enum Resource {
         USER = "user",
         USER_CREDENTIAL = "user_credential",
@@ -82,14 +131,29 @@ export namespace RBAC {
         MESSAGE = "message"
     }
 
-    export interface Authorization {
-        roles: Array<Role>,
+    export type Authorization = {
+        /**
+         *  User roles
+         */
+        roles: Role[],
+        /**
+         * Operation to apply to the resource
+         */
         operation: Operation
+        /**
+         * Resource to which to apply the operation
+         */
         resource: Resource
+        /**
+         * (Optional) Field that if true, the user can apply the _operation_ even if they are not the owner of the resource
+         */
         others?: boolean
     }
 }
 
+/**
+ * @return implementation instance of {@link IRbacWithRole}
+ */
 export function createRBAC(): IRbacWithRole {
 
     const Role = RBAC.Role

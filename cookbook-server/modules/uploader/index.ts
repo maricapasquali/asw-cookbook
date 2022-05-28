@@ -3,25 +3,57 @@ import * as multer from 'multer'
 import * as fs from "fs";
 
 export type Mixed = {
+    /**
+     * Field name specified in the form
+     */
     name: string,
+    /**
+     * Max number of file to upload
+     */
     maxCount?: number,
+    /**
+     * Type of file to upload
+     */
     type: FileUploader.FileType
 }
 
 export type UploaderConfiguration = {
+    /**
+     * Type of file to upload
+     */
     type: FileUploader.FileType,
+    /**
+     * Destination folder
+     */
     dest: string,
+    /**
+     * (Optional) Rename uploaded file and return the new name.
+     */
     newFileName?: (file: any) => string
 }
 
 export interface IFileUploader {
+    /**
+     * @param field field name specified in the form
+     * @param configuration instance of {@link UploaderConfiguration}
+     * @return middleware to upload one file
+     */
     single(field: string, configuration: UploaderConfiguration): any
+
+    /**
+     * @param fields field names specified in the form
+     * @param configurations instance of {@link UploaderConfiguration}
+     * @return middleware to upload more than one file
+     */
     mixed(fields: Array<Mixed>, configurations: Array<UploaderConfiguration>): any
 }
 
 const KILOBYTE: number = 1024 // bytes
 const MEGABYTE: number = KILOBYTE * KILOBYTE
 
+/**
+ * An implementation of {@link IFileUploader}
+ */
 export class FileUploader implements IFileUploader {
 
     private readonly fileSize: number = 512 * MEGABYTE
@@ -112,13 +144,19 @@ export class FileUploader implements IFileUploader {
 
 export namespace FileUploader {
 
+    /**
+     * {@link FileType} represents all the available type of file
+     */
     export enum FileType {
         IMAGE = 'image',
         VIDEO = 'video'
     }
 
     export namespace FileType {
-
+        /**
+         * @param fileType type of file
+         * @return an available extension array based on file type
+         */
         export function availableFileExtension(fileType: FileType): string[] {
             switch (fileType) {
                 case FileUploader.FileType.IMAGE:

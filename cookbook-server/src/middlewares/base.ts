@@ -40,7 +40,7 @@ function checkAndDecode(options?: AuthOption): Middleware {
                 }
 
                 if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.resource, options.others(decoded_token, req.params.id))) {
-                    return next({status: 403, description: 'User is unauthorized to execute this function.'})
+                    return next({status: 403, description: `User is unauthorized to ${options.operation.toUpperCase()} resource ${options.resource.toUpperCase()}.`})
                 }
             }
             req.locals.user = decoded_token
@@ -58,6 +58,9 @@ export type Middleware = ( req: any, res: any, next: (err?: any) => any ) => voi
 
 export type Middlewares = Middleware | Middleware[]
 
+/**
+ * @return middleware to extract credential from header _authorization_
+ */
 export function extractAuthorization(): Middleware {
     return function (req, res, next){
         try {
@@ -69,6 +72,10 @@ export function extractAuthorization(): Middleware {
     }
 }
 
+/**
+ * @param options options of middleware ({@link AuthOption})
+ * @return middleware to check authorization on a resource and an operation and if authorization isn't present, a bad request error is sent.
+ */
 export function checkRestrictedRBAC(options?: AuthOption): Middleware {
     return function (req, res, next){
         extractAuthorization()(req, res, (err?: any): any => {
@@ -79,6 +86,10 @@ export function checkRestrictedRBAC(options?: AuthOption): Middleware {
     }
 }
 
+/**
+ * @param options options of middleware ({@link AuthOption})
+ * @return middleware to check authorization on a resource and an operation.
+ */
 export function checkNormalRBAC(options?: AuthOption): Middleware {
     return function (req, res, next){
         extractAuthorization()(req, res, (err?: any): any => {
@@ -89,6 +100,10 @@ export function checkNormalRBAC(options?: AuthOption): Middleware {
     }
 }
 
+/**
+ * @param headersToCheck object that represents headers to check with the correct values
+ * @return middleware to check headers on a request.
+ */
 export function checkRequestHeaders(headersToCheck: object): Middleware {
     return function (req, res, next) {
         let headersNotValid: object = Object.entries(headersToCheck)
@@ -108,6 +123,10 @@ export function checkRequestHeaders(headersToCheck: object): Middleware {
     }
 }
 
+/**
+ * @param uploader uploader middleware to wrap ({@link FileUploader})
+ * @return middleware that wrap an uploader middleware and if error occurred, a bad request error is sent.
+ */
 export function wrapUpload(uploader: any): Middleware {
     return function (req, res, next){
         uploader(req, res, function (err){
