@@ -1,10 +1,26 @@
-import {flatten, recursiveSearch} from "../arrays";
+import {flatten} from "../arrays";
 
 export interface Scrolling {
+    /**
+     * Enable scrolling of the browser window
+     */
     enable: () => void
-    disable: () => void,
-    addScrollingEnable: (...element: HTMLElement[]) => void,
-    cleanScrollingEnables: () => void,
+
+    /**
+     * Disable the scrolling of the browser window
+     */
+    disable: () => void
+
+    /**
+     * Enable element scrolling when browser scrolling is disabled
+     * @param element html elements which are enabled for scrolling
+     */
+    addScrollingEnable: (...element: HTMLElement[]) => void
+
+    /**
+     * Disable all element scrolling when browser scrolling is disabled
+     */
+    cleanScrollingEnables: () => void
 }
 
 // left: 37, up: 38, right: 39, down: 40,
@@ -17,6 +33,10 @@ function childrenFlatten(elems: HTMLElement[]): HTMLElement[] {
 }
 
 function parentSearch(elements: HTMLElement[], elem: HTMLElement): HTMLElement {
+    const recursiveSearch = (v1: HTMLElement[], v: HTMLElement, field: string): any => {
+        if(v1.find(p => p == v)) return v
+        return recursiveSearch(v1, v[field], field)
+    }
     return recursiveSearch(elements, elem, "parentElement")
 }
 

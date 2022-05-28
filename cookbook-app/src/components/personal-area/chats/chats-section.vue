@@ -248,7 +248,7 @@ export default {
     },
 
     onStartChat(){
-      prependIfPresent(this.chats, this.selectedChat)
+      moveInFirstPosition(this.chats, this.selectedChat)
     },
     onReadMessages({chatID, readMessages}){
       let chat = this.chats.find(c => c._id === chatID)
@@ -314,7 +314,7 @@ export default {
         if(this._iSelectedChat(chat)){
           this.$store.commit('chats/remove-unread')
         } else {
-          prependIfPresent(this.chats, chat)
+          moveInFirstPosition(this.chats, chat)
           chat.unreadMessages += 1
           chat.started = true
         }
