@@ -4,6 +4,10 @@ type SocketAuthorization = { key: string, userinfo?: { _id: string, userID: stri
 
 declare module 'socket.io-client' {
     interface Socket {
+        /**
+         * Updates the authorization information on the socket and reconnects it.
+         * @param socketAuthorization new authorization information
+         */
         updateAuthorization(socketAuthorization: SocketAuthorization): void
     }
 }

@@ -1,9 +1,7 @@
 import {Schema, Document} from "mongoose";
 import {IUser} from "../user";
 import {IShoppingListPoint, ShoppingListPointSchema} from "./point";
-
 import {MongooseDuplicateError} from "../../../../modules/custom.errors";
-import {areThereDuplicatesIn} from "../../../../modules/utilities";
 
 export interface IShoppingList extends Document {
     user: IUser['_id'],
@@ -16,6 +14,7 @@ export const ShoppingListSchema: Schema<IShoppingList> = new Schema<IShoppingLis
 })
 
 ShoppingListSchema.pre('save', function (){
-    if(areThereDuplicatesIn(this.shoppingList, p => p.food.toString()))
+    let _foods: Set<string> = new Set(this.shoppingList.map(p => p.food.toString()))
+    if(_foods.size < this.shoppingList.length)
         throw new MongooseDuplicateError('duplicate food on shopping list')
 })

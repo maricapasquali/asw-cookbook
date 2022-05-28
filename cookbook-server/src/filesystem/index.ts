@@ -1,12 +1,30 @@
 import * as path from "path"
 
 type Path = {
+    /**
+     * @param filename (optional) name of the file to find the absolute path for
+     * @param resource (optional) name of the resource to find the absolute path for
+     * @return absolute path of the file or the resource
+     */
     path(filename?: string, resource?: MediaResource): string
 }
 
 interface MediaResource {
+    /**
+     * name of resource
+     */
     name: string
+
+    /**
+     * @param filename (optional) name of the file to find the absolute path for
+     * @return absolute path of the resource images
+     */
     Image(filename?: string): string
+
+    /**
+     * @param filename (optional) name of the file to find the absolute path for
+     * @return absolute path of the videos of the resource
+     */
     Video(filename?: string): string
 }
 

@@ -3,27 +3,66 @@ import * as path from "path";
 import * as ejs from "ejs";
 
 type TemplateEmailJSON = {
+    /**
+     * File template of email
+     */
     template: string
+    /**
+     * Dynamic data of email
+     */
     context: CommonEmailData & any | CommonEmailData & CommonUserEmailData & any | any
 }
 
 type CommonEmailData = {
+    /**
+     * Application name
+     */
     app_name: string
 }
 
 type CommonUserEmailData = {
+    /**
+     * First name of user
+     */
     firstname: string
+    /**
+     * Last name of user
+     */
     lastname: string
+    /**
+     * Email of user
+     */
     email: string
+    /**
+     * Username of user
+     */
     userID: string
 }
 
+/**
+ * {@link TemplateEmail} is an interface that represents the content of an email.
+ */
 export interface TemplateEmail {
+
+    /**
+     * @return content of email in HTML format.
+     */
     toHtml(): string
+
+    /**
+     * @return content of email in plaintext format.
+     */
     toText(): string
+
+    /**
+     * @return content of email in JSON format.
+     */
     toJson(): TemplateEmailJSON
 }
 
+/**
+ * {@link ATemplateEmail} is a partial implementation of {@link TemplateEmail}
+ */
 abstract class ATemplateEmail implements TemplateEmail{
     private readonly templateFile: string
     private readonly template: any
@@ -49,6 +88,10 @@ abstract class ATemplateEmail implements TemplateEmail{
 
 export namespace TemplateEmail {
 
+    /**
+     * Create an instance of {@link TemplateEmail} for Reset Password
+     * @param data instance of {@link CommonEmailData} plus { user_name: string, url: string }
+     */
     export function createResetPasswordEmail(data: CommonEmailData & { user_name: string, url: string }): TemplateEmail {
         return new class extends ATemplateEmail {
             toText(): string{
@@ -70,6 +113,10 @@ export namespace TemplateEmail {
         }('reset-password.ejs', data)
     }
 
+    /**
+     * Create an instance of {@link TemplateEmail} for Signup
+     * @param data instance of {@link CommonEmailData} plus {@link CommonUserEmailData} plus { url: string }
+     */
     export function createSignUpEmail(data: CommonEmailData & CommonUserEmailData & { url: string }): TemplateEmail {
         return new class extends ATemplateEmail {
             toText(): string{
@@ -95,6 +142,10 @@ export namespace TemplateEmail {
         }('signup.ejs', data)
     }
 
+    /**
+     * Create an instance of {@link TemplateEmail} for Administrator Signup
+     * @param data instance of {@link CommonEmailData} plus {@link CommonUserEmailData} plus { passwordDefault: string }
+     */
     export function createSignUpAdminEmail(data: CommonEmailData & CommonUserEmailData & { passwordDefault: string }): TemplateEmail {
         return new class extends ATemplateEmail {
             toText(): string {
@@ -119,6 +170,10 @@ export namespace TemplateEmail {
         }('signup-admin.ejs', data)
     }
 
+    /**
+     * Create an instance of {@link TemplateEmail} for Erase User Account
+     * @param data instance of {@link CommonEmailData}  plus {@link CommonUserEmailData}
+     */
     export function createEraseUserEmail(data: CommonEmailData & CommonUserEmailData): TemplateEmail {
         return new class extends ATemplateEmail {
             toText(): string {
