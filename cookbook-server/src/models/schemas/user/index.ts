@@ -141,3 +141,5 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         maximum: Strike.MAX
     }
 });
+
+UserSchema.index({ "information.email": 1, "credential.role": 1 }, { unique: true, name: "role-email" })

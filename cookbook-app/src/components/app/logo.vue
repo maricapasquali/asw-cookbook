@@ -29,11 +29,7 @@ export default {
   },
   methods: {
     setLogo(_dark){
-      try {
-        this.$data._logo = `/images/logo/${_dark ? "dark": "light"}-logo.png`
-      } catch (e) {
-        this.imgNotFound()
-      }
+      this.$data._logo = `/images/logo/${_dark ? "dark": "light"}-logo.png`
     },
     imgNotFound(e){
       console.error(e)

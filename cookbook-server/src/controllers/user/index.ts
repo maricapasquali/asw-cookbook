@@ -56,7 +56,11 @@ export function create_user(req, res){
             if(accessManager.isSignedUser(user.credential)) send_email_signup(user)
         }, err => {
             if(MongooseValidationError.is(err)) return res.status(400).json({description: err.message})
-            if(MongooseDuplicateError.is(err)) return res.status(409).json({description: 'Username has been already used'})
+            if(MongooseDuplicateError.is(err)) {
+                console.debug(err.message)
+                let fieldExpected: string = (err.message.match(/email|userID/) || ["user"])[0]
+                return res.status(409).json({ description: fieldExpected.capitalize() + ' has been already used', details: {field: fieldExpected} })
+            }
             res.status(500).json({code: 0, description: err.message})
         })
 }

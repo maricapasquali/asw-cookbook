@@ -1,5 +1,6 @@
 // Import global utilities
 import "@utils/global"
+import "cookbook-shared/libs/lang"
 // Import Vue
 import Vue from 'vue'
 // Import Bootstrap Vue and Icon Plugin
