@@ -753,6 +753,20 @@ paths:
           $ref: "#/components/responses/bad_request"
         409:
           description: Username has been already used
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  details:
+                    type: object
+                    properties:
+                      field:
+                        description: duplicated field
+                        type: string
+                        enum:
+                          - email
+                          - userID
         500:
           $ref: "#/components/responses/general_error"
 

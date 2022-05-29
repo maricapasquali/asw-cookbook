@@ -27,7 +27,14 @@ export default function (bus){
         console.error(err)
         switch(err.response?.status) {
             case 400: return _badRequestString(err)
-            case 409: return 'UserID già utilizzato.'
+            case 409: {
+                let field = err.response.data?.details?.field
+                switch (field){
+                    case "email": return field.capitalize() + ' già utilizzata.'
+                    case "userID": return field.capitalize() + ' già utilizzato.'
+                    default: return "User già inserito."
+                }
+            }
             default: return serverError(err, false)
         }
     }

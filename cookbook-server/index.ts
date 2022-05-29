@@ -1,3 +1,4 @@
+import "cookbook-shared/libs/lang"
 import "./modules/global"
 
 import * as express from 'express'
