@@ -7,6 +7,7 @@
     "src",
     "modules",
     "index.ts",
-    "static/index.ts"
+    "static/index.ts",
+    "test/helpers"
   ]
 }
