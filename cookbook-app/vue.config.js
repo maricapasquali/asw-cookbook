@@ -39,6 +39,12 @@ module.exports = {
         }
     },
     chainWebpack: (config) => {
+        if (process.env.NODE_ENV === 'production') {
+            config.performance
+                  .maxEntrypointSize(10485760)//(bytes) -> 10 MB
+                  .maxAssetSize(5242880)//(bytes) -> 5 MB
+        }
+
         const svgRule = config.module.rule('svg');
         svgRule.uses.clear();
         svgRule
