@@ -106,8 +106,8 @@ export default {
 <style scoped lang="scss">
 
 .card-comments{
-  background-color: $component-color;
-  border: none;
+  background-color: $component-color!important;
+  border: none!important;
 
   & .add-comment button{
     color: white;
