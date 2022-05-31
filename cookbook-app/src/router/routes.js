@@ -1,36 +1,36 @@
 // MAIN ROUTES
-import Login from '@views/Login'
-import CheckAccount from "@views/CheckAccount";
-import NotFound from '@views/404'
-import HomePage from "@views/HomePage";
+const Login = () => import("@views/Login")
+const CheckAccount = () => import("@views/CheckAccount")
+const NotFound = () => import("@views/404")
+const HomePage = () => import("@views/HomePage")
 
-import UserArea from "@views/UserArea";
-import Searches from "@views/Searches";
-import ChatRecipe from "@views/ChatRecipe";
-import OneChat from "@views/OneChat";
+const UserArea = () => import("@views/UserArea")
+const Searches = () => import("@views/Searches")
+const ChatRecipe = () => import("@views/ChatRecipe")
+const OneChat = () => import("@views/OneChat")
 
 // SUB ROUTES
-import ChangePassword from "@views/user-area/ChangePassword";
-import PersonalArea from "@views/user-area/PersonalArea";
-import OneUser from "@views/user-area/OneUser";
-import OneRecipe from "@views/user-area/OneRecipe";
+const ChangePassword = () => import("@views/user-area/ChangePassword")
+const PersonalArea = () => import("@views/user-area/PersonalArea")
+const OneUser = () => import("@views/user-area/OneUser")
+const OneRecipe = () => import("@views/user-area/OneRecipe")
 
 // BOTH
-import UserInformation from "@components/personal-area/user-information"
+const UserInformation = () => import("@components/personal-area/user-information")
 // SIGNED
-import RecipesSection from "@components/personal-area/recipes/recipes-section"
+const RecipesSection = () => import("@components/personal-area/recipes/recipes-section")
 // BOTH
-import FoodSection from "@components/personal-area/foods/food-section"
+const FoodSection = () => import("@components/personal-area/foods/food-section")
 // ADMIN
-import ReportSection from "@components/personal-area/admin/reports/reports-section"
+const ReportSection = () => import("@components/personal-area/admin/reports/reports-section")
 // ADMIN
-import UserSection from "@components/personal-area/admin/users/users-section"
+const UserSection = () => import("@components/personal-area/admin/users/users-section")
 // SIGNED
-import FriendSection from "@components/personal-area/friends/friends-section"
+const FriendSection = () => import("@components/personal-area/friends/friends-section")
 // BOTH
-import ChatSection from "@components/personal-area/chats/chats-section"
+const ChatSection = () => import("@components/personal-area/chats/chats-section")
 // BOTH
-import NotificationSection from "@components/personal-area/notifications/notifications-section"
+const NotificationSection = () => import("@components/personal-area/notifications/notifications-section")
 
 export default [
     {
