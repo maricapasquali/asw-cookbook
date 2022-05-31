@@ -4,12 +4,12 @@ import {io, Socket} from "socket.io-client";
 import * as express from "express";
 import * as fs from "fs";
 import * as  path from "path";
-import sockets from "../../sockets";
-import {Hosting} from "../../../commons/modules/hosting";
-import {Chat, User} from "../../models";
-import {ChatPopulationPipeline, IChat} from "../../models/schemas/chat";
-import Rooms from "../../sockets/rooms";
-import {ChatInfo} from "../../sockets/chat";
+import sockets from "../../src/sockets";
+import {Hosting} from "cookbook-shared/libs/hosting";
+import {Chat, User} from "../../src/models";
+import {ChatPopulationPipeline, IChat} from "../../src/models/schemas/chat";
+import Rooms from "../../src/sockets/rooms";
+import {ChatInfo} from "../../src/sockets/chat";
 
 type UserInfo = { _id: string, userID: string, isAdmin?: boolean }
 

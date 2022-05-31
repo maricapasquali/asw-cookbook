@@ -83,7 +83,7 @@ export default {
   filters: {
     capitalize(text){
       if(!text) return text
-      return text.replace(/^\w/, c => c.toUpperCase());
+      return text.capitalize()
     },
   },
   computed: {

@@ -1,17 +1,16 @@
-import {Validator} from "../../../commons/modules/validator";
+import {Validator} from "cookbook-shared/libs/validator";
 
-import {IFileUploader, UploaderConfiguration} from "../uploader";
+import {IFileUploader} from "../uploader";
 import {IJwtTokensManager} from "../jwt.token";
 import {IRbacWithRole} from "../rbac";
 import {IMailer} from "../mailer";
 
+/**
+ * Global variables.
+ */
 declare global {
 
     var fileUploader: IFileUploader
-
-    var FileConfigurationImage: UploaderConfiguration
-
-    var FileConfigurationVideo: UploaderConfiguration
 
     var tokensManager: IJwtTokensManager
 

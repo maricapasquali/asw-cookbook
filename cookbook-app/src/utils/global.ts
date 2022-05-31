@@ -3,7 +3,7 @@ import {
     PasswordValidatorExtended,
     EmailValidator,
     PasswordValidator
-} from '../../../commons/modules/validator'
+} from 'cookbook-shared/libs/validator'
 import {
     ReaderStream,
     ReaderStreamImage,
@@ -16,10 +16,9 @@ import {
     prependIfAbsent,
     removeIfPresent,
     replaceIfPresent,
-    prependIfPresent,
+    moveInFirstPosition,
     prepend,
     lastOf,
-    recursiveSearch,
     flatten,
     visitUntil,
 } from "./arrays"
@@ -63,13 +62,11 @@ declare global {
 
         replaceIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any, newVal: any): any
 
-        prependIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): void
+        moveInFirstPosition(v1: Array<any>, predicate: (v: any) => boolean | any): void
 
         prepend(v1: Array<any>, index: number): void
 
         lastOf(v1: Array<any>, filter?: (v: any) => boolean | any): any
-
-        recursiveSearch(v1: Array<any>, v: any, field: string): any
 
         flatten(vector: Array<object>, field: string): Array<object>
 
@@ -101,10 +98,9 @@ window.pushIfAbsent = pushIfAbsent
 window.prependIfAbsent = prependIfAbsent
 window.removeIfPresent = removeIfPresent
 window.replaceIfPresent = replaceIfPresent
-window.prependIfPresent = prependIfPresent
+window.moveInFirstPosition = moveInFirstPosition
 window.prepend = prepend
 window.lastOf = lastOf
-window.recursiveSearch = recursiveSearch
 window.flatten = flatten
 window.visitUntil = visitUntil
 

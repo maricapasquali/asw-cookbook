@@ -5,8 +5,8 @@ const path = require('path');
 const serveStatic = require('serve-static');
 const history = require('connect-history-api-fallback');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const {Hosting} = require('../commons/modules/hosting')
-const config = require('../environment/env.config')
+const {Hosting} = require('cookbook-shared/libs/hosting')
+const config = require('cookbook-shared/environment').default
 
 const optionsProxy =  {
     ssl: {
@@ -21,7 +21,7 @@ const optionsProxy =  {
 const proxyMiddleware = createProxyMiddleware(optionsProxy)
 const wsProxyMiddleware = createProxyMiddleware(Object.assign(optionsProxy, { ws: true }))
 
-app.use(/^\/(api|images|videos)\/.*$/, proxyMiddleware);
+app.use(/^\/(api|images|videos|icons)\/.*$/, proxyMiddleware);
 app.use('/socket.io', wsProxyMiddleware);
 
 app.use(history())

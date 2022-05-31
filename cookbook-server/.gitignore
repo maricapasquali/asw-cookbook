@@ -1,12 +1,6 @@
 node_modules
-videos
-images
 
 *.env
 
 **/*.js
 **/*.js.map
-
-!test/bdd/*.js
-!test/tdd/*.js
-!views/js/*.js

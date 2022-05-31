@@ -1,3 +1,4 @@
+import "cookbook-shared/libs/lang"
 import "./modules/global"
 
 import * as express from 'express'
@@ -6,11 +7,12 @@ import * as path from 'path';
 import * as cors from 'cors';
 import {Server} from "socket.io";
 
-import {Hosting, HTTPSOptions} from "../commons/modules/hosting"
-import * as database from './database'
-import routes from './routes'
-import socket from './sockets'
-import {requestId} from './middlewares'
+import {Hosting, HTTPSOptions} from "cookbook-shared/libs/hosting"
+import * as database from './src/database'
+import routes from './src/routes'
+import socket from './src/sockets'
+import {requestId} from './src/middlewares'
+import * as staticDirectory from "./static"
 
 const app = express();
 app.use(express.json());
@@ -21,8 +23,10 @@ const views = path.join(__dirname ,'views')
 app.set('view engine', 'ejs');
 app.set('views', views)
 
-app.use(express.static(views))
-app.use('/libs', express.static(path.join(__dirname, 'node_modules')))
+/**
+ * STATIC FILES
+ */
+staticDirectory.staticFiles(app)
 
 /**
  * DATABASE CONNECTION

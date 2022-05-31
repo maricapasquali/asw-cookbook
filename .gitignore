@@ -1,6 +1,8 @@
 .idea
 design
+node_modules
 *.env
 
 data/*
 !data/cookbook.archive
+!data/init.sh

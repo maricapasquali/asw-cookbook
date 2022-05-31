@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "client:build:tsc": "tsc --build",
-    "client:build:production": "vue-cli-service build --mode production",
-    "client:start": "cross-env NODE_ENV=production node .",
+    "build": "tsc --build && vue-cli-service build --mode production",
+    "start": "cross-env NODE_ENV=production node .",
     "dev:client:tsc": "tsc --build -w",
     "dev:client:serve": "vue-cli-service serve",
-    "dev:client:watches": "concurrently \"npm:dev:client:tsc\" \"npm:dev:client:serve\""
+    "dev:client:watches": "concurrently \"npm:dev:client:tsc\" \"npm:dev:client:serve\"",
+    "clean": "tsc --build --clean"
   },
   "author": "Marica Pasquali",
   "license": "ISC",
@@ -19,6 +19,7 @@
     "@fortawesome/vue-fontawesome": "^2.0.6",
     "axios": "^0.26.1",
     "bcryptjs": "^2.4.3",
+    "bootstrap": "4.6",
     "bootstrap-vue": "^2.21.2",
     "concurrently": "^7.0.0",
     "connect-history-api-fallback": "^1.6.0",

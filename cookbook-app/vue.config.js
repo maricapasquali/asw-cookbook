@@ -1,6 +1,6 @@
 const path = require('path')
 const fs = require('fs')
-const config = require("../environment/env.config")
+const config = require("cookbook-shared/environment").default
 
 module.exports = {
     pages: {
@@ -13,8 +13,6 @@ module.exports = {
     configureWebpack: {
         resolve: {
             alias: {
-                '@environment': path.resolve(__dirname, "..", "environment"),
-                '@commons': path.resolve(__dirname, "..", "commons", "modules"),
                 '@': path.resolve(__dirname, 'src'),
                 '@api': path.resolve(__dirname, 'src/services/api'),
                 '@assets': path.resolve(__dirname, 'src/assets'),
@@ -79,6 +77,10 @@ module.exports = {
                 changeOrigin: true,
             },
             '^/images': {
+                target: config.server.origin,
+                changeOrigin: true,
+            },
+            '^/icons': {
                 target: config.server.origin,
                 changeOrigin: true,
             },

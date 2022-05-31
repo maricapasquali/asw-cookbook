@@ -45,7 +45,7 @@
                 </b-row>
                 <!-- SELECT DROPDOWN -->
                 <b-container fluid v-if="showDropdown" class="select-dropdown" @mouseenter="_disableScrollWindow" @mouseleave="_enableScrollWindow">
-                  <b-row v-for="(opt, ind) in options" @click="select(opt)" :key="opt.value" :class="classObjOptions(opt)" @mouseover="onHoverOption(ind)" >
+                  <b-row v-for="(opt, ind) in $data._options" @click="select(opt)" :key="opt.value" :class="classObjOptions(opt)" @mouseover="onHoverOption(ind)" >
                     <b-col v-if="opt.src" cols="1">
                       <img width="20" height="20" :src="opt.src" :alt="opt.value" v-on:error="errorIcon"/>
                     </b-col>
@@ -138,7 +138,7 @@ export default {
   },
   methods:{
     setOptions(opts){
-      this.$data._options = opts
+      this.$data._options = clone(opts)
       this.defaultValue = this.placeholder ? { text: this.placeholder, value: undefined, disabled: true } : this.$data._options[0]
       prependIfAbsent(this.$data._options, this.defaultValue)
     },
@@ -218,12 +218,14 @@ export default {
     },
 
     select: function (opt){
-      if(isString(opt)) opt = this.$data._options.find(o => o.value === opt)
+      if(!opt.disabled) {
+        if(isString(opt)) opt = this.$data._options.find(o => o.value === opt)
 
-      let _option = opt || this.defaultValue
-      this.$emit('input', _option.value)
-      if(isDefined(this.state)) this.$emit('change', _option.value)
-      this.closeDropdown();
+        let _option = opt || this.defaultValue
+        this.$emit('input', _option.value)
+        if(isDefined(this.state)) this.$emit('change', _option.value)
+        this.closeDropdown();
+      }
     }
   }
 }

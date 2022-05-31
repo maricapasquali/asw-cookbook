@@ -4,14 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "server:build": "tsc --build",
-    "server:start": "cross-env NODE_ENV=production node .",
-    "dev:server:tsc": "tsc --build -w",
+    "postinstall": "(cd static && npm install)",
+    "build": "tsc --build && tsc --project static/ts",
+    "start": "cross-env NODE_ENV=production node .",
+    "dev:server:tsc": "concurrently -n watch:server,watch:static \"tsc --build -w\" \"tsc --project static/ts -w\"",
     "dev:server:nodemon": "nodemon .",
     "dev:server:watches": "concurrently \"npm:dev:server:tsc\" \"npm:dev:server:nodemon\"",
-    "test:tdd": "cross-env NODE_ENV=test mocha --ui tdd ./test/tdd/*.js",
-    "test:bdd": "cross-env NODE_ENV=test mocha --ui bdd ./test/bdd/*.js",
-    "test": "cross-env NODE_ENV=test npm run test:tdd && npm run test:bdd"
+    "test:tdd": "cross-env NODE_ENV=test mocha --require ts-node/register --ui tdd ./test/tdd/*.ts",
+    "test:bdd": "cross-env NODE_ENV=test mocha --require ts-node/register --ui bdd ./test/bdd/*.ts",
+    "test": "cross-env NODE_ENV=test npm run test:tdd && npm run test:bdd",
+    "clean": "tsc --build --clean && (cd static && npm run clean)"
   },
   "nodemonConfig": {
     "ext": "js"
@@ -19,7 +21,6 @@
   "author": "Marica Pasquali",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.26.1",
     "bcrypt": "^5.0.1",
     "concurrently": "^7.0.0",
     "cors": "^2.8.5",
@@ -38,10 +39,14 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.1",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^17.0.33",
     "chai": "^4.3.6",
     "cross-env": "^7.0.3",
     "mocha": "^9.2.2",
     "nodemon": "^2.0.15",
+    "ts-node": "^10.7.0",
     "typescript": "^4.6.2"
   }
 }

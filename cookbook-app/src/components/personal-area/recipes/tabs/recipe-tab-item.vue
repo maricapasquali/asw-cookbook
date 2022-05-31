@@ -1,5 +1,5 @@
 <template>
-  <b-container fluid class="recipes-section-item" >
+  <b-container fluid class="recipes-section-item" role="tablist">
     <!-- Recipe: BaseInfo + Actions -->
     <b-row class="ml-2" cols="1" cols-md="2">
       <b-col class="mb-2">
@@ -44,7 +44,7 @@
     </b-row>
 
     <!-- Details -->
-    <b-collapse :id="toggleDetailId" v-model="item.showDetails" @show="updateForm = false">
+    <b-collapse :id="toggleDetailId" accordion="actions" role="tabpanel" v-model="item.showDetails">
       <b-card class="mt-3">
         <!-- Tutorial -->
         <b-row class="tutorial mb-4" align-h="center" v-if="item.recipe.tutorial">
@@ -110,7 +110,7 @@
     </b-collapse>
 
     <!-- Change recipe form -->
-    <b-collapse :id="toggleChangeId" @show="onShowChangeForm">
+    <b-collapse :id="toggleChangeId" accordion="actions" role="tabpanel" @show="onShowChangeForm" @hide="onHideChangeForm">
       <b-card no-body v-if="updateForm.show">
         <recipe-form title="Modifica ricetta" v-model="updateForm.recipe" @onChanged="onChangedRecipe"/>
       </b-card>
@@ -165,7 +165,7 @@ export default {
       return  `${this.mode}-change-mode-${this.item.recipe._id}`
     },
     toggleChangeTitle(){
-      return (this.updateForm ? 'Chiudi' : 'Apri') +  ' modifica ricetta'
+      return (this.updateForm.show ? 'Chiudi' : 'Apri') +  ' modifica ricetta'
     },
 
     permissionId(){
@@ -201,8 +201,10 @@ export default {
   },
   methods: {
     tutorialNotFound(e){
-      console.error('tutorial ('+e.target.src+') not found')
-      e.target.parentNode.parentNode.remove()
+      if(e && e.target){
+        console.error('tutorial ('+e.target.src+') not found')
+        e.target.parentNode?.parentNode?.remove()
+      }
     },
 
     /* - SAVED RECIPE: SHARE ONLY */
@@ -219,7 +221,6 @@ export default {
     },
     /* - CHANGE */
     onShowChangeForm(){
-      this.item.showDetails = false
       this.updateForm = {
         recipe: clone(this.item.recipe),
         show: true
