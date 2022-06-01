@@ -6,9 +6,7 @@
   "scripts": {
     "build": "tsc --build && vue-cli-service build --mode production",
     "start": "cross-env NODE_ENV=production node .",
-    "dev:client:tsc": "tsc --build -w",
-    "dev:client:serve": "vue-cli-service serve",
-    "dev:client:watches": "concurrently \"npm:dev:client:tsc\" \"npm:dev:client:serve\"",
+    "dev": "concurrently -n vue-cli:serve,tsc \"vue-cli-service serve\" \"tsc --build -w\"",
     "clean": "tsc --build --clean"
   },
   "author": "Marica Pasquali",

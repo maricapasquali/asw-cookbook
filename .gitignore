@@ -4,5 +4,5 @@ node_modules
 *.env
 
 data/*
-!data/cookbook.archive
+!data/db-example.archive
 !data/init.sh

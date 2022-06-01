@@ -2,6 +2,7 @@
   "extends": "../tsconfig.json",
   "include": [
     "src/services/**/*",
-    "src/utils/**/*"
+    "src/utils/**/*",
+    "../cookbook-shared/**/*"
   ]
 }

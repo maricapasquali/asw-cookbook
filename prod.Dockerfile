@@ -25,11 +25,11 @@ CMD [ "npm", "run", "start:client" ]
 
 FROM base as server
 
-WORKDIR /app/cookbook-server
-
-COPY ./cookbook-server .
+COPY ./cookbook-server ./cookbook-server
 
 RUN npm install
+
+WORKDIR /app/cookbook-server
 
 RUN npm run postinstall
 
@@ -44,7 +44,7 @@ CMD [ "npm", "run", "start:server" ]
 
 FROM mongo as database
 
-COPY ./data/cookbook.archive /data
+COPY ./data/db-example.archive /data
 
 ADD ./data/init.sh /docker-entrypoint-initdb.d
 

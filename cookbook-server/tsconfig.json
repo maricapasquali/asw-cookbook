@@ -8,6 +8,6 @@
     "modules",
     "index.ts",
     "static/index.ts",
-    "test/helpers"
+    "../cookbook-shared/**/*"
   ]
 }

@@ -6,6 +6,16 @@ ENV NODE_ENV development
 
 WORKDIR /app
 
+COPY . .
+
+RUN npm install
+
+WORKDIR /app/cookbook-server
+
+RUN npm run postinstall
+
+WORKDIR /app
+
 
 FROM base as client
 
