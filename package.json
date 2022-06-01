@@ -6,9 +6,8 @@
     "build": "npm run build -ws --if-present",
     "start:server": "npm start -w cookbook-server",
     "start:client": "npm start -w cookbook-app",
-    "dev:shared": "npm run dev:shared:watches -w cookbook-shared",
-    "dev:server": "npm run dev:server:watches -w cookbook-server",
-    "dev:client": "npm run dev:client:watches -w cookbook-app",
+    "dev:server": "npm run dev -w cookbook-server",
+    "dev:client": "npm run dev -w cookbook-app",
     "test" : "npm run test -ws --if-present",
     "clean" : "npm run clean -ws --if-present"
   },

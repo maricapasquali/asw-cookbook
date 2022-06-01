@@ -43,12 +43,12 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
 - _production_ mode
 
   ```
-     docker-compose -f ./prod.docker-compose.yml down
+     docker-compose -f ./prod.docker-compose.yml down -v
   ```
 
 - _development_ mode
   ```
-     docker-compose -f ./dev.docker-compose.yml down
+     docker-compose -f ./dev.docker-compose.yml down -v
   ```
 
 # Using NPM
@@ -79,9 +79,6 @@ npm install
 
 - _development_ mode
   ```
-  npm run dev:shared
-  ```
-  ```
   npm run dev:server
   ```
   ```
@@ -95,7 +92,7 @@ npm install
 Requirement: [_mongorestore_](https://www.mongodb.com/try/download/database-tools) (mongodb tools)
 
 ```
-  mongorestore --uri <database-uri-connection> --archive=./data/cookbook.archive
+  mongorestore --uri <database-uri-connection> --archive=./data/db-example.archive
 ```
 
 Using _**Docker**_ : `<database-uri-connection> = mongodb://localhost:27018`
