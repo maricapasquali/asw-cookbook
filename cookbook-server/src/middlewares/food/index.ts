@@ -1,5 +1,5 @@
 import {Middlewares, checkRestrictedRBAC, checkNormalRBAC} from "../base";
-import {RBAC} from "../../../modules/rbac";
+import {RBAC} from "../../libs/rbac";
 import Resource = RBAC.Resource;
 import Operation = RBAC.Operation;
 import {Food} from "../../models";

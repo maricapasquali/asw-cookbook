@@ -1,5 +1,5 @@
 import {checkRequestHeaders, Middlewares, checkNormalRBAC, checkRestrictedRBAC} from "../../base";
-import {RBAC} from "../../../../modules/rbac";
+import {RBAC} from "../../../libs/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
 import {Comment} from "../../../models";

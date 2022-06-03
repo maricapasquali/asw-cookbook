@@ -5,7 +5,7 @@ import {JwtTokensManager} from "../jwt.token";
 import {createRBAC} from "../rbac";
 import {Mailer} from "../mailer";
 import {FileUploader} from "../uploader";
-import {FilesystemResource} from "../../src/filesystem";
+import {FilesystemResource} from "../../filesystem";
 
 global.configuration = config
 

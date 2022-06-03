@@ -1,7 +1,7 @@
 import {Types} from "mongoose";
 import {expect} from "chai";
 import * as assert from "assert";
-import {IJwtTokensManager, Tokens} from "../../modules/jwt.token";
+import {IJwtTokensManager, Tokens} from "../../src/libs/jwt.token";
 
 /* -- EXPORTED FUNCTIONALITY -- */
 

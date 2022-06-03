@@ -1,6 +1,6 @@
 import {create_notification} from "../../controllers/notification";
 import {Notification} from "../../models/schemas/notification";
-import {RBAC} from "../../../modules/rbac";
+import {RBAC} from "../../libs/rbac";
 import Role = RBAC.Role;
 import Rooms from "../rooms";
 

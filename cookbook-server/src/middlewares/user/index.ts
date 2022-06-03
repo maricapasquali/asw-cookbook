@@ -1,10 +1,10 @@
 import {Middlewares, checkRestrictedRBAC, checkNormalRBAC, Middleware, wrapUpload} from "../base";
-import {RBAC} from "../../../modules/rbac";
+import {RBAC} from "../../libs/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
-import {randomString} from "../../../modules/utilities";
+import {randomString} from "../../libs/utilities";
 import * as path from "path";
-import {FileUploader, UploaderConfiguration} from "../../../modules/uploader";
+import {FileUploader, UploaderConfiguration} from "../../libs/uploader";
 import FileType = FileUploader.FileType;
 import {FilesystemResource} from "../../filesystem";
 

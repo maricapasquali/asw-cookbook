@@ -30,6 +30,7 @@ export default function (app){
      */
     const swaggerCookbookAPI = YAML.load(path.resolve("api-docs",'api-documentations.yaml'));
     app.use(routes.apiDocs, function(req, res, next){
+        swaggerCookbookAPI.info.title = configuration.appName + " API"
         swaggerCookbookAPI.servers = []
         swaggerCookbookAPI.servers.push({ url: configuration.server['sub-domain'].api.origin })
         swaggerCookbookAPI.paths['/admins'].post.responses['201'].headers['Access-Control-Allow-Origin'].schema.example = configuration.server.origin

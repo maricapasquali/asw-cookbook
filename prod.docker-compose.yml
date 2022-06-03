@@ -25,6 +25,8 @@ services:
       target: server
     ports:
       - "3000:3000"
+    volumes:
+      - ./cookbook-server/src/filesystem/emails:/app/cookbook-server/src/filesystem/emails
     environment:
       - DATABASE_URI=mongodb://database-app/cookbook
     networks:

@@ -1,5 +1,5 @@
 import {Document, Schema} from "mongoose";
-import {RBAC} from "../../../../modules/rbac";
+import {RBAC} from "../../../libs/rbac";
 import Role = RBAC.Role;
 import {Countries, Genders} from "cookbook-shared/assets";
 
@@ -40,7 +40,7 @@ export namespace SignUp {
             return [State.PENDING, State.CHECKED]
         }
         export function _default(role: string){
-            return role as Role === Role.ADMIN ? State.CHECKED : State.PENDING
+            return Role.isAdmin(role) ? State.CHECKED : State.PENDING
         }
 
         export function isChecked(state: string){
@@ -135,7 +135,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         type: Number,
         required: false,
         default: function (){
-          return this.credential.role as Role === Role.SIGNED ?  0 : undefined
+          return Role.isSigned(this.credential.role) ?  0 : undefined
         },
         minimum: 0,
         maximum: Strike.MAX

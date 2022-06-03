@@ -1,11 +1,11 @@
 import * as bcrypt from 'bcrypt'
 
 import {newUser} from "../utils.user.controller";
-import {RBAC} from "../../../../modules/rbac";
+import {RBAC} from "../../../libs/rbac";
 import Role = RBAC.Role;
-import {MongooseDuplicateError, MongooseValidationError} from "../../../../modules/custom.errors";
+import {MongooseDuplicateError, MongooseValidationError} from "../../../libs/custom.errors";
 import {User} from "../../../models";
-import {TemplateEmail} from "../../../../modules/mailer/templates";
+import {TemplateEmail} from "../../../libs/mailer/templates";
 
 const send_email_signup = function (user) {
     const signUpEmail: TemplateEmail = TemplateEmail.createSignUpAdminEmail({
@@ -18,7 +18,7 @@ const send_email_signup = function (user) {
     })
     mailer.send({
         to: user.information.email,
-        subject: 'CookBook - Registazione Amministratore',
+        subject: configuration.appName + ' - Registazione Amministratore',
     }, signUpEmail, {savedJSON: {filename: `signup-admin-${user._id}`} /*FOR DEVELOP*/})
 }
 

@@ -1,22 +1,22 @@
 import * as bcrypt from 'bcrypt'
-import {futureDateFromNow, randomString} from '../../../modules/utilities'
+import {futureDateFromNow, randomString} from '../../libs/utilities'
 import {Chat, EmailLink, Friend, Notification, ShoppingList, User} from '../../models'
 
-import {DecodedTokenType} from '../../../modules/jwt.token'
-import {RBAC} from '../../../modules/rbac'
+import {DecodedTokenType} from '../../libs/jwt.token'
+import {RBAC} from '../../libs/rbac'
 import {IUser, SignUp} from "../../models/schemas/user";
-import {TemplateEmail} from "../../../modules/mailer/templates";
+import {TemplateEmail} from "../../libs/mailer/templates";
 import {Types} from "mongoose";
 import {IChat} from "../../models/schemas/chat";
-import {Pagination} from "../../../modules/pagination";
+import {Pagination} from "../../libs/pagination";
 
-import {MongooseDuplicateError, MongooseValidationError} from "../../../modules/custom.errors";
+import {MongooseDuplicateError, MongooseValidationError} from "../../libs/custom.errors";
 import {newUser} from "./utils.user.controller";
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
 import ObjectId = Types.ObjectId;
 import Role = RBAC.Role;
 
-const client_origin = configuration.client.origin
+const client_origin = configuration.externalOriginOf("client") //configuration.client.origin
 
 const send_email_signup = function (user) {
     let randomKey: string = randomString()
@@ -41,7 +41,7 @@ const send_email_signup = function (user) {
 
         mailer.send({
             to: user.information.email,
-            subject: 'CookBook - Registazione',
+            subject: configuration.appName + ' - Registazione',
         }, signUpEmail, {savedJSON: {filename: `signup-${user._id}` } /*FOR DEVELOP*/})
 
     }, err => console.error(err.message))
@@ -283,7 +283,7 @@ function send_email_erase_user(user: IUser): void {
     })
     mailer.send({
         to: user.information.email,
-        subject: 'CookBook - Cancellazione account',
+        subject: configuration.appName + ' - Cancellazione account',
     }, eraseUserEmail, {savedJSON: {filename: `erase-user-${user._id}`} /*FOR DEVELOP*/})
 
 }
@@ -444,7 +444,7 @@ export function send_email_password(req, res){
 
                         mailer.send({
                             to: email,
-                            subject: 'CookBook - Reset Password',
+                            subject: configuration.appName + ' - Reset Password',
                         }, resetPswEmail, { savedJSON: {filename: `reset-pass-${user._id}`} /*FOR DEVELOP*/ })
 
                 }, err => res.status(500).json({description: err.message}))

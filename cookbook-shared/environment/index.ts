@@ -1,8 +1,7 @@
 import * as dotenv from "dotenv"
 import * as dotenvExpand from "dotenv-expand"
 import * as path from "path"
-
-const DEVELOPMENT = "development"
+import {Mode, isDevelopmentMode, isTestMode} from "./mode";
 
 dotenvExpand.expand(dotenv.config({ path: path.join(__dirname, '.env') }))
 
@@ -16,7 +15,7 @@ let port_client: number
 
 if(process.env.DOCKER_CONTAINER_ENV) {
 
-    let isDevMode = process.env.NODE_ENV === DEVELOPMENT
+    let isDevMode = isDevelopmentMode(process.env.NODE_ENV)
     const _dev = isDevMode ? "-dev" : ''
 
     hostname_server = "server-app" + _dev
@@ -34,7 +33,8 @@ if(process.env.DOCKER_CONTAINER_ENV) {
     port_client = +process.env.COOKBOOK_CLIENT_PORT || +process.env.VUE_APP_COOKBOOK_CLIENT_PORT || 5000
 }
 
-const databaseURI = (process.env.NODE_ENV === "test" ? process.env.DATABASE_TEST_URI || "mongodb://localhost:27017/cookbook-test" : process.env.DATABASE_URI || "mongodb://localhost:27017/cookbook" )
+const databaseURI = isTestMode(process.env.NODE_ENV) ? (process.env.DATABASE_TEST_URI || "mongodb://localhost:27017/cookbook-test")
+                                                     : (process.env.DATABASE_URI || "mongodb://localhost:27017/cookbook" )
 
 const server_origin = `${protocol}://${hostname_server}:${port_server}`
 const api_pathname = "/api"
@@ -43,9 +43,9 @@ const videos_pathname = "/videos"
 
 const client_origin = `${protocol}://${hostname_client}:${port_client}`
 
-let environment = {
+let environment: any = {
     appName: 'CookBook',
-    mode: process.env.NODE_ENV || DEVELOPMENT,
+    mode: (process.env.NODE_ENV as Mode) || Mode.DEVELOPMENT,
     server: {
         protocol: protocol,
         hostname: hostname_server,
@@ -68,7 +68,16 @@ let environment = {
     }
 }
 
-if(environment.mode !== DEVELOPMENT) {
+/**
+ * @param who node from which to extract the source
+ * @return origin of _who_ (client or server). If using docker, the external hostname is "localhost", otherwise {@link environment.client.origin} or {@link environment.server.origin}
+ */
+environment.externalOriginOf = function externalOriginOf(who: "client" | "server"): string  {
+    if(process.env.DOCKER_CONTAINER_ENV) return this[who].origin.replace(this[who].hostname, "localhost")
+    return this[who].origin
+}
+
+if(!isDevelopmentMode(environment.mode)) {
     console.debug = function (...args){}
     console.error = function (...args){}
 }

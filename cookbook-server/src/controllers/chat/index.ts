@@ -2,16 +2,16 @@ import {Chat, Message, User} from "../../models";
 import {Types} from "mongoose";
 import {ChatPopulationPipeline, IChat} from "../../models/schemas/chat";
 import {existById} from "../../database/utils";
-import {RBAC} from "../../../modules/rbac";
+import {RBAC} from "../../libs/rbac";
 import ObjectId = Types.ObjectId;
-import {MongooseValidationError} from "../../../modules/custom.errors";
+import {MongooseValidationError} from "../../libs/custom.errors";
 import * as _ from "lodash"
-import {decodeToArray, decodeToBoolean} from "../../../modules/utilities";
+import {decodeToArray, decodeToBoolean} from "../../libs/utilities";
 import Role = RBAC.Role;
-import {DecodedTokenType} from "../../../modules/jwt.token";
+import {DecodedTokenType} from "../../libs/jwt.token";
 import {chatMiddleware} from "../../middlewares";
 import UpdateAction = chatMiddleware.UpdateAction
-import {Pagination} from "../../../modules/pagination";
+import {Pagination} from "../../libs/pagination";
 
 async function getBodyFromFormData(req: any, res: any): Promise<any> {
     const body = req.body

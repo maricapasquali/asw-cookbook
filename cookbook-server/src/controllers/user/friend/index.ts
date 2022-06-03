@@ -1,13 +1,13 @@
 import {existById} from "../../../database/utils";
 import {Chat, Friend, User} from "../../../models";
 import {Types} from "mongoose";
-import {DecodedTokenType} from "../../../../modules/jwt.token";
-import {RBAC} from "../../../../modules/rbac";
+import {DecodedTokenType} from "../../../libs/jwt.token";
+import {RBAC} from "../../../libs/rbac";
 import {FriendShip, IFriend} from "../../../models/schemas/user/friend";
-import {MongooseDuplicateError, MongooseValidationError} from "../../../../modules/custom.errors";
+import {MongooseDuplicateError, MongooseValidationError} from "../../../libs/custom.errors";
 import * as _ from "lodash";
 import {IChat} from "../../../models/schemas/chat";
-import {Pagination} from "../../../../modules/pagination";
+import {Pagination} from "../../../libs/pagination";
 
 const FriendShipPopulateOptions = {
     path: 'from to',

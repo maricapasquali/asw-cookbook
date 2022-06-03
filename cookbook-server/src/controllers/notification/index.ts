@@ -1,9 +1,9 @@
 import {Notification, User} from "../../models";
 import {Types} from "mongoose";
-import {MongooseDuplicateError, MongooseValidationError} from "../../../modules/custom.errors";
+import {MongooseDuplicateError, MongooseValidationError} from "../../libs/custom.errors";
 import {INotification} from "../../models/schemas/notification";
-import {DecodedTokenType} from "../../../modules/jwt.token";
-import {Pagination} from "../../../modules/pagination";
+import {DecodedTokenType} from "../../libs/jwt.token";
+import {Pagination} from "../../libs/pagination";
 
 function notificationUser(decodedToken: DecodedTokenType): Array<any> {
     return accessManager.isAdminUser(decodedToken) ? [decodedToken.role] : [decodedToken._id, Types.ObjectId(decodedToken._id)];

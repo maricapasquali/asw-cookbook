@@ -1,11 +1,11 @@
 import * as bcrypt from 'bcrypt'
 import {User} from "../../../models";
 import {SignUp, Strike, IUser} from "../../../models/schemas/user";
-import {RBAC} from "../../../../modules/rbac";
+import {RBAC} from "../../../libs/rbac";
 import {Types} from "mongoose";
 import ObjectId = Types.ObjectId
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
-import {AccessLocker} from "../../../../modules/access.locker";
+import {AccessLocker} from "../../../libs/access.locker";
 
 const locker = new AccessLocker(5, 15) //max attempts 5 & try again in 15 minutes
 

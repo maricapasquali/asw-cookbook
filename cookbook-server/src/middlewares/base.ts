@@ -1,6 +1,6 @@
-import {DecodedTokenType} from "../../modules/jwt.token";
+import {DecodedTokenType} from "../libs/jwt.token";
 import {Types} from "mongoose";
-import {RBAC} from "../../modules/rbac";
+import {RBAC} from "../libs/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
 

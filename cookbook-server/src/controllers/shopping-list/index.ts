@@ -1,7 +1,7 @@
 import {Food, ShoppingList, User} from "../../models";
-import {MongooseDuplicateError, MongooseValidationError} from "../../../modules/custom.errors";
+import {MongooseDuplicateError, MongooseValidationError} from "../../libs/custom.errors";
 import {Types} from "mongoose";
-import {RBAC} from "../../../modules/rbac";
+import {RBAC} from "../../libs/rbac";
 import {existById} from "../../database/utils";
 import {IShoppingList} from "../../models/schemas/shopping-list";
 import Role = RBAC.Role;

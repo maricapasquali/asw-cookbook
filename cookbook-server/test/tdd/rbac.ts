@@ -1,4 +1,4 @@
-import {RBAC, createRBAC, IRbacWithRole} from "../../modules/rbac"
+import {RBAC, createRBAC, IRbacWithRole} from "../../src/libs/rbac"
 import {assert} from "chai"
 
 suite('RBAC', function () {

@@ -1,5 +1,5 @@
 import {Comment, Recipe, Report, User} from "../../../models";
-import {MongooseValidationError} from "../../../../modules/custom.errors";
+import {MongooseValidationError} from "../../../libs/custom.errors";
 import {Types} from "mongoose";
 import {IComment} from "../../../models/schemas/recipe/comment";
 import {IRecipe} from "../../../models/schemas/recipe";

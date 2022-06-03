@@ -1,8 +1,8 @@
 import {Food} from '../../models'
 import {Types} from "mongoose";
 
-import {MongooseDuplicateError, MongooseValidationError} from "../../../modules/custom.errors";
-import {Pagination} from "../../../modules/pagination";
+import {MongooseDuplicateError, MongooseValidationError} from "../../libs/custom.errors";
+import {Pagination} from "../../libs/pagination";
 
 export function uploadImage() {}
 export function create_food(req, res) {

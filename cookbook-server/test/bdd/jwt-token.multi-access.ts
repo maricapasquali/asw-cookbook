@@ -1,6 +1,6 @@
 import {assert, should} from "chai"
 import {v4} from  "uuid"
-import {IJwtTokensManager, JwtTokensManager, Tokens} from "../../modules/jwt.token"
+import {IJwtTokensManager, JwtTokensManager, Tokens} from "../../src/libs/jwt.token"
 import {
     CHECKER_LIST_ALL,
     CHECKER_LIST_SOME,

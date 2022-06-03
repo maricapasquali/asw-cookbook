@@ -11,7 +11,7 @@ import {
     tryAgainAfter,
     maxNumberAttempt
 } from "../helpers/access-locker.helpers"
-import {AccessLocker, IAccessLocker} from "../../modules/access.locker"
+import {AccessLocker, IAccessLocker} from "../../src/libs/access.locker"
 
 should()
 

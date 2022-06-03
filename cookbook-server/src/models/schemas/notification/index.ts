@@ -1,6 +1,6 @@
 import {Document, Schema} from "mongoose";
 import {IUser} from "../user";
-import {RBAC} from "../../../../modules/rbac";
+import {RBAC} from "../../../libs/rbac";
 import Role = RBAC.Role;
 import {Types} from "mongoose"
 
@@ -38,7 +38,7 @@ export const NotificationSchema: Schema<INotification> = new Schema<INotificatio
         type: Schema.Types.Mixed,
         required: true,
         validate: function (){
-            return this.user as Role === Role.ADMIN || Types.ObjectId.isValid(this.user)
+            return Role.isAdmin(this.user) || Types.ObjectId.isValid(this.user)
         }
     },
     type: { type: String, required: true, enum: Notification.Type.values() },

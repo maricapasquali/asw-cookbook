@@ -1,5 +1,5 @@
 import "cookbook-shared/libs/lang"
-import "./modules/global"
+import "./src/libs/@global"
 
 import * as express from 'express'
 import * as fs from 'fs';
@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(cors({ origin: configuration.client.origin })) //used to enable HTTPS requests from a different source
 app.use(requestId)
 
-const views = path.join(__dirname ,'views')
+const views = path.join(__dirname , 'views')
 app.set('view engine', 'ejs');
 app.set('views', views)
 
@@ -61,5 +61,5 @@ Hosting
     })
     .build()
     .listen((hosting) => {
-        console.log(`Server running at ${hosting.origin}`);
+        console.log(`Server running at ${configuration.externalOriginOf("server")}`);
     });
