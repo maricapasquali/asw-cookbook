@@ -2,9 +2,7 @@ node_modules
 
 #SHARED
 cookbook-shared/node_modules
-
-cookbook-shared/src/**/*.js
-cookbook-shared/src/**/*.js.map
+cookbook-shared/dist
 
 cookbook-shared/environment/.env
 
@@ -17,7 +15,7 @@ cookbook-app/src/services/**/*.js.map
 
 cookbook-app/src/utils/**/*.js
 cookbook-app/src/utils/**/*.js.map
-
+!cookbook-app/src/utils/index.js
 
 #SERVER
 cookbook-server/node_modules

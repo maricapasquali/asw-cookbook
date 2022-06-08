@@ -1,6 +1,5 @@
-// Import global utilities
-import "@utils/global"
-import "cookbook-shared/libs/lang"
+// Import utils
+import "@utils"
 // Import Vue
 import Vue from 'vue'
 // Import Bootstrap Vue and Icon Plugin
@@ -39,7 +38,7 @@ import Components from "@components"
 // Import my Plugins
 import AppPlugins from '@plugins'
 // Import Environment Variables
-import envConfig from "cookbook-shared/environment";
+import envConfig from "cookbook-shared/dist/environment";
 // Make BootstrapVue available throughout your project
 Vue.use(BootstrapVue)
 // Optionally install the BootstrapVue icon components plugin

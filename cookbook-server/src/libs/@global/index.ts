@@ -1,5 +1,6 @@
 import config from "cookbook-shared/environment";
 import {EmailValidator} from "cookbook-shared/libs/validator";
+import "cookbook-shared/libs/lang"
 
 import {JwtTokensManager} from "../jwt.token";
 import {createRBAC} from "../rbac";

@@ -4,14 +4,15 @@ ENV DOCKER_CONTAINER_ENV true
 
 WORKDIR /app
 
+FROM base as prod-base
+
 COPY ./package*.json ./
 
 COPY ./tsconfig.json .
 
 COPY ./cookbook-shared ./cookbook-shared
 
-
-FROM base as client
+FROM prod-base as prod-client
 
 COPY ./cookbook-app ./cookbook-app
 
@@ -21,9 +22,11 @@ ENV NODE_ENV production
 
 RUN npm run build
 
+RUN find ./cookbook-shared/* -not -path "./cookbook-shared/dist*" -delete
+
 CMD [ "npm", "run", "start:client" ]
 
-FROM base as server
+FROM prod-base as prod-server
 
 COPY ./cookbook-server ./cookbook-server
 
@@ -41,11 +44,35 @@ RUN npm run build
 
 CMD [ "npm", "run", "start:server" ]
 
-
-FROM mongo as database
+FROM mongo as prod-database
 
 COPY ./data/db-example.archive /data
 
 ADD ./data/init.sh /docker-entrypoint-initdb.d
 
 CMD docker-entrypoint.sh mongod
+
+FROM base as dev-base
+
+# Active Hot Reloading
+ENV CHOKIDAR_USEPOLLING true
+
+ENV NODE_ENV development
+
+COPY . .
+
+RUN npm install
+
+WORKDIR /app/cookbook-server
+
+RUN npm run postinstall
+
+WORKDIR /app
+
+FROM dev-base as dev-client
+
+CMD [ "npm", "run", "dev:client" ]
+
+FROM dev-base as dev-server
+
+CMD [ "npm", "run", "dev:server" ]

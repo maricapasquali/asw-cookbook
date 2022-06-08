@@ -1,7 +1,7 @@
 const path = require('path')
 const fs = require('fs')
-const config = require("cookbook-shared/environment").default
-const {isProductionMode} = require("cookbook-shared/environment/mode")
+const config = require("cookbook-shared/dist/environment").default
+const {isProductionMode} = require("cookbook-shared/dist/environment/mode")
 
 module.exports = {
     pages: {

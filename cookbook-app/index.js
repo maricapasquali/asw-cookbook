@@ -5,9 +5,9 @@ const path = require('path');
 const serveStatic = require('serve-static');
 const history = require('connect-history-api-fallback');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const {Hosting} = require('cookbook-shared/libs/hosting')
-const config = require('cookbook-shared/environment').default
-const {isDevelopmentMode} = require('cookbook-shared/environment/mode')
+const {Hosting} = require('cookbook-shared/dist/libs/hosting')
+const config = require('cookbook-shared/dist/environment').default
+const {isDevelopmentMode} = require('cookbook-shared/dist/environment/mode')
 
 const optionsProxy =  {
     ssl: {

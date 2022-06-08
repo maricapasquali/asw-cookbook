@@ -7,8 +7,7 @@ services:
     image: marica/web-app-client
     build:
       context: .
-      dockerfile: prod.Dockerfile
-      target: client
+      target: prod-client
     ports:
      - "5000:5000"
     networks:
@@ -21,8 +20,7 @@ services:
     image: marica/web-app-server
     build:
       context: .
-      dockerfile: prod.Dockerfile
-      target: server
+      target: prod-server
     ports:
       - "3000:3000"
     volumes:
@@ -39,8 +37,7 @@ services:
     image: marica/web-app-database
     build:
       context: .
-      dockerfile: prod.Dockerfile
-      target: database
+      target: prod-database
     ports:
       - "27018:27017"
     networks:

@@ -72,7 +72,7 @@ let environment: any = {
  * @param who node from which to extract the source
  * @return origin of _who_ (client or server). If using docker, the external hostname is "localhost", otherwise {@link environment.client.origin} or {@link environment.server.origin}
  */
-environment.externalOriginOf = function externalOriginOf(who: "client" | "server"): string  {
+environment.externalOriginOf = function (who: "client" | "server"): string  {
     if(process.env.DOCKER_CONTAINER_ENV) return this[who].origin.replace(this[who].hostname, "localhost")
     return this[who].origin
 }
