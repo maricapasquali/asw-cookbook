@@ -16,7 +16,7 @@ export type MethodsAxios = {
     erase: (pathname: string, config?: AxiosRequestConfig) => Promise<AxiosResponse>
 }
 
-export default function (serverConfiguration, store): MethodsAxios {
+export default function (serverConfiguration: any, store: any): MethodsAxios {
     const subDomain = serverConfiguration['sub-domain']
 
     const _serverInfo = {
