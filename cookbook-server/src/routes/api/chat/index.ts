@@ -5,7 +5,7 @@ import messageRoute from './message'
 export default function(app) {
 
     app.route('/api/users/:id/chats')
-        .post(chatMiddleware.create(), chatMiddleware.uploadChatImage(), chatController.create_chat)
+        .post(chatMiddleware.create(), chatController.create_chat)
         .get(chatMiddleware.list(), chatController.list_chat)
 
     app.route('/api/users/:id/chats/:chatID')

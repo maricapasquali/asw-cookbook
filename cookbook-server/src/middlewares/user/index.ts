@@ -1,23 +1,11 @@
-import {Middlewares, checkRestrictedRBAC, checkNormalRBAC, Middleware, wrapUpload} from "../base";
+import {Middlewares, checkRestrictedRBAC, checkNormalRBAC} from "../base";
 import {RBAC} from "../../libs/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
-import {randomString} from "../../libs/utilities";
-import * as path from "path";
-import {FileUploader, UploaderConfiguration} from "../../libs/uploader";
-import FileType = FileUploader.FileType;
-import {FilesystemResource} from "../../filesystem";
+import {uploadProfileImage} from "./base";
 
-export function uploadProfileImage(): Middleware {
-
-    let config: UploaderConfiguration = {
-        type: FileType.IMAGE,
-        dest: FilesystemResource.USERS.Image(),
-        newFileName: function (file: any){
-            return 'user-' + randomString(30) + path.extname(file.originalname)
-        }
-    }
-    return wrapUpload(fileUploader.single('img', config))
+export function create(): Middlewares {
+    return uploadProfileImage()
 }
 
 export function all_user(): Middlewares {
@@ -29,11 +17,14 @@ export function one(): Middlewares {
 }
 
 export function update_user(): Middlewares {
-    return checkRestrictedRBAC({
-        operation: Operation.UPDATE,
-        resource: Resource.USER,
-        others: (decodedToken, param_id) => decodedToken._id !== param_id
-    })
+    return [
+        checkRestrictedRBAC({
+            operation: Operation.UPDATE,
+            resource: Resource.USER,
+            others: (decodedToken, param_id) => decodedToken._id !== param_id
+        }),
+        uploadProfileImage()
+    ]
 }
 
 export function update_credential():Middlewares {

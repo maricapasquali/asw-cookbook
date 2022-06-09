@@ -5,13 +5,13 @@ import sessionRoute from "./session";
 export default function (app) {
 
     app.route('/api/users')
-        .post(userMiddleware.uploadProfileImage(), userController.create_user)
+        .post(userMiddleware.create(), userController.create_user)
         .get(userMiddleware.all_user(), userController.all_users)
         .put(userController.check_account)
 
     app.route('/api/users/:id')
         .get(userMiddleware.one(), userController.one_user)
-        .patch(userMiddleware.update_user(), userMiddleware.uploadProfileImage(), userController.update_user)
+        .patch(userMiddleware.update_user(), userController.update_user)
         .delete(userMiddleware.erase(), userController.delete_user)
 
     app.route('/api/users/:id/credentials')

@@ -57,7 +57,8 @@ export function create(): Middlewares {
             operation: Operation.CREATE,
             resource: RBAC.Resource.RECIPE,
             others: (decodedToken, param_id) => decodedToken._id != param_id
-        })
+        }),
+        uploadImageAndTutorial()  /* for update image and/or tutorial*/
     ]
 }
 
@@ -89,7 +90,8 @@ export function update(): Middlewares {
         checkRestrictedRBAC({
             operation: Operation.UPDATE,
             resource: RBAC.Resource.RECIPE
-        })
+        }),
+        uploadImageAndTutorial()  /* for update image and/or tutorial*/
     ]
 }
 

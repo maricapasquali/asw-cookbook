@@ -41,7 +41,8 @@ export function create(): Middlewares {
             operation: Operation.CREATE,
             resource: Resource.CHAT,
             others: (decodedToken, param_id) => decodedToken._id !== param_id
-        })
+        }),
+        uploadChatImage()
     ]
 }
 

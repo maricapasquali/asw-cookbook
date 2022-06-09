@@ -8,6 +8,7 @@ export function requestId(req, res, next) {
 export * as userMiddleware from "./user";
 export * as sessionMiddleware from "./user/session";
 export * as friendMiddleware from "./user/friend";
+export * as adminMiddleware from "./user/admin";
 export * as shoppingListMiddleware from "./shopping-list";
 export * as recipeMiddleware from "./recipe";
 export * as commentMiddleware from "./recipe/comment";
