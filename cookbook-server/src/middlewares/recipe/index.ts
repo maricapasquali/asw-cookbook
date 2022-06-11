@@ -8,7 +8,7 @@ import {
 } from "../base";
 import {RBAC} from "../../libs/rbac";
 import Operation = RBAC.Operation;
-import {decodeToArray, randomString} from "../../libs/utilities";
+import {decodeToArray, randomString, valuesOfEnum} from "../../libs/utilities";
 import * as path from "path";
 import {FileUploader, UploaderConfiguration} from "../../libs/uploader";
 import FileType = FileUploader.FileType;
@@ -43,9 +43,7 @@ export enum RecipeType {
 }
 export namespace RecipeType {
     export function values(): RecipeType[] {
-        return Object.entries(RecipeType)
-                     .filter(([k, v]) => typeof v === 'string')
-                     .map(([k, v]) => RecipeType[k])
+        return valuesOfEnum(RecipeType, "string")
     }
 
     export function isLoved(value: string): boolean {

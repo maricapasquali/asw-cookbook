@@ -1,3 +1,5 @@
+import {valuesOfEnum} from "../utilities";
+
 export interface IRbac {
 
     /**
@@ -73,7 +75,7 @@ export namespace RBAC {
          * @return a list of all {@link Role}'s enumeration values.
          */
         export function values(): Role[] {
-            return Object.entries(Role).filter(([k, v]) => typeof v === 'string').map(([k, v]) => Role[k])
+            return valuesOfEnum(Role, "string")
         }
 
         /**

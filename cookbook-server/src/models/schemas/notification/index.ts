@@ -3,6 +3,7 @@ import {IUser} from "../user";
 import {RBAC} from "../../../libs/rbac";
 import Role = RBAC.Role;
 import {Types} from "mongoose"
+import {valuesOfEnum} from "../../../libs/utilities";
 
 export interface INotification extends Document {
     user: IUser['_id'] | 'admin'
@@ -26,9 +27,7 @@ export namespace Notification {
     }
     export namespace Type {
         export function values(): Array<Notification.Type> {
-            return Object.entries(Notification.Type)
-                         .filter(([k, v]) => typeof v === 'string')
-                         .map(([k, v]) => Notification.Type[k])
+            return valuesOfEnum(Notification.Type, "string")
         }
     }
 }

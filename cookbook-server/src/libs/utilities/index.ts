@@ -55,3 +55,13 @@ export function decodeToBoolean(encodedString: string): boolean | never {
     if(typeof decoded !== "boolean") throw new NoBooleanError()
     return decoded
 }
+
+type EnumValuesType = "string" | "number" | "boolean"
+/**
+ * @param enums enumeration from which to extract values
+ * @param filterType type of values to filter
+ * @return array of enumeration values
+ */
+export function valuesOfEnum(enums: Record<string, any>, filterType: EnumValuesType): any[] {
+   return Object.values(enums).filter(value => typeof value === filterType)
+}

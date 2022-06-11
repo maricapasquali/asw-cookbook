@@ -2,6 +2,7 @@ import {Document, Schema} from "mongoose";
 import {IUser} from "../user";
 import {IMessage, MessageSchema} from "./message";
 import Types = Schema.Types
+import {valuesOfEnum} from "../../../libs/utilities";
 
 export interface IChat extends Document {
     info: {
@@ -19,7 +20,7 @@ export namespace IChat {
     }
     export namespace Type {
         export function values(): Array<IChat.Type>{
-            return [Type.ONE, Type.GROUP]
+            return valuesOfEnum(Type, "string")
         }
 
         export function isGroupChat(type: string): boolean {
@@ -33,7 +34,7 @@ export namespace IChat {
     }
     export namespace Role {
         export function values(): Array<IChat.Role>{
-            return [Role.ADMIN, Role.WRITER, Role.READER]
+            return valuesOfEnum(Role, "string")
         }
         export function isReader(role: string): boolean {
             return role as IChat.Role === Role.READER

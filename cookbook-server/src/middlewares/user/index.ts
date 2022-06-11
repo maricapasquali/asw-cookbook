@@ -4,6 +4,8 @@ import {RBAC} from "../../libs/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
 import {uploadProfileImage} from "./base";
+import {valuesOfEnum} from "../../libs/utilities";
+import {RecipeType} from "../recipe";
 
 function checkParamId(req: any, res: any, next: CallbackNext): void {
     let {id} = req.params
@@ -89,9 +91,7 @@ export enum UpdateCredential {
 }
 export namespace UpdateCredential {
     export function values(): UpdateCredential[] {
-        return Object.entries(UpdateCredential)
-                     .filter(([k, v]) => typeof v === 'string')
-                     .map(([k, v]) => UpdateCredential[k])
+        return valuesOfEnum(UpdateCredential, "string")
     }
 
     export function includes(val: string): boolean {
