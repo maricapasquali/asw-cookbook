@@ -1,5 +1,6 @@
 import {Schema, Document} from "mongoose";
 import {IUser} from "../index";
+import {valuesOfEnum} from "../../../../libs/utilities";
 
 export interface IFriend extends Document {
     from: IUser['_id'],
@@ -16,7 +17,7 @@ export namespace FriendShip {
 
     export namespace State {
         export function values(): Array<State> {
-            return [State.PENDING, State.ACCEPTED, State.REJECTED]
+            return valuesOfEnum(State, "string")
         }
 
         export function changeable(): Array<State>{
@@ -38,3 +39,14 @@ export const FriendSchema: Schema<IFriend> = new Schema<IFriend>({
 })
 
 FriendSchema.index({ from: 1, to: 1 }, {unique: true, name: 'friend-ship'})
+
+export const FriendShipPopulateOptions = {
+    path: 'from to',
+    select: {
+        userID: '$credential.userID',
+        img: '$information.img',
+        country: '$information.country',
+        occupation: '$information.occupation',
+    },
+    match: {}
+}

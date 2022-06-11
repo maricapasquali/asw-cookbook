@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "types": ["../modules/global", "@types/mocha"]
+    "types": ["../src/libs/@global", "@types/mocha"]
   }
 }

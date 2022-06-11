@@ -1,6 +1,7 @@
 import {AxiosResponse} from "axios";
+import {MethodsAxios} from "../../methods";
 
-export default function (methods){
+export default function (methods: MethodsAxios){
 
 //use token
     function login(credential: {userID: string, password: string}): Promise<AxiosResponse> {

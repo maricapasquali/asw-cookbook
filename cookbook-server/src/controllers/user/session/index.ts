@@ -1,22 +1,16 @@
 import * as bcrypt from 'bcrypt'
 import {User} from "../../../models";
 import {SignUp, Strike, IUser} from "../../../models/schemas/user";
-import {RBAC} from "../../../../modules/rbac";
+import {RBAC} from "../../../libs/rbac";
 import {Types} from "mongoose";
 import ObjectId = Types.ObjectId
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
-import {AccessLocker} from "../../../../modules/access.locker";
+import {AccessLocker} from "../../../libs/access.locker";
 
 const locker = new AccessLocker(5, 15) //max attempts 5 & try again in 15 minutes
 
 export function login(req, res){
-    const {userID, password} = req.locals
-
-    if(!userID && !password) return res.status(400).json({description: 'userID and password are required.'})
-    if(!userID) return res.status(400).json({description: 'userID is required.'})
-    if(!password) return res.status(400).json({description: 'password is required.'})
-
-    const ip = req.header('x-forwarded-for') || req.socket?.remoteAddress || req.connection?.remoteAddress;
+    const { userID, password, ip } = req.locals
     if(!locker.checkAttempts(ip)) return res.status(409).json({ description: 'Finished login attempts.', tryAgainIn: locker.getTryAgainInMinutes(ip) });
 
     User.findOne()
@@ -64,11 +58,8 @@ export function login(req, res){
         }, err => res.status(500).json({description: err.message}))
 }
 
-//use token
 export function logout(req, res){
-    let {id} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-
+    const {id} = req.params
     const decoded_token = req.locals.user
 
     User.findOne()
@@ -90,15 +81,11 @@ export function logout(req, res){
         }, err => res.status(500).json({description: err.message}))
 }
 
-//use token
-export function update_access_token(req, res){
-    let { id } = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    let { refresh_token } = req.body
-    let access_token = req.locals.access_token
 
-    if(!access_token) return res.status(400).json({description: 'Missing access token'})
-    if(!refresh_token) return res.status(400).json({description: 'Missing refresh token'})
+export function update_access_token(req, res){
+    const { id } = req.params
+    const access_token = req.locals.access_token
+    const refresh_token = req.body.refresh_token
 
     let decoded_aToken = tokensManager.checkValidityOfToken(access_token);
     if(decoded_aToken!==false) return res.status(204).send()

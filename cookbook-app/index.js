@@ -5,8 +5,9 @@ const path = require('path');
 const serveStatic = require('serve-static');
 const history = require('connect-history-api-fallback');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const {Hosting} = require('cookbook-shared/libs/hosting')
-const config = require('cookbook-shared/environment').default
+const {Hosting} = require('cookbook-shared/dist/libs/hosting')
+const config = require('cookbook-shared/dist/environment').default
+const {isDevelopmentMode} = require('cookbook-shared/dist/environment/mode')
 
 const optionsProxy =  {
     ssl: {
@@ -15,7 +16,7 @@ const optionsProxy =  {
     },
     target: config.server.origin,
     secure: false, // because in ssl there is self signed certificate,
-    logLevel: config.mode === "development" ? "debug": "silent"
+    logLevel: isDevelopmentMode(config.mode) ? "debug": "silent"
 }
 
 const proxyMiddleware = createProxyMiddleware(optionsProxy)
@@ -38,7 +39,7 @@ Hosting
     .setPort(config.client.port)
     .build()
     .listen((hosting) => {
-        console.log(`Client running at ${hosting.origin}`);
+        console.log(`Client running at ${config.externalOriginOf("client")}`);
 
         hosting.server.on('upgrade', wsProxyMiddleware.upgrade);
     });

@@ -1,6 +1,6 @@
-import {DecodedTokenType} from "../../modules/jwt.token";
+import {DecodedTokenType} from "../libs/jwt.token";
 import {Types} from "mongoose";
-import {RBAC} from "../../modules/rbac";
+import {RBAC} from "../libs/rbac";
 import Operation = RBAC.Operation;
 import Resource = RBAC.Resource;
 
@@ -54,7 +54,9 @@ function checkAndDecode(options?: AuthOption): Middleware {
 
 type AuthOption = { operation: Operation, resource: Resource, others?: (decodedToken: DecodedTokenType, param_id: string) => boolean, ignoreValidationParamId?: boolean }
 
-export type Middleware = ( req: any, res: any, next: (err?: any) => any ) => void
+export type CallbackNext = (err?: any) => any
+
+export type Middleware = ( req: any, res: any, next: CallbackNext ) => void
 
 export type Middlewares = Middleware | Middleware[]
 

@@ -1,4 +1,4 @@
-import * as core from "express-serve-static-core";
+import {Application} from "express";
 import * as http from "http";
 import * as https from "https";
 
@@ -20,13 +20,13 @@ export class Hosting {
 
     optHttps: () => HTTPSOptions
 
-    private readonly app = null
+    private readonly app: Application = null
     private instanceServer: http.Server | https.Server
     private socket: (server: http.Server | https.Server) => void
 
     private unchangeables: Set<string> = new Set<string>()
 
-    constructor(app: core.Express) {
+    constructor(app: Application) {
         this.app = app
     }
 
@@ -171,7 +171,7 @@ export namespace Hosting {
      * @param app instance of express app
      * @return an instance of http/s server builder.
      */
-    export function create(app: core.Express): Hosting {
+    export function create(app: Application): Hosting {
         return new Hosting(app)
     }
 
@@ -180,7 +180,7 @@ export namespace Hosting {
      * @param options some options regarding the https server
      * @return an HTTPS Server builder.
      */
-    export function createHttpsServer(app: core.Express, options: HTTPSOptions): Hosting {
+    export function createHttpsServer(app: Application, options: HTTPSOptions): Hosting {
         return new Hosting(app)
                     .setHttpsOptions(() => options, true)
                     .setProtocol("https", true)
@@ -190,7 +190,7 @@ export namespace Hosting {
      * @param app instance of express app
      * @return an HTTP Server builder.
      */
-    export function createHttpServer(app: core.Express): Hosting {
+    export function createHttpServer(app: Application): Hosting {
         return new Hosting(app).setProtocol("http", true)
     }
 }

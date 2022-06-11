@@ -5,7 +5,7 @@ import {
     Countries,
     Diets,
     RecipeCategories
-} from "cookbook-shared/assets"
+} from "cookbook-shared/dist/assets"
 
 export default {
     state: {

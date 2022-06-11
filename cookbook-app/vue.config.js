@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
-const config = require("cookbook-shared/environment").default
+const config = require("cookbook-shared/dist/environment").default
+const {isProductionMode} = require("cookbook-shared/dist/environment/mode")
 
 module.exports = {
     pages: {
@@ -39,7 +40,7 @@ module.exports = {
         }
     },
     chainWebpack: (config) => {
-        if (process.env.NODE_ENV === 'production') {
+        if (isProductionMode(process.env.NODE_ENV)) {
             config.performance
                   .maxEntrypointSize(10485760)//(bytes) -> 10 MB
                   .maxAssetSize(5242880)//(bytes) -> 5 MB

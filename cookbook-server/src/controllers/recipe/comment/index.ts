@@ -1,5 +1,5 @@
 import {Comment, Recipe, Report, User} from "../../../models";
-import {MongooseValidationError} from "../../../../modules/custom.errors";
+import {MongooseValidationError} from "../../../libs/custom.errors";
 import {Types} from "mongoose";
 import {IComment} from "../../../models/schemas/recipe/comment";
 import {IRecipe} from "../../../models/schemas/recipe";
@@ -41,12 +41,8 @@ function addCommentOn(doc: IComment | IRecipe, options: {body: any, user_id: str
 
 
 function commentToRecipe(req: any, res: any){
-    let {id, recipeID} = req.params
-    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!Types.ObjectId.isValid(recipeID)) return res.status(400).json({ description: 'Required a valid \'recipeID\''})
-    if(!req.body.content) return res.status(400).json({ description: 'Body must require field => \'content\': string'})
-
-    const user = req.locals.user?._id
+    const {id, recipeID} = req.params
+    const user = req.locals.user
 
     Recipe.findOne()
         .where('_id').equals(recipeID)
@@ -55,16 +51,15 @@ function commentToRecipe(req: any, res: any){
         .then(recipe => {
 
             if(!recipe) return res.status(404).json({description: 'Recipe is not found'})
-            return addCommentOn(recipe, {body: req.body, user_id: user}, res)
+            return addCommentOn(recipe, {body: req.body, user_id: user?._id}, res)
 
         }, err => res.status(500).json({code: err.code || 0, description: err.message}))
 }
 
 function responseToComment(req: any, res: any){
-    if(!req.body.content) return res.status(400).json({ description: 'Body must require field => \'content\': string'})
-    const user = req.locals.user?._id
+    const user = req.locals.user
     const comment = req.locals.comment
-    addCommentOn(comment, { body: req.body, user_id: user, recipe: req.params.recipeID }, res)
+    addCommentOn(comment, { body: req.body, user_id: user?._id, recipe: req.params.recipeID }, res)
 }
 
 export function writeComment(req, res){
@@ -84,7 +79,6 @@ function report(req, res){
 
 function unReport(req, res) {
     const comment = req.locals.comment
-    if (comment.reported.length === 0) return res.status(404).json({description: 'Comment is not found'})
     comment.reported = []
     comment.save()
            .then(doc => res.status(200).json({description: 'Comment has been unreported.'}),
@@ -92,12 +86,10 @@ function unReport(req, res) {
 }
 
 function changeContentComment(req, res) {
-    if(!req.body.content) return res.status(400).json({ description: 'Body must require field => \'content\': string'})
-
     const comment = req.locals.comment
     comment.content = req.body.content
     comment.save()
-           .then(doc => res.status(200).json({description: 'Comment\'s content has been changed.'}),
+           .then(() => res.status(200).json({description: 'Comment\'s content has been changed.'}),
                  err => res.status(500).json({code: err.code || 0, description: err.message}))
 }
 

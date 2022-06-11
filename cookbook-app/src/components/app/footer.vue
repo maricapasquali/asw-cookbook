@@ -6,7 +6,7 @@
        <strong>Contatti: </strong>
        <b-link  class="mt-2" :href="`mailto:${administratorEmail}`"> {{ administratorEmail }} </b-link>
      </div>
-     <span class="copy-right"> Copyright &copy; 2021-{{currentYear}} CookBook, Co. </span>
+     <span class="copy-right"> Copyright &copy; 2021-{{currentYear}} {{ $appName }}, Co. </span>
    </b-container>
   </footer>
 </template>

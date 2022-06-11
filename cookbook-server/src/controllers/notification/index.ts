@@ -1,29 +1,19 @@
 import {Notification, User} from "../../models";
 import {Types} from "mongoose";
-import {MongooseDuplicateError, MongooseValidationError} from "../../../modules/custom.errors";
+import {MongooseDuplicateError, MongooseValidationError} from "../../libs/custom.errors";
 import {INotification} from "../../models/schemas/notification";
-import {DecodedTokenType} from "../../../modules/jwt.token";
-import {Pagination} from "../../../modules/pagination";
+import {DecodedTokenType} from "../../libs/jwt.token";
+import {Pagination} from "../../libs/pagination";
 
 function notificationUser(decodedToken: DecodedTokenType): Array<any> {
     return accessManager.isAdminUser(decodedToken) ? [decodedToken.role] : [decodedToken._id, Types.ObjectId(decodedToken._id)];
 }
 
 export function list_notification(req, res){
-    let {id} = req.params
-    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    let {readed, page, limit} = req.query
-    if(readed){
-        try {
-            readed = JSON.parse(readed)
-            if(typeof readed !== 'boolean') throw new Error()
-        } catch (e){
-            return res.status(400).json('Query \'readed\' must be a boolean')
-        }
-    }
+    const {page, limit} = req.query
     const user = req.locals.user
+    const filters = req.locals.filters
 
-    const filters = typeof readed === 'boolean' ? { read: readed }: {}
     Pagination.ofQueryDocument(
         Notification.find(filters)
             .where('user').in(notificationUser(user))
@@ -34,12 +24,8 @@ export function list_notification(req, res){
 }
 
 export function update_notification(req, res){
-    let { id, notificationID } = req.params
-    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!Types.ObjectId.isValid(notificationID)) return res.status(400).json({ description: 'Required a valid \'notificationID\''})
-    let { read } = req.body
-    if(typeof read !== 'boolean') return res.status(400).json({ description: 'Body required field \'read: boolean\' '})
-
+    const { notificationID } = req.params
+    const { read } = req.body
     const user = req.locals.user
 
     Notification.updateOne({ user: { $in: notificationUser(user) }, _id: notificationID }, { read: read })
@@ -51,10 +37,7 @@ export function update_notification(req, res){
 }
 
 export function delete_notification(req, res){
-    let { id, notificationID } = req.params
-    if(!Types.ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!Types.ObjectId.isValid(notificationID)) return res.status(400).json({ description: 'Required a valid \'notificationID\''})
-
+    const { notificationID } = req.params
     const user = req.locals.user
 
     Notification.deleteOne({ user: { $in: notificationUser(user) }, _id: notificationID })

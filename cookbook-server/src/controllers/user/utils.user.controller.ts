@@ -1,4 +1,4 @@
-import {RBAC} from "../../../modules/rbac";
+import {RBAC} from "../../libs/rbac";
 import {IUser} from "../../models/schemas/user";
 import Role = RBAC.Role;
 import {User} from "../../models";

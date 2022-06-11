@@ -1,7 +1,8 @@
-import "../../modules/global"
+import "../../src/libs/@global"
 
 import {Types} from "mongoose";
 import {connect, disconnect, drop} from "../../src/database"
+import {isTestMode} from "cookbook-shared/environment/mode";
 
 /* -- EXPORTED FUNCTIONALITY -- */
 export const SECOND_IN_MS: number = 1000
@@ -20,7 +21,7 @@ export const dropDatabase = drop
 
 export const ObjectId = Types.ObjectId
 
-export const isTestingMode = configuration.mode === "test"
+export const isTestingMode = isTestMode(configuration.mode)
 
 export const sleep = (seconds: number): Promise<void> => new Promise(resolve => setTimeout(resolve, seconds * SECOND_IN_MS))
 

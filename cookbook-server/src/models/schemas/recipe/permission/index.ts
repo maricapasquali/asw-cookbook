@@ -1,6 +1,7 @@
 import {Document, Schema} from "mongoose";
 
 import {IUser} from "../../user";
+import {valuesOfEnum} from "../../../../libs/utilities";
 
 export interface IPermission extends Document {
     user: IUser['_id'],
@@ -14,7 +15,7 @@ export namespace IPermission {
     }
     export namespace GrantedType {
         export function values(): Array<GrantedType> {
-            return [GrantedType.READ, GrantedType.WRITE, GrantedType.ROOT]
+            return valuesOfEnum(GrantedType, "string")
         }
         export function isWritePermission(value: string): boolean {
             let granted: GrantedType = value as GrantedType

@@ -1,11 +1,12 @@
 import config from "cookbook-shared/environment";
 import {EmailValidator} from "cookbook-shared/libs/validator";
+import "cookbook-shared/libs/lang"
 
 import {JwtTokensManager} from "../jwt.token";
 import {createRBAC} from "../rbac";
 import {Mailer} from "../mailer";
 import {FileUploader} from "../uploader";
-import {FilesystemResource} from "../../src/filesystem";
+import {FilesystemResource} from "../../filesystem";
 
 global.configuration = config
 

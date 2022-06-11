@@ -1,7 +1,7 @@
 import {Schema, Document} from "mongoose";
 import {IUser} from "../user";
 import {IShoppingListPoint, ShoppingListPointSchema} from "./point";
-import {MongooseDuplicateError} from "../../../../modules/custom.errors";
+import {MongooseDuplicateError} from "../../../libs/custom.errors";
 
 export interface IShoppingList extends Document {
     user: IUser['_id'],

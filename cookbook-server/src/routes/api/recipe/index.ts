@@ -15,11 +15,11 @@ export default function (app) {
 
     // for specific user
     app.route('/api/users/:id/recipes')
-       .post(recipeMiddleware.create(), recipeMiddleware.uploadImageAndTutorial() /* for update image and/or tutorial*/, recipeController.create_recipe)
+       .post(recipeMiddleware.create(), recipeController.create_recipe)
        .get(recipeMiddleware.list(), recipeController.list_recipes)
 
     app.route('/api/users/:id/recipes/:recipeID')
-       .patch(recipeMiddleware.update(), recipeMiddleware.uploadImageAndTutorial() /* for update image and/or tutorial*/, recipeController.update_recipe)
+       .patch(recipeMiddleware.update(), recipeController.update_recipe)
        .delete(recipeMiddleware.erase(), recipeController.delete_recipe)
        .get(recipeMiddleware.one(), recipeController.one_recipe)
 
