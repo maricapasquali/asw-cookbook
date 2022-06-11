@@ -22,7 +22,7 @@ function remove_like_on_recipe(req, res, next){
 }
 
 function add_like_on_comment(req, res, next){
-    retrieveComment(req, res, (err?: any): any => {
+    retrieveComment()(req, res, (err?: any): any => {
         if(err) return next(err)
         const comment = req.locals.comment
         return checkNormalRBAC({
@@ -34,7 +34,7 @@ function add_like_on_comment(req, res, next){
 }
 
 function remove_like_on_comment(req, res, next){
-    retrieveComment(req, res, (err?: any): any => {
+    retrieveComment()(req, res, (err?: any): any => {
         if(err) return next(err)
         const comment = req.locals.comment
         const like = comment.likes.find(l => l._id == req.params.likeID)

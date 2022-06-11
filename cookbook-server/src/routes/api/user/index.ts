@@ -7,7 +7,7 @@ export default function (app) {
     app.route('/api/users')
         .post(userMiddleware.create(), userController.create_user)
         .get(userMiddleware.all_user(), userController.all_users)
-        .put(userController.check_account)
+        .put(userMiddleware.check_account(), userController.check_account)
 
     app.route('/api/users/:id')
         .get(userMiddleware.one(), userController.one_user)
@@ -18,11 +18,11 @@ export default function (app) {
        .patch(userMiddleware.update_credential(), userController.update_credential_user)
 
     app.route('/api/reset-password/email')
-        .get(userController.send_email_password)
+        .get(userMiddleware.send_email_password(), userController.send_email_password)
     app.route('/api/reset-password/check-link')
-        .get(userController.checkLinkResetPassword)
+        .get(userMiddleware.checkLinkResetPassword(), userController.checkLinkResetPassword)
     app.route('/api/reset-password/users')
-        .get(userController.foundUserForNickname)
+        .get(userMiddleware.foundUserForNickname(), userController.foundUserForNickname)
 
     sessionRoute(app)
 }

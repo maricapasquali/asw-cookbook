@@ -1,4 +1,4 @@
-import {Chat, Message, User} from "../../models";
+import {Chat, User} from "../../models";
 import {Types} from "mongoose";
 import {ChatPopulationPipeline, IChat} from "../../models/schemas/chat";
 import {existById} from "../../database/utils";
@@ -6,123 +6,46 @@ import {RBAC} from "../../libs/rbac";
 import ObjectId = Types.ObjectId;
 import {MongooseValidationError} from "../../libs/custom.errors";
 import * as _ from "lodash"
-import {decodeToArray, decodeToBoolean} from "../../libs/utilities";
 import Role = RBAC.Role;
 import {DecodedTokenType} from "../../libs/jwt.token";
 import {chatMiddleware} from "../../middlewares";
 import UpdateAction = chatMiddleware.UpdateAction
 import {Pagination} from "../../libs/pagination";
 
-async function getBodyFromFormData(req: any, res: any): Promise<any> {
-    const body = req.body
-    const user_id = req.params.id
-
-    const _body: any = { info: {} }
-
-    try {
-        _body.users = _.uniqBy(decodeToArray(body.users), 'user')
-        if(!_body.users.every(i => i.user)) {
-            let message: string = 'Elements of \'Users\' must be of the form : { user: string, role?: string }'
-            res.status(400).json({ description: message })
-            return Promise.reject(message)
-        }
-        if(!_body.users.every(i => i.user == RBAC.Role.ADMIN)) await existById(User, _body.users.map(c => c.user))
-    } catch (e){
-        if(Array.isArray(e)){
-            let message: string = 'Users [' + e + '] are not founds.'
-            res.status(404).json({ description: message })
-            return Promise.reject(message)
-        }
-        else {
-            let message: string = 'users must be array and have at least one element.'
-            res.status(400).json({ description: message })
-            return Promise.reject(message)
-        }
-    }
-
-    if(req.file) _body.info.img = req.file.filename
-    if(body.name) _body.info.name = body.name
-    if(body.message) _body.messages = body.message ? [new Message({ content: body.message, sender: user_id })] : undefined
-
-    const me = _body.users.find(u => u.user === user_id)
-
-    if(_body.users.length === 1 && me) {
-        let message: string = '\'Users\' must contain at least one user different from ' + user_id
-        res.status(400).json({ description: message })
-        return Promise.reject(message)
-    }
-    _body.info.type = body.type || ( (_body.info.name || _body.users.length + (me ? 0 : 1) > 2 ) ? IChat.Type.GROUP: IChat.Type.ONE )
-    if(IChat.Type.isGroupChat(_body.info.type) && !_body.info.name) {
-        let message: string = 'A group chat must have a name'
-        res.status(400).json({ description: message })
-        return Promise.reject(message)
-    }
-
-    switch (_body.info.type as IChat.Type){
-        case IChat.Type.ONE: {
-            if(me) me.role = IChat.Role.WRITER
-            else _body.users.unshift({ user: user_id })
-
-            _body.info.name = undefined
-            _body.info.img = undefined
-        }
-            break;
-        case IChat.Type.GROUP: {
-            if(me) me.role = IChat.Role.ADMIN
-            else _body.users.unshift({ user: user_id , role: IChat.Role.ADMIN })
-        }
-            break;
-        default: {
-            let message: string = 'Required \'type\' in ' + IChat.Type.values()
-            res.status(400).json({ description: message })
-            return Promise.reject(message)
-        }
-    }
-    console.debug('Create Chat Body = ', _body)
-
-    return _body
-}
-
 export function create_chat(req, res) {
-    const {id} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+    const body = req.locals.body
 
-    getBodyFromFormData(req, res)
-        .then(body => {
+    const _createChat = () =>{
+        Chat.find({ 'users.user': { $all: body.users.map(u => u.user) }, 'info.name': body.info.name })
+            .then(chats => {
+                console.debug('Chats ', chats)
+                if(chats.length) return res.status(409).json({ description: 'Chat has just created.', chatID: chats[0]._id })
 
-            const _createChat = () =>{
-                Chat.find({ 'users.user': { $all: body.users.map(u => u.user) }, 'info.name': body.info.name })
-                    .then(chats => {
-                        console.debug('Chats ', chats)
-                        if(chats.length) return res.status(409).json({ description: 'Chat has just created.', chatID: chats[0]._id })
+                new Chat(body)
+                    .save()
+                    .then(chat => {
+                        chat.populate(ChatPopulationPipeline, function (err, populateChat){
+                            if(err) return res.status(500).json({ description: err.message })
+                            return res.status(201).json(populateChat)
+                        })
+                    }, err => res.status(MongooseValidationError.is(err)? 400: 500).json({ description: err.message }))
 
-                        new Chat(body)
-                            .save()
-                            .then(chat => {
-                                chat.populate(ChatPopulationPipeline, function (err, populateChat){
-                                    if(err) return res.status(500).json({ description: err.message })
-                                    return res.status(201).json(populateChat)
-                                })
-                            }, err => res.status(MongooseValidationError.is(err)? 400: 500).json({ description: err.message }))
+            }, err =>  res.status(500).json({ description: err.message }))
+    }
 
-                    }, err =>  res.status(500).json({ description: err.message }))
-            }
-
-            if(body.users.some(i => i.user == RBAC.Role.ADMIN)) {
-                console.debug('Add admins')
-                User.find()
-                    .where('credential.role').equals(RBAC.Role.ADMIN)
-                    .then(admins => {
-                        if(admins.length === 0) return res.status(404).json({ description: 'Admins are not found' })
-                        let index = body.users.findIndex(i => (i.user == RBAC.Role.ADMIN))
-                        let adminRole = body.users[index].role
-                        body.users.splice(index, 1)
-                        admins.forEach(admin => body.users.push({user: admin._id, role: adminRole}))
-                        _createChat()
-                    }, err =>  res.status(500).json({ description: err.message }) )
-            } else _createChat()
-
-        }, err => console.error(err))
+    if(body.users.some(i => i.user == RBAC.Role.ADMIN)) {
+        console.debug('Add admins')
+        User.find()
+            .where('credential.role').equals(RBAC.Role.ADMIN)
+            .then(admins => {
+                if(admins.length === 0) return res.status(404).json({ description: 'Admins are not found' })
+                let index = body.users.findIndex(i => (i.user == RBAC.Role.ADMIN))
+                let adminRole = body.users[index].role
+                body.users.splice(index, 1)
+                admins.forEach(admin => body.users.push({user: admin._id, role: adminRole}))
+                _createChat()
+            }, err =>  res.status(500).json({ description: err.message }) )
+    } else _createChat()
 }
 
 function remapWithoutMessages(chat: IChat, userID: string): any {
@@ -137,42 +60,12 @@ function remapWithoutMessages(chat: IChat, userID: string): any {
 
 export function list_chat(req, res) {
     const {id} = req.params
-    let  {page, limit, name} = req.query
-    let noMessages = req.query['no-messages']
-    if(noMessages){
-        try {
-            noMessages = decodeToBoolean(noMessages)
-        }
-        catch (e){
-            return res.status(400).json({ description: 'Query parameter \'no-messages\' must be a boolean.'})
-        }
-    }
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+    const {page, limit} = req.query
+    const {user, noMessages} = req.locals
+    const filtersGroup = req.locals.filters.group
+    const filtersOne = req.locals.filters.one
 
-    const user = req.locals.user
-
-    const searchAvailableValue = ['partial', 'full']
-    if(name) {
-        try {
-            name = JSON.parse(name)
-            if(!name.search || !name.value) throw new Error()
-        } catch (e) {
-            return res.status(400).json({ description: 'Parameter \'name\' is malformed. It must be of form: {"search": string, "value": string}' })
-        }
-        if(!searchAvailableValue.includes(name.search)) return res.status(400).json({ description: `Parameter \'name.search\' must be in ${searchAvailableValue}.` })
-    }
-
-    const pipelinePopulatedChat = _.cloneDeep(ChatPopulationPipeline)
-    const filtersGroup = { 'info.type': IChat.Type.GROUP, 'users.user': user._id }
-    const filtersOne = { 'info.type': IChat.Type.ONE , 'users.user': user._id }
-    if(name) {
-        let regexObject = { $regex: `^${name.value}`, $options: "i" }
-        if(name.search === 'full') regexObject['$regex']+='$'
-        filtersGroup['info.name'] = regexObject
-        Object.assign(pipelinePopulatedChat[0].match, { 'credential.userID' : regexObject })
-    }
-    console.debug('filtersGroup ', filtersGroup, ' pipelinePopulatedChat ', pipelinePopulatedChat)
-    Promise.all([Chat.find(filtersGroup).populate(ChatPopulationPipeline), Chat.find(filtersOne).populate(pipelinePopulatedChat)])
+    Promise.all([Chat.find(filtersGroup.filter).populate(filtersGroup.pipeline), Chat.find(filtersOne.filter).populate(filtersOne.pipeline)])
         .then(results => {
             let [chatGroup, chatOne] = results
 
@@ -192,18 +85,8 @@ export function list_chat(req, res) {
 }
 
 export function chat(req, res) {
-    const {id, chatID} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
-    let noMessages = req.query['no-messages']
-    if(noMessages){
-        try {
-            noMessages = decodeToBoolean(noMessages)
-        }
-        catch (e){
-            return res.status(400).json({ description: 'Query parameter \'no-messages\' must be a boolean.'})
-        }
-    }
+    const {chatID} = req.params
+    const noMessages = req.locals.noMessages
     const user = req.locals.user
 
     Chat.findOne()
@@ -216,9 +99,7 @@ export function chat(req, res) {
 }
 
 export function delete_chat(req, res) {
-    const {id, chatID} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
+    const {chatID} = req.params
     const user = req.locals.user
 
     Chat.findOne()
@@ -238,18 +119,13 @@ export function delete_chat(req, res) {
         }, err => res.status(500).json({ description: err.message }))
 }
 
-export function update_chat(req, res, err) {
-    const {id, chatID} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
-
+export function update_chat(req, res) {
+    const {chatID} = req.params
     const {action} = req.query
     const body = req.body
-
-    const actionsAvailableChatOne = [UpdateAction.UPDATE_USER_ROLE]
-    const actionsAvailableChatGroup = [UpdateAction.UPDATE_CHAT_NAME, UpdateAction.UPDATE_USER_ROLE, UpdateAction.ADD_USERS, UpdateAction.UPDATE_CHAT_IMAGE]
-
     const user = req.locals.user
+    const actionsAvailableChatOne = req.locals.actionsAvailableChatOne
+    const actionsAvailableChatGroup = req.locals.actionsAvailableChatGroup
 
     Chat.findOne()
         .where('users.user').equals(ObjectId(user._id))

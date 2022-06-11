@@ -5,12 +5,8 @@ import ObjectId = Types.ObjectId;
 import {ChatPopulationPipeline, ChatPopulationPipelineSelect} from "../../../models/schemas/chat";
 
 export function send_message(req, res) {
-    const {id, chatID} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
+    const {chatID} = req.params
     const {content, attachment, timestamp} = req.body
-    if(!(content || (!content && attachment))) return res.status(400).json({ description: 'Body must be of the form: { content: string, attachment?: string, timestamp?: number  } or { content?: string, attachment: string, timestamp?: number  } '})
-
     const user = req.locals.user
 
     const message = new Message({ sender: user._id, content, timestamp, attachment })
@@ -22,7 +18,7 @@ export function send_message(req, res) {
                 .then(result =>{
                     if(result.n === 0)  return res.status(404).json({ description: 'Chat is not found.' })
                     if(result.nModified === 0) return res.status(500).json({ description: 'Message is not send.' })
-                    message.populate({path: 'sender' , select: ChatPopulationPipelineSelect}, function (err, populateMessage){
+                    message.populate({path: 'sender', select: ChatPopulationPipelineSelect}, function (err, populateMessage){
                         if(err) return res.status(500).json({ description: err.message })
                         return res.status(200).json(populateMessage)
                     })
@@ -32,13 +28,7 @@ export function send_message(req, res) {
 
 export function read_messages(req, res) {
     const {id, chatID} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
-
-    const messages = _.uniq(req.body.messages)
-    if(!messages.length) return res.status(400).json({ description: 'Body must be of the form: { messages: [string,...] } '})
-
-    const user = req.locals.user
+    const messages = req.locals.messages
 
     Chat.findOne()
         .where('_id').equals(chatID)
@@ -75,10 +65,7 @@ export function read_messages(req, res) {
 }
 
 export function list_messages(req, res) {
-    const {id, chatID} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    if(!ObjectId.isValid(chatID)) return res.status(400).json({ description: 'Required a valid \'chatID\''})
-
+    const {chatID} = req.params
     const user = req.locals.user
 
     Chat.findOne()

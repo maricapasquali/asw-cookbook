@@ -38,3 +38,14 @@ export const FriendSchema: Schema<IFriend> = new Schema<IFriend>({
 })
 
 FriendSchema.index({ from: 1, to: 1 }, {unique: true, name: 'friend-ship'})
+
+export const FriendShipPopulateOptions = {
+    path: 'from to',
+    select: {
+        userID: '$credential.userID',
+        img: '$information.img',
+        country: '$information.country',
+        occupation: '$information.occupation',
+    },
+    match: {}
+}

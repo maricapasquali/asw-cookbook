@@ -54,7 +54,9 @@ function checkAndDecode(options?: AuthOption): Middleware {
 
 type AuthOption = { operation: Operation, resource: Resource, others?: (decodedToken: DecodedTokenType, param_id: string) => boolean, ignoreValidationParamId?: boolean }
 
-export type Middleware = ( req: any, res: any, next: (err?: any) => any ) => void
+export type CallbackNext = (err?: any) => any
+
+export type Middleware = ( req: any, res: any, next: CallbackNext ) => void
 
 export type Middlewares = Middleware | Middleware[]
 

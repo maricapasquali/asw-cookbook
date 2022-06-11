@@ -15,6 +15,7 @@ import {newUser} from "./utils.user.controller";
 import isAlreadyLoggedOut = IUser.isAlreadyLoggedOut;
 import ObjectId = Types.ObjectId;
 import Role = RBAC.Role;
+import {UpdateCredential} from "../../middlewares/user";
 
 const client_origin = configuration.externalOriginOf("client") //configuration.client.origin
 
@@ -86,45 +87,11 @@ function infoUsers(users: Array<IUser>, me: DecodedTokenType): Array<object> {
     }
 }
 export function all_users(req, res){
-
-    let {fullname, userID, page, limit} = req.query
-
-    const searchAvailableValue = ['full', 'partial']
-
-    let filters = { 'credential.role': Role.SIGNED }
-
-    if(userID) {
-        try {
-            userID = JSON.parse(userID)
-            if(!userID.search || !userID.value) throw new Error()
-        } catch (e) {
-            return res.status(400).json({ description: 'Parameter \'userID\' is malformed. It must be of form: {"search": string, "value": string}' })
-        }
-
-        if(!searchAvailableValue.includes(userID.search)) return res.status(400).json({ description: `Parameter \'userID.search\' must be in ${searchAvailableValue}.` })
-        let regexObject = {$regex: `^${userID.value}`, $options: "i"}
-        if(userID.search === 'full') regexObject['$regex']+='$'
-        filters['credential.userID'] = regexObject
-    }
-
-    if(fullname) {
-        try {
-            fullname = JSON.parse(fullname)
-            if(!fullname.search || !fullname.value) throw new Error()
-        } catch (e) {
-            return res.status(400).json({ description: 'Parameter \'fullname\' is malformed.  It must be of form: {"search": string, "value": string}' })
-        }
-
-        if(!searchAvailableValue.includes(fullname.search)) return res.status(400).json({ description: `Parameter \'fullname.search\' must be in ${searchAvailableValue}.`  })
-        let regexObject = {$regex: `^${fullname.value}`, $options: "i"}
-        if(fullname.search === 'full') regexObject['$regex']+='$'
-        filters['$or'] = [ { 'information.firstname': regexObject  },  { 'information.lastname': regexObject } ]
-    }
-
+    const {page, limit} = req.query
     const user = req.locals.user
 
+    const filters = req.locals.filters
     if(!accessManager.isAdminUser(user)) filters['signup'] = SignUp.State.CHECKED
-
     if(user) filters['_id'] = {$ne: user._id}
     console.debug(JSON.stringify(filters, null, 2))
 
@@ -137,8 +104,7 @@ export function all_users(req, res){
 }
 
 export function check_account(req, res) {
-    let {email, userID, key} = req.body
-    if(!email || !userID || !key) return res.status(400).json({description: "Require 'email', 'userID', 'key'"})
+    const {email, userID, key} = req.body
     EmailLink.findOne()
             .where('link', '/end-signup')
             .where('randomKey').equals(key)
@@ -171,8 +137,6 @@ export function check_account(req, res) {
 // (optional) use token
 export function one_user(req, res){
     const {id} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-
     const decoded_token = req.locals.user
 
     User.findOne()
@@ -200,14 +164,8 @@ export function one_user(req, res){
 
 //use token
 export function update_user(req, res){
-    let {id} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-
-    let userBody = req.body
-    if(req.file) userBody.img = req.file.filename
-    if(userBody.img?.length === 0) userBody.img = null
-    if(Object.keys(req.body).length === 0) return res.status(400).json({description: 'Missing body.'})
-    console.debug("Update info user = ", userBody)
+    const {id} = req.params
+    const userBody = req.body
 
     User.findOne()
         .where('signup').equals(SignUp.State.CHECKED)
@@ -289,13 +247,12 @@ function send_email_erase_user(user: IUser): void {
 }
 //use token
 export function delete_user(req, res){
-    let {id} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
+    const {id} = req.params
     const decoded_token = req.locals.user
 
     const deleteUser = (id, decoded_token) => {
         let query =  User.findOne()
-            .where('_id').equals(id)
+                         .where('_id').equals(id)
 
         if(!accessManager.isAdminUser(decoded_token)) query.where('signup').equals(SignUp.State.CHECKED)
 
@@ -326,56 +283,41 @@ export function delete_user(req, res){
 
 //use token
 export function update_credential_user(req, res){
-    let {id} = req.params
-    if(!ObjectId.isValid(id)) return res.status(400).json({ description: 'Required a valid \'id\''})
-    let {change, reset} = req.query
-
-    if(!['userID', 'password'].includes(change)) return res.status(400).json({description: 'Available values: ["userID", "password"]'})
-
+    const {id} = req.params
+    const {change, reset} = req.query
     const {old_userID, new_userID, old_password, new_hash_password} = req.body
 
-    switch (change){
-        case 'userID':{
-            if(!(old_userID && new_userID))
-                return res.status(400).send({description: 'Update userID: required [old_userID, new_userID] '})
-
-            User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
-                    if (!user) return res.status(404).json({description: 'User is not found'});
+    User.findOne()
+        .where('signup').equals(SignUp.State.CHECKED)
+        .where('_id').equals(id)
+        .then(user => {
+            if (!user) return res.status(404).json({description: 'User is not found'});
+            switch (change){
+                case UpdateCredential.USERID: {
                     if(user.credential.userID === old_userID) {
                         user.credential.userID = new_userID
-                        user.save().then(() => res.status(200).json({update: change}),
-                            err => res.status(500).json({description: err.message}))
-                    }else return res.status(409).json({description: 'Old UserID is incorrect'});
-                },
-                err => res.status(500).json({description: err.message}))
-
-        }break;
-        case 'password':{
-            if(!reset && !(old_password && new_hash_password))
-                return res.status(400).send({description: 'Update password: required [old_password, new_hash_password] '})
-
-            User.findOne().where('signup').equals(SignUp.State.CHECKED).where('_id').equals(id).then(user => {
-                    if (!user) return res.status(404).json({description: 'User is not found'});
+                        user.save().then(() => res.status(200).json({update: change}), err => res.status(500).json({description: err.message}))
+                    }
+                    else return res.status(409).json({description: 'Old UserID is incorrect'});
+                }
+                break;
+                case UpdateCredential.PASSWORD:{
                     let result = reset || bcrypt.compareSync(old_password, user.credential.hash_password)
                     if(result) {
                         user.credential.hash_password = new_hash_password
-                        user.save().then(() => res.status(200).json({update: change}),
-                            err => res.status(500).json({description: err.message}))
-                    }else return res.status(409).json({description: 'Old Password is incorrect'});
-                },
-                err => res.status(500).json({description: err.message}))
-
-        }break
-    }
+                        user.save().then(() => res.status(200).json({update: change}), err => res.status(500).json({description: err.message}))
+                    }
+                    else return res.status(409).json({description: 'Old Password is incorrect'});
+                }
+                break
+            }
+        }, err => res.status(500).json({description: err.message}))
 }
 
 export function checkLinkResetPassword(req, res){
-    let {key} = req.query
-    if(!key) return res.status(400).json({description: 'Missing key'})
-
     EmailLink.findOne()
              .where('link').equals('/reset-password')
-             .where('randomKey').equals(key)
+             .where('randomKey').equals(req.query.key)
              .then(emailLink => {
                  if(!emailLink) return res.status(404).json({description: 'Key not valid'})
                  if(emailLink.expired < Date.now()) {
@@ -389,9 +331,6 @@ export function checkLinkResetPassword(req, res){
 
 export function foundUserForNickname(req, res){
     const {nickname, key} = req.query
-    if(!nickname) return res.status(400).json({description: 'Missing nickname'})
-    if(!key) return res.status(400).json({description: 'Missing key'})
-
     Promise.all([
         EmailLink.findOne()
                  .where('link').equals('/reset-password')
@@ -412,10 +351,7 @@ export function foundUserForNickname(req, res){
 
 //SEND EMAIL
 export function send_email_password(req, res){
-    let {email} = req.query
-    if(!email) return res.status(400).json({description: 'Missing email.'})
-    if(!EmailValidator.check(email)) return res.status(400).json({description: 'Email is not valid.'})
-
+    const {email} = req.query
     User.findOne()
         .where('signup').equals(SignUp.State.CHECKED)
         .where('information.email').equals(email)

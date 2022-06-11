@@ -14,5 +14,12 @@ export function uploadProfileImage(): Middleware {
             return 'user-' + randomString(30) + path.extname(file.originalname)
         }
     }
-    return wrapUpload(fileUploader.single('img', config))
+    return function (req, res, next){
+        wrapUpload(fileUploader.single('img', config))(req, res, err => {
+            if(err) return next(err)
+            if(req.file) Object.assign(req.body, { img: req.file.filename })
+            if(req.body.img?.length === 0) Object.assign(req.body, { img: null })
+            next()
+        })
+    }
 }
