@@ -150,18 +150,16 @@ export function create(): Middlewares {
             let {id} = req.params
             if(!Types.ObjectId.isValid(id)) return next({ status: 400, description: 'Required a valid \'id\''})
 
-            return existById(User, [id])
-                        .then(() => {
-
-                            checkAndFormatBody()(req, res, err => {
-                                if(err) return next(err)
-                                Object.assign(req.body, { owner: req.params.id })
-                                next()
-                            })
-
-                        }, ids => next({ status: 404, description: 'User ('+ids[0]+') is not found.'}))
+            return existById(User, [id]).then(() => next(), ids => next({ status: 404, description: 'User ('+ids[0]+') is not found.'}))
         },
-        uploadImageAndTutorial()  /* for update image and/or tutorial*/
+        uploadImageAndTutorial(), /* for update image and/or tutorial*/
+        function(req, res, next) {
+            checkAndFormatBody()(req, res, err => {
+                if(err) return next(err)
+                Object.assign(req.body, { owner: req.params.id })
+                next()
+            })
+        }
     ]
 }
 
