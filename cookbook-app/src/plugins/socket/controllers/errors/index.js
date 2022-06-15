@@ -1,47 +1,44 @@
-export default function (bus, store, socket){
+export default function (bus, store, socket) {
 
-    function checkRefreshToken({expired, message, previousEmittedEvent}){
+    function checkRefreshToken({ expired, message, previousEmittedEvent }) {
 
-        const emitPrevEvent = () => {
+        function emitPrevEvent() {
             socket.emit(previousEmittedEvent.event, ...previousEmittedEvent.args)
             console.debug("Re-Emit previous event on socket.io.")
         }
 
-        const emitError = () => {
+        function emitError() {
             console.error(message)
-            bus.$emit(expired ? 'show:error:unauthenticated' : 'show:error:forbidden', {message})
+            bus.$emit(expired ? "show:error:unauthenticated" : "show:error:forbidden", { message })
         }
 
         store.dispatch("session/requestNewAccessToken")
-            .then((res) => {
+            .then(res => {
                 console.debug("Response 'requestNewAccessToken' = ", res)
-                if(previousEmittedEvent && (res?.status === 200 || res?.status === 204)) {
+                if (previousEmittedEvent && (res?.status === 200 || res?.status === 204)) {
                     console.debug("Previous emitted event ", previousEmittedEvent)
-                    if(/chat:(?:messages|typing|read)/.test(previousEmittedEvent.event)){
+                    if (/chat:(?:messages|typing|read)/.test(previousEmittedEvent.event)) {
                         socket.on("connect", () => {
                             bus.$emit("chat:re-enter")
-                            socket.on('enter', emitPrevEvent)
+                            socket.on("enter", emitPrevEvent)
                         })
-                    }
-                    else if(previousEmittedEvent.event === 'connect'){
+                    } else if (previousEmittedEvent.event === "connect") {
                         socket.connect()
                         console.debug("Re-Connect again..")
-                    }
-                    else emitPrevEvent()
+                    } else emitPrevEvent()
                     bus.$emit("hide:errors")
-                }
-                else {
+                } else {
                     emitError()
                 }
             })
     }
 
     function onConnectError(error) {
-        if(error.data){
+        if (error.data) {
             let expired = error.data.expired
             let message = error.message
             let previousEmittedEvent = error.data.previousEmittedEvent
-            checkRefreshToken({expired, message, previousEmittedEvent})
+            checkRefreshToken({ expired, message, previousEmittedEvent })
         }
     }
 

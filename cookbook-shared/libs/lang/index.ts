@@ -3,12 +3,12 @@ declare global {
         /**
          * @return A new string with the first letter uppercase.
          */
-        capitalize(): string
+        capitalize: () => string
     }
 }
 
-String.prototype.capitalize = function (){
-    return this.replace(/^\w/, c => c.toUpperCase());
+String.prototype.capitalize = function () {
+    return this.replace(/^\w/, c => c.toUpperCase())
 }
 
 export {}

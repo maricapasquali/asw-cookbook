@@ -1,6 +1,7 @@
-import handlerErrorBase from './base'
-export default function (bus){
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated} = handlerErrorBase(bus)
+import handlerErrorBase from "./base"
+
+export default function (bus) {
+    const { badRequest, forbidden, notFound, serverError, unAuthenticated } = handlerErrorBase(bus)
 
     function similarErrorHandler(err) {
         switch (err.response?.status) {
@@ -14,9 +15,9 @@ export default function (bus){
                 forbidden(err)
                 break
             case 404: {
-                let resource = {name: 'Ricetta', id: err.response.config?.urlParams?.recipeID}
-                if(err.response.config?.urlParams?.commentID) {
-                    resource.name = 'Commento'
+                let resource = { name: "Ricetta", id: err.response.config?.urlParams?.recipeID }
+                if (err.response.config?.urlParams?.commentID) {
+                    resource.name = "Commento"
                     resource.id = err.response.config?.urlParams?.commentID
                 }
                 notFound(err, resource)
@@ -29,9 +30,15 @@ export default function (bus){
         return false
     }
 
-    const createCommentOrResponse = (err) => similarErrorHandler(err)
-    const deleteComment = (err) => similarErrorHandler(err)
-    const updateComment = (err) => similarErrorHandler(err)
+    function createCommentOrResponse(err) {
+        return similarErrorHandler(err)
+    }
+    function deleteComment(err) {
+        return similarErrorHandler(err)
+    }
+    function updateComment(err) {
+        return similarErrorHandler(err)
+    }
 
     function getReportedComment(err) {
         switch (err.response?.status) {
@@ -39,7 +46,7 @@ export default function (bus){
                 badRequest(err)
                 break
             case 401:
-                unAuthenticated(err, {_forbiddenPage: true})
+                unAuthenticated(err, { _forbiddenPage: true })
                 break
             case 403:
                 forbidden(err)

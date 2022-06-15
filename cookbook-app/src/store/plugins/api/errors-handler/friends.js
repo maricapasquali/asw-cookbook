@@ -1,7 +1,7 @@
-import handlerErrorBase from './base'
+import handlerErrorBase from "./base"
 
 export default function (bus) {
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated} = handlerErrorBase(bus)
+    const { badRequest, forbidden, notFound, serverError, unAuthenticated } = handlerErrorBase(bus)
 
     function requestFriendShip(err, info) {
         switch (err.response?.status) {
@@ -15,7 +15,7 @@ export default function (bus) {
                 forbidden(err)
                 break
             case 404:
-                notFound(err, { name: 'Utente', id: err.response?.config?.urlParams?.id })
+                notFound(err, { name: "Utente", id: err.response?.config?.urlParams?.id })
                 break
             case 409: return err.response?.data?.actualState
             default:
@@ -37,7 +37,7 @@ export default function (bus) {
                 forbidden(err)
                 break
             case 404:
-                notFound(err, { name: 'Amicizia' })
+                notFound(err, { name: "Amicizia" })
                 break
             default:
                 serverError(err)
@@ -49,7 +49,7 @@ export default function (bus) {
         switch (err.response?.status) {
             case 400: break
             case 401:
-                unAuthenticated(err, info || {_forbiddenPage: false})
+                unAuthenticated(err, info || { _forbiddenPage: false })
                 break
             default:
                 serverError(err)
@@ -69,7 +69,7 @@ export default function (bus) {
                 forbidden(err)
                 break
             case 404:
-                notFound(err, { name: 'Amicizia' })
+                notFound(err, { name: "Amicizia" })
                 break
             case 409: return err.response?.data?.actualState
             default:

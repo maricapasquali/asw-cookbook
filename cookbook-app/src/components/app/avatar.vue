@@ -1,109 +1,134 @@
 <template>
   <div>
-    <b-avatar :id="avatarId"
-              :variant="variant"
-              :src="$data._image"
-              :icon="$data._default"
-              :size="size"
-              @img-error="imageError"
-              :badge="$data._badge" badge-variant="success" class="mr-2"/>
+    <b-avatar
+      :id="avatarId"
+      :variant="variant"
+      :src="image_"
+      :icon="default_"
+      :size="size"
+      :badge="badge_"
+      badge-variant="success"
+      class="mr-2"
+      @img-error="imageError"
+    />
 
-    <router-link v-if="userID && link" :class="userIdClass" :to="{name: 'single-user', params: {id: user}}"> <strong> <em> {{ userID }}</em></strong> </router-link>
-    <span v-else-if="userID" :class="userIdClass"> <em> {{ userID }}</em></span>
+    <router-link
+      v-if="userId && link"
+      :class="userIdClass"
+      :to="{name: 'single-user', params: {id: user}}"
+    >
+      <strong> <em> {{ userId }}</em></strong>
+    </router-link>
+    <span
+      v-else-if="userId"
+      :class="userIdClass"
+    > <em> {{ userId }}</em></span>
   </div>
 </template>
 
 <script>
 
-import {mapGetters} from "vuex";
-import {UserMixin} from "@mixins"
+import { mapGetters } from "vuex"
+import { UserMixin } from "@mixins"
 
 export default {
-  name: "avatar",
-  mixins:[UserMixin],
-  props: {
-    value: String, //image
-    user: String | Array, //user _id or array of _id
-    userID: String,
-    link: Boolean,
-    userIdClass: String | Object,
-    size: {
-      type: Number,
-      default: 70
+    name: "Avatar",
+    mixins:[UserMixin],
+    props: {
+        value: {
+            type: String,
+            default: ""
+        }, //image
+        user: { // Users Identifier ( _id | [_id] )
+            type: [String, Array],
+            required: true
+        },
+        userId: { // Username ( userID )
+            type: String,
+            default: ""
+        },
+        link: Boolean,
+        userIdClass: {
+            type: String,
+            default: ""
+        },
+        size: {
+            type: Number,
+            default: 70
+        },
+        variant: {
+            type: String,
+            default: "dark"
+        },
+        group: Boolean
     },
-    variant: {
-      type: String,
-      default: 'dark'
+    data() {
+        return {
+            default_: "",
+            image_: "",
+            badge_: false,
+        }
     },
-    group: Boolean
-  },
-  data: function(){
-    return {
-      _default: '',
-      _image: '',
-      _badge: false,
-    }
-  },
-  watch: {
-    value(vl){
-     this.setImage(vl)
+    computed: {
+        ...mapGetters({
+            _onlines: "users/online",
+            _offlines: "users/offline"
+        }),
+        avatarId() {
+            return "avatar"+(`-${this.user}` || "")
+        }
     },
-    user(vl){
-      this._setBadge(this._onlines, vl)
+    watch: {
+        value(vl) {
+            this.setImage(vl)
+        },
+        user(vl) {
+            this._setBadge(this._onlines, vl)
+        },
+        _onlines(val) {
+            this._setBadge(val, this.user)
+        }
     },
-    _onlines(val, old){
-      this._setBadge(val, this.user)
-    }
-  },
-  computed: {
-    ...mapGetters({
-      _onlines: 'users/online',
-      _offlines: 'users/offline'
-    }),
-    avatarId(){
-      return 'avatar'+(`-${this.user}` || '')
-    }
-  },
-  methods: {
-    imageError(e){
-      console.error('Image ' + this.$data._image + ' is not found.')
-      this.$data._image = ''
-      this.$emit('onNotFound')
+    created() {
+        this.default_ = this.group ? "people-fill": ""
+        this.setImage(this.value)
+        this._setBadge(this._onlines, this.user)
     },
+    methods: {
+        imageError() {
+            console.error("Image " + this.image_ + " is not found.")
+            this.image_ = ""
+            this.$emit("onNotFound")
+        },
 
-    setImage(vl){
-        this.$data._image = this._formatUserImage(vl)
-    },
+        setImage(vl) {
+            this.image_ = this._formatUserImage(vl)
+        },
 
-    _setBadge(usersOnline, vl){
-      if( Array.isArray(vl) ){
-        let isOnline = vl.some(i => usersOnline.includes(i))
-        let isAllOffline = vl.every(i => !usersOnline.includes(i))
-        this.$data._badge = isOnline
-        vl.forEach(i =>{
-          let online = usersOnline.includes(i)
-          if(online) this.$emit('online', { _id: i })
-          let offline = this._offlines[i]
-          if(offline) this.$emit('offline', { _id: i, offline }, isAllOffline)
-          console.debug(`State of \'${i}\' is ${online ? 'online': 'offline'}`)
-        })
-      }
-      else if(vl){
-        let isOnline = usersOnline.some(s => s === vl)
-        this.$data._badge = isOnline
-        if(isOnline) this.$emit('online', { _id: vl })
-        else if(this._offlines[vl]) this.$emit('offline', { _id: vl, offline: this._offlines[vl] }, true)
-        console.debug(`State of \'${vl}\' is ${isOnline ? 'online': 'offline'}`)
-      }
+        _setBadge(usersOnline, vl) {
+            if ( Array.isArray(vl) ) {
+                let isOnline = vl.some(i => usersOnline.includes(i))
+                let isAllOffline = vl.every(i => !usersOnline.includes(i))
+                this.badge_ = isOnline
+                vl.forEach(i => {
+                    let online = usersOnline.includes(i)
+                    if (online) this.$emit("online", { _id: i })
+                    let offline = this._offlines[i]
+                    if (offline) this.$emit("offline", { _id: i, offline }, isAllOffline)
+                    console.debug(`State of '${i}' is ${online ? "online": "offline"}`)
+                })
+            } else if (vl) {
+                let isOnline = usersOnline.some(s => s === vl)
+                this.badge_ = isOnline
+                if (isOnline) this.$emit("online", { _id: vl })
+                else if (this._offlines[vl]) this.$emit("offline", { _id: vl, offline: this._offlines[vl] }, true)
+                console.debug(`State of '${vl}' is ${isOnline ? "online": "offline"}`)
+            }
+        }
     }
-  },
-  created() {
-    this.$data._default = this.group ? 'people-fill': ''
-    this.setImage(this.value)
-    this._setBadge(this._onlines, this.user)
-  }
 }
 </script>
 
 <style scoped>
+/* stylelint-disable no-empty-source */
 </style>

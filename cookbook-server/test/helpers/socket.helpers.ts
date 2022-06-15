@@ -1,19 +1,28 @@
-import * as bcrypt from 'bcrypt';
-import {Server} from "socket.io";
-import {io, Socket} from "socket.io-client";
-import * as express from "express";
-import * as fs from "fs";
-import * as  path from "path";
-import sockets from "../../src/sockets";
-import {Hosting} from "cookbook-shared/libs/hosting";
-import {Chat, User} from "../../src/models";
-import {ChatPopulationPipeline, IChat} from "../../src/models/schemas/chat";
-import Rooms from "../../src/sockets/rooms";
-import {ChatInfo} from "../../src/sockets/chat";
+import * as bcrypt from "bcrypt"
+import { Server } from "socket.io"
+import {
+    io,
+    Socket
+} from "socket.io-client"
+import * as express from "express"
+import * as fs from "fs"
+import * as path from "path"
+import sockets from "../../src/sockets"
+import { Hosting } from "cookbook-shared/libs/hosting"
+import {
+    Chat,
+    User
+} from "../../src/models"
+import {
+    ChatPopulationPipeline,
+    IChat
+} from "../../src/models/schemas/chat"
+import Rooms from "../../src/sockets/rooms"
+import { ChatInfo } from "../../src/sockets/chat"
 
 type UserInfo = { _id: string, userID: string, isAdmin?: boolean }
 
-const users: any[] = [], clients: any[] = []
+const users: any[] = []; const clients: any[] = []
 
 let numberOfConnectedClients = 0
 
@@ -79,23 +88,24 @@ const hannah = {
 
 const chats: any[] = []
 
-const usersIntoDatabase: any[] = [ mario, kyle, jason, hannah ]
+const usersIntoDatabase: any[] = [mario, kyle, jason, hannah]
 
-const createClient = (uri: string, options: any, user?: UserInfo, withInvalidToken?: string | boolean): Socket => {
+function createClient(uri: string, options: any, user?: UserInfo, withInvalidToken?: string | boolean): Socket {
     users.push({ client: users.length, user })
-    let _option = {...options}
-    if(user) {
-        let tokens =  {
-            access: withInvalidToken ? tokensManager.createToken(user, typeof withInvalidToken === "boolean" ? "0 seconds": withInvalidToken) : tokensManager.createToken(user),
+    const _option = { ...options }
+    if (user) {
+        const tokens = {
+            access: withInvalidToken ? tokensManager.createToken(user, typeof withInvalidToken === "boolean" ? "0 seconds" : withInvalidToken) : tokensManager.createToken(user),
             refresh: tokensManager.createToken(user)
         }
-        Object.assign(_option,{
+        Object.assign(_option, {
             auth: {
                 key: tokens.access,
                 userinfo: user
             }
         })
-        tokensManager.tokens(user._id).append(tokens)
+        tokensManager.tokens(user._id)
+            .append(tokens)
     }
     return io(uri, _option)
 }
@@ -106,10 +116,9 @@ const optionsCreationClients = {
     rejectUnauthorized: false // because I am using a self-signed certificate
 }
 
-let indexClientInvalidToken;
+let indexClientInvalidToken
 
-const setClients = (uri: string) =>{
-
+function setClients(uri: string): void {
     clients.splice(0)
 
     clients.push(...[
@@ -124,7 +133,7 @@ const setClients = (uri: string) =>{
     indexClientInvalidToken = 4
 
     clients.forEach(client => {
-        let clientName = getUserInfoOfClient(client).userID
+        const clientName = getUserInfoOfClient(client).userID
         client
             .on("connect", () => {
                 numberOfConnectedClients += 1
@@ -138,7 +147,9 @@ const setClients = (uri: string) =>{
 }
 
 /* -- EXPORTED FUNCTIONALITY -- */
-export const firedEvent = event => `Fired event is '${event}'. `
+export function firedEvent(event: string) {
+    return `Fired event is '${event}'. `
+}
 
 export namespace SocketEvent {
    export const USER_ONLINE = "user:online"
@@ -159,77 +170,94 @@ export namespace SocketEvent {
    export const CONNECT_ERROR = "connect_error"
 }
 
+export function insertSomeUsers(): Promise<any> {
+    return User.insertMany(usersIntoDatabase)
+}
 
-export const insertSomeUsers = (): Promise<any> => User.insertMany(usersIntoDatabase)
+export function startServer(): Promise<void> {
+    return new Promise(resolve => {
+        const serverPort: number = configuration.server.port
+        const serverHostname: string = configuration.server.hostname
+        const optionsHTTPS = {
+            key: fs.readFileSync(path.join(__dirname, "..", "..", "sslcert", "privatekey.pem")),
+            cert: fs.readFileSync(path.join(__dirname, "..", "..", "sslcert", "cert.pem"))
+        }
 
-export const startServer = (): Promise<void> => new Promise((resolve, reject) => {
-
-    const serverPort: number = configuration.server.port
-    const serverHostname: string = configuration.server.hostname
-    const optionsHTTPS = {
-        key: fs.readFileSync(path.join(__dirname, "..", "..", "sslcert", "privatekey.pem")),
-        cert: fs.readFileSync(path.join(__dirname, "..", "..", "sslcert", "cert.pem")),
-    }
-
-    Hosting
-        .createHttpsServer(express(), optionsHTTPS)
-        .setHostName(serverHostname)
-        .setPort(serverPort)
-        .setSocket((httpsServer) => {
-            server = new Server(httpsServer, {
-                cors: {
-                    origin: "*",
-                    methods: ["GET", "POST"],
-                    credentials: true
-                }
-            })
-            sockets(server)
-        })
-        .build()
-        .listen((serverHosting) => {
-            console.debug(`Server listening on ${serverHosting.origin} ...`)
-            setClients(serverHosting.origin)
-            resolve()
-        })
-})
-
-export const connectClient = (client: Socket) => new Promise<void>((resolve, reject) => client.connect().on("connect", resolve).on("connect_error", reject))
-
-export const disconnectClient = (client: Socket) => new Promise<void>((resolve, reject) => {
-    client.disconnect()
-    if(client.disconnected) resolve()
-    else reject("Client is not disconnected")
-})
-
-export const connectAllClients = (): Promise<void> => new Promise((resolve, reject) => {
-    clients.forEach((client, index) => {
-            if (index != indexClientInvalidToken) {
-                client.connect().on("connect", () => {
-                    if(clients.length - 1 === numberOfConnectedClients ) resolve()
+        Hosting
+            .createHttpsServer(express(), optionsHTTPS)
+            .setHostName(serverHostname)
+            .setPort(serverPort)
+            .setSocket(httpsServer => {
+                server = new Server(httpsServer, {
+                    cors: {
+                        origin: "*",
+                        methods: ["GET", "POST"],
+                        credentials: true
+                    }
                 })
-                .on("connect_error", reject)
-            }
+                sockets(server)
+            })
+            .build()
+            .listen(serverHosting => {
+                console.debug(`Server listening on ${serverHosting.origin} ...`)
+                setClients(serverHosting.origin)
+                resolve()
+            })
     })
-})
+}
 
-export const disconnectAllClients = (): Promise<void> => new Promise((resolve, reject) => {
-    clients.forEach(client => client.disconnect())
-    if(clients.every(client => client.disconnected) && 0 === numberOfConnectedClients) resolve()
-    else reject("Not all clients are disconnected.")
-})
+export function connectClient(client: Socket): Promise<void> {
+    return new Promise<void>((resolve, reject) =>
+        client
+            .connect()
+            .on("connect", resolve)
+            .on("connect_error", reject)
+    )
+}
 
-export const closeSockets = (): Promise<void[]> => {
-    let _disconnectAllClients = disconnectAllClients()
-    let _closeServer = new Promise<void>((resolve, reject) => {
+export function disconnectClient(client: Socket): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        client.disconnect()
+        if (client.disconnected) resolve()
+        else reject("Client is not disconnected")
+    })
+}
+
+export function connectAllClients(): Promise<void> {
+    return new Promise((resolve, reject) => {
+        clients.forEach((client, index) => {
+            if (index != indexClientInvalidToken) {
+                client
+                    .connect()
+                    .on("connect", () => {
+                        if (clients.length - 1 === numberOfConnectedClients) resolve()
+                    })
+                    .on("connect_error", reject)
+            }
+        })
+    })
+}
+
+export function disconnectAllClients(): Promise<void> {
+    return new Promise((resolve, reject) => {
+        clients.forEach(client => client.disconnect())
+        if (clients.every(client => client.disconnected) && numberOfConnectedClients === 0) resolve()
+        else reject("Not all clients are disconnected.")
+    })
+}
+
+export function closeSockets(): Promise<void[]> {
+    const _disconnectAllClients = disconnectAllClients()
+    const _closeServer = new Promise<void>((resolve, reject) => {
         server.close(err => {
-            if(err) reject(err)
+            if (err) reject(err)
             else resolve()
         })
     })
     return Promise.all([_disconnectAllClients, _closeServer])
 }
 
-export const subscribeEvent = ( options: { client: Socket, method?: "once" | "on", event: string, filter?: (...args: any[]) => boolean, assertionHandler?: (...args: any[]) => void } ): Promise<void> => {
+export function subscribeEvent(options: { client: Socket, method?: "once" | "on", event: string, filter?: (...args: any[]) => boolean, assertionHandler?: (...args: any[]) => void }): Promise<void> {
     options.method = options.method || "once"
     options.filter = options.filter || (() => true)
     options.assertionHandler = options.assertionHandler || (() => {
@@ -237,129 +265,160 @@ export const subscribeEvent = ( options: { client: Socket, method?: "once" | "on
     })
 
     return new Promise((resolve, reject) => {
-        let handler = (...args) => {
-            if(options.filter(...args)){
+        function handler(...args: any[]): void {
+            if (options.filter(...args)) {
                 try {
                     options.assertionHandler(...args)
-                    console.debug(`[Client ${getUserInfoOfClient(options.client).userID}]: Checked Event = '${options.event}' with args = `,  ...args)
+                    console.debug(`[Client ${getUserInfoOfClient(options.client).userID}]: Checked Event = '${options.event}' with args = `, ...args)
                     resolve()
-                }catch (e){
+                } catch (e) {
                     reject(e)
                 } finally {
-                    if(options.method === "on") options.client.off(options.event, handler)
+                    if (options.method === "on") options.client.off(options.event, handler)
                 }
             }
         }
-        switch (options.method){
+        switch (options.method) {
             case "once":
-                options.client.once(options.event, handler);
+                options.client.once(options.event, handler)
                 break
             case "on":
-                options.client.on(options.event, handler);
+                options.client.on(options.event, handler)
                 break
         }
     })
 }
 
-export const subscribeEventOnce = (client: Socket, event: string, assertionHandler: (...args: any[]) => void): Promise<void> => subscribeEvent({ client, event, assertionHandler,  method: "once" })
-
-export const subscribeEventOn = (client: Socket, event: string, assertionHandler: (...args: any[]) => void, filter?: (...args: any[]) => boolean): Promise<void> => subscribeEvent({ client, event, assertionHandler, method: "on", filter })
-
-export const filterOnlineClients = (excludedClient: Socket): Socket[] => clients.filter(c => c != excludedClient).filter(c => c.connected)
-
-export const getClient = (position: number): Socket => clients[position]
-
-export const createNewClientFrom = (position: number, invalidToken?: string | boolean) : Socket => {
-    let prev: Socket = clients[position]
-    if(prev) return createClient((prev.io as any).uri, optionsCreationClients, (prev.auth as any)?.userinfo, invalidToken)
+export function subscribeEventOnce(client: Socket, event: string, assertionHandler: (...args: any[]) => void): Promise<void> {
+    return subscribeEvent({ client, event, assertionHandler, method: "once" })
 }
 
-export const getUserIdentifierOfClient = (position: number): string => users.find(u => u.client === position)?.user?._id
+export function subscribeEventOn(client: Socket, event: string, assertionHandler: (...args: any[]) => void, filter?: (...args: any[]) => boolean): Promise<void> {
+    return subscribeEvent({ client, event, assertionHandler, method: "on", filter })
+}
 
-export const getUserInfoOfClient = (cl: Socket): UserInfo => (cl?.auth as any)?.userinfo || {_id: null, userID: "anonymous"}
+export function filterOnlineClients(excludedClient: Socket): Socket[] {
+    return clients.filter(c => c != excludedClient)
+        .filter(c => c.connected)
+}
 
-export const maxClients = (): number => clients.length - 1
+export function getClient(position: number): Socket {
+    return clients[position]
+}
 
-//CHATS
-export const insertSomeChats = (): Promise<any> => {
+export function createNewClientFrom(position: number, invalidToken?: string | boolean) : Socket {
+    const prev: Socket = clients[position]
+    if (prev) return createClient((prev.io as any).uri, optionsCreationClients, (prev.auth as any)?.userinfo, invalidToken)
+}
+
+export function getUserIdentifierOfClient(position: number): string {
+    return users.find(u => u.client === position)?.user?._id
+}
+
+export function getUserInfoOfClient(cl: Socket): UserInfo {
+    return (cl?.auth as any)?.userinfo || { _id: null, userID: "anonymous" }
+}
+
+export function maxClients(): number {
+    return clients.length - 1
+}
+
+// CHATS
+export function insertSomeChats(): Promise<any> {
     return Chat.insertMany([
-        { info: { type: IChat.Type.ONE }, users: [ {user: kyle._id}, {user: mario._id} ] },
-        { info: { type: IChat.Type.GROUP, name: "super-friends"},  users: [ {user: kyle._id}, {user: mario._id}, {user: hannah._id} ] }
-    ]).then(_chats => {
-        if(_chats.length === 0) return Promise.reject(new Error("No chat was inserted"))
-        return Promise.all( _chats.map(chat => chat.populate(ChatPopulationPipeline).execPopulate()))
-                      .then(popChats => {
-                          chats.push(...(
-                              popChats.map(chat => chat.toObject()).map(chat => {
-                                  return Object.assign(chat, {
-                                      _id: chat._id.toString(),
-                                      users: chat.users.map(u => {
-                                          u.user._id = u.user._id.toString()
-                                          return u
-                                      })
-                                  })
-                              })
-                          ))
-                      })
-    })
+        { info: { type: IChat.Type.ONE }, users: [{ user: kyle._id }, { user: mario._id }] },
+        { info: { type: IChat.Type.GROUP, name: "super-friends" }, users: [{ user: kyle._id }, { user: mario._id }, { user: hannah._id }] }
+    ])
+        .then(_chats => {
+            if (_chats.length === 0) return Promise.reject(new Error("No chat was inserted"))
+            return Promise.all(_chats.map(chat => chat.populate(ChatPopulationPipeline)
+                .execPopulate()))
+                .then(popChats => {
+                    chats.push(...(
+                        popChats.map(chat => chat.toObject())
+                            .map(chat => {
+                                return Object.assign(chat, {
+                                    _id: chat._id.toString(),
+                                    users: chat.users.map(u => {
+                                        u.user._id = u.user._id.toString()
+                                        return u
+                                    })
+                                })
+                            })
+                    ))
+                })
+        })
 }
 
-export const getChatInfo = (type: IChat.Type): ChatInfo => {
-    let chat = chats.find(c => c.info.type === type)
-    if(!chat) throw new Error("Chat is not found. Type = "+type)
+export function getChatInfo(type: IChat.Type): ChatInfo {
+    const chat = chats.find(c => c.info.type === type)
+    if (!chat) throw new Error("Chat is not found. Type = " + type)
     return {
         _id: chat._id,
         info: {
             type: chat.info.type,
             name: chat.info.name,
-            usersRole: chat.users.map(u => ({user: u.user._id, role: u.role}))
+            usersRole: chat.users.map(u => ({ user: u.user._id, role: u.role }))
         },
         users: chat.users.map(u => u.user)
     }
 }
 
-export const getUserInfoOfClientInChat = (cl: Socket, type: IChat.Type): UserInfo => (getClientsOnChat(type).find(c => c == cl)?.auth as any)?.userinfo
+export function getUserInfoOfClientInChat(cl: Socket, type: IChat.Type): UserInfo {
+    return (getClientsOnChat(type)
+        .find(c => c == cl)?.auth as any)?.userinfo
+}
 
-export const getClientsOnChat = (type: IChat.Type, filter?: (client: Socket) => boolean): Socket[] => {
-    let _usersInChat: string[] = getChatInfo(type).users.map(u => u._id)
-    let _clients = clients.filter(c => _usersInChat.includes(c.auth?.userinfo?._id))
+export function getClientsOnChat(type: IChat.Type, filter?: (client: Socket) => boolean): Socket[] {
+    const _usersInChat: string[] = getChatInfo(type).users.map(u => u._id)
+    const _clients = clients.filter(c => _usersInChat.includes(c.auth?.userinfo?._id))
     return filter ? _clients.filter(filter) : _clients
 }
 
-export const allUsersEnterInChat = (type: IChat.Type, ...excludeClient: Socket[]): Promise<any> =>
-    Promise.all(getClientsOnChat(type).filter(c => !excludeClient.includes(c)).map(client => enterInChat(client, type)))
-           .then(results => {
-               let dist = new Set(results)
-               if(dist.size === 1) return { chatName: results[0] }
-               throw new Error("More chats are selected .")
-           })
+export function allUsersEnterInChat(type: IChat.Type, ...excludeClient: Socket[]): Promise<any> {
+    return Promise.all(
+        getClientsOnChat(type)
+            .filter(c => !excludeClient.includes(c))
+            .map(client => enterInChat(client, type))
+    )
+        .then(results => {
+            const dist = new Set(results)
+            if (dist.size === 1) return { chatName: results[0] }
+            throw new Error("More chats are selected .")
+        })
+}
 
+export function enterInChat(client: Socket, type: IChat.Type): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+        client
+            .emit("chat:enter", getChatInfo(type))
+            .once(SocketEvent.CHAT_ENTER, ({ chatName }) => resolve(chatName))
+            .once(SocketEvent.CHAT_USER_NOT_FOUND, () => reject({ event: SocketEvent.CHAT_USER_NOT_FOUND }))
+            .once(SocketEvent.OPERATION_NOT_AUTHORIZED, () => reject({ event: SocketEvent.OPERATION_NOT_AUTHORIZED }))
+    })
+}
+//-----------------------------------------------------------
+export function allUsersLeaveChat(type: IChat.Type): Promise<void> {
+    return new Promise<void>(resolve => {
+        getClientsOnChat(type)
+            .forEach(client => client.emit("chat:leave", getChatInfo(type)))
+        resolve()
+    })
+}
 
-export const enterInChat = (client: Socket, type: IChat.Type) => new Promise<any>((resolve, reject) => {
-    client.emit("chat:enter", getChatInfo(type))
-          .once(SocketEvent.CHAT_ENTER, ({chatName}) => resolve(chatName))
-          .once(SocketEvent.CHAT_USER_NOT_FOUND, () => reject({event: SocketEvent.CHAT_USER_NOT_FOUND}))
-          .once(SocketEvent.OPERATION_NOT_AUTHORIZED, () => reject({event: SocketEvent.OPERATION_NOT_AUTHORIZED}))
-})
-
-export const allUsersLeaveChat = (type: IChat.Type): Promise<void> => new Promise<void>(resolve => {
-    getClientsOnChat(type).forEach(client => client.emit("chat:leave", getChatInfo(type)))
-    resolve()
-})
-
-export const getExceptedChatName = (type: IChat.Type): string => {
-    let _chat = getChatInfo(type)
-    if(_chat) {
-        switch(type){
-            case IChat.Type.ONE: return [Rooms.CHAT_ONE, _chat._id].join('-');
-            case IChat.Type.GROUP: return [Rooms.CHAT_GROUP, _chat._id ].join('-')
+export function getExceptedChatName(type: IChat.Type): string {
+    const _chat = getChatInfo(type)
+    if (_chat) {
+        switch (type) {
+            case IChat.Type.ONE: return [Rooms.CHAT_ONE, _chat._id].join("-")
+            case IChat.Type.GROUP: return [Rooms.CHAT_GROUP, _chat._id].join("-")
         }
     }
 }
 
-export const getExceptedChatInfo = (type: IChat.Type): any => {
-    let _chat = getChatInfo(type)
-    if(_chat){
+export function getExceptedChatInfo(type: IChat.Type): any {
+    const _chat = getChatInfo(type)
+    if (_chat) {
         return {
             _id: _chat._id,
             ..._chat.info
@@ -367,17 +426,21 @@ export const getExceptedChatInfo = (type: IChat.Type): any => {
     }
 }
 
-export const message = (sender: string): any => ({
-    sender: { _id: sender },
-    content: "examples message"
-})
-
-const randomInteger = (min: number, max: number): number => {
-    max *= 1000; min *= 1000
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+export function message(sender: string): any {
+    return ({
+        sender: { _id: sender },
+        content: "examples message"
+    })
 }
 
-export const readMessage = (sender: string, ...receivers: string[]): any => ({
-    ...message(sender),
-    read: receivers.map((r, index) => ({ user: { _id: r }, timestamp: Date.now() - (index < receivers.length - 1 ? randomInteger(1000, 5000): 0)  }))
-})
+function randomInteger(min: number, max: number): number {
+    max *= 1000; min *= 1000
+    return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+export function readMessage(sender: string, ...receivers: string[]): any {
+    return ({
+        ...message(sender),
+        read: receivers.map((r, index) => ({ user: { _id: r }, timestamp: Date.now() - (index < receivers.length - 1 ? randomInteger(1000, 5000) : 0) }))
+    })
+}

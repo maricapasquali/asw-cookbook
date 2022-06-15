@@ -1,12 +1,12 @@
-import {AxiosResponse} from "axios";
-import {MethodsAxios} from "../methods";
+import { AxiosResponse } from "axios"
+import { MethodsAxios } from "../methods"
 
 export default function (methods: MethodsAxios) {
 
     function createShoppingListPoint(user: string, data: object, token: string): Promise<AxiosResponse>  {
-        return methods.post('/users/:userID/shopping-list', data,{
+        return methods.post("/users/:userID/shopping-list", data,{
             headers: {
-                authorization: 'Bearer ' + token
+                authorization: "Bearer " + token
             },
             urlParams:{
                 userID: user
@@ -15,9 +15,9 @@ export default function (methods: MethodsAxios) {
     }
 
     function getShoppingList(user: string, token: string): Promise<AxiosResponse>  {
-        return methods.get('/users/:userID/shopping-list', {
+        return methods.get("/users/:userID/shopping-list", {
             headers: {
-                authorization: 'Bearer ' + token
+                authorization: "Bearer " + token
             },
             urlParams:{
                 userID: user
@@ -26,9 +26,9 @@ export default function (methods: MethodsAxios) {
     }
 
     function updateShoppingListPoint(user: string, point: string, data: object, token: string): Promise<AxiosResponse>  {
-        return methods.patch('/users/:userID/shopping-list/:pointID', data,{
+        return methods.patch("/users/:userID/shopping-list/:pointID", data,{
             headers: {
-                authorization: 'Bearer ' + token
+                authorization: "Bearer " + token
             },
             urlParams:{
                 userID: user,
@@ -38,9 +38,9 @@ export default function (methods: MethodsAxios) {
     }
 
     function deleteShoppingListPoint(user: string, point: string, token: string): Promise<AxiosResponse>  {
-        return methods.erase('/users/:userID/shopping-list/:pointID', {
+        return methods.erase("/users/:userID/shopping-list/:pointID", {
             headers: {
-                authorization: 'Bearer ' + token
+                authorization: "Bearer " + token
             },
             urlParams:{
                 userID: user,

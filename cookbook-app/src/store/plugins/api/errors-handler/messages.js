@@ -1,10 +1,11 @@
-import handlerErrorBase from './base'
+import handlerErrorBase from "./base"
+
 export default function (bus) {
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated} = handlerErrorBase(bus)
+    const { badRequest, forbidden, notFound, serverError, unAuthenticated } = handlerErrorBase(bus)
 
-    const errInfo = {_forbiddenPage: true}
+    const errInfo = { _forbiddenPage: true }
 
-    function commonHandler(err, resourceNotFound){
+    function commonHandler(err, resourceNotFound) {
         switch (err.response?.status) {
             case 400:
                 badRequest(err)
@@ -16,7 +17,7 @@ export default function (bus) {
                 forbidden(err)
                 break
             case 404:
-                if(resourceNotFound) notFound(err, resourceNotFound)
+                if (resourceNotFound) notFound(err, resourceNotFound)
                 break
             default:
                 serverError(err)
@@ -25,24 +26,24 @@ export default function (bus) {
         return false
     }
     // messages
-    function readMessages(err){
-        commonHandler(err, {name: 'Chat/Messaggi'})
+    function readMessages(err) {
+        commonHandler(err, { name: "Chat/Messaggi" })
     }
-    function createMessage(err){
-        return commonHandler(err, {name: 'Chat', id: err?.response?.config?.urlParams?.chatID})
+    function createMessage(err) {
+        return commonHandler(err, { name: "Chat", id: err?.response?.config?.urlParams?.chatID })
     }
-    function listMessages(err){
-        commonHandler(err, {name: 'Chat', id: err?.response?.config?.urlParams?.chatID})
+    function listMessages(err) {
+        commonHandler(err, { name: "Chat", id: err?.response?.config?.urlParams?.chatID })
     }
 
     // attachments
-    function updatePermissionAttachment(err){
-        commonHandler(err, { name: 'Ricetta/Utenti' })
+    function updatePermissionAttachment(err) {
+        commonHandler(err, { name: "Ricetta/Utenti" })
     }
-    function getAttachments(err){
-        commonHandler(err, {name: 'Utente', id: err?.response?.config?.urlParams?.userID})
+    function getAttachments(err) {
+        commonHandler(err, { name: "Utente", id: err?.response?.config?.urlParams?.userID })
     }
-    function getAttachment(err){
+    function getAttachment(err) {
         commonHandler(err)
     }
 

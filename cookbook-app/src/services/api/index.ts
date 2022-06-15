@@ -1,15 +1,15 @@
-import users from './users'
-import friends from './users/friends'
-import foods from './foods'
-import recipes from './recipes'
-import shoppingList from './shopping-list'
-import notifications from './notifications'
-import chats from './chats'
+import users from "./users"
+import friends from "./users/friends"
+import foods from "./foods"
+import recipes from "./recipes"
+import shoppingList from "./shopping-list"
+import notifications from "./notifications"
+import chats from "./chats"
 
-import methods, {MethodsAxios} from './methods'
+import methods, { MethodsAxios } from "./methods"
 
 export default function ({ serverConfiguration, store }){
-    let _methods: MethodsAxios = methods(serverConfiguration, store)
+    const _methods: MethodsAxios = methods(serverConfiguration, store)
 
     return {
         serverInformation: _methods.info,

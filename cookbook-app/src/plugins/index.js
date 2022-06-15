@@ -1,14 +1,14 @@
-import BroadcastChannelPlugin from './broadcast-channel'
-import DirectivePlugin from './directives'
-import EventBusPlugin, {eventBus} from './event-bus'
-import SocketPlugin from './socket'
-import FiltersPlugin from './filters'
+import BroadcastChannelPlugin from "./broadcast-channel"
+import DirectivePlugin from "./directives"
+import EventBusPlugin, { eventBus } from "./event-bus"
+import SocketPlugin from "./socket"
+import FiltersPlugin from "./filters"
 
-export default function installAppPlugins(Vue, {configurationEnvironment, store, router}){
+export default function installAppPlugins(Vue, { configurationEnvironment, store, router }) {
 
     Vue.prototype.$appName = configurationEnvironment.appName
 
-    console.debug('Install plugin App Utilities ...')
+    console.debug("Install plugin App Utilities ...")
 
     Vue.use(FiltersPlugin)
 

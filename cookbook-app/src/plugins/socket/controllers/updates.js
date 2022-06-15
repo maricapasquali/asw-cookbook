@@ -1,66 +1,66 @@
 export default function (bus, store, router) {
 
-    function addInShoppingList(point){
+    function addInShoppingList(point) {
         store.commit("shopping-list/add", point)
     }
-    function updatePointInShoppingList(point){
-        store.commit("shopping-list/update", {pointID: point._id, checked: point.checked})
+    function updatePointInShoppingList(point) {
+        store.commit("shopping-list/update", { pointID: point._id, checked: point.checked })
     }
-    function removePointInShoppingList(pointID){
+    function removePointInShoppingList(pointID) {
         store.commit("shopping-list/remove", pointID)
     }
 
-    function addRecipePermission({recipe}){
-        bus.$emit('recipe:add:permission', recipe)
+    function addRecipePermission({ recipe }) {
+        bus.$emit("recipe:add:permission", recipe)
     }
 
-    function unlikeRecipe({recipeID, likeID}){
-        bus.$emit('unlike:recipe', recipeID, likeID)
+    function unlikeRecipe({ recipeID, likeID }) {
+        bus.$emit("unlike:recipe", recipeID, likeID)
     }
 
-    function unlikeComment({commentID, likeID}){
-        bus.$emit('unlike:comment', commentID, likeID)
+    function unlikeComment({ commentID, likeID }) {
+        bus.$emit("unlike:comment", commentID, likeID)
     }
 
-    function updateFood(food){
-        bus.$emit('food:update', food)
+    function updateFood(food) {
+        bus.$emit("food:update", food)
     }
 
-    function updateComment(comment){
-        bus.$emit('comment:update', comment)
+    function updateComment(comment) {
+        bus.$emit("comment:update", comment)
     }
 
-    function deleteComment(commentID){
-        bus.$emit('comment:delete', commentID)
+    function deleteComment(commentID) {
+        bus.$emit("comment:delete", commentID)
     }
 
-    function unReportComment(commentID){
-        bus.$emit('comment:unreport', commentID)
+    function unReportComment(commentID) {
+        bus.$emit("comment:unreport", commentID)
     }
 
-    function signupUser(user){
-        bus.$emit('user:signup', user)
+    function signupUser(user) {
+        bus.$emit("user:signup", user)
     }
 
-    function checkUser(user){
-        bus.$emit('user:checked', user)
+    function checkUser(user) {
+        bus.$emit("user:checked", user)
     }
 
-    function updateInfoUser(user_info){
-        bus.$emit('user:update:info', user_info)
+    function updateInfoUser(userInfo) {
+        bus.$emit("user:update:info", userInfo)
         // if it is my friend
-        store.commit('friendships/update-user-info', user_info)
+        store.commit("friendships/update-user-info", userInfo)
     }
 
-    function deleteUser(id){
-        console.debug('deleted user : ', id)
-        if(store.getters["session/userIdentifier"] === id){
+    function deleteUser(id) {
+        console.debug("deleted user : ", id)
+        if (store.getters["session/userIdentifier"] === id) {
             store.dispatch("reset")
-            router.replace({name: "homepage"})
+            router.replace({ name: "homepage" })
         } else {
-            bus.$emit('user:delete', id)
+            bus.$emit("user:delete", id)
             // if it is my friend
-            store.commit('friendships/remove', id)
+            store.commit("friendships/remove", id)
         }
     }
 

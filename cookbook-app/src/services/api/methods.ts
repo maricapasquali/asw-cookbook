@@ -1,23 +1,26 @@
-import axios, {AxiosRequestConfig, AxiosResponse} from 'axios'
+import axios, {
+    AxiosRequestConfig,
+    AxiosResponse
+} from "axios"
 
-declare module 'axios' {
+declare module "axios" {
     interface AxiosRequestConfig {
-        urlParams?: Record<string, string>;
+        urlParams?: Record<string, string>
     }
 }
 
 export type MethodsAxios = {
-    info: any,
-    head: (pathname: string, config?: AxiosRequestConfig) => Promise<AxiosResponse>,
-    get: (pathname: string, config?: AxiosRequestConfig) => Promise<AxiosResponse>,
-    post: (pathname: string, data: any, config?: AxiosRequestConfig) => Promise<AxiosResponse>,
-    patch: (pathname: string, data: any, config?: AxiosRequestConfig) => Promise<AxiosResponse>,
-    put: (pathname: string, data: any, config?: AxiosRequestConfig) => Promise<AxiosResponse>,
+    info: any
+    head: (pathname: string, config?: AxiosRequestConfig) => Promise<AxiosResponse>
+    get: (pathname: string, config?: AxiosRequestConfig) => Promise<AxiosResponse>
+    post: (pathname: string, data: any, config?: AxiosRequestConfig) => Promise<AxiosResponse>
+    patch: (pathname: string, data: any, config?: AxiosRequestConfig) => Promise<AxiosResponse>
+    put: (pathname: string, data: any, config?: AxiosRequestConfig) => Promise<AxiosResponse>
     erase: (pathname: string, config?: AxiosRequestConfig) => Promise<AxiosResponse>
 }
 
 export default function (serverConfiguration: any, store: any): MethodsAxios {
-    const subDomain = serverConfiguration['sub-domain']
+    const subDomain = serverConfiguration["sub-domain"]
 
     const _serverInfo = {
         api: {
@@ -43,47 +46,47 @@ export default function (serverConfiguration: any, store: any): MethodsAxios {
         },
     })
 
-    instance.interceptors.request.use(function (config){
-        if (!config.url) return config;
-        let pathname = config.url;
-        Object.entries(config.urlParams || {}).forEach(([k, v]) => pathname = pathname.replace(`:${k}`, encodeURIComponent(v)));
+    instance.interceptors.request.use(config=> {
+        if (!config.url) return config
+        let pathname = config.url
+        Object.entries(config.urlParams || {}).forEach(([k, v]) => pathname = pathname.replace(`:${k}`, encodeURIComponent(v)))
         console.debug("interceptors.request : pathname = ", pathname)
         return {
             ...config,
             url: pathname,
-        };
-    })
-    instance.interceptors.response.use(function(res) {
-            console.debug("interceptors.response : res = ", res.status)
-            return res;
-        },
-        async function (err){
-            const originalConfig = err.config;
-            console.error("interceptors.response : err = ", err)
-
-            let userIdentifier = store.getters['session/userIdentifier']
-            console.debug('User is logged = ', !!userIdentifier)
-
-            if (err.response?.status === 401 && userIdentifier && !originalConfig._retry && !originalConfig.url.includes('refresh-token')) {
-                originalConfig._retry = true;
-                return store.dispatch('session/requestNewAccessToken')
-                    .then(res => {
-                        console.debug("Interceptors : result request  ", res)
-                        if(res?.status === 200 || res?.status === 204) {
-                            console.debug(
-                                res?.status === 200 ? "Interceptors : Access token has been updated."
-                                    : (res?.status === 204 ? "Interceptors : Access token is still valid." : '')
-                            )
-                            return instance({ ...originalConfig, headers: { authorization: 'Bearer ' + res?.data.access_token } });
-                        }
-                        console.error("Interceptors : Refresh token err: ", res.response)
-                        return Promise.reject(res);
-                    })
-            }
-
-            return Promise.reject(err);
         }
-    );
+    })
+    instance.interceptors.response.use(res => {
+        console.debug("interceptors.response : res = ", res.status)
+        return res
+    },
+    err => {
+        const originalConfig = err.config
+        console.error("interceptors.response : err = ", err)
+
+        const userIdentifier = store.getters["session/userIdentifier"]
+        console.debug("User is logged = ", !!userIdentifier)
+
+        if (err.response?.status === 401 && userIdentifier && !originalConfig._retry && !originalConfig.url.includes("refresh-token")) {
+            originalConfig._retry = true
+            return store.dispatch("session/requestNewAccessToken")
+                .then(res => {
+                    console.debug("Interceptors : result request  ", res)
+                    if(res?.status === 200 || res?.status === 204) {
+                        console.debug(
+                            res?.status === 200 ? "Interceptors : Access token has been updated."
+                                : (res?.status === 204 ? "Interceptors : Access token is still valid." : "")
+                        )
+                        return instance({ ...originalConfig, headers: { authorization: "Bearer " + res?.data.access_token } })
+                    }
+                    console.error("Interceptors : Refresh token err: ", res.response)
+                    return Promise.reject(res)
+                })
+        }
+
+        return Promise.reject(err)
+    }
+    )
 
     function head(pathname: string, config?: AxiosRequestConfig): Promise<AxiosResponse>{
         return instance.head(_serverInfo.api.pathname + pathname, config)

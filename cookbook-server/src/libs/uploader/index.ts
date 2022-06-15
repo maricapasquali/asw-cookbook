@@ -1,16 +1,16 @@
-import * as path from "path";
-import * as multer from 'multer'
-import * as fs from "fs";
+import * as path from "path"
+import * as multer from "multer"
+import * as fs from "fs"
 
 export type Mixed = {
     /**
      * Field name specified in the form
      */
-    name: string,
+    name: string
     /**
      * Max number of file to upload
      */
-    maxCount?: number,
+    maxCount?: number
     /**
      * Type of file to upload
      */
@@ -21,11 +21,11 @@ export type UploaderConfiguration = {
     /**
      * Type of file to upload
      */
-    type: FileUploader.FileType,
+    type: FileUploader.FileType
     /**
      * Destination folder
      */
-    dest: string,
+    dest: string
     /**
      * (Optional) Rename uploaded file and return the new name.
      */
@@ -38,39 +38,38 @@ export interface IFileUploader {
      * @param configuration instance of {@link UploaderConfiguration}
      * @return middleware to upload one file
      */
-    single(field: string, configuration: UploaderConfiguration): any
+    single: (field: string, configuration: UploaderConfiguration) => any
 
     /**
      * @param fields field names specified in the form
      * @param configurations instance of {@link UploaderConfiguration}
      * @return middleware to upload more than one file
      */
-    mixed(fields: Array<Mixed>, configurations: Array<UploaderConfiguration>): any
+    mixed: (fields: Mixed[], configurations: UploaderConfiguration[]) => any
 }
 
-const KILOBYTE: number = 1024 // bytes
+const KILOBYTE = 1024 // bytes
 const MEGABYTE: number = KILOBYTE * KILOBYTE
 
 /**
  * An implementation of {@link IFileUploader}
  */
 export class FileUploader implements IFileUploader {
-
     private readonly fileSize: number = 512 * MEGABYTE
 
-    mixed(fields: Array<Mixed>, configurations: Array<UploaderConfiguration>): any {
-        const _configuration = (fieldName: string): (UploaderConfiguration | null) => {
-            let field = fields.find(f => f.name === fieldName)
+    mixed(fields: Mixed[], configurations: UploaderConfiguration[]): any {
+        function _configuration(fieldName: string): UploaderConfiguration | null {
+            const field = fields.find(f => f.name === fieldName)
             return field ? configurations.find(c => c.type === field.type) : null
         }
 
-        let fileStorage = multer.diskStorage({
+        const fileStorage = multer.diskStorage({
             destination: (req, file, cb) => {
-                let configuration = _configuration(file.fieldname)
-                this._destination(configuration ? configuration.dest : 'tmp', cb)
+                const configuration = _configuration(file.fieldname)
+                this._destination(configuration ? configuration.dest : "tmp", cb)
             },
             filename: (req, file, cb) => this._filename(file, _configuration(file.fieldname), cb)
-        });
+        })
 
         return multer({
             storage: fileStorage,
@@ -78,22 +77,23 @@ export class FileUploader implements IFileUploader {
                 fileSize: this.fileSize
             },
             fileFilter: (req, file, cb) => {
-                let configuration = _configuration(file.fieldname)
+                const configuration = _configuration(file.fieldname)
                 Promise.all([
                     this.checkType(file, ...configurations.map(c => c.type)),
                     this.checkAvailableExtension(file, configuration)
                 ])
-                .then(() => cb(null, true))
-                .catch(cb)
+                    .then(() => cb(null, true))
+                    .catch(cb)
             }
-        }).fields(fields)
+        })
+            .fields(fields)
     }
 
     single(field: string, configuration: UploaderConfiguration): any {
-        let fileStorage = multer.diskStorage({
+        const fileStorage = multer.diskStorage({
             destination: (req, file, cb) => this._destination(configuration.dest, cb),
             filename: (req, file, cb) => this._filename(file, configuration, cb)
-        });
+        })
 
         return multer({
             storage: fileStorage,
@@ -105,11 +105,12 @@ export class FileUploader implements IFileUploader {
                     this.checkType(file, configuration.type),
                     this.checkAvailableExtension(file, configuration)
                 ])
-                .then(() => cb(null, true))
-                .catch(cb)
+                    .then(() => cb(null, true))
+                    .catch(cb)
             }
 
-        }).single(field)
+        })
+            .single(field)
     }
 
     private _destination(dest: string, cb: (...args: any[]) => void): void {
@@ -118,25 +119,30 @@ export class FileUploader implements IFileUploader {
     }
 
     private _filename(file: any, configuration: UploaderConfiguration, cb: (...args: any[]) => void): void {
-        configuration.newFileName = configuration.newFileName || ((file: any) => file.originalname + '_' + Date.now() + path.extname(file.originalname).toLowerCase())
-        let newFileName: string = configuration.newFileName(file)
+        configuration.newFileName = configuration.newFileName || ((file: any) => file.originalname + "_" + Date.now() + path.extname(file.originalname)
+            .toLowerCase())
+        const newFileName: string = configuration.newFileName(file)
         console.debug(`Rename ${configuration.type}: new path = ${path.join(configuration.dest, newFileName)}`)
         cb(null, newFileName)
     }
 
     private checkType(file: any, ...expectedTypes: FileUploader.FileType[]): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            if(!file.mimetype.match(expectedTypes.map(type => type + '\/.*').join('|')))
-                return reject(new Error('File is not an ' + expectedTypes.join(' or ')))
+            if (!file.mimetype.match(expectedTypes.map(type => `${type}/.*`).join("|"))) {
+                return reject(new Error("File is not an " + expectedTypes.join(" or ")))
+            }
             resolve()
         })
     }
 
     private checkAvailableExtension(file: any, configuration: UploaderConfiguration): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            let ext: string = path.extname(file.originalname).toLowerCase().replace("\.", "")
-            if(!FileUploader.FileType.availableFileExtension(configuration.type).includes(ext))
+            const ext: string = path.extname(file.originalname)
+                .toLowerCase()
+                .replace(".", "")
+            if (!FileUploader.FileType.availableFileExtension(configuration.type).includes(ext)) {
                 return reject(new Error(`'${ext}' is not an available extension for type '${configuration.type}'`))
+            }
             resolve()
         })
     }
@@ -148,8 +154,8 @@ export namespace FileUploader {
      * {@link FileType} represents all the available type of file
      */
     export enum FileType {
-        IMAGE = 'image',
-        VIDEO = 'video'
+        IMAGE = "image",
+        VIDEO = "video"
     }
 
     export namespace FileType {
@@ -160,9 +166,9 @@ export namespace FileUploader {
         export function availableFileExtension(fileType: FileType): string[] {
             switch (fileType) {
                 case FileUploader.FileType.IMAGE:
-                    return ['png', 'jpg', 'jpeg', 'gif']
+                    return ["png", "jpg", "jpeg", "gif"]
                 case FileUploader.FileType.VIDEO:
-                    return ['mp4', 'mkv']
+                    return ["mp4", "mkv"]
             }
         }
     }

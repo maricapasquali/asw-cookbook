@@ -1,6 +1,7 @@
-import handlerErrorBase from './base'
-export default function (bus){
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated} = handlerErrorBase(bus)
+import handlerErrorBase from "./base"
+
+export default function (bus) {
+    const { badRequest, forbidden, notFound, serverError, unAuthenticated } = handlerErrorBase(bus)
 
     function makeOrUnmakeLike(err) {
         switch (err.response?.status) {
@@ -14,13 +15,12 @@ export default function (bus){
                 forbidden(err)
                 break
             case 404: {
-                let resource = { name:'Ricetta', id: err.response.config?.urlParams?.recipeID}
-                if(err.response.config?.urlParams?.likeID) {
-                    resource.name = 'Like'
+                let resource = { name:"Ricetta", id: err.response.config?.urlParams?.recipeID }
+                if (err.response.config?.urlParams?.likeID) {
+                    resource.name = "Like"
                     resource.id = err.response.config?.urlParams?.likeID
-                }
-                else if(err.response.config?.params?.commentID) {
-                    resource.name = 'Commento'
+                } else if (err.response.config?.params?.commentID) {
+                    resource.name = "Commento"
                     resource.id = err.response.config?.params?.commentID
                 }
                 notFound(err, resource)

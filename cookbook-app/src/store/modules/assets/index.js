@@ -1,11 +1,11 @@
-import getters from "./getters";
+import getters from "./getters"
 
 import {
-    Genders,
     Countries,
     Diets,
+    Genders,
     RecipeCategories
-} from "cookbook-shared/dist/assets"
+} from "@shared/assets"
 
 export default {
     state: {

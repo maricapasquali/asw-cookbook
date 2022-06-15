@@ -1,18 +1,22 @@
 <template>
-  <div :class="{ 'input-group': $data._showSwitch }">
+  <div :class="{ 'input-group': showSwitch_ }">
     <b-form-input
-        :id="id"
-        :value="value"
-        :placeholder="placeholder"
-        :type="type"
-        :required="required"
-        :state="state"
-        @input="changeValue"
-        ref="form-input"
-        autocomplete="on"
+      :id="id"
+      :value="value"
+      :placeholder="placeholder"
+      :type="type"
+      :required="required"
+      :state="state"
+      autocomplete="on"
+      @input="changeValue"
     />
-    <b-input-group-append v-if="$data._showSwitch" >
-      <b-button tabindex="-1" :title="title" @click="switchVisibility" :variant="variant">
+    <b-input-group-append v-if="showSwitch_">
+      <b-button
+        tabindex="-1"
+        :title="title"
+        :variant="variant"
+        @click="switchVisibility"
+      >
         <b-icon :icon="icon" />
       </b-button>
     </b-input-group-append>
@@ -21,49 +25,61 @@
 
 <script>
 export default {
-  name: "input-password-switch-visibility",
-  props: {
-    id: String,
-    placeholder: String,
-    required: Boolean,
-    state: Boolean | undefined,
+    name: "InputPasswordSwitchVisibility",
+    props: {
+        id: {
+            type: String,
+            required: true,
+            default: "form-input"
+        },
+        value: {
+            type: String,
+            required: true
+        },
+        placeholder: {
+            type: String,
+            default: ""
+        },
+        required: Boolean,
+        state: {
+            type: Boolean,
+            required: false,
+            default: undefined
+        }
+    },
+    data() {
+        return {
+            showPassword_: null,
+            showSwitch_: false
+        }
+    },
+    computed: {
+        icon() {
+            return this.showPassword_ ? "eye-slash-fill": "eye-fill"
+        },
+        title() {
+            return `${this.showPassword_ ? "Nascondi": "Mostra"} password`
+        },
+        type() {
+            return this.showPassword_ ? "text": "password"
+        },
+        variant() {
+            return this.showPassword_ ? "secondary" : "primary"
+        }
+    },
+    methods: {
+        changeValue(val) {
+            this.showSwitch_ = val?.length > 0
+            this.$emit("input", val)
+        },
 
-    value: String,
-    referer: String
-  },
-  data(){
-    return {
-      _showPassword: null,
-      _showSwitch: false
+        switchVisibility() {
+            this.showPassword_ = !this.showPassword_
+        }
     }
-  },
-  computed: {
-    icon(){
-      return this.$data._showPassword ? 'eye-slash-fill': 'eye-fill'
-    },
-    title() {
-      return `${this.$data._showPassword ? 'Nascondi': 'Mostra'} password`;
-    },
-    type(){
-      return this.$data._showPassword ? 'text': 'password'
-    },
-    variant(){
-      return this.$data._showPassword ? 'secondary' : 'primary'
-    }
-  },
-  methods: {
-    changeValue(val){
-      this.$data._showSwitch = val?.length > 0
-      this.$emit("input", val)
-    },
-
-    switchVisibility(){
-      this.$data._showPassword = !this.$data._showPassword
-    }
-  }
 }
 </script>
 
 <style scoped>
-
+/* stylelint-disable no-empty-source */
 </style>

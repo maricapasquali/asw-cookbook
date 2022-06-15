@@ -1,14 +1,14 @@
 export interface IRecipeCategory {
-    value: string,
+    value: string
     text: string
 }
 
 class RecipeCategory implements IRecipeCategory {
-    text: string;
-    value: string;
+    text: string
+    value: string
     constructor(value: string, text: string) {
-        this.value = value;
-        this.text = text;
+        this.value = value
+        this.text = text
     }
 }
 

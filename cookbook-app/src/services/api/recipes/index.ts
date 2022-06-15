@@ -1,12 +1,15 @@
-import {AxiosResponse} from "axios";
+import { AxiosResponse } from "axios"
 
-import _likes from './likes'
-import _comments from './comments'
+import _likes from "./likes"
+import _comments from "./comments"
 
-import {getHeaderBearerAuthorization} from "../utils";
-import {OptionsRequestType, PaginationOptions, RecipeFilters} from "../request-options";
-import {MethodsAxios} from "../methods";
-
+import { getHeaderBearerAuthorization } from "../utils"
+import {
+    OptionsRequestType,
+    PaginationOptions,
+    RecipeFilters
+} from "../request-options"
+import { MethodsAxios } from "../methods"
 
 export default function (methods: MethodsAxios) {
     const likes = _likes(methods)
@@ -14,21 +17,21 @@ export default function (methods: MethodsAxios) {
 
 
     function setUrlPath(recipe: any){
-        if(recipe.img) {
+        if(recipe?.img) {
             recipe.img = methods.info.images.path(recipe.img)
-            console.debug('image = ' + recipe.img)
+            console.debug("image = " + recipe.img)
         }
-        if(recipe.tutorial) {
+        if(recipe?.tutorial) {
             recipe.tutorial = methods.info.videos.path(recipe.tutorial)
-            console.debug('tutorial = ' + recipe.tutorial)
+            console.debug("tutorial = " + recipe.tutorial)
         }
     }
 
     function allSharedRecipes(token?: string, optionsPagination?: PaginationOptions, filters?: RecipeFilters, options?: OptionsRequestType): Promise<AxiosResponse>  {
-        return methods.get('/recipes', {
+        return methods.get("/recipes", {
             headers: getHeaderBearerAuthorization(token),
             cancelToken: options?.cancelToken,
-            params: {...optionsPagination, ...filters}
+            params: { ...optionsPagination, ...filters }
         })
             .then(response => {
                 response.data.items.forEach(recipe => setUrlPath(recipe))
@@ -37,17 +40,17 @@ export default function (methods: MethodsAxios) {
     }
 
     function numberRecipesForCountry(token?: string, options?: OptionsRequestType): Promise<AxiosResponse>  {
-        return methods.get('/recipes-for-country', {
+        return methods.get("/recipes-for-country", {
             cancelToken: options?.cancelToken,
             headers: getHeaderBearerAuthorization(token),
         })
     }
 
     function createRecipe(user: string, data: any, token: string): Promise<AxiosResponse>{
-        return methods.post('/users/:userID/recipes', data, {
+        return methods.post("/users/:userID/recipes", data, {
             headers: {
-                authorization: 'Bearer ' + token,
-                'Content-Type': 'multipart/form-data'
+                authorization: "Bearer " + token,
+                "Content-Type": "multipart/form-data"
             },
             urlParams:{
                 userID: user
@@ -60,7 +63,7 @@ export default function (methods: MethodsAxios) {
     }
 
     function getRecipes(user: string, token?: string, type?: string, paginationOptions?: PaginationOptions, filters?: RecipeFilters, options?: OptionsRequestType): Promise<AxiosResponse>  {
-        return methods.get('/users/:userID/recipes', {
+        return methods.get("/users/:userID/recipes", {
             headers: getHeaderBearerAuthorization(token),
             cancelToken: options?.cancelToken,
             params: {
@@ -79,7 +82,7 @@ export default function (methods: MethodsAxios) {
     }
 
     function getRecipe(user: string, id: string, type: string, token?: string, options?: OptionsRequestType): Promise<AxiosResponse>  {
-        const pathName = user ? '/users/:userID/recipes/:recipeID' : '/recipes/:recipeID'
+        const pathName = user ? "/users/:userID/recipes/:recipeID" : "/recipes/:recipeID"
         return methods.get(pathName, {
             cancelToken: options?.cancelToken,
             headers: getHeaderBearerAuthorization(token),
@@ -98,10 +101,10 @@ export default function (methods: MethodsAxios) {
     }
 
     function updateRecipe(user: string, id: string, data: object, token: string): Promise<AxiosResponse>{
-        return methods.patch('/users/:userID/recipes/:recipeID', data, {
+        return methods.patch("/users/:userID/recipes/:recipeID", data, {
             headers: {
-                authorization: 'Bearer ' + token,
-                'Content-Type': 'multipart/form-data'
+                authorization: "Bearer " + token,
+                "Content-Type": "multipart/form-data"
             },
             urlParams:{
                 userID: user,
@@ -115,9 +118,9 @@ export default function (methods: MethodsAxios) {
     }
 
     function deleteRecipe(user: string, id: string, token: string){
-        return methods.erase('/users/:userID/recipes/:recipeID', {
+        return methods.erase("/users/:userID/recipes/:recipeID", {
             headers: {
-                authorization: 'Bearer ' + token
+                authorization: "Bearer " + token
             },
             urlParams:{
                 userID: user,
@@ -126,13 +129,13 @@ export default function (methods: MethodsAxios) {
         })
     }
 
-    function updatePermission(user: string, recipeID: string, permission: Array<{ user: string, granted?: string }>, token: string): Promise<AxiosResponse>{
-        return methods.patch('/users/:userID/recipes/:recipeID', {permission}, {
+    function updatePermission(user: string, recipeID: string, permission: { user: string, granted?: string }[], token: string): Promise<AxiosResponse>{
+        return methods.patch("/users/:userID/recipes/:recipeID", { permission }, {
             headers: {
-                authorization: 'Bearer ' + token
+                authorization: "Bearer " + token
             },
             params: {
-                field: 'permission'
+                field: "permission"
             },
             urlParams:{
                 userID: user,

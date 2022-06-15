@@ -1,17 +1,21 @@
-import axios, {CancelToken, CancelTokenSource} from "axios";
+import axios, {
+    CancelToken,
+    CancelTokenSource
+} from "axios"
+import { isBoolean } from "../../utils/lang"
 
 interface IQueuePendingRequests {
-    push(id: string, request: CancelTokenSource): void
-    remove(id: string): void
-    cancel(id: string, message?: string): void
-    cancelAll(message?: string): void
+    push: (id: string, request: CancelTokenSource) => void
+    remove: (id: string) => void
+    cancel: (id: string, message?: string) => void
+    cancelAll: (message?: string) => void
 }
 
 type PendingRequest = { _id: string, request: CancelTokenSource }
 
 export class QueuePendingRequests implements IQueuePendingRequests {
 
-    private readonly MESSAGE_DEFAULT: string = 'Operation canceled by user.'
+    private readonly MESSAGE_DEFAULT: string = "Operation canceled by user."
     private readonly _pendingRequests: PendingRequest[]
 
     private constructor() {
@@ -27,31 +31,31 @@ export class QueuePendingRequests implements IQueuePendingRequests {
     }
 
     private findIndex(id: string): number | false {
-        let index = this._pendingRequests.findIndex(p => p._id === id)
+        const index = this._pendingRequests.findIndex(p => p._id === id)
         return index >= 0 ? index: false
     }
 
     push(id: string, request: CancelTokenSource): void {
-        let _request = this.find(id)
+        const _request = this.find(id)
         if(!_request) {
-            this._pendingRequests.push({_id: id, request})
-            console.debug('Queue Request push : ', this._pendingRequests)
+            this._pendingRequests.push({ _id: id, request })
+            console.debug("Queue Request push : ", this._pendingRequests)
         }
     }
 
     remove(id: string): void {
-        let index = this.findIndex(id)
+        const index = this.findIndex(id)
         if(index) {
             this._pendingRequests.splice(index)
-            console.debug('Queue Request remove : ', this._pendingRequests)
+            console.debug("Queue Request remove : ", this._pendingRequests)
         }
     }
 
     cancel(id: string, message?: string): void {
-        let request = this.find(id)
+        const request = this.find(id)
         if(request) {
             request.cancel(message || this.MESSAGE_DEFAULT)
-            console.debug('Queue Request cancel : ', this._pendingRequests)
+            console.debug("Queue Request cancel : ", this._pendingRequests)
             this.remove(id)
         }
     }
@@ -60,7 +64,7 @@ export class QueuePendingRequests implements IQueuePendingRequests {
         if(this._pendingRequests.length){
             this._pendingRequests.forEach(p => p.request.cancel(message || this.MESSAGE_DEFAULT))
             this._pendingRequests.splice(0)
-            console.debug('Queue Request cancel-all : ', this._pendingRequests)
+            console.debug("Queue Request cancel-all : ", this._pendingRequests)
         }
     }
 }
@@ -68,18 +72,18 @@ export class QueuePendingRequests implements IQueuePendingRequests {
 export namespace QueuePendingRequests {
     export function makeOptions(pendingRequests: QueuePendingRequests, _id: string, cancelOptions?: boolean | { message?: string } ): { cancelToken: CancelToken } {
         if(cancelOptions) {
-            let _message;
-            if (typeof cancelOptions !== "boolean") _message = cancelOptions?.message
+            let _message
+            if (!isBoolean(cancelOptions)) _message = (cancelOptions as any)?.message
             pendingRequests.cancel(_id, _message)
         }
-        let source = axios.CancelToken.source()
+        const source = axios.CancelToken.source()
         pendingRequests.push(_id, source)
         return { cancelToken: source.token }
     }
 }
 
 export function isAbortError(err: any): boolean {
-    let isAbort = axios.isCancel(err)
-    if(isAbort) console.error('Request canceled : ', err.message)
+    const isAbort = axios.isCancel(err)
+    if(isAbort) console.error("Request canceled : ", err.message)
     return isAbort
 }

@@ -1,6 +1,7 @@
-import handlerErrorBase from './base'
-export default function (bus){
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated, duplicateResource} = handlerErrorBase(bus)
+import handlerErrorBase from "./base"
+
+export default function (bus) {
+    const { badRequest, forbidden, notFound, serverError, unAuthenticated, duplicateResource } = handlerErrorBase(bus)
 
     function similarHandlerError(err, notFoundResource) {
         switch (err.response?.status) {
@@ -8,13 +9,13 @@ export default function (bus){
                 badRequest(err)
                 break
             case 401:
-                unAuthenticated(err, {_forbiddenPage: true})
+                unAuthenticated(err, { _forbiddenPage: true })
                 break
             case 403:
                 forbidden(err)
                 break
             case 404:
-                notFound(err, notFoundResource || { name: 'Ricetta', id: err.response.config?.urlParams?.recipeID })
+                notFound(err, notFoundResource || { name: "Ricetta", id: err.response.config?.urlParams?.recipeID })
                 break
             case 409: // not in delete recipe
                 duplicateResource(err, "Esiste già una ricetta con questo nome.")
@@ -48,21 +49,27 @@ export default function (bus){
                 return true
             case 401:
                 unAuthenticated(err, info)
-                return false;
+                return false
             case 403:
                 forbidden(err)
                 return false
-            case 404: return true;
+            case 404: return true
         }
         serverError(err)
         return false
     }
 
-    const createRecipe = (err) => similarHandlerError(err, { name: 'Utente', id: err.response.config?.urlParams?.userID })
+    function createRecipe(err) {
+        return similarHandlerError(err, { name: "Utente", id: err.response.config?.urlParams?.userID })
+    }
 
-    const updateRecipe = (err) => similarHandlerError(err)
+    function updateRecipe(err) {
+        return similarHandlerError(err)
+    }
 
-    const deleteRecipe = (err) => similarHandlerError(err)
+    function deleteRecipe(err) {
+        return similarHandlerError(err)
+    }
 
     return {
         allSharedRecipes,

@@ -1,39 +1,46 @@
 <template>
   <footer class="text-center">
-   <b-container class="h-100">
-     <div><logo dark/></div>
-     <div v-if="!isAdmin" class="py-2">
-       <strong>Contatti: </strong>
-       <b-link  class="mt-2" :href="`mailto:${administratorEmail}`"> {{ administratorEmail }} </b-link>
-     </div>
-     <span class="copy-right"> Copyright &copy; 2021-{{currentYear}} {{ $appName }}, Co. </span>
-   </b-container>
+    <b-container class="h-100">
+      <div><logo dark /></div>
+      <div
+        v-if="!isAdmin"
+        class="py-2"
+      >
+        <strong>Contatti: </strong>
+        <b-link
+          class="mt-2"
+          :href="`mailto:${administratorEmail}`"
+        >
+          {{ administratorEmail }}
+        </b-link>
+      </div>
+      <span class="copy-right"> Copyright &copy; 2021-{{ currentYear }} {{ $appName }}, Co. </span>
+    </b-container>
   </footer>
 </template>
 
 <script>
-import {mapGetters} from "vuex";
+import { mapGetters } from "vuex"
 
 export default {
-  name: "app-footer",
-  computed: {
-    ...mapGetters({
-      isAdmin: 'session/isAdmin'
-    }),
-    currentYear(){
-      return new Date(Date.now()).getFullYear()
-    },
-    administratorEmail(){
-      return `administrator@${this.$appName.toLowerCase()}.com`
+    name: "AppFooter",
+    computed: {
+        ...mapGetters({
+            isAdmin: "session/isAdmin"
+        }),
+        currentYear() {
+            return new Date(Date.now()).getFullYear()
+        },
+        administratorEmail() {
+            return `administrator@${this.$appName.toLowerCase()}.com`
+        }
     }
-  }
 }
 </script>
 
-<style scoped lang="scss">
-
-footer{
-  background-color:  $footer-color!important;
+<style lang="scss" scoped>
+footer {
+  background-color: $footer-color !important;
   color: white;
   z-index: 3;
   bottom: 0;
@@ -42,8 +49,9 @@ footer{
 
   .container {
     display: grid;
+
     .logo {
-      height: 50px!important;
+      height: 50px !important;
       border-radius: 8px;
     }
 

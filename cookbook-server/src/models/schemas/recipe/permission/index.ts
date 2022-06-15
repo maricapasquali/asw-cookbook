@@ -1,24 +1,27 @@
-import {Document, Schema} from "mongoose";
+import {
+    Document,
+    Schema
+} from "mongoose"
 
-import {IUser} from "../../user";
-import {valuesOfEnum} from "../../../../libs/utilities";
+import { IUser } from "../../user"
+import { valuesOfEnum } from "../../../../libs/utilities"
 
 export interface IPermission extends Document {
-    user: IUser['_id'],
+    user: IUser["_id"]
     granted: string
 }
 export namespace IPermission {
     export enum GrantedType {
-        READ = 'read', // retrieve
-        WRITE = 'read-write', // retrieve & update
-        ROOT = 'root' // retrieve & update & delete
+        READ = "read", // retrieve
+        WRITE = "read-write", // retrieve & update
+        ROOT = "root" // retrieve & update & delete
     }
     export namespace GrantedType {
-        export function values(): Array<GrantedType> {
+        export function values(): GrantedType[] {
             return valuesOfEnum(GrantedType, "string")
         }
         export function isWritePermission(value: string): boolean {
-            let granted: GrantedType = value as GrantedType
+            const granted: GrantedType = value as GrantedType
             return granted === GrantedType.WRITE || granted === GrantedType.ROOT
         }
         export function isRootPermission(value: string): boolean {
@@ -29,6 +32,6 @@ export namespace IPermission {
 
 export const PermissionSchema: Schema<IPermission> = new Schema<IPermission>({
     _id: false,
-    user: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    user: { type: Schema.Types.ObjectId, required: true, ref: "User" },
     granted: { type: String, required: false, enum: IPermission.GrantedType.values(), default: IPermission.GrantedType.READ }
 })
