@@ -1,4 +1,4 @@
-import {Schema} from "mongoose";
+import { Schema } from "mongoose"
 
 export interface IEmailLink {
     userID: string
@@ -9,9 +9,9 @@ export interface IEmailLink {
 }
 
 export const EmailLinkSchema: Schema<IEmailLink> = new Schema<IEmailLink>({
-    userID: {type: String, required: true},
-    email: {type: String, required: true},
-    expired:  {type: Number, required: true},
-    link:  {type: String, required: true},
-    randomKey:  {type: String, required: true}
+    userID: { type: String, required: true },
+    email: { type: String, required: true },
+    expired: { type: Number, required: true },
+    link: { type: String, required: true },
+    randomKey: { type: String, required: true }
 })

@@ -1,14 +1,14 @@
-import comments from './comments'
-import foods from './foods'
-import friends from './friends'
-import likes from './likes'
-import notifications from './notifications'
-import recipes from './recipes'
-import session from './session'
-import shoppingList from './shopping-list'
-import users from './users'
-import chats from './chats'
-import messages from './messages'
+import comments from "./comments"
+import foods from "./foods"
+import friends from "./friends"
+import likes from "./likes"
+import notifications from "./notifications"
+import recipes from "./recipes"
+import session from "./session"
+import shoppingList from "./shopping-list"
+import users from "./users"
+import chats from "./chats"
+import messages from "./messages"
 
 export default function (bus) {
     return  {

@@ -1,21 +1,21 @@
-import {AxiosResponse} from "axios";
-import {getHeaderBearerAuthorization} from "../../utils";
-import {OptionsRequestType} from "../../request-options";
-import {MethodsAxios} from "../../methods";
+import { AxiosResponse } from "axios"
+import { getHeaderBearerAuthorization } from "../../utils"
+import { OptionsRequestType } from "../../request-options"
+import { MethodsAxios } from "../../methods"
 
 export default function (methods: MethodsAxios) {
 
     function getReportedComment(token: string, options?: OptionsRequestType): Promise<AxiosResponse>  {
-        return methods.get('/comments-reported', {
+        return methods.get("/comments-reported", {
             cancelToken: options?.cancelToken,
             headers: {
-                authorization: 'Bearer ' + token
+                authorization: "Bearer " + token
             }
         })
     }
 
     function createComment(user: string, recipe: string, data: object, token?: string): Promise<AxiosResponse>  {
-        return methods.post('/users/:userID/recipes/:recipeID/comments', data, {
+        return methods.post("/users/:userID/recipes/:recipeID/comments", data, {
             headers: getHeaderBearerAuthorization(token),
             urlParams:{
                 userID: user,
@@ -25,7 +25,7 @@ export default function (methods: MethodsAxios) {
     }
 
     function updateComment(user: string, recipe: string, comment: string, token: string, options: {data?: {content: string}, action?: string}): Promise<AxiosResponse>  {
-        return methods.patch('/users/:userID/recipes/:recipeID/comments/:commentID', options.data || {}, {
+        return methods.patch("/users/:userID/recipes/:recipeID/comments/:commentID", options.data || {}, {
             headers: getHeaderBearerAuthorization(token),
             params: {
                 action: options.action
@@ -39,9 +39,9 @@ export default function (methods: MethodsAxios) {
     }
 
     function deleteComment(user: string, recipe: string, comment: string, token: string): Promise<AxiosResponse>  {
-        return methods.erase('/users/:userID/recipes/:recipeID/comments/:commentID', {
+        return methods.erase("/users/:userID/recipes/:recipeID/comments/:commentID", {
             headers: {
-                authorization: 'Bearer ' + token
+                authorization: "Bearer " + token
             },
             urlParams:{
                 userID: user,
@@ -52,7 +52,7 @@ export default function (methods: MethodsAxios) {
     }
 
     function createResponse(user: string, recipe: string, comment: string, data: object, token?: string): Promise<AxiosResponse>  {
-        return methods.post('/users/:userID/recipes/:recipeID/comments/:commentID/responses', data, {
+        return methods.post("/users/:userID/recipes/:recipeID/comments/:commentID/responses", data, {
             headers: getHeaderBearerAuthorization(token),
             urlParams:{
                 userID: user,

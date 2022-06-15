@@ -1,46 +1,67 @@
 <template>
-  <div v-if="$data._video" class="preview-tutorial w-100">
-    <video class="w-100 h-100" :src="$data._video" :poster="_poster" @error="onError" controls>
+  <div
+    v-if="video_"
+    class="preview-tutorial w-100"
+  >
+    <video
+      class="w-100 h-100"
+      :src="video_"
+      :poster="_poster"
+      controls
+      @error="onError"
+    >
       Your browser does not support the video tag.
     </video>
   </div>
-  <preview-recipe-image v-else-if="_showOnlyPoster" v-model="poster"/>
+  <preview-recipe-image
+    v-else-if="_showOnlyPoster"
+    v-model="_poster"
+  />
 </template>
 
 <script>
 import PreviewRecipeImage from "./preview-recipe-image"
+
 export default {
-  name: "preview-recipe-tutorial",
-  props: {
-    value: String,
-    poster: String,
-    withoutDefaultPoster: Boolean,
-    withImage: Boolean
-  },
-  data(){
-    return {
-      defaultImageRecipe: PreviewRecipeImage.data().defaultImageRecipes
-    }
-  },
-  computed: {
-    _poster(){
-      return this.poster || (!this.withoutDefaultPoster && this.defaultImageRecipe)
+    name: "PreviewRecipeTutorial",
+    props: {
+        value: {
+            type: String,
+            default: ""
+        },
+        poster: {
+            type: String,
+            default: ""
+        },
+        withoutDefaultPoster: Boolean,
+        withImage: Boolean
     },
-    _showOnlyPoster(){
-      return this.withImage && !this.$data._video
+    data() {
+        return {
+            defaultImageRecipe: PreviewRecipeImage.data().defaultImageRecipes,
+
+            video_: ""
+        }
+    },
+    computed: {
+        _poster() {
+            return this.poster || (!this.withoutDefaultPoster && this.defaultImageRecipe)
+        },
+        _showOnlyPoster() {
+            return this.withImage && !this.video_
+        }
+    },
+    created() {
+        this.video_ = this.value
+        console.debug("Set tutorial preview video = ", this.video_)
+    },
+    methods: {
+        onError(e) {
+            console.error("Video is not found. ", e)
+            this.video_ = ""
+            this.$emit("onVideoNotFound")
+        }
     }
-  },
-  methods: {
-    onError(e){
-      console.error('Video is not found. ', e)
-      this.$data._video = ''
-      this.$emit('onVideoNotFound')
-    }
-  },
-  created() {
-    this.$data._video = this.value
-    console.debug('Set tutorial preview video = ', this.$data._video)
-  }
 }
 </script>
 

@@ -1,10 +1,11 @@
-import * as nodemailer from 'nodemailer'
-import * as fs from 'fs'
-import * as path from 'path'
+import * as nodemailer from "nodemailer"
+import * as fs from "fs"
+import * as path from "path"
 
-import * as dotenv from 'dotenv'
-import {TemplateEmail} from "./templates";
-dotenv.config({path: path.join(__dirname, ".env")})
+import * as dotenv from "dotenv"
+import { TemplateEmail } from "./templates"
+
+dotenv.config({ path: path.join(__dirname, ".env") })
 
 /**
  * {@link MessageHeader} is an interface that represents the information of email (i.e sender, receiver, subject, attachments).
@@ -33,7 +34,7 @@ export type MailerOptions = {
     * (Optional) Field that if true does not send the email.
     * Note: Using only for testing.
     */
-   test?: boolean,
+   test?: boolean
    /**
     * (Optional) Field for saving the information of the email in a file.
     * Note: Using only for testing.
@@ -43,7 +44,7 @@ export type MailerOptions = {
        * File name to save some information of email.
        */
       filename: string
-   },
+   }
    /**
     * (Optional) Some callbacks for errors or success.
     */
@@ -52,7 +53,7 @@ export type MailerOptions = {
        * Function will be called when an error is raised.
        * @param e error
        */
-      error: (e: any) => void,
+      error: (e: any) => void
       /**
        * Function will be called when the operation is successful.
        * @param i some information of email
@@ -68,67 +69,63 @@ export interface IMailer {
     * @param templateEmail template of email body ({@link TemplateEmail})
     * @param options option of mailer ({@link MailerOptions})
     */
-   send(messageHeader: MessageHeader, templateEmail: TemplateEmail, options?: MailerOptions)
+   send: (messageHeader: MessageHeader, templateEmail: TemplateEmail, options?: MailerOptions) => any
 }
 
 /**
  * An implementation of {@link IMailer}
  */
 export class Mailer implements IMailer {
-   private readonly transport: any
-   private readonly from: string
+    private readonly transport: any
+    private readonly from: string
 
-   private readonly output;
+    private readonly output
 
-   constructor(from: string, output?: string) {
-      this.from = from
-      this.transport = nodemailer.createTransport({
-         host: process.env.MAILER_HOST,
-         port: process.env.MAILER_PORT,
-         auth: {
-            user: process.env.MAILER_USER,
-            pass: process.env.MAILER_PASSWORD
-         }
-      });
-      this.output = output || path.join(__dirname , 'outputs')
-   }
+    constructor(from: string, output?: string) {
+        this.from = from
+        this.transport = nodemailer.createTransport({
+            host: process.env.MAILER_HOST,
+            port: process.env.MAILER_PORT,
+            auth: {
+                user: process.env.MAILER_USER,
+                pass: process.env.MAILER_PASSWORD
+            }
+        })
+        this.output = output || path.join(__dirname, "outputs")
+    }
 
-   send(messageHeader: MessageHeader, templateEmail: TemplateEmail, options?: MailerOptions) {
-      const callbacks = options.callbacks
-      const savedJSON = options.savedJSON
-      const test = options.test
+    send(messageHeader: MessageHeader, templateEmail: TemplateEmail, options?: MailerOptions) {
+        const callbacks = options.callbacks
+        const savedJSON = options.savedJSON
+        const test = options.test
 
-      try {
-         const _messageHeader = Object.assign({ from: this.from }, messageHeader)
-         const message = {..._messageHeader, html: templateEmail.toHtml(), text: templateEmail.toText() }
+        try {
+            const _messageHeader = Object.assign({ from: this.from }, messageHeader)
+            const message = { ..._messageHeader, html: templateEmail.toHtml(), text: templateEmail.toText() }
 
-         if(!test){
-            this.transport.sendMail(message, function (err, info){
-               if(err) {
-                  console.error(err)
-                  if(callbacks && typeof callbacks.error === 'function') callbacks.error(err)
-               }
-               else {
-                  console.debug('Email was sent to '+ messageHeader.to)
-                  if(callbacks && typeof callbacks.success === 'function') callbacks.success(info)
-               }
-            })
-         }
+            if (!test) {
+                this.transport.sendMail(message, (err, info) => {
+                    if (err) {
+                        console.error(err)
+                        if (callbacks && typeof callbacks.error === "function") callbacks.error(err)
+                    } else {
+                        console.debug("Email was sent to " + messageHeader.to)
+                        if (callbacks && typeof callbacks.success === "function") callbacks.success(info)
+                    }
+                })
+            }
 
-         if(savedJSON){
-            let templateEmailJSON = templateEmail.toJson()
-            let pathFileJSON: string = path.join(this.output, savedJSON.filename + ".json")
-            fs.writeFile(pathFileJSON, JSON.stringify({..._messageHeader, ...templateEmailJSON}, null, 2), 'utf8', (err)=> {
-               if(err) console.error(err)
-               else console.debug('Save email in '+ pathFileJSON)
-            });
-         }
-
-      }catch (e){
-         console.error(e)
-         if(callbacks && typeof callbacks.error === 'function') callbacks.error(e)
-      }
-   }
-
+            if (savedJSON) {
+                const templateEmailJSON = templateEmail.toJson()
+                const pathFileJSON: string = path.join(this.output, savedJSON.filename + ".json")
+                fs.writeFile(pathFileJSON, JSON.stringify({ ..._messageHeader, ...templateEmailJSON }, null, 2), "utf8", err => {
+                    if (err) console.error(err)
+                    else console.debug("Save email in " + pathFileJSON)
+                })
+            }
+        } catch (e) {
+            console.error(e)
+            if (callbacks && typeof callbacks.error === "function") callbacks.error(e)
+        }
+    }
 }
-

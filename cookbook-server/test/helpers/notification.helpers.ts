@@ -1,4 +1,4 @@
-import {User} from "../../src/models";
+import { User } from "../../src/models"
 import * as bcrypt from "bcrypt"
 
 /* -- EXPORTED FUNCTIONALITY -- */
@@ -45,4 +45,6 @@ export const kira = {
     signup: "checked"
 }
 
-export const insertSomeUsers = (): Promise<any> => User.insertMany([kyle, marica, kira])
+export function insertSomeUsers(): Promise<any> {
+    return User.insertMany([kyle, marica, kira])
+}

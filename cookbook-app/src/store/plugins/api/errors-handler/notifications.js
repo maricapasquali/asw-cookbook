@@ -1,6 +1,7 @@
-import handlerErrorBase from './base'
-export default function (bus){
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated} = handlerErrorBase(bus)
+import handlerErrorBase from "./base"
+
+export default function (bus) {
+    const { badRequest, forbidden, notFound, serverError, unAuthenticated } = handlerErrorBase(bus)
 
     function similarErrorHandler(err) {
         switch (err.response?.status) {
@@ -8,14 +9,14 @@ export default function (bus){
                 badRequest(err)
                 return
             case 401:
-                unAuthenticated(err, {_forbiddenPage: true})
+                unAuthenticated(err, { _forbiddenPage: true })
                 return
             case 403:
                 forbidden(err)
                 return
             case 404:
-                if(err.response?.config?.urlParams?.notificationID)
-                    return notFound(err, {name: 'Notifica', id: err.response?.config?.urlParams?.notificationID})
+                if (err.response?.config?.urlParams?.notificationID)
+                    return notFound(err, { name: "Notifica", id: err.response?.config?.urlParams?.notificationID })
         }
         serverError(err)
     }

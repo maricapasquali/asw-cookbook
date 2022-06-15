@@ -1,37 +1,81 @@
-<template >
-  <b-container class="word-map px-0" fluid v-show="visibility">
-    <b-row class="map-container mx-1 p-0" cols="1">
+<template>
+  <b-container
+    v-show="visibility"
+    class="word-map px-0"
+    fluid
+  >
+    <b-row
+      class="map-container mx-1 p-0"
+      cols="1"
+    >
       <b-col class="map-container-header">
         <b-button-group>
-          <b-button title="Reset zoom" @click="resetZoom">  <font-awesome-icon icon="undo" /></b-button>
-          <b-button title="Zoom +" @click="zoomIn" :disabled="noZoomIn"><b-icon-zoom-in /></b-button>
-          <b-button title="Zoom -" @click="zoomOut" :disabled="noZoomOut"><b-icon-zoom-out /></b-button>
+          <b-button
+            title="Reset zoom"
+            @click="resetZoom"
+          >
+            <font-awesome-icon icon="undo" />
+          </b-button>
+          <b-button
+            title="Zoom +"
+            :disabled="noZoomIn"
+            @click="zoomIn"
+          >
+            <b-icon-zoom-in />
+          </b-button>
+          <b-button
+            title="Zoom -"
+            :disabled="noZoomOut"
+            @click="zoomOut"
+          >
+            <b-icon-zoom-out />
+          </b-button>
         </b-button-group>
-        <b-row v-if="hoverCountry" class="country-label-hover px-0 " cols="1" align-h="center" align-v="center">
-          <b-col class="text-center px-0" v-if="hoverCountry.value && hoverCountry.text">
-            <country-image v-model="hoverCountry.value"/> <span>{{hoverCountry.text}}</span>
+        <b-row
+          v-if="hoverCountry"
+          class="country-label-hover px-0 "
+          cols="1"
+          align-h="center"
+          align-v="center"
+        >
+          <b-col
+            v-if="hoverCountry.value && hoverCountry.text"
+            class="text-center px-0"
+          >
+            <country-image v-model="hoverCountry.value" /> <span>{{ hoverCountry.text }}</span>
           </b-col>
-          <b-col  class="text-center px-0" v-if="hoverCountry.recipes">
-            <span># Ricette {{hoverCountry.recipes}} </span>
+          <b-col
+            v-if="hoverCountry.recipes"
+            class="text-center px-0"
+          >
+            <span># Ricette {{ hoverCountry.recipes }} </span>
           </b-col>
         </b-row>
       </b-col>
 
 
-      <b-col class="map-container-body" >
+      <b-col class="map-container-body">
+        <v-zoomer
+          ref="zoom"
+          class="zoom-map-container"
 
-
-        <v-zoomer ref="zoom" class="zoom-map-container"
-
-                  zoomed.sync="out" :zoomingElastic=false :limitTranslation=false :doubleClickToZoom=true
-                  :minScale=scale.min :maxScale=scale.max >
-
-          <WorldSvg ref="world-map" class="world-map-svg"
-                    @mouseover.native="onMapHover" @click.native="onMapClick"
-                    @wheel.native="checkScale" @dblclick.native="checkScale"
-                    @mousedown.native="drag" @mouseup.native="drop"
+          zoomed.sync="out"
+          :zooming-elastic="false"
+          :limit-translation="false"
+          :double-click-to-zoom="true"
+          :min-scale="scale.min"
+          :max-scale="scale.max"
+        >
+          <WorldSvg
+            ref="world-map"
+            class="world-map-svg"
+            @mouseover.native="onMapHover"
+            @click.native="onMapClick"
+            @wheel.native="checkScale"
+            @dblclick.native="checkScale"
+            @mousedown.native="drag"
+            @mouseup.native="drop"
           />
-
         </v-zoomer>
       </b-col>
     </b-row>
@@ -40,166 +84,163 @@
 
 <script>
 
-import WorldSvg from '@assets/images/world.svg'
+import WorldSvg from "@assets/images/world.svg"
 
 export default {
-  name: "world-map",
-  props: {
-    value: {
-      type: Array,
-      default: () => []
+    name: "WorldMap",
+    components: {
+        WorldSvg,
     },
-    countries: {
-      type: Array,
-      default: () => []
-    },
-    visibility: {
-      type: Boolean,
-      default: true
-    }
-  },
-  components: {
-    WorldSvg,
-  },
-  data(){
-    return {
-      selectableCountries: {},
-      hoverCountry: '',
-
-      noZoomIn: false,
-      noZoomOut: true,
-      scale: {
-        max: 3,
-        min: 0.5
-      }
-    }
-  },
-  watch: {
-    countries(val){
-      val.map(country =>( { target: this.$refs['world-map'].$el.getElementsByClassName(country.refMap.class), country: country } ))
-         .forEach(({target, country}) => this.selectable(target, country.value, country))
-
-      console.debug('Selectable countries: ', this.selectableCountries)
-
-      this.value.forEach(cVal => {
-        let found = this.selectableCountries[cVal]
-        if(found && found.targets) found.targets.forEach(t => this.toggleSelect(t, cVal))
-      })
-      this._oldValue = clone(this.value)
-    },
-    value(val){
-      // console.debug('New value = ', JSON.stringify(val, null, 1))
-      // console.debug('Old value = ', JSON.stringify(this._oldValue, null, 1))
-      if(val){
-        if(val.length === 0) {
-          // on reset
-          Array.from(this.$refs['world-map'].$el.getElementsByClassName('selected'))
-              .forEach(target => target.classList.remove('selected'))
+    props: {
+        value: {
+            type: Array,
+            default: () => []
+        },
+        countries: {
+            type: Array,
+            default: () => []
+        },
+        visibility: {
+            type: Boolean,
+            default: true
         }
-        else if(this._oldValue.length > val.length){
-          // on remove
-          diff(this._oldValue, val).forEach(c => {
-            let found = this.selectableCountries[c];
-            if(found  && found.targets) found.targets.forEach(t => t.classList.remove('selected'))
-          })
+    },
+    data() {
+        return {
+            selectableCountries: {},
+            hoverCountry: "",
+
+            noZoomIn: false,
+            noZoomOut: true,
+            scale: {
+                max: 3,
+                min: 0.5
+            }
         }
-        else if(this._oldValue.length < val.length){
-          // on add
-          diff(val, this._oldValue).forEach(c => {
-            let found = this.selectableCountries[c];
-            if(found && found.targets) found.targets.forEach(t => t.classList.add('selected'))
-          })
+    },
+    watch: {
+        countries(val) {
+            val.map(country => ( { target: this.$refs["world-map"].$el.getElementsByClassName(country.refMap.class), country: country } ))
+                .forEach(({ target, country }) => this.selectable(target, country.value, country))
+
+            console.debug("Selectable countries: ", this.selectableCountries)
+
+            this.value.forEach(cVal => {
+                let found = this.selectableCountries[cVal]
+                if (found && found.targets) found.targets.forEach(t => this.toggleSelect(t, cVal))
+            })
+            this._oldValue = clone(this.value)
+        },
+        value(val) {
+            // console.debug('New value = ', JSON.stringify(val, null, 1))
+            // console.debug('Old value = ', JSON.stringify(this._oldValue, null, 1))
+            if (val) {
+                if (val.length === 0) {
+                    // on reset
+                    Array.from(this.$refs["world-map"].$el.getElementsByClassName("selected"))
+                        .forEach(target => target.classList.remove("selected"))
+                } else if (this._oldValue.length > val.length) {
+                    // on remove
+                    diff(this._oldValue, val).forEach(c => {
+                        let found = this.selectableCountries[c]
+                        if (found  && found.targets) found.targets.forEach(t => t.classList.remove("selected"))
+                    })
+                } else if (this._oldValue.length < val.length) {
+                    // on add
+                    diff(val, this._oldValue).forEach(c => {
+                        let found = this.selectableCountries[c]
+                        if (found && found.targets) found.targets.forEach(t => t.classList.add("selected"))
+                    })
+                }
+                this._oldValue = clone(val)
+            }
         }
-        this._oldValue = clone(val)
-      }
+    },
+    updated() {
+        console.debug("map world components = ", this.$refs["world-map"])
+    },
+    methods: {
+
+        selectable(target, countryVal, details = {}) {
+            this.selectableCountries[countryVal] = {
+                targets: [],
+                details: details
+            }
+            Array.from(target).forEach(pathCountry => {
+                pathCountry.classList.add("selectable")
+                pathCountry.dataset.country = countryVal
+                this.selectableCountries[countryVal].targets.push(pathCountry)
+            })
+            // console.debug('Make Selectable country : ', country.value)
+            // console.debug(this.selectableCountries[country.value] )
+        },
+
+        isSelected(target) {
+            return target.classList.contains("selected")
+        },
+
+        toggleSelect(target, countryVal) {
+            target.classList.toggle("selected")
+
+            if (this.isSelected(target)) {
+                // console.debug('Select target ', countryVal)
+                pushIfAbsent(this.value, countryVal)
+            } else {
+                // console.debug('DESelect target ', countryVal)
+                removeIfPresent(this.value, countryVal)
+            }
+        },
+
+        found(target) {
+            return Object.entries(this.selectableCountries)
+                .filter(([, v]) => v.targets.includes(target))
+                .reduce((prev, current) => ( { _id: current[0], ...current[1] }) , undefined)
+        },
+
+        onMapClick(e) {
+            let ct = this.found(e.target)
+            if (ct && ct.targets) ct.targets.forEach(target => this.toggleSelect(target, ct._id))
+        },
+
+        onMapHover(e) {
+            Array.from(document.getElementsByClassName("hover"))
+                .forEach(h => h.classList.remove("hover"))
+
+            let found = this.found(e.target)
+            if (found && found.targets && found.details) {
+                // console.debug(found)
+                found.targets.forEach(target =>  target.classList.toggle("hover"))
+                this.hoverCountry = found.details
+            } else this.hoverCountry = ""
+
+        },
+
+        drag() {
+            this.$refs["world-map"].$el.style.cursor = "grabbing"
+        },
+        drop() {
+            this.$refs["world-map"].$el.style.cursor = "grab"
+        },
+        resetZoom() {
+            this.$refs.zoom.reset()
+            // console.debug('Reset zoom ')
+            this.checkScale()
+        },
+        checkScale() {
+            this.noZoomIn = this.$refs.zoom.scale === this.scale.max
+            this.noZoomOut = this.$refs.zoom.scale === this.scale.min
+
+            // console.debug('Check Scale: ' + this.$refs.zoom.scale)
+        },
+        zoomIn() {
+            this.$refs.zoom.zoomIn()
+            this.checkScale()
+        },
+        zoomOut() {
+            this.$refs.zoom.zoomOut()
+            this.checkScale()
+        },
     }
-  },
-  methods: {
-
-    selectable(target, countryVal, details = {}){
-      this.selectableCountries[countryVal] = {
-        targets: [],
-        details: details
-      }
-      Array.from(target).forEach(path_country => {
-        path_country.classList.add('selectable')
-        path_country.dataset.country = countryVal
-        this.selectableCountries[countryVal].targets.push(path_country)
-      })
-      // console.debug('Make Selectable country : ', country.value)
-      // console.debug(this.selectableCountries[country.value] )
-    },
-
-    isSelected(target){
-      return target.classList.contains('selected')
-    },
-
-    toggleSelect(target, countryVal){
-      target.classList.toggle('selected')
-
-      if(this.isSelected(target)){
-        // console.debug('Select target ', countryVal)
-        pushIfAbsent(this.value, countryVal)
-      }else {
-        // console.debug('DESelect target ', countryVal)
-        removeIfPresent(this.value, countryVal)
-      }
-    },
-
-    found(target){
-      return Object.entries(this.selectableCountries)
-                   .filter(([k, v]) => v.targets.includes(target))
-                   .reduce((prev, current) => ( {_id: current[0], ...current[1]}) , undefined);
-    },
-
-    onMapClick(e){
-      let ct = this.found(e.target)
-      if(ct && ct.targets) ct.targets.forEach(target => this.toggleSelect(target, ct._id))
-    },
-
-    onMapHover(e){
-      Array.from(document.getElementsByClassName('hover'))
-           .forEach(h => h.classList.remove('hover'))
-
-      let found = this.found(e.target)
-      if(found && found.targets && found.details) {
-        // console.debug(found)
-        found.targets.forEach(target =>  target.classList.toggle('hover'))
-        this.hoverCountry = found.details
-      }
-      else this.hoverCountry = ''
-
-    },
-
-    drag(e){
-      this.$refs['world-map'].$el.style.cursor = "grabbing"
-    },
-    drop(e){
-      this.$refs['world-map'].$el.style.cursor = "grab"
-    },
-    resetZoom(){
-      this.$refs.zoom.reset()
-      // console.debug('Reset zoom ')
-      this.checkScale()
-    },
-    checkScale(){
-      this.noZoomIn = this.$refs.zoom.scale === this.scale.max
-      this.noZoomOut = this.$refs.zoom.scale === this.scale.min
-
-      // console.debug('Check Scale: ' + this.$refs.zoom.scale)
-    },
-    zoomIn(){
-      this.$refs.zoom.zoomIn()
-      this.checkScale()
-    },
-    zoomOut(){
-      this.$refs.zoom.zoomOut()
-      this.checkScale()
-    },
-  },
-  updated() {
-    console.debug('map world components = ', this.$refs['world-map'])
-  }
 }
 </script>
 
@@ -260,6 +301,5 @@ export default {
     }
   }
 }
-
 
 </style>

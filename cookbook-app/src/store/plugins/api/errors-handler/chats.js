@@ -1,10 +1,11 @@
-import handlerErrorBase from './base'
+import handlerErrorBase from "./base"
+
 export default function (bus) {
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated} = handlerErrorBase(bus)
+    const { badRequest, forbidden, notFound, serverError, unAuthenticated } = handlerErrorBase(bus)
 
-    const errInfo = {_forbiddenPage: true}
+    const errInfo = { _forbiddenPage: true }
 
-    function handlerCommonError(err){
+    function handlerCommonError(err) {
         switch (err.response?.status) {
             case 400:
                 badRequest(err)
@@ -19,111 +20,112 @@ export default function (bus) {
         return false
     }
 
-    function createChat(err){
-        if(!handlerCommonError(err)) {
-            switch (err.response?.status){
+    function createChat(err) {
+        if (!handlerCommonError(err)) {
+            switch (err.response?.status) {
                 case 404:
-                    notFound(err, { name: 'Utente', id: err.response.config?.urlParams?.id })
-                    break;
-                case 409:
-                    let {chatID} = err.response.data
-                    console.debug('existed chat = ', chatID)
-                    return chatID;
+                    notFound(err, { name: "Utente", id: err.response.config?.urlParams?.id })
+                    break
+                case 409: {
+                    let { chatID } = err.response.data
+                    console.debug("existed chat = ", chatID)
+                    return chatID
+                }
                 default:
                     serverError(err)
-                    break;
+                    break
             }
         }
         return false
     }
 
-    function getChats(err){
-        if(!handlerCommonError(err)) serverError(err)
+    function getChats(err) {
+        if (!handlerCommonError(err)) serverError(err)
     }
 
-    function getChat(err){
-        if(!handlerCommonError(err)) {
-            switch (err.response?.status){
+    function getChat(err) {
+        if (!handlerCommonError(err)) {
+            switch (err.response?.status) {
                 case 404:
                     return true
                 default:
                     serverError(err)
-                    break;
+                    break
             }
         }
         return false
     }
 
-    function getNewChat(err){
+    function getNewChat(err) {
         switch (err.response?.status) {
             case 400:
-                console.error('400 - ' + err.response.data?.description)
-                break;
+                console.error("400 - " + err.response.data?.description)
+                break
             case 401:
                 unAuthenticated(err, errInfo)
-                break;
+                break
             case 403:
                 forbidden(err)
-                break;
+                break
             case 404:
-                console.error('404 - ' + err.response.data?.description)
-                break;
+                console.error("404 - " + err.response.data?.description)
+                break
             default:
                 serverError(err)
-                break;
+                break
         }
     }
 
     function getRecipeOnChat(err) {
-        if(!handlerCommonError(err)){
-            switch (err.response?.status){
+        if (!handlerCommonError(err)) {
+            switch (err.response?.status) {
                 case 404:
                     return true
                 default:
                     serverError(err)
-                    break;
+                    break
             }
         }
         return false
     }
 
-    function deleteChat(err){
-        if(!handlerCommonError(err)) {
-            switch (err.response?.status){
+    function deleteChat(err) {
+        if (!handlerCommonError(err)) {
+            switch (err.response?.status) {
                 case 404:
-                    notFound(err, { name: 'Chat', id: err.response.config?.urlParams?.chatID })
+                    notFound(err, { name: "Chat", id: err.response.config?.urlParams?.chatID })
                     break
                 default:
                     serverError(err)
-                    break;
+                    break
             }
         }
     }
 
-    function getFriendOnChat(err){
+    function getFriendOnChat(err) {
         switch (err.response?.status) {
             case 400:
                 badRequest(err)
-                break;
+                break
             case 401:
                 unAuthenticated(err, errInfo)
-                break;
+                break
             default:
                 serverError(err)
-                break;
+                break
         }
         return false
     }
 
-    function updateUserRoleInChat(err){
-        if(!handlerCommonError(err)){
-            switch (err.response?.status){
+    function updateUserRoleInChat(err) {
+        if (!handlerCommonError(err)) {
+            switch (err.response?.status) {
                 case 404:
-                    console.error('404 - ', err.response.data)
+                    console.error("404 - ", err.response.data)
                     break
                 default:
                     serverError(err)
-                    break;
+                    break
             }
         }
     }

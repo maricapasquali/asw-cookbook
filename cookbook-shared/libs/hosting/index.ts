@@ -1,12 +1,12 @@
-import {Application} from "express";
-import * as http from "http";
-import * as https from "https";
+import { Application } from "express"
+import * as http from "http"
+import * as https from "https"
 
 /**
  * Type of option of the https server.
  */
 export type HTTPSOptions = {
-    key: Buffer,
+    key: Buffer
     cert: Buffer
 }
 
@@ -15,7 +15,7 @@ export type HTTPSOptions = {
  */
 export class Hosting {
     protocol: string
-    hostname: string = "localhost"
+    hostname = "localhost"
     port: number
 
     optHttps: () => HTTPSOptions
@@ -101,26 +101,24 @@ export class Hosting {
      * @return an instance of Hosting class.
      */
     build(): this {
-        if(!this.port) throw new Error("Hosting: You must set port.")
-        if(!this.protocol) this.protocol = this.optHttps ? "https" : "http"
+        if (!this.port) throw new Error("Hosting: You must set port.")
+        if (!this.protocol) this.protocol = this.optHttps ? "https" : "http"
 
         switch (this.protocol) {
             case "http":
-            {
-                const http = require('http');
-                this.instanceServer = http.createServer(this.app);
-            }
-                break;
+                {
+                    this.instanceServer = http.createServer(this.app)
+                }
+                break
             case "https":
-            {
-                const https = require('https');
-                if(!this.optHttps || typeof this.optHttps !== "function") throw new Error("No HTTPS protocol certificate is set.")
-                this.instanceServer = https.createServer(this.optHttps(), this.app)
-            }
+                {
+                    if (!this.optHttps || typeof this.optHttps !== "function") throw new Error("No HTTPS protocol certificate is set.")
+                    this.instanceServer = https.createServer(this.optHttps(), this.app)
+                }
                 break
         }
 
-        if(this.socket && typeof this.socket === 'function') {
+        if (this.socket && typeof this.socket === "function") {
             this.socket(this.instanceServer)
         }
 
@@ -131,8 +129,8 @@ export class Hosting {
      * Start a server listening for connections.
      * @param callback function that will be called after the `'Listening'` event.
      */
-    listen(callback?: (hosting: Hosting) => void): void{
-        this.instanceServer.listen(this.port, () => callback?.call(null, this));
+    listen(callback?: (hosting: Hosting) => void): void {
+        this.instanceServer.listen(this.port, () => callback?.call(null, this))
     }
 
     /**
@@ -151,16 +149,16 @@ export class Hosting {
 
     private check(valueOf: string, unchangeable: boolean): void | never {
         let _value: any
-        switch (valueOf){
+        switch (valueOf) {
             case "HttpsOptions":
-                _value = this.optHttps;
+                _value = this.optHttps
                 break
             case "Protocol":
-                _value = this.protocol;
+                _value = this.protocol
                 break
         }
-        if(unchangeable) this.unchangeables.add(valueOf)
-        if(this.unchangeables.has(valueOf) && _value)
+        if (unchangeable) this.unchangeables.add(valueOf)
+        if (this.unchangeables.has(valueOf) && _value)
             throw new Error(`'${valueOf}' is already set. ${valueOf} = ${_value}`)
     }
 }
@@ -182,8 +180,8 @@ export namespace Hosting {
      */
     export function createHttpsServer(app: Application, options: HTTPSOptions): Hosting {
         return new Hosting(app)
-                    .setHttpsOptions(() => options, true)
-                    .setProtocol("https", true)
+            .setHttpsOptions(() => options, true)
+            .setProtocol("https", true)
     }
 
     /**

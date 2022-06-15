@@ -1,13 +1,13 @@
-import actions from "./actions";
-import mutations from "./mutations";
-import getters from "./getters";
+import actions from "./actions"
+import mutations from "./mutations"
+import getters from "./getters"
 
-import messages from './modules/messages'
+import messages from "./modules/messages"
 
 export default {
     namespaced: true,
     modules: {
-      messages
+        messages
     },
     state:{
         unreadMessages: 0,

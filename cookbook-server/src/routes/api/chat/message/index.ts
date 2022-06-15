@@ -1,16 +1,14 @@
-import {messageController} from '../../../../controllers'
-import {messageMiddleware} from '../../../../middlewares'
+import { messageController } from "../../../../controllers"
+import { messageMiddleware } from "../../../../middlewares"
 
-export default function(app) {
+export default function (app) {
+    app.route("/api/users/:id/chats/:chatID/messages")
+        .post(messageMiddleware.send(), messageController.sendMessage)
+        .put(messageMiddleware.readMessages(), messageController.readMessages)
+        .get(messageMiddleware.list(), messageController.listMessages)
 
-    app.route('/api/users/:id/chats/:chatID/messages')
-       .post(messageMiddleware.send(), messageController.send_message)
-       .put(messageMiddleware.read_messages(), messageController.read_messages)
-       .get(messageMiddleware.list(), messageController.list_messages)
-
-    app.route('/api/users/:id/chats/:chatID/messages/:messageID')
-        .get(messageController.one_message)
-        .put(messageController.change_content_message)
-        .delete(messageController.delete_message)
-
+    app.route("/api/users/:id/chats/:chatID/messages/:messageID")
+        .get(messageController.oneMessage)
+        .put(messageController.changeContentMessage)
+        .delete(messageController.deleteMessage)
 }

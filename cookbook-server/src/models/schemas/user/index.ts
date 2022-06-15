@@ -1,12 +1,18 @@
-import {Document, Schema} from "mongoose";
-import {RBAC} from "../../../libs/rbac";
-import Role = RBAC.Role;
-import {Countries, Genders} from "cookbook-shared/assets";
-import {valuesOfEnum} from "../../../libs/utilities";
+import {
+    Document,
+    Schema
+} from "mongoose"
+import { RBAC } from "../../../libs/rbac"
+import {
+    Countries,
+    Genders
+} from "cookbook-shared/assets"
+import { valuesOfEnum } from "../../../libs/utilities"
+import Role = RBAC.Role
 
 export interface IUser extends Document{
-    signup: string,
-    createdAt: number,
+    signup: string
+    createdAt: number
     information: {
         img?:string
         firstname:string
@@ -17,11 +23,11 @@ export interface IUser extends Document{
         gender?:string
         country?:string
         occupation?:string
-    },
+    }
     credential:{
         userID:string
         hash_password: string
-        role: string,
+        role: string
         lastAccess: number
     }
     strike?:number
@@ -34,43 +40,43 @@ export namespace IUser {
 
 export namespace SignUp {
     export enum State {
-        PENDING = 'pending', CHECKED = 'checked'
+        PENDING = "pending", CHECKED = "checked"
     }
     export namespace State {
-        export function values(): Array<State> {
+        export function values(): State[] {
             return valuesOfEnum(State, "string")
         }
-        export function _default(role: string){
+        export function _default(role: string) {
             return Role.isAdmin(role) ? State.CHECKED : State.PENDING
         }
 
-        export function isChecked(state: string){
+        export function isChecked(state: string) {
             return state as State === State.CHECKED
         }
 
-        export function isPending(state: string){
+        export function isPending(state: string) {
             return state as State === State.PENDING
         }
     }
 }
 
 export namespace Strike {
-    export const MAX: number = 3
-    export function isBlocked(strike: number): boolean{
+    export const MAX = 3
+    export function isBlocked(strike: number): boolean {
         return strike >= Strike.MAX
     }
 }
 
 export const UserSchema: Schema<IUser> = new Schema<IUser>({
     signup: {
-      type: String,
-      required: false,
-      default: function (){
-          return SignUp.State._default(this.credential.role)
-      },
-      enum: SignUp.State.values(),
+        type: String,
+        required: false,
+        default: function () {
+            return SignUp.State._default(this.credential.role)
+        },
+        enum: SignUp.State.values()
     },
-    createdAt:{ type: Number, required: false, default: Date.now() },
+    createdAt: { type: Number, required: false, default: Date.now() },
     information: {
         img: {
             type: String,
@@ -88,7 +94,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         email: {
             type: String,
             required: true,
-            match: [EmailValidator.regex, 'Please fill a valid email address'],
+            match: [EmailValidator.regex, "Please fill a valid email address"],
             unique: true
         },
         tel_number: {
@@ -102,7 +108,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         gender: {
             type: String,
             required: false,
-            enum: Genders.map(gender => gender.value),
+            enum: Genders.map(gender => gender.value)
         },
         country: {
             type: String,
@@ -111,16 +117,16 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         },
         occupation: {
             type: String,
-            required: false,
+            required: false
         }
     },
     credential: {
-        userID:{
+        userID: {
             type: String,
             required: true,
             unique: true
         },
-        hash_password:{
+        hash_password: {
             type: String,
             required: true
         },
@@ -128,19 +134,19 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
             type: String,
             required: false,
             default: Role.SIGNED,
-            enum: Role.values(),
+            enum: Role.values()
         },
-        lastAccess: { type: Number, required: false, default: undefined },
+        lastAccess: { type: Number, required: false, default: undefined }
     },
     strike: {
         type: Number,
         required: false,
-        default: function (){
-          return Role.isSigned(this.credential.role) ?  0 : undefined
+        default: function () {
+            return Role.isSigned(this.credential.role) ? 0 : undefined
         },
         minimum: 0,
         maximum: Strike.MAX
     }
-});
+})
 
 UserSchema.index({ "information.email": 1, "credential.role": 1 }, { unique: true, name: "role-email" })

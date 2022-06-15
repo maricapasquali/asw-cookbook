@@ -1,44 +1,60 @@
 <template>
-  <b-img v-if="$data._logo" :style="cssStyle" class="logo" fluid :src="$data._logo" :alt="$appName" @error="imgNotFound"/>
-  <h2 v-else :class="dark ?'text-light': 'text-primary'"><em>{{ $appName }}</em></h2>
+  <b-img
+    v-if="logo_"
+    :style="cssStyle"
+    class="logo"
+    fluid
+    :src="logo_"
+    :alt="$appName"
+    @error="imgNotFound"
+  />
+  <h2
+    v-else
+    :class="dark ?'text-light': 'text-primary'"
+  >
+    <em>{{ $appName }}</em>
+  </h2>
 </template>
 
 <script>
 export default {
-  name: "logo",
-  props: {
-    dark: Boolean,
-    height: Number
-  },
-  data() {
-    return {
-      _logo: ""
-    }
-  },
-  computed: {
-    cssStyle(){
-      let _css = {}
-      if(this.height) _css.height = this.height + 'px!important'
-      return _css
-    }
-  },
-  watch: {
-    dark(val){
-      this.setLogo(val)
-    }
-  },
-  methods: {
-    setLogo(_dark){
-      this.$data._logo = `/images/logo/${_dark ? "dark": "light"}-logo.png`
+    name: "Logo",
+    props: {
+        dark: Boolean,
+        height: {
+            type: Number,
+            default: 0
+        }
     },
-    imgNotFound(e){
-      console.error(e)
-      this.$data._logo = ""
+    data() {
+        return {
+            logo_: ""
+        }
+    },
+    computed: {
+        cssStyle() {
+            let _css = {}
+            if (this.height) _css.height = this.height + "px!important"
+            return _css
+        }
+    },
+    watch: {
+        dark(val) {
+            this.setLogo(val)
+        }
+    },
+    created() {
+        this.setLogo(this.dark)
+    },
+    methods: {
+        setLogo(_dark) {
+            this.logo_ = `/images/logo/${_dark ? "dark": "light"}-logo.png`
+        },
+        imgNotFound(e) {
+            console.error(e)
+            this.logo_ = ""
+        }
     }
-  },
-  created() {
-   this.setLogo(this.dark)
-  }
 }
 </script>
 

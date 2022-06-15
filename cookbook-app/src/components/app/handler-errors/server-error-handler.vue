@@ -1,5 +1,10 @@
 <template>
-  <error-handler v-model="value" title="Server Error" variant="danger">
+  <error-handler
+    :value="value"
+    title="Server Error"
+    variant="danger"
+    @input="$emit('input', $event)"
+  >
     <template #more-details>
       <div v-if="isNetworkError">
         <p>Possible reason: </p>
@@ -13,21 +18,28 @@
 </template>
 
 <script>
-import ErrorHandler from "./error-handler";
+import ErrorHandler from "./error-handler"
+
 export default {
-  name: "server-error-handler",
-  props: {
-    value: {
-      show: Boolean,
-      message: String
+    name: "ServerErrorHandler",
+    components: { ErrorHandler },
+    props: {
+        value: {
+            type: Object,
+            required: true,
+            default() {
+                return ({
+                    show: false,
+                    message: ""
+                })
+            }
+        }
+    },
+    computed: {
+        isNetworkError() {
+            return this.value.message === "Network Error"
+        }
     }
-  },
-  components: {ErrorHandler},
-  computed: {
-    isNetworkError(){
-      return this.value.message === 'Network Error'
-    }
-  }
 }
 </script>
 

@@ -1,4 +1,4 @@
-import * as mongoose from "mongoose";
+import * as mongoose from "mongoose"
 
 /**
  * MongooseDuplicateError is extension of {@link mongoose.Error} that represents the error of duplication resource.
@@ -6,14 +6,14 @@ import * as mongoose from "mongoose";
 export class MongooseDuplicateError extends mongoose.Error {
     readonly code: number = MongooseDuplicateError.code
     constructor(msg?: string) {
-        super(msg || "custom mongoose error for duplicate");
+        super(msg || "custom mongoose error for duplicate")
     }
 }
 export namespace MongooseDuplicateError {
     /**
      * Error code of _MongooseDuplicateError_
      */
-    export const code: number = 11000
+    export const code = 11000
 
     /**
      * @param error to check
@@ -28,13 +28,13 @@ export namespace MongooseValidationError {
     /**
      * Error name of _ValidationError_
      */
-    export const name: string = 'ValidationError'
+    export const name = "ValidationError"
 
     /**
      * @param error to check
      * @return true if _error_ is instance of _ValidationError_
      */
-    export function is(error: any){
+    export function is(error: any) {
         return name === error.name
     }
 }

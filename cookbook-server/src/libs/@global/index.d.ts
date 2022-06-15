@@ -1,9 +1,11 @@
-import {Validator} from "cookbook-shared/libs/validator";
+/* eslint no-var: 0 */
 
-import {IFileUploader} from "../uploader";
-import {IJwtTokensManager} from "../jwt.token";
-import {IRbacWithRole} from "../rbac";
-import {IMailer} from "../mailer";
+import { Validator } from "cookbook-shared/libs/validator"
+
+import { IFileUploader } from "../uploader"
+import { IJwtTokensManager } from "../jwt.token"
+import { IRbacWithRole } from "../rbac"
+import { IMailer } from "../mailer"
 
 /**
  * Global variables.
@@ -18,7 +20,7 @@ declare global {
 
     var mailer: IMailer
 
-    var app_name: string
+    var appName: string
 
     var configuration: any
 

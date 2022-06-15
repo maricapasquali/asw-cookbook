@@ -1,9 +1,10 @@
-import handlerErrorBase from './base'
-export default function(bus) {
+import handlerErrorBase from "./base"
 
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated} = handlerErrorBase(bus)
+export default function (bus) {
 
-    function similarErrorHandler(err, info){
+    const { badRequest, forbidden, notFound, serverError, unAuthenticated } = handlerErrorBase(bus)
+
+    function similarErrorHandler(err, info) {
         switch (err.response?.status) {
             case 400:
                 badRequest(err)
@@ -17,7 +18,9 @@ export default function(bus) {
         }
     }
 
-    const getFoods = (err) => similarErrorHandler(err, {_forbiddenPage: true})
+    function getFoods(err) {
+        return similarErrorHandler(err, { _forbiddenPage: true })
+    }
 
     function createFood(err) {
         switch (err.response?.status) {
@@ -25,7 +28,7 @@ export default function(bus) {
                 badRequest(err)
                 break
             case 401:
-                unAuthenticated(err, {_forbiddenPage: true})
+                unAuthenticated(err, { _forbiddenPage: true })
                 break
             case 403:
                 forbidden(err)
@@ -44,13 +47,13 @@ export default function(bus) {
                 badRequest(err)
                 break
             case 401:
-                unAuthenticated(err, {_forbiddenPage: true})
+                unAuthenticated(err, { _forbiddenPage: true })
                 break
             case 403:
                 forbidden(err)
                 break
             case 404:
-                notFound(err, {name: 'Cibo', id: err.response?.config?.urlParams?.id})
+                notFound(err, { name: "Cibo", id: err.response?.config?.urlParams?.id })
                 break
             default:
                 serverError(err)
