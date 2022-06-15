@@ -76,11 +76,11 @@ export default {
 </script>
 
 <style scoped>
-/deep/ .modal-body{
-  padding: 0!important;
+/deep/ .modal-body {
+  padding: 0 !important;
 }
 
-.alert{
+.alert {
   margin-bottom: 0;
   padding: 1.25rem;
 }

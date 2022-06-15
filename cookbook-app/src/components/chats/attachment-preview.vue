@@ -210,11 +210,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.not-found-description{
+.not-found-description {
   cursor: auto;
 }
 
-.preview-description{
+.preview-description {
   & p {
     height: 0;
     min-height: 110px;

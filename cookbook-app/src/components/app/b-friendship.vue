@@ -253,5 +253,6 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
+/* stylelint-disable no-empty-source */
 </style>

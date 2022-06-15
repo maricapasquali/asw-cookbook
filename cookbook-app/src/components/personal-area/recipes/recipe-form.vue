@@ -663,8 +663,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
-form{
+form {
   margin: 1%;
   padding: 10px;
 
@@ -672,12 +671,13 @@ form{
     width: 100%;
   }
 
-  & .fieldset-ingredients{
+  & .fieldset-ingredients {
     border: 1px solid;
     border-radius: 10px;
     padding: 1%;
     margin-bottom: 25px;
-    & >legend {
+
+    & > legend {
       width: fit-content;
       padding: 0 5px;
     }

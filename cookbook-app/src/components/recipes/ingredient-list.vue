@@ -180,8 +180,8 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
-.list-group-item{
+<style scoped>
+.list-group-item {
   cursor: pointer;
 }
 </style>

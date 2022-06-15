@@ -9,10 +9,11 @@
   text-decoration: line-through;
 }
 
-.icon{
+.icon {
   cursor: pointer;
+
   &:focus {
-    outline: none!important;
+    outline: none !important;
   }
 }
 
@@ -21,10 +22,11 @@
 }
 
 .mt-6 {
-  margin-top: 6rem!important;
+  margin-top: 6rem !important;
 }
+
 .mb-8 {
-  margin-bottom: 8rem!important;
+  margin-bottom: 8rem !important;
 }
 
 .rounded-left {
@@ -45,6 +47,7 @@ fieldset.bordered {
   border: 1px solid lightgray;
   border-radius: 10px;
   padding: 10px;
+
   & > legend {
     width: fit-content;
     padding-right: 5px;

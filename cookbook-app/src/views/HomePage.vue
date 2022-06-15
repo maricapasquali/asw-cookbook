@@ -366,14 +366,15 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .recipe-post-container {
-  .new-recipes{
+  .new-recipes {
     position: sticky;
     z-index: 100;
     top: 8%;
     left: 50%;
     margin-bottom: 15px;
+
     & button {
       border-radius: 1.25rem;
       box-shadow: 0 0 19px 5px #00000096;
@@ -382,45 +383,47 @@ export default {
   }
 }
 
-
 .description-post {
   position: absolute;
   background-color: $overlay;
   color: white;
-  top:10%;
+  top: 10%;
   left: 15px;
   width: 100%;
 }
-.details-recipes{
+
+.details-recipes {
   position: absolute;
   right: 5px;
-  bottom: 185px
+  bottom: 185px;
 }
 
 .recipe-post {
-  & >.card-header, .card-footer{
+  & > .card-header,
+  .card-footer {
     color: white;
     background-color: $component-color;
+
     & a {
       color: white;
     }
   }
 
-  & >.card-body{
+  & > .card-body {
     position: relative;
     padding: 0;
   }
 
-  & .country-image{
+  & .country-image {
     width: 50px;
-    height: 40px
+    height: 40px;
   }
 
-  & .recipe-post-link{
+  & .recipe-post-link {
     color: white;
   }
 
-  & .recipes-tutorial{
+  & .recipes-tutorial {
     height: 300px;
   }
 }

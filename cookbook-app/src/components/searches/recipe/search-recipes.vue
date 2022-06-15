@@ -731,28 +731,29 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 ::v-deep div.food-finder-container > div > div {
-  padding-left: 0.7rem!important;
-  padding-right: 0.7rem!important;
+  padding-left: 0.7rem !important;
+  padding-right: 0.7rem !important;
 }
-.search-result-container{
 
-  .search-result-header{
+.search-result-container {
+  .search-result-header {
     & .filters {
       width: fit-content;
       float: left;
       padding: 0.7rem;
-      & > svg{
+
+      & > svg {
         cursor: pointer;
       }
+
       & > span {
         padding-left: 10px;
       }
     }
   }
-  .search-result-body {
 
+  .search-result-body {
     & .recipe-found-container {
       & a {
         display: block;
@@ -765,23 +766,25 @@ export default {
         bottom: 5px;
       }
 
-      & .recipe-found{
+      & .recipe-found {
         height: 100%;
 
         & div.card-body {
-          padding: 1.25rem 0 ;
+          padding: 1.25rem 0;
           color: white;
+
           & img {
-           height: 100%;
+            height: 100%;
           }
+
           & .container-fluid {
             position: absolute;
             top: 10px;
-            & .base-info{
+
+            & .base-info {
               background: $overlay;
             }
           }
-
         }
       }
     }

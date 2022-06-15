@@ -191,7 +191,7 @@ export default {
 </script>
 
 <style scoped>
-#text-area-sender-mex{
+#text-area-sender-mex {
   min-height: 62px;
 }
 </style>

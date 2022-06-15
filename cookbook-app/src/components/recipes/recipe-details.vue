@@ -164,9 +164,10 @@ export default {
 </script>
 
 <style scoped>
-/deep/ .modal-dialog{
+/deep/ .modal-dialog {
   max-width: 90vw;
 }
+
 div.details-component {
   padding: 10px;
 }

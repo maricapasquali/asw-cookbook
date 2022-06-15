@@ -305,10 +305,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .custom-select {
   position: relative;
-  &:focus-visible{
+
+  &:focus-visible {
     border-color: #80bdff;
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
@@ -321,9 +321,7 @@ export default {
   .select-dropdown {
     max-height: 300px;
     overflow-y: auto;
-
     border-radius: 10px;
-
     border: 1px solid #a8a8a8;
     box-shadow: 0 4px 4px grey;
     position: absolute;
@@ -332,29 +330,33 @@ export default {
     left: 0;
     z-index: 4;
 
-    .options-select{
+    .options-select {
       padding: 0.25rem;
       background-color: white;
-      &.hover{
-        background-color: $component-color; /*desktop*/
+
+      &.hover {
+        background-color: $component-color; /* desktop */
         color: white;
         cursor: default;
       }
-      &.disabled.hover{
+
+      &.disabled.hover {
         background-color: lightgray;
         color: white;
       }
-      &.disabled{
+
+      &.disabled {
         color: #b9b9b9;
       }
     }
   }
 }
 
-.custom-select.disabled  {
+.custom-select.disabled {
   color: #6c757d;
   background-color: #e9ecef;
   opacity: 0.65;
+
   &:focus {
     box-shadow: none;
     outline: none;

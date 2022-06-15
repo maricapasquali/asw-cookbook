@@ -69,6 +69,9 @@ export default {
         }
     }
 }
+
 </script>
 
-<style scoped></style>
+<style scoped>
+/* stylelint-disable no-empty-source */
+</style>

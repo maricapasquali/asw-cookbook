@@ -665,49 +665,51 @@ export default {
   cursor: pointer;
 }
 
-.scroll{
+.scroll {
   overflow-y: auto;
   max-height: 350px;
 }
-.align{
+
+.align {
   margin-left: 17px;
 }
 
-.shopping-list{
-  & > div{
+.shopping-list {
+  & > div {
     cursor: pointer;
   }
+
   .food-checked {
     width: 100%;
     top: 29px;
     border-bottom: 2px solid black;
     position: absolute;
-
   }
 }
-.search-food-container{
+
+.search-food-container {
   border: 1px solid lightgray;
   border-radius: 10px;
 }
 
-@media (max-width: 992px){
-  .shopping-list{
+@media (max-width: 992px) {
+  .shopping-list {
     .food-checked {
       width: 110%;
     }
   }
 }
 
-@media (max-width: 576px){
-  .shopping-list{
+@media (max-width: 576px) {
+  .shopping-list {
     .food-checked {
       width: 100%;
     }
   }
 }
 
-@media (max-width: 400px){
-  .shopping-list{
+@media (max-width: 400px) {
+  .shopping-list {
     .food-checked {
       width: 90%;
     }

@@ -221,7 +221,7 @@ export default {
 </script>
 
 <style scoped>
-.anonymous{
+.anonymous {
   color: black;
 }
 </style>

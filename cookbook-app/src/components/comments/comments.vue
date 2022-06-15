@@ -143,19 +143,20 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
+.card-comments {
+  background-color: $component-color !important;
+  border: none !important;
 
-.card-comments{
-  background-color: $component-color!important;
-  border: none!important;
-
-  & .add-comment button{
+  & .add-comment button {
     color: white;
   }
-  & .card-body{
-    color: black
+
+  & .card-body {
+    color: black;
   }
-  & .no-comments{
+
+  & .no-comments {
     color: white;
     padding-left: 10px;
   }

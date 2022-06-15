@@ -548,35 +548,35 @@ export default {
 }
 </script>
 
-<style  lang="scss" scoped>
-
-$height_items_chat: 700px;
+<style lang="scss" scoped>
+$height-items-chat: 700px;
 
 .chat-container {
   background-color: $background-color-chat;
   border-radius: 1.25rem;
-  min-height: $height_items_chat;
+  min-height: $height-items-chat;
   box-sizing: border-box;
 }
 
 #chat-items-navigator {
   & .chat-list {
-    max-height: $height_items_chat;
+    max-height: $height-items-chat;
     overflow-y: auto;
 
     & .chat-item.selected {
       background-color: #b8c6ff;
     }
   }
+
   & > ul {
-    margin: 0!important;
-    flex-direction: column!important;
+    margin: 0 !important;
+    flex-direction: column !important;
     height: 100%;
     width: 100%;
   }
 }
 
-.friends-list{
+.friends-list {
   overflow-y: auto;
   max-height: 400px;
 }

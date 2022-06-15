@@ -93,7 +93,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.collapsable-container{
+.collapsable-container {
   background-color: $component-color;
   border-radius: 10px;
   margin: 5% auto;
@@ -102,6 +102,7 @@ export default {
 
   & > div {
     margin: 10px 0;
+
     & > div {
       padding: 1%;
     }

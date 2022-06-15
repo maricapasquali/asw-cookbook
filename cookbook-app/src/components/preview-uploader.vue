@@ -203,6 +203,6 @@ export default {
 .video-preview {
   object-fit: cover;
   height: auto;
-  width: 100%
+  width: 100%;
 }
 </style>

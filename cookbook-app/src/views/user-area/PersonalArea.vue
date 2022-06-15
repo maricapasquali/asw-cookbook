@@ -8,7 +8,7 @@
             :key="i"
           >
             <template #title>
-              <div style="width: 100px">
+              <div style="width: 100px;">
                 <b-skeleton width="100%" />
               </div>
             </template>
@@ -16,7 +16,7 @@
               <b-row
                 cols="1"
                 class="text-center py-5"
-                style="height: 500px"
+                style="height: 500px;"
               >
                 <b-col
                   class="text-center"
@@ -139,5 +139,5 @@ export default {
 </script>
 
 <style scoped>
-
+/* stylelint-disable no-empty-source */
 </style>

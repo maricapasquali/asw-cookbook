@@ -174,7 +174,7 @@ export default {
 </script>
 
 <style lang="scss">
-body{
-    background-color: $background-color !important;
+body {
+  background-color: $background-color !important;
 }
 </style>

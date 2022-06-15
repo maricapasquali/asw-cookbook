@@ -221,30 +221,27 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 #ingredient-group {
   position: relative;
 
-  &.with-barcode{
+  &.with-barcode {
     input {
-      padding-right: 36px;
+      text-overflow: ellipsis;
     }
   }
-  input{
-    text-overflow: ellipsis;
-  }
 
-
-  .find-foods{
+  .find-foods {
     position: absolute;
     width: 100%;
     z-index: 1;
     overflow-y: auto;
     max-height: 100px;
     box-shadow: 0 8px 7px 0 grey;
+
     & > div {
       padding: 10px;
       cursor: default;
+
       &:hover {
         background-color: lightgray;
       }

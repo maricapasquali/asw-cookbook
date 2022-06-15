@@ -138,8 +138,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-.username{
+<style scoped>
+.username {
   font-size: 18pt;
 }
 </style>

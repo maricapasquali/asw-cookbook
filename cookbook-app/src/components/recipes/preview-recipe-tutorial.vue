@@ -65,7 +65,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 .preview-tutorial > video {
   object-fit: cover;
   cursor: pointer;

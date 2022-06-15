@@ -381,13 +381,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 ::v-deep .table thead th {
-  padding-left: 0!important;
+  padding-left: 0 !important;
 }
 
 ::v-deep .table tbody td {
-  padding: 0!important;
+  padding: 0 !important;
 }
 
 .read-badge {
@@ -397,7 +396,7 @@ export default {
   height: 10px;
 }
 
-.notification{
+.notification {
   cursor: pointer;
 }
 
@@ -425,25 +424,25 @@ export default {
   border-color: #b8c6ff;
 }
 
-.alert-notification-report{
+.alert-notification-report {
   color: #850000;
   background-color: #ffccd2;
   border-color: #ffb8ba;
 }
 
-.alert-notification-like{
+.alert-notification-like {
   color: #853300;
   background-color: #ffe1cc;
   border-color: #ffcdb8;
 }
 
-.alert-notification-user-info{
+.alert-notification-user-info {
   color: #343434;
   background-color: #f6f6f6;
   border-color: #d9d9d9;
 }
 
-.alert-notification-strike{
+.alert-notification-strike {
   color: #856404;
   background-color: #fff3cd;
   border-color: #ffeeba;

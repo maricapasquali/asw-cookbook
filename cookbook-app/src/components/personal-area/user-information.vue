@@ -367,11 +367,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-::v-deep .accept-request{
+::v-deep .accept-request {
   background-color: #f8f9fa;
   border-color: #f8f9fa;
   color: $component-color;
 }
+
 .user-infos {
   border: 1px dashed black;
   border-radius: 10px;

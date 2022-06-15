@@ -160,29 +160,29 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 /* SINGLE MESSAGE */
 .message-container {
-
   & .message {
-    border-radius:10px;
+    border-radius: 10px;
     padding: 10px;
-
     white-space: pre-line;
     word-break: break-word;
   }
 
-  & .message.my-message  {
+  & .message.my-message {
     background-color: $background-color-my-message;
     color: white;
-    > pre{
+
+    > pre {
       color: white;
     }
   }
+
   & .message.others-message {
     background-color: $background-color-others-message;
     color: black;
-    > pre{
+
+    > pre {
       color: black;
     }
   }

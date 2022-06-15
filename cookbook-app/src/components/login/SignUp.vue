@@ -324,14 +324,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 #signup-card {
-  .primary-footer{
+  .primary-footer {
     background-color: white;
     margin-top: 1.25rem;
   }
-  .primary-body{
-    padding: 0
+
+  .primary-body {
+    padding: 0;
   }
 }
 

@@ -468,27 +468,29 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.responses{
+.responses {
   border: 1px solid lightgrey;
   border-radius: 1.25rem;
   padding: 1%;
 }
 
-.comment{
+.comment {
   margin-top: 1.25rem;
 
   & .comment-user {
     position: relative;
     padding-left: 13px;
+
     & > div {
       & > a {
         color: white;
       }
     }
-    &:after{
+
+    &::after {
       border: 1em solid transparent;
       border-top-color: $comment-bg-color;
-      content: '';
+      content: "";
       margin-left: 5em;
       position: absolute;
       top: 44%;
@@ -506,13 +508,15 @@ export default {
     background-color: $comment-bg-color;
     color: black;
 
-    & .footer{
+    & .footer {
       margin-top: 10px;
       border-radius: 10px;
-      & .timestamp{
+
+      & .timestamp {
         float: left;
         padding-right: 10px;
       }
+
       & .actions {
         & button {
           padding-left: 0;
@@ -521,33 +525,34 @@ export default {
     }
   }
 
-  button.toggle-conversation{
+  button.toggle-conversation {
     color: white;
   }
 }
 
 .reported-comment {
   & .comment-user {
-    &:after{
-      border-top-color: $comment-reported-bg-color!important;
-
+    &::after {
+      border-top-color: $comment-reported-bg-color !important;
     }
   }
+
   & .comment-popover {
-    background-color: $comment-reported-bg-color!important;
-    border-color: $comment-reported-bg-color!important;
+    background-color: $comment-reported-bg-color !important;
+    border-color: $comment-reported-bg-color !important;
   }
 }
 
 .deleted-comment {
   & .comment-user {
-    &:after{
-      border-top-color: $comment-deleted-bg-color!important;
+    &::after {
+      border-top-color: $comment-deleted-bg-color !important;
     }
   }
+
   & .comment-popover {
-    background-color: $comment-deleted-bg-color!important;
-    border-color: $comment-deleted-bg-color!important;
+    background-color: $comment-deleted-bg-color !important;
+    border-color: $comment-deleted-bg-color !important;
   }
 }
 

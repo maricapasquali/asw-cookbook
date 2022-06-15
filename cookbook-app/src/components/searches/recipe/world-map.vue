@@ -244,20 +244,20 @@ export default {
 }
 </script>
 
-<style lang="scss">
-.map-container{
+<style lang="scss" scoped>
+.map-container {
   background-color: $background-color;
   position: relative;
   border: 2px solid lightgray;
   border-radius: 10px;
   padding: 1%;
 
-  & .map-container-header{
+  & .map-container-header {
     position: absolute;
     top: 17px;
     z-index: 10;
 
-    & .country-label-hover{
+    & .country-label-hover {
       background-color: white;
       padding: 10px;
       box-shadow: 4px 3px 15px;
@@ -268,32 +268,33 @@ export default {
     }
   }
 
-  & .map-container-body{
+  & .map-container-body {
     padding: 0;
 
     & .zoom-map-container {
-      width:  100%;
+      width: 100%;
       height: 857px;
 
       & svg.world-map-svg {
         object-fit: contain;
         transform: scale(0.85);
         height: 100%;
-
         position: absolute;
         left: -131px;
-        top:0;
+        top: 0;
 
-        & .selectable{
+        & .selectable {
           fill: white;
           cursor: pointer;
+        }
 
-        }
-        & .hover{
+        & .hover {
           fill: $map-hover;
-          filter: drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));
+          filter: drop-shadow(3px 5px 2px rgb(0 0 0 / 40%));
         }
-        & .selected, & .hover.selected{
+
+        & .selected,
+        & .hover.selected {
           fill: $map-select;
           filter: none;
         }

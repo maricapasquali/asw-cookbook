@@ -305,12 +305,12 @@ export default {
 <style lang="scss" scoped>
 ::v-deep table tr {
   & th[aria-colindex="2"],
-    td[aria-colindex="2"] {
+  td[aria-colindex="2"] {
     text-align: var(--cell-align);
   }
 }
 
-.friend-search-container{
+.friend-search-container {
   border: 1px solid lightgray;
   border-radius: 10px;
 }

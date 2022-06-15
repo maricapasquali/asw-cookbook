@@ -364,27 +364,31 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.container-find-user{
+.container-find-user {
   position: relative;
   min-height: 170px;
+
   .footer-find-user {
     position: absolute;
     bottom: 11px;
     right: 20px;
   }
 }
+
 @media only screen and (max-width: 768px) {
   .container-find-user {
-    min-height: 0!important;
+    min-height: 0 !important;
   }
 }
-@media only screen and (max-width: 400px){
-  .container-find-user{
+
+@media only screen and (max-width: 400px) {
+  .container-find-user {
     & .footer-find-user {
-      position: unset!important;
+      position: unset !important;
     }
+
     & .body-find-user {
-      height: unset!important;
+      height: unset !important;
     }
   }
 }

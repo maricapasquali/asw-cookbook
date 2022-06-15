@@ -87,9 +87,10 @@ export default {
 </script>
 
 <style scoped>
-img{
+img {
   object-fit: contain;
 }
+
 .go-home {
   font-size: 16pt;
   border-radius: 1.25rem;

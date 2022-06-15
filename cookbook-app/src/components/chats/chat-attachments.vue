@@ -41,7 +41,7 @@
           </b-form-group>
           <b-row
             cols="1"
-            style="overflow: auto; height: 500px"
+            style="overflow: auto; height: 500px;"
           >
             <b-col
               v-for="(item, index) in _items"
@@ -118,5 +118,5 @@ export default {
 </script>
 
 <style scoped>
-
+/* stylelint-disable no-empty-source */
 </style>

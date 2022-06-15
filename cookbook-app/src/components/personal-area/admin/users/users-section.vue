@@ -118,7 +118,7 @@
           </template>
 
           <template #row-details="row">
-            <ul style="list-style: none">
+            <ul style="list-style: none;">
               <li v-if="row.item.details.information.email">
                 <strong>Email:</strong> <em>{{ row.item.details.information.email }}</em>
               </li>

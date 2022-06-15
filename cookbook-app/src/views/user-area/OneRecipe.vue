@@ -463,27 +463,29 @@ export default {
   border-radius: 5px;
 }
 
-
-.header-recipe{
+.header-recipe {
   color: white;
   position: relative;
   height: 205px;
   border-radius: 25px;
+
   & img {
     border-radius: 25px;
   }
-  & > div{
+
+  & > div {
     border-radius: 25px;
     position: absolute;
     top: 0;
     background-color: $overlay;
+
     & strong {
       font-size: 18pt;
     }
   }
 }
 
-::v-deep.recipe-tutorial > video{
+::v-deep.recipe-tutorial > video {
   border-radius: 10px;
 }
 </style>

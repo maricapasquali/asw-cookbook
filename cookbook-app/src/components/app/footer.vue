@@ -38,10 +38,9 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
-
-footer{
-  background-color:  $footer-color!important;
+<style lang="scss" scoped>
+footer {
+  background-color: $footer-color !important;
   color: white;
   z-index: 3;
   bottom: 0;
@@ -50,8 +49,9 @@ footer{
 
   .container {
     display: grid;
+
     .logo {
-      height: 50px!important;
+      height: 50px !important;
       border-radius: 8px;
     }
 

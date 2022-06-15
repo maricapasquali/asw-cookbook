@@ -102,5 +102,5 @@ export default {
 </script>
 
 <style scoped>
-
+/* stylelint-disable no-empty-source */
 </style>

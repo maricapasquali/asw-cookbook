@@ -294,16 +294,18 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
-.navigator-bar{
+<style lang="scss" scoped>
+.navigator-bar {
   background-color: $nav-color;
 }
+
 .navigator-bar.navigator-bar-in-logout {
-  z-index: 2!important;
+  z-index: 2 !important;
 }
 
 .nav-notification {
   position: relative;
+
   & .badge {
     position: absolute;
     top: -3px;

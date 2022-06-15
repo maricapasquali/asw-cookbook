@@ -305,13 +305,14 @@ export default {
 </script>
 
 <style scoped>
-#forgot-password:focus, #signup:focus{
-  box-shadow: none!important;
+#forgot-password:focus,
+#signup:focus {
+  box-shadow: none !important;
 }
 
-/deep/ input{
-  white-space: nowrap!important;
-  overflow: hidden!important;
-  text-overflow: ellipsis!important;
+/deep/ input {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 </style>

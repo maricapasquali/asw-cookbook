@@ -116,7 +116,7 @@
                   img-left
                   class="attachment-item"
                   body-class="py-0"
-                  style="cursor: pointer"
+                  style="cursor: pointer;"
                 >
                   <b-row
                     align-v="center"
@@ -616,32 +616,32 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .chat {
-
-  & .messages-header{
+  & .messages-header {
     border-radius: 1.25rem 1.25rem 0 0;
     box-shadow: 0 3px 12px 0 #0000006e;
     background-color: $background-color-chat-header;
     color: white;
   }
 
-
   & .messages-container {
     background-color: $background-color-chat;
     box-sizing: border-box;
+
     & > div#messages {
       overflow: auto;
       height: 500px;
     }
-    & .read-new-messages{
+
+    & .read-new-messages {
       position: absolute;
       bottom: 20px;
       right: 40px;
 
-      & button{
+      & button {
         box-shadow: 0 0 20px 5px black;
       }
+
       & span.badge {
         position: absolute;
         top: -5px;
@@ -656,8 +656,7 @@ export default {
 
   & .messages-footer {
     background-color: lightgrey;
-    //box-shadow: 0px -3px 12px 0px #0000006e;
-    border-radius: 0 0 1.25rem 1.25rem ;
+    border-radius: 0 0 1.25rem 1.25rem;
   }
 }
 </style>

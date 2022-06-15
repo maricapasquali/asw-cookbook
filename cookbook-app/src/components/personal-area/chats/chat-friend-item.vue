@@ -73,7 +73,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 .friend-item {
   border: 1px solid lightgrey;
   cursor: pointer;
