@@ -1,13 +1,12 @@
-import {shoppingListController} from '../../../controllers'
-import {shoppingListMiddleware} from '../../../middlewares'
+import { shoppingListController } from "../../../controllers"
+import { shoppingListMiddleware } from "../../../middlewares"
 
-export default function (app){
-
-    app.route('/api/users/:id/shopping-list')
-        .post(shoppingListMiddleware.add(), shoppingListController.add_food)
+export default function (app) {
+    app.route("/api/users/:id/shopping-list")
+        .post(shoppingListMiddleware.add(), shoppingListController.addFood)
         .get(shoppingListMiddleware.list(), shoppingListController.list)
 
-    app.route('/api/users/:id/shopping-list/:pointShoppingListID')
-        .patch(shoppingListMiddleware.update(), shoppingListController.update_food_on_list)
-        .delete(shoppingListMiddleware.erase(), shoppingListController.delete_food_on_list)
+    app.route("/api/users/:id/shopping-list/:pointShoppingListID")
+        .patch(shoppingListMiddleware.update(), shoppingListController.updateFoodOnList)
+        .delete(shoppingListMiddleware.erase(), shoppingListController.deleteFoodOnList)
 }

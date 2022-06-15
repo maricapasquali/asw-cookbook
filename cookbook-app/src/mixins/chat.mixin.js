@@ -1,36 +1,36 @@
-import * as _ from 'lodash'
+import * as _ from "lodash"
 import UserMixin from "./user.mixin"
-import {mapGetters} from "vuex";
+import { mapGetters } from "vuex"
 
-function _lastAccess(chatType, users){
-    let _lastAccess = '';
-    if(chatType === 'one' && users.length === 2){
+function _lastAccess(chatType, users) {
+    let _lastAccess
+    if (chatType === "one" && users.length === 2) {
         const otherUser =  users.find(r => r.user?._id !== this.userIdentifier)
         _lastAccess = otherUser && otherUser.user?.lastAccess
 
-        console.debug('Other user => ', otherUser.user?.userID,' Last access = ', _lastAccess)
-    }
-    else {
+        console.debug("Other user => ", otherUser.user?.userID," Last access = ", _lastAccess)
+    } else {
         const otherUsers = users.filter(r => r.user?._id !== this.userIdentifier)
-        const _maxItem = _.maxBy(otherUsers.map(r => r.user), 'lastAccess')
-        _lastAccess = otherUsers.every(r=> r.user?.lastAccess !== 0) ? _maxItem && _maxItem.lastAccess : 0
+        const _maxItem = _.maxBy(otherUsers.map(r => r.user), "lastAccess")
+        _lastAccess = otherUsers.every(r => r.user?.lastAccess !== 0) ? _maxItem && _maxItem.lastAccess : 0
 
-        const otherUsersLastAccess = otherUsers.map(r => { const obj = {}; obj[r.user?.userID] = r.user?.lastAccess || false; return obj })
-        console.debug('Other users => ', JSON.stringify(otherUsersLastAccess), ' Last access = ', _lastAccess)
+        const otherUsersLastAccess = otherUsers.map(r => {
+            const obj = {}; obj[r.user?.userID] = r.user?.lastAccess || false; return obj
+        })
+        console.debug("Other users => ", JSON.stringify(otherUsersLastAccess), " Last access = ", _lastAccess)
     }
     return _lastAccess
 }
 
 function _baseInfoUser(chatInfo, users) {
-    if (chatInfo.type === 'one' && users.length === 2) {
+    if (chatInfo.type === "one" && users.length === 2) {
         const otherUser = users.find(r => r.user?._id !== this.userIdentifier)
-        if (otherUser) console.debug('Other user: base info = ', JSON.stringify(otherUser.user))
-        return otherUser && {_id: otherUser.user?._id, name: otherUser.user.role === "admin" ? otherUser.user.userID + " (Amministratore)" : otherUser.user.userID, img: otherUser.user.img}
-    }
-    else {
-        if(chatInfo.type === 'group' && this.isAdmin) {
-            const otherUser = users.find(r => r.user && r.user.role !== 'admin')
-            return otherUser && {_id: otherUser.user?._id, name: otherUser.user?.userID}
+        if (otherUser) console.debug("Other user: base info = ", JSON.stringify(otherUser.user))
+        return otherUser && { _id: otherUser.user?._id, name: otherUser.user.role === "admin" ? otherUser.user.userID + " (Amministratore)" : otherUser.user.userID, img: otherUser.user.img }
+    } else {
+        if (chatInfo.type === "group" && this.isAdmin) {
+            const otherUser = users.find(r => r.user && r.user.role !== "admin")
+            return otherUser && { _id: otherUser.user?._id, name: otherUser.user?.userID }
         }
         return {
             _id: users.filter(r => r.user?._id !== this.userIdentifier).map(r => r.user?._id),
@@ -40,45 +40,47 @@ function _baseInfoUser(chatInfo, users) {
     }
 }
 
-function _isChatOne(chatInfo){
-    return chatInfo.type === 'one'
+function _isChatOne(chatInfo) {
+    return chatInfo.type === "one"
 }
 
-function _isChatGroup(chatInfo){
-    return chatInfo.type === 'group'
+function _isChatGroup(chatInfo) {
+    return chatInfo.type === "group"
 }
 
-function _withAdmin(users){
-    return users.some(r => r.user?.role === 'admin')
+function _withAdmin(users) {
+    return users.some(r => r.user?.role === "admin")
 }
 
-function _amIReader(users){
-   return users.find(r => r.user?._id === this.userIdentifier && r.role === 'reader')
+function _amIReader(users) {
+    return users.find(r => r.user?._id === this.userIdentifier && r.role === "reader")
 }
 
-function _amINotReader(users){
-    return users.find(r => r.user?._id === this.userIdentifier && r.role !== 'reader')
+function _amINotReader(users) {
+    return users.find(r => r.user?._id === this.userIdentifier && r.role !== "reader")
 }
 
-function _goToChat(user_id, callbackCreateChat) {
-    console.debug('GO TO CHAT OF USER =', user_id)
+function _goToChat(userId, callbackCreateChat) {
+    console.debug("GO TO CHAT OF USER =", userId)
     const formData = new FormData()
-    if(user_id === 'admin') {
-        formData.set('users', JSON.stringify([{user: user_id, role: 'admin'}]))
-        formData.set('type', 'group')
-        formData.set('name', 'Talk with Administrators')
-    }else {
-        formData.set('users', JSON.stringify([{user: user_id}]))
-        formData.set('type', 'one')
+    if (userId === "admin") {
+        formData.set("users", JSON.stringify([{ user: userId, role: "admin" }]))
+        formData.set("type", "group")
+        formData.set("name", "Talk with Administrators")
+    } else {
+        formData.set("users", JSON.stringify([{ user: userId }]))
+        formData.set("type", "one")
     }
-    const link = (chat_id) => ({ name: 'chat', params: { chat_id } })
+    function link(chatId) {
+        return ({ name: "chat", params: { chatId } })
+    }
 
-    this.$store.dispatch('chats/create', formData)
-        .then(({data}) => data)
+    this.$store.dispatch("chats/create", formData)
+        .then(({ data }) => data)
         .catch(this.$store.$api.errorsHandler.chats.createChat)
         .then(chat => {
-            if(chat) {
-                if(isCallable(callbackCreateChat)) callbackCreateChat(chat)
+            if (chat) {
+                if (isCallable(callbackCreateChat)) callbackCreateChat(chat)
                 else this.$router.push(link(isString(chat) ? chat : chat._id))
             }
         })
@@ -86,11 +88,11 @@ function _goToChat(user_id, callbackCreateChat) {
 
 /* Listeners updates */
 
-function _onUpdateUserInfosInMessages(messages, userInfo){
+function _onUpdateUserInfosInMessages(messages, userInfo) {
     messages?.filter(m => m.sender?._id === userInfo._id).forEach(m => this._updateUserInformation(m.sender, userInfo))
 }
 
-function _onUpdateUserInOneChat(chat, userInfo){
+function _onUpdateUserInOneChat(chat, userInfo) {
     const foundUserInChat = chat.users.find(r => r.user?._id === userInfo._id)
     this._updateUserInformation(foundUserInChat && foundUserInChat.user, userInfo)
     this._onUpdateUserInfosInMessages(chat.messages, userInfo)
@@ -99,10 +101,10 @@ function _onUpdateUserInOneChat(chat, userInfo){
 export default {
     mixins: [UserMixin],
     computed: {
-      ...mapGetters({
-          userIdentifier: 'session/userIdentifier',
-          isAdmin: 'session/isAdmin',
-      })
+        ...mapGetters({
+            userIdentifier: "session/userIdentifier",
+            isAdmin: "session/isAdmin",
+        })
     },
     methods: {
         _lastAccess,

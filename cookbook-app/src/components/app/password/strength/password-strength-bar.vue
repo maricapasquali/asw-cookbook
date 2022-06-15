@@ -1,11 +1,26 @@
 <template>
   <div>
-    <b-progress id="strength-progress-bar" class="my-2" :max="maxStrengthPassword">
-      <b-progress-bar :value="$data._strength.value" :variant="_variant" :label="$data._strength.label" />
+    <b-progress
+      id="strength-progress-bar"
+      class="my-2"
+      :max="maxStrengthPassword"
+    >
+      <b-progress-bar
+        :value="strength_.value"
+        :variant="_variant"
+        :label="strength_.label"
+      />
     </b-progress>
 
-    <b-form-invalid-feedback v-if="withInvalidFeedback" :state="$data._validation">
-      <strength-description title="Password deve contenere" :strength="minimalStrengthValid" :password="$data._value" />
+    <b-form-invalid-feedback
+      v-if="withInvalidFeedback"
+      :state="validation_"
+    >
+      <strength-description
+        title="Password deve contenere"
+        :strength="minimalStrengthValid"
+        :password="value_"
+      />
     </b-form-invalid-feedback>
   </div>
 </template>
@@ -13,85 +28,91 @@
 <script>
 
 export default {
-  name: "password-strength-bar",
-  props: {
-    value: String,
-    maxStrength: Number,
-    withInvalidFeedback: Boolean
-  },
-  data(){
-    return {
-      _strength: {
-        value: null,
-        label: null
-      },
-      _validation: null,
-      _value: ""
-    }
-  },
-
-  computed: {
-
-    minimalStrengthNotValid(){
-      return PasswordValidator.WEAK
+    name: "PasswordStrengthBar",
+    props: {
+        value: {
+            type: String,
+            required: true
+        },
+        maxStrength: {
+            type: Number,
+            default: 100
+        },
+        withInvalidFeedback: Boolean
+    },
+    data() {
+        return {
+            strength_: {
+                value: null,
+                label: null
+            },
+            validation_: null,
+            value_: ""
+        }
     },
 
-    minimalStrengthValid(){
-      return PasswordValidator.GOOD
+    computed: {
+
+        minimalStrengthNotValid() {
+            return PasswordValidator.WEAK
+        },
+
+        minimalStrengthValid() {
+            return PasswordValidator.GOOD
+        },
+
+        maxStrengthPassword() {
+            return this.maxStrength || 100
+        },
+
+        _variant() {
+            return this.strength_.label + "-password"
+        }
     },
-
-    maxStrengthPassword(){
-      return this.maxStrength || 100
+    watch: {
+        value(v) {
+            this.checkStrength(v)
+        }
     },
-
-    _variant(){
-      return this.$data._strength.label + '-password'
-    }
-  },
-  methods: {
-    checkStrength(password){
-      console.debug("Check strength ... ")
-
-      this.$data._value = password
-
-      let actualStrength = PasswordValidator.strength(password)
-
-      this._setActualStrength(actualStrength)
-
-      this.$data._validation = actualStrength ? actualStrength !== this.minimalStrengthNotValid : null
-
-      this.$emit('onCheck', { password, validation: this.$data._validation, strength: actualStrength?.name })
+    created() {
+        this.strength_.label = this.minimalStrengthNotValid.name
+        if (this.value) this.checkStrength(this.value)
     },
+    methods: {
+        checkStrength(password) {
+            console.debug("Check strength ... ")
 
-    _setActualStrength(actualStrength){
-      this.$data._strength.label = actualStrength?.name || this.minimalStrengthNotValid.name
-      switch (actualStrength) {
-        case PasswordValidator.WEAK:
-          this.$data._strength.value = 25
-          break;
-        case PasswordValidator.GOOD:
-          this.$data._strength.value = 50
-          break;
-        case PasswordValidator.MEDIUM:
-          this.$data._strength.value = 75
-          break;
-        case PasswordValidator.STRONG:
-          this.$data._strength.value = 100
-          break;
-        default:
-          this.$data._strength.value = null
-      }
+            this.value_ = password
+
+            let actualStrength = PasswordValidator.strength(password)
+
+            this._setActualStrength(actualStrength)
+
+            this.validation_ = actualStrength ? actualStrength !== this.minimalStrengthNotValid : null
+
+            this.$emit("onCheck", { password, validation: this.validation_, strength: actualStrength?.name })
+        },
+
+        _setActualStrength(actualStrength) {
+            this.strength_.label = actualStrength?.name || this.minimalStrengthNotValid.name
+            switch (actualStrength) {
+                case PasswordValidator.WEAK:
+                    this.strength_.value = 25
+                    break
+                case PasswordValidator.GOOD:
+                    this.strength_.value = 50
+                    break
+                case PasswordValidator.MEDIUM:
+                    this.strength_.value = 75
+                    break
+                case PasswordValidator.STRONG:
+                    this.strength_.value = 100
+                    break
+                default:
+                    this.strength_.value = null
+            }
+        }
     }
-  },
-  watch: {
-    value(v){
-      this.checkStrength(v)
-    }
-  },
-  created() {
-    this.$data._strength.label = this.minimalStrengthNotValid.name
-    if(this.value) this.checkStrength(this.value)
-  }
 }
 </script>
 

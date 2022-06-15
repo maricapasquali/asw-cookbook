@@ -1,5 +1,5 @@
-require("cookbook-shared/dist/libs/lang")
-const { EmailValidator, PasswordValidator } = require("cookbook-shared/dist/libs/validator")
+require("@shared/libs/lang")
+const { EmailValidator, PasswordValidator } = require("@shared/libs/validator")
 const { ReaderStreamImage, ReaderStreamVideo } = require("./filesystem")
 const {
     diff,
@@ -19,6 +19,7 @@ const {
     isEmpty,
     isBoolean,
     isString,
+    isNumber,
     isCallable,
     isDefined,
     dateFormat
@@ -34,6 +35,7 @@ window.equals = equals
 window.isEmpty = isEmpty
 window.isBoolean = isBoolean
 window.isString = isString
+window.isNumber = isNumber
 window.isCallable = isCallable
 window.isDefined = isDefined
 window.dateFormat = dateFormat

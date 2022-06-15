@@ -8,7 +8,7 @@ export interface Validator<T> {
      * @param value generic type (as string, number, etc...) to evaluate
      * @return true if _value_ matches with a regular expression (regex), otherwise false.
      */
-    check(value: T): boolean
+    check: (value: T) => boolean
 }
 
 // EMAIL
@@ -16,7 +16,7 @@ export interface Validator<T> {
  * Implementation of Email Validator.
  */
 export const EmailValidator: Validator<string> = new class implements Validator<string> {
-    readonly regex: RegExp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
+    readonly regex: RegExp = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
     check(value: string): boolean {
         return this.regex.test(value)
     }
@@ -27,7 +27,7 @@ export interface PasswordStrength {
     /**
      * Name of password strength
      */
-    readonly name: string,
+    readonly name: string
     /**
      * Minimum length of a password
      */
@@ -51,27 +51,29 @@ export interface PasswordStrength {
 }
 
 namespace RegExpFactory {
+
+    // eslint-disable-next-line no-inner-declarations
     function toRegex(pattern: string): RegExp {
         return new RegExp(pattern)
     }
 
-    export function atLeastLength(min: number = 1): RegExp {
+    export function atLeastLength(min = 1): RegExp {
         return toRegex("(?:.*[^\\s].*){"+min +",}")
     }
 
-    export function atLeastLowerCase(number: number = 1): RegExp {
+    export function atLeastLowerCase(number = 1): RegExp {
         return toRegex("(?:.*[a-z].*){" + number + ",}")
     }
 
-    export function atLeastUpperCase(number: number = 1): RegExp {
+    export function atLeastUpperCase(number = 1): RegExp {
         return toRegex("(?:.*[A-Z].*){" + number + ",}")
     }
 
-    export function atLeastDigit(number: number = 1): RegExp {
+    export function atLeastDigit(number = 1): RegExp {
         return toRegex("(?:.*[0-9].*){" + number + ",}")
     }
 
-    export function atLeastSpecialChar(number: number = 1): RegExp {
+    export function atLeastSpecialChar(number = 1): RegExp {
         return toRegex("(?:.*[^A-Za-z0-9\\s].*){" + number + ",}")
     }
 }
@@ -88,7 +90,7 @@ export namespace PasswordStrength {
          * @return true if length of _value_ matches the minimum length,
          *         otherwise false.
          */
-        length(value: string): CheckAlways
+        length: (value: string) => CheckAlways
 
         /**
          * @param value to evaluate
@@ -96,7 +98,7 @@ export namespace PasswordStrength {
          *         true if _value_ contains the minimum number of lowercase characters,
          *         otherwise false.
          */
-        lowercase(value: string): CheckEventually
+        lowercase: (value: string) => CheckEventually
 
         /**
          * @param value to evaluate
@@ -104,7 +106,7 @@ export namespace PasswordStrength {
          *         true if _value_ contains the minimum number of uppercase characters,
          *         otherwise false.
          */
-        uppercase(value: string): CheckEventually
+        uppercase: (value: string) => CheckEventually
 
         /**
          * @param value to evaluate
@@ -112,7 +114,7 @@ export namespace PasswordStrength {
          *         true if _value_ contains the minimum number of numeric characters,
          *         otherwise false.
          */
-        digit(value: string): CheckEventually
+        digit: (value: string) => CheckEventually
 
         /**
          * @param value to evaluate
@@ -120,7 +122,7 @@ export namespace PasswordStrength {
          *         true if _value_ contains the minimum number of special characters,
          *         otherwise false.
          */
-        specialChars(value: string): CheckEventually
+        specialChars: (value: string) => CheckEventually
 
 
         /**
@@ -128,31 +130,32 @@ export namespace PasswordStrength {
          * @return true if ALL functions ({@link length}, {@link lowercase}, {@link uppercase}, {@link digit}, {@link specialChars}) return true,
          *         otherwise false.
          */
-        every(value: string): boolean
+        every: (value: string) => boolean
 
         /**
          * @param value to evaluate
          * @return true if SOME functions ({@link length}, {@link lowercase}, {@link uppercase}, {@link digit}, {@link specialChars}) return true,
          *         otherwise false.
          */
-        some(value: string): boolean
+        some: (value: string) => boolean
     }
 
     export namespace Checker {
         export namespace Operation {
-            const AND: boolean = true // NEUTRAL VALUE OF LOGIC 'AND'
-            const OR: boolean = false // NEUTRAL VALUE OF LOGIC 'OR'
+            const AND = true // NEUTRAL VALUE OF LOGIC 'AND'
+            const OR = false // NEUTRAL VALUE OF LOGIC 'OR'
 
             type CheckerTypes = CheckEventually | CheckAlways
 
-            export function and(...args: CheckerTypes[]): boolean{
+            export function and(...args: CheckerTypes[]): boolean {
                 return args.map(r => toCheckAlways(r, AND)).every(r => r)
             }
 
-            export function or(...args: CheckerTypes[]): boolean{
+            export function or(...args: CheckerTypes[]): boolean {
                 return args.map(r => toCheckAlways(r, OR)).some(r => r)
             }
 
+            // eslint-disable-next-line no-inner-declarations
             function toCheckAlways(checkEventually: CheckEventually, logicOperation: boolean): CheckAlways {
                 return typeof checkEventually === "boolean" ? checkEventually : (!!logicOperation)
             }
@@ -167,28 +170,28 @@ export namespace PasswordStrength {
     export abstract class ExtendedConstructor implements Extended {
         abstract name: string;
         abstract minimumLength: number;
-        minimumLowerCase?: number;
-        minimumUpperCase?: number;
-        minimumDigit?: number;
-        minimumSpecialChar?: number;
+        minimumLowerCase?: number
+        minimumUpperCase?: number
+        minimumDigit?: number
+        minimumSpecialChar?: number
 
         length(value: string): CheckAlways {
             return RegExpFactory.atLeastLength(this.minimumLength).test(value)
         }
         lowercase(value: string): CheckEventually {
-            if(!this.minimumLowerCase) return
+            if (!this.minimumLowerCase) return
             return RegExpFactory.atLeastLowerCase(this.minimumLowerCase).test(value)
         }
         uppercase(value: string): CheckEventually {
-            if(!this.minimumUpperCase) return
+            if (!this.minimumUpperCase) return
             return RegExpFactory.atLeastUpperCase(this.minimumUpperCase).test(value)
         }
         digit(value: string): CheckEventually {
-            if(!this.minimumDigit) return
+            if (!this.minimumDigit) return
             return RegExpFactory.atLeastDigit(this.minimumDigit).test(value)
         }
         specialChars(value: string): CheckEventually {
-            if(!this.minimumSpecialChar) return
+            if (!this.minimumSpecialChar) return
             return RegExpFactory.atLeastSpecialChar(this.minimumSpecialChar).test(value)
         }
         every(value: string): boolean {
@@ -198,7 +201,7 @@ export namespace PasswordStrength {
                 this.uppercase(value),
                 this.digit(value),
                 this.specialChars(value)
-            );
+            )
         }
         some(value: string): boolean {
             return Checker.Operation.or(
@@ -207,7 +210,7 @@ export namespace PasswordStrength {
                 this.uppercase(value),
                 this.digit(value),
                 this.specialChars(value)
-            );
+            )
         }
     }
 
@@ -224,19 +227,19 @@ export interface PasswordValidator {
      * @param strength to test the password validity
      * @return true if the password respect the given strength pattern, otherwise false.
      */
-    check(password: string, strength: PasswordStrength): boolean
+    check: (password: string, strength: PasswordStrength) => boolean
 
     /**
      * @param password to evaluate
      * @return the strength of the passed password
      */
-    strength(password: string): PasswordStrength
+    strength: (password: string) => PasswordStrength
 }
 
 export type PasswordStrengthDefault = {
-    readonly WEAK: PasswordStrength.Extended,
-    readonly GOOD: PasswordStrength.Extended,
-    readonly MEDIUM: PasswordStrength.Extended,
+    readonly WEAK: PasswordStrength.Extended
+    readonly GOOD: PasswordStrength.Extended
+    readonly MEDIUM: PasswordStrength.Extended
     readonly STRONG: PasswordStrength.Extended
 }
 
@@ -292,16 +295,16 @@ export const PasswordValidator: PasswordValidatorExtended = new class implements
     }
 
     check(password: string, strength: PasswordStrength): boolean | never {
-        let checker: PasswordStrength.Checker = this._passwordStrengths.find(p => p === strength)
-        if(!checker) throw new Error("PasswordStrength['" + strength.name + "'] is not in PasswordValidator ");
+        const checker: PasswordStrength.Checker = this._passwordStrengths.find(p => p === strength)
+        if (!checker) throw new Error("PasswordStrength['" + strength.name + "'] is not in PasswordValidator ")
         return checker.every(password)
     }
 
     strength(password: string): PasswordStrength {
-        if(!password || password.trim().length === 0) return
-        if(this.check(password, this.STRONG)) return this.STRONG
-        if(this.check(password, this.MEDIUM)) return this.MEDIUM
-        if(this.check(password, this.GOOD)) return this.GOOD
+        if (!password || password.trim().length === 0) return
+        if (this.check(password, this.STRONG)) return this.STRONG
+        if (this.check(password, this.MEDIUM)) return this.MEDIUM
+        if (this.check(password, this.GOOD)) return this.GOOD
         return this.WEAK
     }
 }

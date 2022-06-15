@@ -1,11 +1,11 @@
-import userRoute from './user'
-import adminRoute from './user/admin'
-import friendRoute from './user/friend'
-import foodRoute from './food'
-import shoppingListRoute from './shopping-list'
-import recipeRoute from './recipe'
-import notificationRoute from './notification'
-import chatRoute from './chat'
+import userRoute from "./user"
+import adminRoute from "./user/admin"
+import friendRoute from "./user/friend"
+import foodRoute from "./food"
+import shoppingListRoute from "./shopping-list"
+import recipeRoute from "./recipe"
+import notificationRoute from "./notification"
+import chatRoute from "./chat"
 
 export default function (app: any) {
     userRoute(app)

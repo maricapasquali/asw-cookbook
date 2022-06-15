@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as ejs from "ejs";
+import * as fs from "fs"
+import * as path from "path"
+import * as ejs from "ejs"
 
 type TemplateEmailJSON = {
     /**
@@ -17,7 +17,7 @@ type CommonEmailData = {
     /**
      * Application name
      */
-    app_name: string
+    appName: string
 }
 
 type CommonUserEmailData = {
@@ -47,31 +47,31 @@ export interface TemplateEmail {
     /**
      * @return content of email in HTML format.
      */
-    toHtml(): string
+    toHtml: () => string
 
     /**
      * @return content of email in plaintext format.
      */
-    toText(): string
+    toText: () => string
 
     /**
      * @return content of email in JSON format.
      */
-    toJson(): TemplateEmailJSON
+    toJson: () => TemplateEmailJSON
 }
 
 /**
  * {@link ATemplateEmail} is a partial implementation of {@link TemplateEmail}
  */
-abstract class ATemplateEmail implements TemplateEmail{
+abstract class ATemplateEmail implements TemplateEmail {
     private readonly templateFile: string
     private readonly template: any
     protected readonly data: any
 
     constructor(file: string, data: any) {
-        let contents = fs.readFileSync(path.join(__dirname, file), 'utf8');
-        this.templateFile = file;
-        this.template = ejs.compile(contents);
+        const contents = fs.readFileSync(path.join(__dirname, file), "utf8")
+        this.templateFile = file
+        this.template = ejs.compile(contents)
         this.data = data
     }
 
@@ -94,9 +94,9 @@ export namespace TemplateEmail {
      */
     export function createResetPasswordEmail(data: CommonEmailData & { user_name: string, url: string }): TemplateEmail {
         return new class extends ATemplateEmail {
-            toText(): string{
-                return  `
-                    ${this.data.app_name}
+            toText(): string {
+                return `
+                    ${this.data.appName}
                     Reimpostare la password?
                     Gentile ${this.data.user_name},
                     se ha richiesto la reimpostazione della password, copia il link sottostante nel browser.
@@ -107,10 +107,10 @@ export namespace TemplateEmail {
                     ATTENZIONE:
                     Il link sarà valido solo per i 30 minuti successivi alla ricezione di questa email.
                     
-                    Il Team ${this.data.app_name}
+                    Il Team ${this.data.appName}
                 `
             }
-        }('reset-password.ejs', data)
+        }("reset-password.ejs", data)
     }
 
     /**
@@ -119,9 +119,9 @@ export namespace TemplateEmail {
      */
     export function createSignUpEmail(data: CommonEmailData & CommonUserEmailData & { url: string }): TemplateEmail {
         return new class extends ATemplateEmail {
-            toText(): string{
-                return  `
-                    Creazione account ${this.data.app_name}.
+            toText(): string {
+                return `
+                    Creazione account ${this.data.appName}.
                     
                     Gentile ${this.data.firstname} ${this.data.lastname},
                     il suo account è stato creato.
@@ -135,11 +135,10 @@ export namespace TemplateEmail {
                     Copia il link sottostante nel browser per completare la registrazione:
                         ${this.data.url}
                     
-                    Il Team ${this.data.app_name}
+                    Il Team ${this.data.appName}
                 `
             }
-
-        }('signup.ejs', data)
+        }("signup.ejs", data)
     }
 
     /**
@@ -149,8 +148,8 @@ export namespace TemplateEmail {
     export function createSignUpAdminEmail(data: CommonEmailData & CommonUserEmailData & { passwordDefault: string }): TemplateEmail {
         return new class extends ATemplateEmail {
             toText(): string {
-                return  `
-                    Creazione account ${this.data.app_name} Amministratore.
+                return `
+                    Creazione account ${this.data.appName} Amministratore.
                     
                     Gentile ${this.data.firstname} ${this.data.lastname},
                     il suo account è stato creato.
@@ -163,11 +162,10 @@ export namespace TemplateEmail {
                     
                     Attenzione: cambia la password di default il prima possibile!
                     
-                    Il Team ${this.data.app_name}
+                    Il Team ${this.data.appName}
                 `
             }
-
-        }('signup-admin.ejs', data)
+        }("signup-admin.ejs", data)
     }
 
     /**
@@ -177,16 +175,15 @@ export namespace TemplateEmail {
     export function createEraseUserEmail(data: CommonEmailData & CommonUserEmailData): TemplateEmail {
         return new class extends ATemplateEmail {
             toText(): string {
-                return  `
+                return `
                     Chiusura definitiva dell'account ${this.data.userID}.
                     
                     Gentile ${this.data.firstname} ${this.data.lastname},
                     le comunichiamo che l'account associato a questa email (${this.data.email}) è stato definitivamente cancellato.
                         
-                    Il Team ${this.data.app_name}       
-                `;
+                    Il Team ${this.data.appName}       
+                `
             }
-
-        }('erase-user.ejs', data)
+        }("erase-user.ejs", data)
     }
 }

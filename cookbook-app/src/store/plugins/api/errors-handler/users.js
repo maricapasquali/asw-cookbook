@@ -1,22 +1,23 @@
-import handlerErrorBase from './base'
-export default function (bus){
-    const {badRequest, forbidden, notFound, serverError, unAuthenticated} = handlerErrorBase(bus)
+import handlerErrorBase from "./base"
+
+export default function (bus) {
+    const { badRequest, forbidden, notFound, serverError, unAuthenticated } = handlerErrorBase(bus)
 
     function _badRequestString(err) {
-        return 'Bad Request' + ( err.response?.data?.description ? ' : ' + err.response?.data?.description: '')
+        return "Bad Request" + ( err.response?.data?.description ? " : " + err.response?.data?.description: "")
     }
 
-    function changeCredential(err, credential){
+    function changeCredential(err, credential) {
         console.error(err)
-        switch (err.response?.status){
+        switch (err.response?.status) {
             case 400: return _badRequestString(err)
-            case 401: unAuthenticated(err, {_forbiddenPage: true})
-                break;
-            case 403: return 'Non sei autorizzato a cambiare ' + credential + ' di quest\'account.'
-            case 404: return 'Utente non trovato.'
+            case 401: unAuthenticated(err, { _forbiddenPage: true })
+                break
+            case 403: return "Non sei autorizzato a cambiare " + credential + " di quest'account."
+            case 404: return "Utente non trovato."
             case 409: {
-                if(credential === 'username') return 'Username non corretto.'
-                if(credential === 'password') return 'Password non corretta.'
+                if (credential === "username") return "Username non corretto."
+                if (credential === "password") return "Password non corretta."
             }
                 break
             default: return serverError(err, false)
@@ -25,13 +26,13 @@ export default function (bus){
 
     function signUp(err) {
         console.error(err)
-        switch(err.response?.status) {
+        switch (err.response?.status) {
             case 400: return _badRequestString(err)
             case 409: {
                 let field = err.response.data?.details?.field
-                switch (field){
-                    case "email": return field.capitalize() + ' già utilizzata.'
-                    case "userID": return field.capitalize() + ' già utilizzato.'
+                switch (field) {
+                    case "email": return field.capitalize() + " già utilizzata."
+                    case "userID": return field.capitalize() + " già utilizzato."
                     default: return "User già inserito."
                 }
             }
@@ -41,32 +42,32 @@ export default function (bus){
 
     function emailResetPassword(err) {
         console.error(err)
-        switch(err.response?.status) {
+        switch (err.response?.status) {
             case 400: return _badRequestString(err)
-            case 404: return 'Email non è associata a nessun account.'
+            case 404: return "Email non è associata a nessun account."
             default: return serverError(err, false)
         }
     }
 
     function checkAccount(err) {
         console.error(err)
-        switch (err.response?.status){
-            case 400: return 'LINK NON VALIDO'
-            case 404: return 'UTENTE NON TROVATO/VALIDO'
-            case 410: return 'LINK SCADUTO'
+        switch (err.response?.status) {
+            case 400: return "LINK NON VALIDO"
+            case 404: return "UTENTE NON TROVATO/VALIDO"
+            case 410: return "LINK SCADUTO"
             default: return serverError(err, false)
         }
     }
 
     function getUser(err, info) {
-        switch(err.response?.status) {
+        switch (err.response?.status) {
             case 400:
                 return true
             case 401:
                 unAuthenticated(err, info)
                 break
             case 404:
-                if(info._forbiddenPage) {
+                if (info._forbiddenPage) {
                     err.response.status = 403
                     forbidden(err)
                     return false
@@ -79,7 +80,7 @@ export default function (bus){
     }
 
     function updateUser(err) {
-        switch(err.response?.status) {
+        switch (err.response?.status) {
             case 400:
                 badRequest(err)
                 break
@@ -90,7 +91,7 @@ export default function (bus){
                 forbidden(err)
                 break
             case 404:
-                notFound(err, {name: 'Utente', id: err.response?.config?.urlParams?.id })
+                notFound(err, { name: "Utente", id: err.response?.config?.urlParams?.id })
                 break
             default:
                 serverError(err)
@@ -99,37 +100,41 @@ export default function (bus){
 
     function deleteAccount(err) {
         console.error(err)
-        switch (err.response?.status){
+        switch (err.response?.status) {
             case 400:
                 badRequest(err)
                 break
             case 401:
-                unAuthenticated(err, {_forbiddenPage: true})
-                break;
-            case 403: return 'Non sei autorizzato a cancellare quest\'account.'
-            case 404: return 'Utente non trovato.'
+                unAuthenticated(err, { _forbiddenPage: true })
+                break
+            case 403: return "Non sei autorizzato a cancellare quest'account."
+            case 404: return "Utente non trovato."
             default: return serverError(err, false)
         }
     }
 
-    const changeUserID = (err)  => changeCredential(err, 'username')
+    function changeUserID(err) {
+        return changeCredential(err, "username")
+    }
 
-    const changePassword = (err) => changeCredential(err, 'password')
+    function changePassword(err) {
+        return changeCredential(err, "password")
+    }
 
     function resetPassword(err) {
         console.error(err)
-        switch (err.response?.status){
+        switch (err.response?.status) {
             case 400: return _badRequestString(err)
-            case 401: return 'Sessione scaduta.'
-            case 403: return 'Non sei autorizzato a resettare la password diquesto utente.'
-            case 404: return 'Utente non trovato.'
+            case 401: return "Sessione scaduta."
+            case 403: return "Non sei autorizzato a resettare la password diquesto utente."
+            case 404: return "Utente non trovato."
             default: return serverError(err, false)
         }
     }
 
-    function checkLinkResetPassword(err){
+    function checkLinkResetPassword(err) {
         console.error(err)
-        switch (err.response?.status){
+        switch (err.response?.status) {
             case 400: return _badRequestString(err)
             case 404: return "Link non valido."
             case 410: return "Link scaduto. Richiedine uno nuovo."
@@ -139,9 +144,9 @@ export default function (bus){
 
     function getUserFromNickname(err) {
         console.error(err)
-        switch (err.response?.status){
+        switch (err.response?.status) {
             case 400: return _badRequestString(err)
-            case 404: return 'Utente/Richiesta non trovato/a.'
+            case 404: return "Utente/Richiesta non trovato/a."
             default: return serverError(err, false)
         }
     }

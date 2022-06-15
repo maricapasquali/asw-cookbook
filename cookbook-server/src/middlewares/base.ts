@@ -1,22 +1,23 @@
-import {DecodedTokenType} from "../libs/jwt.token";
-import {Types} from "mongoose";
-import {RBAC} from "../libs/rbac";
-import Operation = RBAC.Operation;
-import Resource = RBAC.Resource;
+import { DecodedTokenType } from "../libs/jwt.token"
+import { Types } from "mongoose"
+import { RBAC } from "../libs/rbac"
+import Operation = RBAC.Operation
+import Resource = RBAC.Resource
 
 function _extractAuthorization(req) {
     req.locals = req.locals || {}
-    if(req.headers.authorization) {
-        const [type, value] = req.headers.authorization.split(' ')
-        switch (type){
-            case 'Basic': {
-                let buff = Buffer.from(value, 'base64');
-                let [userID, password] = buff.toString('utf-8').split(':');
+    if (req.headers.authorization) {
+        const [type, value] = req.headers.authorization.split(" ")
+        switch (type) {
+            case "Basic": {
+                const [userID, password] = Buffer.from(value, "base64")
+                    .toString("utf-8")
+                    .split(":")
                 req.locals.userID = userID
                 req.locals.password = password
             }
-                break;
-            case 'Bearer': {
+                break
+            case "Bearer": {
                 req.locals.access_token = value
             }
                 break
@@ -28,35 +29,32 @@ function _extractAuthorization(req) {
 
 function checkAndDecode(options?: AuthOption): Middleware {
     return function (req, res, next) {
-        let decoded_token: DecodedTokenType | boolean = tokensManager.checkValidityOfToken(req.locals.access_token);
-        if(decoded_token) {
-            if(options) {
+        const decodedToken: DecodedTokenType | boolean = tokensManager.checkValidityOfToken(req.locals.access_token)
+        if (decodedToken) {
+            if (options) {
                 options.others = options.others || (() => false)
                 options.ignoreValidationParamId = options.ignoreValidationParamId || false
 
-                let isIDValid = options.ignoreValidationParamId || Types.ObjectId.isValid(req.params.id)
-                if(!isIDValid) {
-                    return next({status: 400, description: 'Required a valid \'id\''})
-                }
+                const isIDValid = options.ignoreValidationParamId || Types.ObjectId.isValid(req.params.id)
+                if (!isIDValid) return next({ status: 400, description: "Required a valid 'id'" })
 
-                if(!accessManager.isAuthorized(decoded_token.role, options.operation, options.resource, options.others(decoded_token, req.params.id))) {
-                    return next({status: 403, description: `User is unauthorized to ${options.operation.toUpperCase()} resource ${options.resource.toUpperCase()}.`})
-                }
+                if (!accessManager.isAuthorized(decodedToken.role, options.operation, options.resource, options.others(decodedToken, req.params.id)))
+                    return next({ status: 403, description: `User is unauthorized to ${options.operation.toUpperCase()} resource ${options.resource.toUpperCase()}.` })
+
             }
-            req.locals.user = decoded_token
+            req.locals.user = decodedToken
             next()
-        }
-        else {
-            next({status: 401, description: 'User is not authenticated'})
+        } else {
+            next({ status: 401, description: "User is not authenticated" })
         }
     }
 }
 
-type AuthOption = { operation: Operation, resource: Resource, others?: (decodedToken: DecodedTokenType, param_id: string) => boolean, ignoreValidationParamId?: boolean }
+type AuthOption = { operation: Operation, resource: Resource, others?: (decodedToken: DecodedTokenType, paramId: string) => boolean, ignoreValidationParamId?: boolean }
 
 export type CallbackNext = (err?: any) => any
 
-export type Middleware = ( req: any, res: any, next: CallbackNext ) => void
+export type Middleware = (req: any, res: any, next: CallbackNext) => void
 
 export type Middlewares = Middleware | Middleware[]
 
@@ -64,11 +62,11 @@ export type Middlewares = Middleware | Middleware[]
  * @return middleware to extract credential from header _authorization_
  */
 export function extractAuthorization(): Middleware {
-    return function (req, res, next){
+    return function (req, res, next) {
         try {
             _extractAuthorization(req)
             next()
-        }catch (e) {
+        } catch (e) {
             next(e)
         }
     }
@@ -79,11 +77,11 @@ export function extractAuthorization(): Middleware {
  * @return middleware to check authorization on a resource and an operation and if authorization isn't present, a bad request error is sent.
  */
 export function checkRestrictedRBAC(options?: AuthOption): Middleware {
-    return function (req, res, next){
+    return function (req, res, next) {
         extractAuthorization()(req, res, (err?: any): any => {
-            if(err) return next(err)
-            if(req.locals.access_token) checkAndDecode(options)(req, res, next)
-            else next({status: 400, description: 'Missing authorization.'})
+            if (err) return next(err)
+            if (req.locals.access_token) checkAndDecode(options)(req, res, next)
+            else next({ status: 400, description: "Missing authorization." })
         })
     }
 }
@@ -93,10 +91,10 @@ export function checkRestrictedRBAC(options?: AuthOption): Middleware {
  * @return middleware to check authorization on a resource and an operation.
  */
 export function checkNormalRBAC(options?: AuthOption): Middleware {
-    return function (req, res, next){
+    return function (req, res, next) {
         extractAuthorization()(req, res, (err?: any): any => {
-            if(err) return next(err)
-            if(req.locals.access_token) checkAndDecode(options)(req, res, next)
+            if (err) return next(err)
+            if (req.locals.access_token) checkAndDecode(options)(req, res, next)
             else next()
         })
     }
@@ -108,20 +106,19 @@ export function checkNormalRBAC(options?: AuthOption): Middleware {
  */
 export function checkRequestHeaders(headersToCheck: object): Middleware {
     return function (req, res, next) {
-        let headersNotValid: object = Object.entries(headersToCheck)
+        const headersNotValid: object = Object.entries(headersToCheck)
             .filter(([key, value]) => {
-                let header = req.get(key)
+                const header = req.get(key)
                 return !header || header.search(value) == -1
             })
             .reduce((prev, current) => {
-                prev[current[0]] = current[1];
-                return prev;
-            }, {});
-        if(Object.keys(headersNotValid).length > 0)  {
+                prev[current[0]] = current[1]
+                return prev
+            }, {})
+        if (Object.keys(headersNotValid).length > 0) {
             console.debug(headersNotValid)
-            next({status: 400, description: 'Headers are not correct. Correct headers : ' + JSON.stringify(headersNotValid) })
-        }
-        else next()
+            next({ status: 400, description: "Headers are not correct. Correct headers : " + JSON.stringify(headersNotValid) })
+        } else next()
     }
 }
 
@@ -130,9 +127,9 @@ export function checkRequestHeaders(headersToCheck: object): Middleware {
  * @return middleware that wrap an uploader middleware and if error occurred, a bad request error is sent.
  */
 export function wrapUpload(uploader: any): Middleware {
-    return function (req, res, next){
-        uploader(req, res, function (err){
-            if(err) return next({ status: 400, description: err.message, code: err.code })
+    return function (req, res, next) {
+        uploader(req, res, err => {
+            if (err) return next({ status: 400, description: err.message, code: err.code })
             next()
         })
     }

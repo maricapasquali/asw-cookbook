@@ -6,7 +6,7 @@ type Path = {
      * @param resource (optional) name of the resource to find the absolute path for
      * @return absolute path of the file or the resource
      */
-    path(filename?: string, resource?: MediaResource): string
+    path: (filename?: string, resource?: MediaResource) => string
 }
 
 interface MediaResource {
@@ -19,13 +19,13 @@ interface MediaResource {
      * @param filename (optional) name of the file to find the absolute path for
      * @return absolute path of the resource images
      */
-    Image(filename?: string): string
+    Image: (filename?: string) => string
 
     /**
      * @param filename (optional) name of the file to find the absolute path for
      * @return absolute path of the videos of the resource
      */
-    Video(filename?: string): string
+    Video: (filename?: string) => string
 }
 
 export namespace FilesystemResource {
@@ -60,24 +60,23 @@ export namespace FilesystemResource {
 
     export const CHATS: MediaResource = BasicMediaResource("chats")
 
-    /*-- PRIVATE --*/
+}
 
-    function PathJoin(subDirectory: string, filename?: string, resource?: MediaResource): string {
-        return path.resolve((resource ? path.join(__dirname, resource.name): __dirname), subDirectory, filename || "")
-    }
+/* -- PRIVATE -- */
+function PathJoin(subDirectory: string, filename?: string, resource?: MediaResource): string {
+    return path.resolve((resource ? path.join(__dirname, resource.name) : __dirname), subDirectory, filename || "")
+}
 
-    function BasicMediaResource(name: string): MediaResource {
-        return new class implements MediaResource {
-            name: string = name
+function BasicMediaResource(name: string): MediaResource {
+    return new class implements MediaResource {
+        name: string = name
 
-            Image(filename?: string): string {
-                return Image.path(filename, this)
-            }
-
-            Video(filename?: string): string {
-                return Video.path(filename, this)
-            }
+        Image(filename?: string): string {
+            return FilesystemResource.Image.path(filename, this)
         }
-    }
 
+        Video(filename?: string): string {
+            return FilesystemResource.Video.path(filename, this)
+        }
+    }()
 }

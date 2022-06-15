@@ -1,18 +1,18 @@
 export interface IDiet {
-    value: string,
+    value: string
     text: string
 }
 
 class Diet implements IDiet {
-    text: string;
-    value: string;
+    text: string
+    value: string
     constructor(value: string, text: string) {
-        this.value = value;
-        this.text = text;
+        this.value = value
+        this.text = text
     }
 }
 
-export const None = new Diet('', "-- None --")
+export const None = new Diet("", "-- None --")
 export const Light = new Diet("light", "Light")
 export const GlutenFree = new Diet("gluten free", "Senza glutine")
 export const LactoseFree = new Diet("lactose free", "Senza lattosio")

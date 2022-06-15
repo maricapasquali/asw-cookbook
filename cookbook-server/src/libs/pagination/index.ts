@@ -1,4 +1,7 @@
-import {Document, Query} from "mongoose";
+import {
+    Document,
+    Query
+} from "mongoose"
 
 export namespace Pagination {
 
@@ -9,11 +12,11 @@ export namespace Pagination {
         /**
          * Number of current page
          */
-        page: number,
+        page: number
         /**
          * Number of documents to keep for page
          */
-        limit: number,
+        limit: number
         /**
          * (Optional) Number of documents to skip for page
          */
@@ -27,11 +30,11 @@ export namespace Pagination {
         /**
          * List of selected documents
          */
-        items: Document[],
+        items: Document[]
         /**
          * Total number of documents in the database
          */
-        total: number,
+        total: number
         /**
          *  (Optional) Information of pagination
          */
@@ -43,13 +46,13 @@ export namespace Pagination {
      * @param options (optional) information of pagination ({@link Pagination.Options})
      * @return {@link Promise} of {@link Pagination.Result}
      */
-    export function ofQueryDocument(query: Query<Document[], Document, {}, Document>, options?: Options): Promise<Result> {
-        let qc = query.toConstructor()
+    export function ofQueryDocument(query: Query<Document[], Document, object, Document>, options?: Options): Promise<Result> {
+        const QueryConstructor = query.toConstructor()
         return query.countDocuments()
             .then(nDocs => {
-                if(nDocs == 0) return Promise.resolve({ items: [] as Document[] , total: nDocs, paginationInfo: options })
-                let _query = new qc()
-                if(options) {
+                if (nDocs == 0) return Promise.resolve({ items: [] as Document[], total: nDocs, paginationInfo: options })
+                let _query = new QueryConstructor()
+                if (options) {
                     // console.debug('pagination options: ', options)
                     _query = _query.limit(options.limit).skip(((options.page - 1) * options.limit) + (options.skip || 0))
                 }
@@ -62,13 +65,13 @@ export namespace Pagination {
      * @param options (optional) information of pagination ({@link Pagination.Options})
      * @return an instance of {@link Pagination.Result}
      */
-    export function ofArray(array: Array<any>, options?: Options): Result {
-        let start: number = 0
+    export function ofArray(array: any[], options?: Options): Result {
+        let start = 0
         let end: number = array.length
-        if(options){
+        if (options) {
             start = ((options.page - 1) * options.limit) + (options.skip || 0)
             end = start + options.limit
-            // console.debug('start = ', start, ', end = ', end)
+        // console.debug('start = ', start, ', end = ', end)
         }
         return { items: array.slice(start, end), total: array.length, paginationInfo: options }
     }

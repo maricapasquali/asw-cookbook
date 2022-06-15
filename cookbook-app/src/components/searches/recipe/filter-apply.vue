@@ -1,6 +1,10 @@
 <template>
   <div>
-    <b-button pill @click="clickTrigger" variant="primary">
+    <b-button
+      pill
+      variant="primary"
+      @click="clickTrigger"
+    >
       <font-awesome-icon icon="minus" />
     </b-button>
     <span class="ml-3">
@@ -11,21 +15,21 @@
 
 <script>
 export default {
-  name: "filter-apply",
-  props: {
-    filterName: {
-      type: String,
-      default: ''
+    name: "FilterApply",
+    props: {
+        filterName: {
+            type: String,
+            default: ""
+        }
+    },
+    methods: {
+        clickTrigger(e) {
+            this.$emit("remove", e)
+        }
     }
-  },
-  methods: {
-    clickTrigger(e){
-      this.$emit('remove', e)
-    }
-  }
 }
 </script>
 
 <style scoped>
-
+/* stylelint-disable no-empty-source */
 </style>

@@ -1,7 +1,7 @@
-import * as mongoose from "mongoose";
+import * as mongoose from "mongoose"
 
-let CONNECTION_URI: string = configuration.database.uri
-//console.debug(CONNECTION_URI)
+const CONNECTION_URI: string = configuration.database.uri
+// console.debug(CONNECTION_URI)
 
 const CONNECTION_OPTIONS: object = {
     useNewUrlParser: true,

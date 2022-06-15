@@ -1,4 +1,4 @@
-import {Model} from "mongoose";
+import { Model } from "mongoose"
 
 /**
  * @param model instance of mongoose collection ({@link Model})
@@ -7,11 +7,10 @@ import {Model} from "mongoose";
  * @return a promise which resolves when all __ids_ exist in collection _model_ and as a result it returns true,
  *         otherwise it rejects and as a result it returns an array of non-existent __id_
  */
-export async function existById(model: Model<any>, values: Array<string>, filters: object = {}): Promise<true>{
-    if(values.length === 0) return Promise.reject('empty')
-    let notValid: Array<string> = []
+export async function existById(model: Model<any>, values: [string, ...string[]], filters: Record<string, any> = {}): Promise<true> {
+    const notValid: string[] = []
     for (const value of values) {
-        const doesExit = await model.exists(Object.assign(filters, {_id: value})).catch(err => console.error(err))
+        const doesExit = await model.exists(Object.assign(filters, { _id: value })).catch(err => console.error(err))
         if (!doesExit) notValid.push(value)
     }
     return notValid.length > 0 ? Promise.reject(notValid) : Promise.resolve(true)

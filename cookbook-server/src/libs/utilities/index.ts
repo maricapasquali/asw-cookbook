@@ -1,21 +1,22 @@
-import * as crypto from 'crypto'
+import * as crypto from "crypto"
 
 /**
  * @param size length of the string to generate
  * @return a random string encoded __hex__ of length _size_
  */
-export function randomString(size: number = 20): string {
-    return crypto.randomBytes(size)
-                 .toString('hex')
-                 .slice(0, size)
+export function randomString(size = 20): string {
+    return crypto
+        .randomBytes(size)
+        .toString("hex")
+        .slice(0, size)
 }
 
 /**
  * @param minutes time (expressed in minutes) to add to now
  * @return a future date (expressed in milliseconds) from now
  */
-export function futureDateFromNow(minutes: number): number{
-    return new Date(Date.now() + minutes*60000).getTime()
+export function futureDateFromNow(minutes: number): number {
+    return new Date(Date.now() + minutes * 60000).getTime()
 }
 
 export class NoArrayError extends Error {
@@ -31,9 +32,9 @@ export class NoArrayError extends Error {
  * @throws {@link NoArrayError}
  * Thrown if the parsed _encodedString_ is not array.
  */
-export function decodeToArray(encodedString: string): Array<any> | never {
-    let array = JSON.parse(encodedString)
-    if(!Array.isArray(array)) throw new NoArrayError()
+export function decodeToArray(encodedString: string): any[] | never {
+    const array = JSON.parse(encodedString)
+    if (!Array.isArray(array)) throw new NoArrayError()
     return array
 }
 
@@ -51,8 +52,8 @@ export class NoBooleanError extends Error {
  * Thrown if the parsed _encodedString_ is not boolean.
  */
 export function decodeToBoolean(encodedString: string): boolean | never {
-    let decoded = JSON.parse(encodedString)
-    if(typeof decoded !== "boolean") throw new NoBooleanError()
+    const decoded = JSON.parse(encodedString)
+    if (typeof decoded !== "boolean") throw new NoBooleanError()
     return decoded
 }
 
@@ -63,5 +64,5 @@ type EnumValuesType = "string" | "number" | "boolean"
  * @return array of enumeration values
  */
 export function valuesOfEnum(enums: Record<string, any>, filterType: EnumValuesType): any[] {
-   return Object.values(enums).filter(value => typeof value === filterType)
+    return Object.values(enums).filter(value => typeof value === filterType)
 }

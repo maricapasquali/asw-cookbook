@@ -1,12 +1,12 @@
-import * as _ from 'lodash'
-import {isCallable} from "../lang";
+import * as _ from "lodash"
+import { isCallable } from "../lang"
 
 /**
  * @param v1 array of values to inspect
  * @param v2 array of values to exclude
  * @return new array of filtered values
  */
-export function diff(v1: Array<any>, v2: Array<any>): Array<any> {
+export function diff(v1: any[], v2: any[]): any[] {
     return _.difference(v1, v2)
 }
 
@@ -16,12 +16,12 @@ export function diff(v1: Array<any>, v2: Array<any>): Array<any> {
  * @param predicate (optional) function used to find the value to append
  * @return true if _val_ is not present in the array and the operation of append successes, otherwise false
  */
-export function pushIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => boolean): boolean {
-    let _oldLen: number = v1.length
-    let index: number = _.findIndex(v1, predicate || val)
-    let index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(val)
-    let isAbsent: boolean = index === -1 && index1 === -1
-    console.debug('pushIfAbsent: found ', !isAbsent)
+export function pushIfAbsent(v1: any[], val: any, predicate?: (v: any) => boolean): boolean {
+    const _oldLen: number = v1.length
+    const index: number = _.findIndex(v1, predicate || val)
+    const index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(val)
+    const isAbsent: boolean = index === -1 && index1 === -1
+    console.debug("pushIfAbsent: found ", !isAbsent)
     if(isAbsent) return v1.push(val) > _oldLen
     return false
 }
@@ -32,12 +32,12 @@ export function pushIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => b
  * @param predicate (optional) function used to find the value to prepend or value to prepend
  * @return true if _val_ is not present in the array and the operation of prepend successes, otherwise false
  */
-export function prependIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) => boolean | any): boolean {
-    let _oldLen: number = v1.length
-    let index: number =  _.findIndex(v1, predicate || val)
-    let index1: number = isCallable(predicate) ? v1.findIndex(predicate) : v1.indexOf(val)
-    let isAbsent: boolean = index === -1 && index1 === -1
-    console.debug('prependIfAbsent: found ', !isAbsent)
+export function prependIfAbsent(v1: any[], val: any, predicate?: (v: any) => boolean | any): boolean {
+    const _oldLen: number = v1.length
+    const index: number =  _.findIndex(v1, predicate || val)
+    const index1: number = isCallable(predicate) ? v1.findIndex(predicate) : v1.indexOf(val)
+    const isAbsent: boolean = index === -1 && index1 === -1
+    console.debug("prependIfAbsent: found ", !isAbsent)
     if(isAbsent) return v1.unshift(val) > _oldLen
     return false
 }
@@ -47,11 +47,11 @@ export function prependIfAbsent(v1: Array<any>, val: any, predicate?: (v: any) =
  * @param predicate function used to find the value to remove or value to remove
  * @return removed element from the array; undefined if the _predicate_ is not present or the operation fails
  */
-export function removeIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any): any {
-    let index: number =  _.findIndex(v1, predicate)
-    let index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
-    let isPresent: boolean = index !== -1 || index1 != -1
-    console.debug('removeIfPresent: found ', isPresent)
+export function removeIfPresent(v1: any[], predicate: (v: any) => boolean | any): any {
+    const index: number =  _.findIndex(v1, predicate)
+    const index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
+    const isPresent: boolean = index !== -1 || index1 != -1
+    console.debug("removeIfPresent: found ", isPresent)
     if(isPresent) return v1.splice(index,1).pop()
 }
 
@@ -61,11 +61,11 @@ export function removeIfPresent(v1: Array<any>, predicate: (v: any) => boolean |
  * @param newVal new value to replace the old one
  * @return old element from the array; undefined if the _predicate_ is not present or the operation fails
  */
-export function replaceIfPresent(v1: Array<any>, predicate: (v: any) => boolean | any, newVal: any): any {
-    let index: number =  _.findIndex(v1, predicate)
-    let index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
-    let isPresent: boolean = index !== -1 || index1 !== -1
-    console.debug('replaceIfPresent: found ', isPresent)
+export function replaceIfPresent(v1: any[], predicate: (v: any) => boolean | any, newVal: any): any {
+    const index: number =  _.findIndex(v1, predicate)
+    const index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
+    const isPresent: boolean = index !== -1 || index1 !== -1
+    console.debug("replaceIfPresent: found ", isPresent)
     if(isPresent) return v1.splice(index,1, newVal).pop()
 }
 
@@ -74,11 +74,11 @@ export function replaceIfPresent(v1: Array<any>, predicate: (v: any) => boolean 
  * @param v1 array of values to modify
  * @param predicate function used to find the value to move or value to move
  */
-export function moveInFirstPosition(v1: Array<any>, predicate: (v: any) => boolean | any): void {
-    let index: number =  _.findIndex(v1, predicate)
-    let index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
-    let isPresent: boolean = index !== -1 || index1 !== -1
-    console.debug('moveInFirstPosition: found ', isPresent)
+export function moveInFirstPosition(v1: any[], predicate: (v: any) => boolean | any): void {
+    const index: number =  _.findIndex(v1, predicate)
+    const index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
+    const isPresent: boolean = index !== -1 || index1 !== -1
+    console.debug("moveInFirstPosition: found ", isPresent)
     if(isPresent) prepend(v1, index)
 }
 
@@ -87,9 +87,9 @@ export function moveInFirstPosition(v1: Array<any>, predicate: (v: any) => boole
  * @param v1 array of values to modify
  * @param index index of value to move
  */
-export function prepend(v1: Array<any>, index: number): void {
+export function prepend(v1: any[], index: number): void {
     if(index >= 0 && index < v1.length) {
-        let val = v1.splice(index, 1).pop()
+        const val = v1.splice(index, 1).pop()
         if(val) v1.unshift(val)
     }
 }
@@ -99,8 +99,8 @@ export function prepend(v1: Array<any>, index: number): void {
  * @param filter (optional) function used to filter or values to filter
  * @return the last element of array
  */
-export function lastOf(v1: Array<any>, filter?: (v: any) => boolean | any): any {
-    return _.last(_.filter(v1, filter));
+export function lastOf(v1: any[], filter?: (v: any) => boolean | any): any {
+    return _.last(_.filter(v1, filter))
 }
 
 /**
@@ -181,27 +181,27 @@ export function lastOf(v1: Array<any>, filter?: (v: any) => boolean | any): any 
  *      },
  *  ]
  */
-export function flatten(vector: Array<object>, field: string): Array<object> {
-    const mapper = (obj: object): Array<object> | object => {
-        if(!obj[field] || !obj[field].length) return obj;
-        return [obj, _.flatMapDeep(obj[field], mapper)];
+export function flatten(vector: object[], field: string): object[] {
+    function mapper(obj: object): object[] | object {
+        if(!obj[field] || !obj[field].length) return obj
+        return [obj, _.flatMapDeep(obj[field], mapper)]
     }
-    return _.flatMapDeep(vector, mapper);
+    return _.flatMapDeep(vector, mapper)
 }
 
 export type VisitOptions = {
     /**
      * field on which to visit
      */
-    flatterField: string,
+    flatterField: string
     /**
      * field on which to go to look for the child
      */
-    finderField: string,
+    finderField: string
     /**
      * (optional) field on which to map the result of the visit
      */
-    mapperField?: string,
+    mapperField?: string
     /**
      * (optional) if it is true, the result of the visit also includes the given child
      */
@@ -307,11 +307,11 @@ export type VisitOptions = {
  *     }
  * ]
  */
-export function visitUntil(vector: Array<object>, child: object, options: VisitOptions): Array<object> {
+export function visitUntil(vector: object[], child: object, options: VisitOptions): object[] {
     const { flatterField, finderField, mapperField, includeChild } = options
 
-    const _visit = (vector1: Array<object>, _child: object, accumulator: Array<object> = []): Array<object> => {
-        let foundParent = vector1.find(v => v[flatterField]?.find(vv => vv[finderField] === _child[finderField]))
+    function _visit(vector1: object[], _child: object, accumulator: object[] = []): object[] {
+        const foundParent = vector1.find(v => v[flatterField]?.find(vv => vv[finderField] === _child[finderField]))
         if(foundParent) {
             accumulator.unshift(foundParent)
             return _visit(vector1, foundParent, accumulator)
@@ -321,7 +321,7 @@ export function visitUntil(vector: Array<object>, child: object, options: VisitO
 
     const _flattenVector = flatten(vector, flatterField)
     if(child && !child[finderField]) {
-        let _copyChild = child
+        const _copyChild = child
         child = {}
         child[finderField] = _copyChild
     }
@@ -330,5 +330,5 @@ export function visitUntil(vector: Array<object>, child: object, options: VisitO
         const _child = _flattenVector.find(v => v[finderField] === child[finderField])
         if(_child) _pathResult.push(_child)
     }
-    return mapperField && _pathResult.some(v => v.hasOwnProperty(mapperField)) ? _pathResult.map(v => v[mapperField]) : _pathResult
+    return mapperField && _pathResult.some(v => v[mapperField]) ? _pathResult.map(v => v[mapperField]) : _pathResult
 }

@@ -1,4 +1,4 @@
-import {valuesOfEnum} from "../utilities";
+import { valuesOfEnum } from "../utilities"
 
 export interface IRbac {
 
@@ -14,7 +14,7 @@ export interface IRbac {
      * @param others if true, the user can apply the _operation_ even if they are not the owner of the resource
      * @return true if all parameters (role, operation, resource, others?) match a record in the authorization list, otherwise false.
      */
-    isAuthorized(role: string, operation: RBAC.Operation, resource: RBAC.Resource, others?: boolean): boolean
+    isAuthorized: (role: string, operation: RBAC.Operation, resource: RBAC.Resource, others?: boolean) => boolean
 }
 
 export interface IRbacWithRole extends IRbac {
@@ -23,13 +23,13 @@ export interface IRbacWithRole extends IRbac {
      * @param user to check
      * @return true if _user.role_ is instance of {@link Role.SIGNED}, otherwise false.
      */
-    isSignedUser(user: { _id?: string, role: string } ): boolean
+    isSignedUser: (user: { _id?: string, role: string }) => boolean
 
     /**
      * @param user to check
      * @return true if _user.role_ is instance of {@link Role.ADMIN}, otherwise false.
      */
-    isAdminUser(user: { _id?: string, role: string } ): boolean
+    isAdminUser: (user: { _id?: string, role: string }) => boolean
 }
 
 /**
@@ -48,15 +48,15 @@ export class RBAC implements IRbacWithRole {
 
     isAuthorized(role: string, operation: RBAC.Operation, resource: RBAC.Resource, others?: boolean): boolean {
         others = others || undefined
-        return this.accessControlList.find(auth => auth.roles.includes(RBAC.Role.as(role)) && auth.operation === operation && auth.resource === resource && auth.others == others) !== undefined ;
+        return this.accessControlList.find(auth => auth.roles.includes(RBAC.Role.as(role)) && auth.operation === operation && auth.resource === resource && auth.others == others) !== undefined
     }
 
-    isSignedUser(user: {_id?: string, role: string} ): boolean {
-        return user && RBAC.Role.isSigned(user.role);
+    isSignedUser(user: {_id?: string, role: string}): boolean {
+        return user && RBAC.Role.isSigned(user.role)
     }
 
-    isAdminUser(user: {_id?: string, role: string} ): boolean{
-        return user && RBAC.Role.isAdmin(user.role);
+    isAdminUser(user: {_id?: string, role: string}): boolean {
+        return user && RBAC.Role.isAdmin(user.role)
     }
 }
 
@@ -137,7 +137,7 @@ export namespace RBAC {
         /**
          *  User roles
          */
-        roles: Role[],
+        roles: Role[]
         /**
          * Operation to apply to the resource
          */
@@ -157,7 +157,6 @@ export namespace RBAC {
  * @return implementation instance of {@link IRbacWithRole}
  */
 export function createRBAC(): IRbacWithRole {
-
     const Role = RBAC.Role
     const Operation = RBAC.Operation
     const Resource = RBAC.Resource
@@ -190,13 +189,13 @@ export function createRBAC(): IRbacWithRole {
         { roles: [Role.SIGNED], operation: Operation.CREATE, resource: Resource.LIKE },
         { roles: [Role.SIGNED], operation: Operation.DELETE, resource: Resource.LIKE },
 
-        { roles: [Role.SIGNED], operation: Operation.CREATE, resource: Resource.COMMENT},
+        { roles: [Role.SIGNED], operation: Operation.CREATE, resource: Resource.COMMENT },
         { roles: [Role.ADMIN], operation: Operation.RETRIEVE, resource: Resource.COMMENT, others: true },
-        { roles: [Role.ADMIN], operation: Operation.DELETE, resource: Resource.COMMENT, others: true},
+        { roles: [Role.ADMIN], operation: Operation.DELETE, resource: Resource.COMMENT, others: true },
         { roles: [Role.SIGNED], operation: Operation.DELETE, resource: Resource.COMMENT },
         { roles: [Role.SIGNED], operation: Operation.UPDATE, resource: Resource.COMMENT },
 
-        { roles: [Role.SIGNED], operation: Operation.CREATE, resource: Resource.COMMENT_REPORT},
+        { roles: [Role.SIGNED], operation: Operation.CREATE, resource: Resource.COMMENT_REPORT },
         { roles: [Role.ADMIN], operation: Operation.DELETE, resource: Resource.COMMENT_REPORT, others: true },
 
         { roles: [Role.SIGNED], operation: Operation.CREATE, resource: Resource.FRIEND },
@@ -216,6 +215,6 @@ export function createRBAC(): IRbacWithRole {
 
         { roles: [Role.SIGNED, Role.ADMIN], operation: Operation.CREATE, resource: Resource.MESSAGE },
         { roles: [Role.SIGNED, Role.ADMIN], operation: Operation.UPDATE, resource: Resource.MESSAGE },
-        { roles: [Role.SIGNED, Role.ADMIN], operation: Operation.RETRIEVE, resource: Resource.MESSAGE },
+        { roles: [Role.SIGNED, Role.ADMIN], operation: Operation.RETRIEVE, resource: Resource.MESSAGE }
     ])
 }

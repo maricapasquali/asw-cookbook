@@ -1,15 +1,10 @@
-import {QueuePendingRequests} from "@api/request";
+import { QueuePendingRequests } from "@api/request"
 
 export default {
-    data(){
+    data() {
         return {
             pendingRequests: null,
-            pendingRequestsMessageCancelAll: 'Cancel all pending request from this components.'
-        }
-    },
-    methods: {
-        makeRequestOptions(_id, cancelOptions){
-            return QueuePendingRequests.makeOptions(this.pendingRequests, _id, cancelOptions)
+            pendingRequestsMessageCancelAll: "Cancel all pending request from this components."
         }
     },
     created() {
@@ -17,5 +12,10 @@ export default {
     },
     beforeDestroy() {
         this.pendingRequests.cancelAll(this.pendingRequestsMessageCancelAll)
+    },
+    methods: {
+        makeRequestOptions(_id, cancelOptions) {
+            return QueuePendingRequests.makeOptions(this.pendingRequests, _id, cancelOptions)
+        }
     }
 }

@@ -1,4 +1,4 @@
-import * as _ from 'lodash'
+import * as _ from "lodash"
 
 /**
  * @param from The object to recursively clone
@@ -30,7 +30,7 @@ export function isEmpty(v: any): boolean {
  * @return true if value is a boolean, otherwise false.
  */
 export function isBoolean(v: any): boolean {
-    return typeof v === 'boolean'
+    return typeof v === "boolean"
 }
 
 /**
@@ -38,7 +38,15 @@ export function isBoolean(v: any): boolean {
  * @return true if value is a string, otherwise false.
  */
 export function isString(v: any): boolean {
-    return typeof v === 'string'
+    return typeof v === "string"
+}
+
+/**
+ * @param v value to check
+ * @return true if value is a number, otherwise false.
+ */
+export function isNumber(v: any): boolean {
+    return typeof v === "number"
 }
 
 /**
@@ -46,7 +54,7 @@ export function isString(v: any): boolean {
  * @return true if value is a function, otherwise false.
  */
 export function isCallable(v: any): boolean {
-    return typeof v === 'function'
+    return typeof v === "function"
 }
 
 /**
@@ -54,7 +62,7 @@ export function isCallable(v: any): boolean {
  * @return true if value is defined, otherwise false.
  */
 export function isDefined(v: any): boolean {
-    return typeof v !== 'undefined'
+    return typeof v !== "undefined"
 }
 
 /**
@@ -63,13 +71,13 @@ export function isDefined(v: any): boolean {
  * @param seconds (optional) if true, return string has also the seconds, otherwise no.
  * @return a string representing the given date (_timestamp_) according to language-specific conventions.
  */
-export function dateFormat(timestamp: number, lang: string = 'it', seconds?: boolean): string {
+export function dateFormat(timestamp: number, lang = "it", seconds?: boolean): string {
     return new Date(timestamp).toLocaleString([lang], {
-        year: 'numeric',
-        day: '2-digit',
-        month:'2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: seconds ? '2-digit':  undefined
+        year: "numeric",
+        day: "2-digit",
+        month:"2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: seconds ? "2-digit":  undefined
     })
 }
