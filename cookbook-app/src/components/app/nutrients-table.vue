@@ -184,11 +184,6 @@ export default {
         onUpdateFood(food) {
             const index = this.ingredients.findIndex(i => i.food._id === food._id)
             if (index !== -1) {
-                //TODO: DA TESTARE
-                // let copyIngredients = [...this.ingredients]
-                // copyIngredients.splice(index, 1 , Object.assign(this.ingredients[index], { food }))
-                // this.$emit("update-ingredients", copyIngredients)
-
                 // eslint-disable-next-line vue/no-mutating-props
                 this.ingredients.splice(index, 1 , Object.assign(this.ingredients[index], { food }))
                 this.makeTable(this.ingredients)

@@ -468,6 +468,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+$comment-bg-color: #fff;
+
 .responses {
   border: 1px solid lightgrey;
   border-radius: 1.25rem;
@@ -530,29 +532,21 @@ export default {
   }
 }
 
-.reported-comment {
-  & .comment-user {
-    &::after {
-      border-top-color: $comment-reported-bg-color !important;
+$comments-bg-colors: (reported: #dcdcdc, deleted: #b4c2d0);
+
+@each $type, $bg in $comments-bg-colors {
+  @debug $type, $bg;
+  .#{$type}-comment {
+    & .comment-user {
+      &::after {
+        border-top-color: $bg !important;
+      }
     }
-  }
 
-  & .comment-popover {
-    background-color: $comment-reported-bg-color !important;
-    border-color: $comment-reported-bg-color !important;
-  }
-}
-
-.deleted-comment {
-  & .comment-user {
-    &::after {
-      border-top-color: $comment-deleted-bg-color !important;
+    & .comment-popover {
+      background-color: $bg !important;
+      border-color: $bg !important;
     }
-  }
-
-  & .comment-popover {
-    background-color: $comment-deleted-bg-color !important;
-    border-color: $comment-deleted-bg-color !important;
   }
 }
 

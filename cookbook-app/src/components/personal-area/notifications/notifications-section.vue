@@ -400,52 +400,24 @@ export default {
   cursor: pointer;
 }
 
-.alert-notification-friendship {
-  color: #6d0085;
-  background-color: #ecccff;
-  border-color: #e3b8ff;
-}
+$notifications-themes: (
+  (type: friendship, color: #6d0085, bg: #ecccff, border-color: #e3b8ff),
+  (type: food, color: #008512, bg: #d3ffcc, border-color: #bfffb8),
+  (type: recipe, color: #008562, bg: #ccffe0, border-color: #b8ffd9),
+  (type: comment, color: #001685, bg: #ccd3ff, border-color: #b8c6ff),
+  (type: report, color: #850000, bg: #ffccd2, border-color: #ffb8ba),
+  (type: like, color: #853300, bg: #ffe1cc, border-color: #ffcdb8),
+  (type: user-info, color: #343434, bg: #f6f6f6, border-color: #d9d9d9),
+  (type: strike, color: #856404, bg: #fff3cd, border-color: #ffeeba)
+);
 
-.alert-notification-food {
-  color: #008512;
-  background-color: #d3ffcc;
-  border-color: #bfffb8;
-}
-
-.alert-notification-recipe {
-  color: #008562;
-  background-color: #ccffe0;
-  border-color: #b8ffd9;
-}
-
-.alert-notification-comment {
-  color: #001685;
-  background-color: #ccd3ff;
-  border-color: #b8c6ff;
-}
-
-.alert-notification-report {
-  color: #850000;
-  background-color: #ffccd2;
-  border-color: #ffb8ba;
-}
-
-.alert-notification-like {
-  color: #853300;
-  background-color: #ffe1cc;
-  border-color: #ffcdb8;
-}
-
-.alert-notification-user-info {
-  color: #343434;
-  background-color: #f6f6f6;
-  border-color: #d9d9d9;
-}
-
-.alert-notification-strike {
-  color: #856404;
-  background-color: #fff3cd;
-  border-color: #ffeeba;
+@each $theme in $notifications-themes {
+  @debug $theme;
+  .alert-notification-#{map-get($theme, "type")} {
+    color: map.get($theme, "color");
+    background-color: map.get($theme, "bg");
+    border-color: map.get($theme, "border-color");
+  }
 }
 
 </style>

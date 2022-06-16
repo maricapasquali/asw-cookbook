@@ -1,5 +1,5 @@
 <template>
-  <div v-if="selected">
+  <div v-if="isSelected">
     <b-img
       :id="imgId"
       :title="selected.text"
@@ -48,6 +48,9 @@ export default {
         ...mapGetters(["getCountryByValue"]),
         imgId() {
             return  "country-image-"+ this.id
+        },
+        isSelected() {
+            return !!this.selected?.value
         }
     },
     watch: {

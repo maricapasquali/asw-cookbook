@@ -375,13 +375,13 @@ export default {
   }
 }
 
-@media only screen and (max-width: 768px) {
+@media screen and (max-width: $screen-medium) {
   .container-find-user {
     min-height: 0 !important;
   }
 }
 
-@media only screen and (max-width: 400px) {
+@media screen and (max-width: $screen-extra-small) {
   .container-find-user {
     & .footer-find-user {
       position: unset !important;

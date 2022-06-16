@@ -117,19 +117,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .bg-weak-password {
-    background-color: $danger;
-  }
+$strengths-bg-colors: (weak: $danger, good: $orange, medium: $warning, strong: $success);
 
-  .bg-good-password {
-    background-color: $orange;
+@each $strength, $bg in $strengths-bg-colors {
+  @debug $strength, $bg;
+  .bg-#{$strength}-password {
+    background-color: $bg;
   }
-
-  .bg-medium-password {
-    background-color: $warning;
-  }
-
-  .bg-strong-password {
-    background-color: $success;
-  }
+}
 </style>

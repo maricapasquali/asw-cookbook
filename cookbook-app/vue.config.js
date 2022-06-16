@@ -3,6 +3,14 @@ const fs = require("fs")
 const config = require("cookbook-shared/dist/environment").default
 const { isProductionMode } = require("cookbook-shared/dist/environment/mode")
 
+const globalSassModules = [
+    "sass:map"
+]
+const globalScssFiles = [
+    "bootstrap/scss/bootstrap",
+    "@/style/scss/application.scss"
+]
+
 module.exports = {
     pages: {
         index: {
@@ -60,10 +68,10 @@ module.exports = {
     css: {
         loaderOptions: {
             sass: {
-                additionalData: `
-                    @import 'bootstrap/scss/bootstrap';
-                    @import "@/style/scss/application.scss";
-                `
+                additionalData: [
+                    globalSassModules.map(src => `@use "${src}";`).join("\n"),
+                    globalScssFiles.map(src => `@import "${src}";`).join("\n")
+                ].join("\n")
             },
         },
     },

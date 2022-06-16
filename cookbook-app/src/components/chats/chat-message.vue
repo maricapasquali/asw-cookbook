@@ -169,18 +169,14 @@ export default {
     word-break: break-word;
   }
 
-  & .message.my-message {
-    background-color: $background-color-my-message;
-    color: white;
+  $messages-bg-colors: (message: my, bg: $component-color, color: white), (message: others, bg: white, color: black);
 
-    > pre {
-      color: white;
+  @each $message in $messages-bg-colors {
+    @debug $message;
+    & .message.#{map-get($message, "message")}-message {
+      background-color: map.get($message, "bg");
+      color: map.get($message, "color");
     }
-  }
-
-  & .message.others-message {
-    background-color: $background-color-others-message;
-    color: black;
   }
 }
 
