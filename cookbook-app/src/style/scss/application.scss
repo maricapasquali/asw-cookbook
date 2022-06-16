@@ -55,7 +55,7 @@ fieldset.bordered {
   }
 }
 
-@media only screen and (max-width: 576px) {
+@media screen and (max-width: $screen-small) {
   .mt-6 {
     margin-top: 10rem !important;
   }

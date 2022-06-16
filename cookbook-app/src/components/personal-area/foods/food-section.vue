@@ -692,7 +692,7 @@ export default {
   border-radius: 10px;
 }
 
-@media (max-width: 992px) {
+@media screen and (max-width: $screen-large) {
   .shopping-list {
     .food-checked {
       width: 110%;
@@ -700,7 +700,7 @@ export default {
   }
 }
 
-@media (max-width: 576px) {
+@media screen and (max-width: $screen-small) {
   .shopping-list {
     .food-checked {
       width: 100%;
@@ -708,7 +708,7 @@ export default {
   }
 }
 
-@media (max-width: 400px) {
+@media screen and (max-width: $screen-extra-small) {
   .shopping-list {
     .food-checked {
       width: 90%;

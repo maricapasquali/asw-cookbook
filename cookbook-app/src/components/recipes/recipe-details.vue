@@ -93,7 +93,8 @@
           <b-container fluid>
             <b-row
               cols="1"
-              :cols-lg="areThereNotes? 4: 3"
+              cols-lg="2"
+              cols-xl="3"
             >
               <div class="details-component">
                 <p>Valori nutrizionali</p>

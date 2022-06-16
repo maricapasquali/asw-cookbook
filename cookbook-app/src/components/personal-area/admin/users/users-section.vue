@@ -370,16 +370,11 @@ export default {
   & .user-state {
     font-weight: bold;
 
-    .user-checked {
-      color: #28a745;
-    }
-
-    .user-pending {
-      color: #ffc107;
-    }
-
-    .user-unknown {
-      color: #dc3545;
+    @each $user, $color in (checked: #28a745, pending: #ffc107, unknown: #dc3545) {
+      @debug $user, $color;
+      .user-#{$user} {
+        color: $color;
+      }
     }
   }
 }

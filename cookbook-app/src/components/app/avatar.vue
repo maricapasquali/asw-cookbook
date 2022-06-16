@@ -41,7 +41,7 @@ export default {
         }, //image
         user: { // Users Identifier ( _id | [_id] )
             type: [String, Array],
-            required: true
+            default: undefined
         },
         userId: { // Username ( userID )
             type: String,

@@ -245,6 +245,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+$map-hover: #9b9b9b4c;
+$map-select: #3a8ff3;
+
 .map-container {
   background-color: $background-color;
   position: relative;
