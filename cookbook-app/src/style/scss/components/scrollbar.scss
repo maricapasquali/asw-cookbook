@@ -12,20 +12,20 @@
 ::-webkit-scrollbar {
   width: $scrollbar-width;
   z-index: $scrollbar-z-index;
-}
 
-/* Track */
-::-webkit-scrollbar-track {
-  background: $scrollbar-bg-color-track;
-  background: $scrollbar-bg-color-track-webkit;
-  background: $scrollbar-bg-color-track-others;
-  border-radius: $scrollbar-border-radius;
-}
+  /* Track */
+  &-track {
+    background: $scrollbar-bg-color-track;
+    background: $scrollbar-bg-color-track-webkit;
+    background: $scrollbar-bg-color-track-others;
+    border-radius: $scrollbar-border-radius;
+  }
 
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: $scrollbar-bg-color-thumb;
-  background: $scrollbar-bg-color-thumb-webkit;
-  background: $scrollbar-bg-color-thumb-others;
-  border-radius: $scrollbar-border-radius;
+  /* Handle */
+  &-thumb {
+    background: $scrollbar-bg-color-thumb;
+    background: $scrollbar-bg-color-thumb-webkit;
+    background: $scrollbar-bg-color-thumb-others;
+    border-radius: $scrollbar-border-radius;
+  }
 }
