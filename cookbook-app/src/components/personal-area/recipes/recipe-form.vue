@@ -667,10 +667,6 @@ form {
   margin: 1%;
   padding: 10px;
 
-  #tutorial-preview {
-    width: 100%;
-  }
-
   & .fieldset-ingredients {
     border: 1px solid;
     border-radius: 10px;

@@ -181,10 +181,6 @@ export default {
   & .message.others-message {
     background-color: $background-color-others-message;
     color: black;
-
-    > pre {
-      color: black;
-    }
   }
 }
 

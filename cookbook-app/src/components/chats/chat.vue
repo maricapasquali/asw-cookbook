@@ -650,10 +650,6 @@ export default {
     }
   }
 
-  .messages-container.top-rounded {
-    border-radius: 1.25rem 1.25rem 0 0;
-  }
-
   & .messages-footer {
     background-color: lightgrey;
     border-radius: 0 0 1.25rem 1.25rem;

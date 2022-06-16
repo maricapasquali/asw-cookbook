@@ -297,20 +297,9 @@ export default {
 <style lang="scss" scoped>
 .navigator-bar {
   background-color: $nav-color;
-}
 
-.navigator-bar.navigator-bar-in-logout {
-  z-index: 2 !important;
-}
-
-.nav-notification {
-  position: relative;
-
-  & .badge {
-    position: absolute;
-    top: -3px;
-    left: 12px;
+  &.navigator-bar-in-logout {
+    z-index: 9999 !important;
   }
 }
-
 </style>
