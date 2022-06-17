@@ -10,7 +10,7 @@
     "dev": "concurrently -n static,nodemon \"tsc --project static/ts -w\" \"nodemon index.ts\"",
     "test:tdd": "cross-env NODE_ENV=test mocha --require ts-node/register --ui tdd ./test/tdd/*.ts",
     "test:bdd": "cross-env NODE_ENV=test mocha --require ts-node/register --ui bdd ./test/bdd/*.ts",
-    "test": "npm run build && cross-env NODE_ENV=test npm run test:tdd && npm run test:bdd",
+    "test": "cross-env NODE_ENV=test npm run test:tdd && npm run test:bdd",
     "clean": "cd static && npm run clean",
     "lint": "eslint --ext .ts,.ejs .",
     "lint:fix": "eslint --ext .ts,.ejs . --fix"
