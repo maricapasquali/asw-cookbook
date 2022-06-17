@@ -39,6 +39,7 @@ services:
       - /app/cookbook-server/static/node_modules
     environment:
       - DATABASE_URI=mongodb://database-app-dev/cookbook
+      - DATABASE_TEST_URI=mongodb://database-app-dev/cookbook-test
     networks:
       - cookbook-dev
     links:

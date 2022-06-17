@@ -176,7 +176,7 @@ export function insertSomeUsers(): Promise<any> {
 
 export function startServer(): Promise<void> {
     return new Promise(resolve => {
-        const serverPort: number = configuration.server.port
+        const serverPort: number = configuration.test["server-port"] || 3002
         const serverHostname: string = configuration.server.hostname
         const optionsHTTPS = {
             key: fs.readFileSync(path.join(__dirname, "..", "..", "sslcert", "privatekey.pem")),
