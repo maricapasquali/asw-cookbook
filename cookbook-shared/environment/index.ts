@@ -50,6 +50,9 @@ const clientOrigin = `${protocol}://${hostnameClient}:${portClient}`
 const environment: any = {
     appName: "CookBook",
     mode: (process.env.NODE_ENV as Mode) || Mode.DEVELOPMENT,
+    test: {
+        "server-port":  +process.env.COOKBOOK_TEST_SERVER_PORT || 3002,
+    },
     server: {
         protocol: protocol,
         hostname: hostnameServer,
