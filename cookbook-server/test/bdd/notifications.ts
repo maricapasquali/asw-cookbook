@@ -1,4 +1,5 @@
 import { assert } from "chai"
+import { ExtendedError } from "socket.io/dist/namespace"
 import {
     connectDatabase,
     disconnectDatabase,
@@ -29,7 +30,8 @@ describe("Notification", function () {
     })
 
     after(() => {
-        if (isTestingMode) return dropDatabase().then(() => disconnectDatabase())
+        if (isTestingMode)
+            return dropDatabase().then(() => disconnectDatabase())
     })
 
     it("not valid.", done => {
@@ -37,8 +39,8 @@ describe("Notification", function () {
             user: "614c308bc2d03660623a59e2",
             content: "Kyle066 ha inserito un nuovo alimento: Papaya."
         })
-            .then(done, err => {
-                assert(err.code === 400 || err.code === 404)
+            .then(done, (err: ExtendedError)  => {
+                assert(err.data.code === 400 || err.data.code === 404)
                 done()
             })
             .catch(done)
@@ -83,8 +85,8 @@ describe("Notification", function () {
                 type: Notification.Type.FRIENDSHIP,
                 content: "mario088 ha accettato la tua richiesta di amicizia."
             })
-                .then(done, err => {
-                    assert(err.code === 404)
+                .then(done, (err: ExtendedError) => {
+                    assert(err.data.code === 404)
                     done()
                 })
                 .catch(done)
@@ -96,8 +98,8 @@ describe("Notification", function () {
                 type: Notification.Type.REPORT,
                 content: "Kyle ha segnato il commento di Hanna nella ricetta Chocolate Cookie"
             })
-                .then(done, err => {
-                    assert(err.code === 400)
+                .then(done, (err: ExtendedError) => {
+                    assert(err.data.code === 400)
                     done()
                 })
                 .catch(done)
