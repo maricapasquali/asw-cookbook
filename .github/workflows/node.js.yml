@@ -8,13 +8,13 @@ on:
     branches: [ "develop", "master" ]
 
 jobs:
-  test-16:
+  test:
 
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [15.x, 16.x, 17.x]
         mongodb-version: [4.2, 4.4]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
@@ -31,41 +31,7 @@ jobs:
       with:
         mongodb-version: ${{ matrix.mongodb-version }}
 
-    - name: Override NODE options for the recent version
-      if: matrix.node-version == '17'
-      run: echo "NODE_OPTIONS=--openssl-legacy-provider" >> $GITHUB_ENV
-
     - name: Install Dependencies
       run: npm install
     - name: Run Tests
       run: npm test
-
-  test-17-higher:
-
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [17.x, 18.x]
-        mongodb-version: [4.2, 4.4]
-
-    env:
-      NODE_OPTIONS: --openssl-legacy-provider
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - name: Start MongoDB
-        uses: supercharge/mongodb-github-action@1.7.0
-        with:
-          mongodb-version: ${{ matrix.mongodb-version }}
-
-      - name: Install Dependencies
-        run: npm install
-      - name: Run Tests
-        run: npm test
