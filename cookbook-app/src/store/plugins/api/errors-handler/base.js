@@ -6,7 +6,7 @@ export default function (bus) {
         console.error(response.status ,  (response.data?.description ? " - " + response.data?.description : ""))
     }
 
-    function badRequest(errOfRequest) {
+    function badRequest(errOfRequest = {}) {
         if (errOfRequest.response?.status === 400) {
             printError(errOfRequest.response)
             bus.$emit("show:error:bad-request", {
@@ -17,14 +17,14 @@ export default function (bus) {
         }
     }
 
-    function unAuthenticated(errOfRequest, errInfo) {
+    function unAuthenticated(errOfRequest = {}, errInfo) {
         if (errOfRequest.response?.status === 401) {
             printError(errOfRequest.response)
             bus.$emit("show:error:unauthenticated", { ...errInfo, show: true })
         }
     }
 
-    function forbidden(errOfRequest) {
+    function forbidden(errOfRequest = {}) {
         if (errOfRequest.response?.status === 403) {
             printError(errOfRequest.response)
             bus.$emit("show:error:forbidden", {
@@ -34,7 +34,7 @@ export default function (bus) {
         }
     }
 
-    function notFound(errOfRequest, resource) {
+    function notFound(errOfRequest = {}, resource) {
         if (errOfRequest.response?.status === 404) {
             printError(errOfRequest.response)
             bus.$emit("show:error:not-found", {
@@ -44,7 +44,7 @@ export default function (bus) {
         }
     }
 
-    function duplicateResource(errOfRequest, message) {
+    function duplicateResource(errOfRequest = {}, message) {
         if (errOfRequest.response?.status === 409) {
             printError(errOfRequest.response)
             bus.$emit("show:error:bad-request", {
@@ -55,9 +55,18 @@ export default function (bus) {
         }
     }
 
-    function serverError(errOfRequest, propagation = true) {
+    function serverError(errOfRequest = {}, propagation = true) {
         if (!isAbortError(errOfRequest)) {
             console.error(errOfRequest)
+            if (errOfRequest.code === 401) {
+                return unAuthenticated({
+                    response: {
+                        status: errOfRequest?.code
+                    }
+                }, {
+                    _forbiddenPage: true
+                })
+            }
             let error = "Internal Server Error"
             if (errOfRequest.response?.status >= 500) printError(errOfRequest.response)
             else  error = errOfRequest?.response?.data?.description ||

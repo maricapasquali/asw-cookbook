@@ -1,6 +1,7 @@
 export default {
-    sayNotLoggedIn() {
-        return new Promise((resolve, reject) => reject({ message: "You are not logged in." }))
+    sayNotLoggedIn({ dispatch }) {
+        dispatch("reset")
+        return Promise.reject({ code: 401, message: "You are not logged in." })
     },
     initialization({ commit, getters, dispatch }, session) {
         commit("session/set", session)

@@ -1,9 +1,10 @@
 <template>
   <error-handler
-    v-model="_error"
+    :value="_error"
     title="Forbidden"
     variant="danger"
     no-closable
+    @input="$emit('input', $event)"
   >
     <template #more-details>
       <div class="d-flex justify-content-end">
