@@ -26,5 +26,10 @@ jobs:
           cache: 'npm'
       - name: Install Dependencies
         run: npm install
-      - name: Run Build
+      - name: Run Build for 16 version
+        if: matrix.node-version == '16.x'
         run: npm run build
+      - name: Run Build for the recent version (17.x and 18.x)
+        if: matrix.node-version != '16.x'
+        run:
+          export NODE_OPTIONS=--openssl-legacy-provider && npm run build
