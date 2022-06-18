@@ -1,6 +1,6 @@
 # CookBook
 
-[![Test](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml)
+[![Test](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml)
 [![ESLint + Stylelint](https://github.com/maricapasquali/asw-cookbook/actions/workflows/linter.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/linter.yml) 
 
 CookBook is a web app for those who love to cook and/or eat healthy.
