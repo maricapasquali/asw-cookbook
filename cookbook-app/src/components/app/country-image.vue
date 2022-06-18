@@ -21,7 +21,7 @@ export default {
     props: {
         value: {
             type: String,
-            required: true,
+            default: undefined,
             validator(val) {
                 return !!Countries.find(country => country.value === val)
             }

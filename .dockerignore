@@ -21,7 +21,6 @@ cookbook-app/src/utils/**/*.js.map
 cookbook-server/node_modules
 cookbook-server/static/node_modules
 
-cookbook-server/**/*.js
-cookbook-server/**/*.js.map
+cookbook-server/static/js
 
 cookbook-server/src/libs/mailer/.env
