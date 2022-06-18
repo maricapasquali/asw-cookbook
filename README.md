@@ -1,5 +1,6 @@
 # CookBook
 
+[![Build](https://github.com/maricapasquali/asw-cookbook/actions/workflows/build.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/build.yml)
 [![Test](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml)
 [![ESLint + Stylelint](https://github.com/maricapasquali/asw-cookbook/actions/workflows/linter.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/linter.yml) 
 
