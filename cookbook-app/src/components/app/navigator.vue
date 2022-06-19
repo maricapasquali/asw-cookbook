@@ -90,10 +90,10 @@
                 badge-left
                 badge-top
                 variant="none"
-                badge-variant="light"
+                :badge-variant="totalNotRead > 0 ? 'light': 'none'"
               >
                 <template #badge>
-                  <span> {{ totalNotRead }} <span class="sr-only">notifiche e messaggi non letti</span></span>
+                  <span v-if="totalNotRead > 0"> {{ totalNotRead }} <span class="sr-only">notifiche e messaggi non letti</span></span>
                 </template>
               </b-avatar>
               <em>{{ username }}</em>
