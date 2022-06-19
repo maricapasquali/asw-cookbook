@@ -33,3 +33,7 @@ jobs:
         if: matrix.node-version != '16.x'
         run:
           export NODE_OPTIONS=--openssl-legacy-provider && npm run build
+      - name: Run build of server-side
+        uses: iCrawl/action-tsc@v1
+        with:
+          project: cookbook-server
