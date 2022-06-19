@@ -244,7 +244,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 $map-hover: #9b9b9b4c;
 $map-select: #3a8ff3;
 
