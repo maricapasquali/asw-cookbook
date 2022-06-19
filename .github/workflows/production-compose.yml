@@ -1,0 +1,23 @@
+name: Production DockerCompose
+
+on:
+  push:
+    branches: [ "develop", "master" ]
+
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        platform: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Docker Compose Action
+        uses: isbang/compose-action@v1.1.0
+        with:
+          compose-file: "prod.docker-compose.yml"
+          down-flags: "--volumes"

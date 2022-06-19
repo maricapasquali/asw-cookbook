@@ -1,11 +1,14 @@
 # CookBook
 
-[![Build](https://github.com/maricapasquali/asw-cookbook/actions/workflows/build.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/build.yml)
-[![Test](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml)
-[![ESLint + Stylelint](https://github.com/maricapasquali/asw-cookbook/actions/workflows/linter.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/linter.yml) 
-
 CookBook is a web app for those who love to cook and/or eat healthy.
 The platform aims to offer the exchange of recipes (traditional or customized) of all sorts of food (appetizers, first courses, main courses, desserts, drinks, condiments, ...)
+
+# Continuous Integration (CI)
+
+[![Build](https://github.com/maricapasquali/asw-cookbook/actions/workflows/build.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/build.yml)
+[![Test](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/test.yml)
+[![ESLint + Stylelint](https://github.com/maricapasquali/asw-cookbook/actions/workflows/linter.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/linter.yml)
+[![Production DockerCompose](https://github.com/maricapasquali/asw-cookbook/actions/workflows/production-compose.yml/badge.svg)](https://github.com/maricapasquali/asw-cookbook/actions/workflows/production-compose.yml)
 
 # Using Docker
 
