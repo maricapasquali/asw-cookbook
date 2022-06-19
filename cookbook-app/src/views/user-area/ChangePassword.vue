@@ -46,7 +46,7 @@
                   @keypress.enter="checkUser"
                 />
               </b-form-group>
-              <input-password
+              <form-inputs-password
                 v-if="success.userID"
                 @inputPassword="hash_password=$event"
                 @checkPassword="validation.password=$event"
