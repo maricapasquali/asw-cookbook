@@ -26,14 +26,16 @@
             <b-col class="d-flex justify-content-end pr-1">
               <b-skeleton width="25%" />
             </b-col>
+
+            <b-button
+              variant="info"
+              class="details-recipes"
+              disabled
+            >
+              <b-icon-info-circle />
+            </b-button>
           </b-row>
-          <b-button
-            variant="info"
-            class="details-recipes"
-            disabled
-          >
-            <b-icon-info-circle />
-          </b-button>
+
           <template #footer>
             <b-row align-h="between">
               <b-col>
@@ -141,14 +143,13 @@
                     :id="doc._id"
                     v-model="doc.country"
                   />
+                  <!-- Details -->
+                  <recipe-details
+                    :recipe="doc"
+                    class="details-recipes"
+                  />
                 </b-col>
               </b-row>
-
-              <!-- Details -->
-              <recipe-details
-                :recipe="doc"
-                class="details-recipes"
-              />
 
               <!-- Likes and Comments -->
               <template #footer>
@@ -395,7 +396,7 @@ export default {
 .details-recipes {
   position: absolute;
   right: 5px;
-  bottom: 185px;
+  bottom: calc(100% - 75px);
 }
 
 .recipe-post {
