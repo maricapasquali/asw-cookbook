@@ -6,6 +6,11 @@
           {{ title }}
         </legend>
 
+        <b-row class="mb-4">
+          <b-col class="text-right">
+            <span>* = campi obbligatori</span>
+          </b-col>
+        </b-row>
         <b-row
           cols="1"
           cols-md="2"
@@ -14,7 +19,7 @@
           <!-- NAME  -->
           <b-col>
             <b-form-group
-              label="Nome"
+              label="Nome *"
               label-for="r-name"
             >
               <b-form-input
@@ -58,7 +63,7 @@
           <!-- CATEGORY  -->
           <b-col>
             <b-form-group
-              label="Categoria"
+              label="Categoria *"
               label-for="r-category"
             >
               <custom-select
@@ -75,7 +80,7 @@
 
         <!-- INGREDIENTS -->
         <fieldset class="fieldset-ingredients">
-          <legend>Ingredienti</legend>
+          <legend>Ingredienti *</legend>
           <food-finder
             ref="foodFinder"
             barcode-search
@@ -132,7 +137,7 @@
           <!-- PROCEDIMENTO -->
           <b-col>
             <b-form-group
-              label="Procedimento"
+              label="Procedimento *"
               label-for="r-process"
             >
               <b-form-textarea

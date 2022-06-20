@@ -1,5 +1,5 @@
 <template>
-  <div class="col-12">
+  <b-container class="col-12">
     <b-row>
       <b-col
         cols="12"
@@ -40,7 +40,7 @@
         cols="12"
         class="px-0"
       >
-        <b-container>
+        <b-container class="mx-0 col-12">
           <b-row align-v="center">
             <b-col
               v-if="isPassedSlotPrependIcon"
@@ -122,7 +122,7 @@
         </b-container>
       </b-col>
     </b-row>
-  </div>
+  </b-container>
 </template>
 
 <script>

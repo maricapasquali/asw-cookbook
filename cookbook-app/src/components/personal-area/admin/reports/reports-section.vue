@@ -46,12 +46,17 @@
                   <div>
                     <b-button
                       v-b-toggle="doc._id"
+                      :title="doc._show ? 'Nascondi': 'Visualizza'"
                       variant="link"
                       class="pl-0 mb-3"
                     >
                       <strong> Commento </strong>
                     </b-button>
-                    <b-collapse :id="doc._id">
+                    <b-collapse
+                      :id="doc._id"
+                      @show="doc._show = true"
+                      @hide="doc._show = false"
+                    >
                       <p> {{ doc.content }}  </p>
                     </b-collapse>
                   </div>
@@ -186,7 +191,7 @@ export default {
                     this.docsReported = []
                     this.docsDeleted = []
                     data.forEach(comment => {
-                        if (comment.content) this.docsReported.push(comment)
+                        if (comment.content) this.docsReported.push(Object.assign(comment, { _show: false }))
                         else this.docsDeleted.push(comment)
                     })
                 })

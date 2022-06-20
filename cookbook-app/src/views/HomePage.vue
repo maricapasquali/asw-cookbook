@@ -326,7 +326,7 @@ export default {
 
         onScrollWindow({ toBottom, toTop }) {
             if (toTop) this.newArrivals.toRead = 0
-            if (toBottom && this.loadOther === false) this.others()
+            if (toBottom && this.loadOther === false && this.areOthers) this.others()
         },
 
         goToNewRecipes() {

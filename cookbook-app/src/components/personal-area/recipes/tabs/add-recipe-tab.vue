@@ -10,6 +10,7 @@
       Inserimento ricetta avvenuto correttamente.
     </b-alert>
     <recipe-form
+      title="Inserisci ricetta"
       @onShared="onShareRecipe"
       @onSaved="onSaveRecipe"
     />
