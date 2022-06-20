@@ -18,7 +18,7 @@ function sendEmailSignup(user: any) {
     })
     mailer.send({
         to: user.information.email,
-        subject: configuration.appName + " - Registazione Amministratore"
+        subject: configuration.appName + " - Registrazione Amministratore"
     }, signUpEmail, { savedJSON: { filename: `signup-admin-${user._id}` } /* FOR DEVELOP */ })
 }
 

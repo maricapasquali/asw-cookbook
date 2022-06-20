@@ -57,7 +57,7 @@ function sendEmailSignup(user: IUser) {
 
             mailer.send({
                 to: user.information.email,
-                subject: configuration.appName + " - Registazione"
+                subject: configuration.appName + " - Registrazione"
             }, signUpEmail, { savedJSON: { filename: `signup-${user._id}` } /* FOR DEVELOP */ })
         }, err => console.error(err.message))
 }

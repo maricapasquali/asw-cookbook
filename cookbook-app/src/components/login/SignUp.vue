@@ -212,7 +212,7 @@
               variant="primary"
               @click="onSubmit"
             >
-              Regitrati
+              Registrati
             </b-button>
           </b-row>
         </b-container>

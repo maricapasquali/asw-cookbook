@@ -40,7 +40,7 @@
                 </div>
                 <div>
                   <div>
-                    <span> Utente segnalanto: </span>
+                    <span> Utente segnalato: </span>
                     <strong> {{ doc.user | username }} </strong>
                   </div>
                   <div>
@@ -121,7 +121,7 @@
                     </li>
                   </ul>
                 </div>
-                <p> Utente segnalanto: <strong>{{ doc.user | username }}</strong></p>
+                <p> Utente segnalato: <strong>{{ doc.user | username }}</strong></p>
               </b-card>
             </b-col>
           </b-row>

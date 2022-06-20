@@ -132,7 +132,7 @@
           <!-- PROCEDIMENTO -->
           <b-col>
             <b-form-group
-              label="Procediemento"
+              label="Procedimento"
               label-for="r-process"
             >
               <b-form-textarea

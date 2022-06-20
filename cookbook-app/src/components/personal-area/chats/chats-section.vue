@@ -14,7 +14,7 @@
           variant="primary"
           @click="chatWithAdmin"
         >
-          <b-icon-chat-fill class="mr-1" /> Chatta con amministartori
+          <b-icon-chat-fill class="mr-1" /> Chatta con amministratori
         </b-button>
       </b-col>
     </b-row>
@@ -68,7 +68,7 @@
       >
         <p v-if="isSearchModeChat">
           <span>
-            <strong>Risulati: </strong>
+            <strong>Risultati: </strong>
             Nessuna chat trova.
           </span>
         </p>
@@ -209,7 +209,7 @@
           </b-col>
           <b-col v-if="_friends.length === 0">
             <span>
-              <strong>Risulato: </strong> Nessun {{ isAdmin? 'utente': 'amico' }} trovato.
+              <strong>Risultato: </strong> Nessun {{ isAdmin? 'utente': 'amico' }} trovato.
             </span>
           </b-col>
         </b-row>

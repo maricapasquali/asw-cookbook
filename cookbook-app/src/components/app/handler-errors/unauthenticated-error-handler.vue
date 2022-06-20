@@ -17,7 +17,7 @@
     </template>
     <template #default>
       <p>La sessione di accesso è scaduta.</p>
-      <p>Puoi rieffettuato l'accesso o continuare come utente ospite.</p>
+      <p>Puoi ri-effettuare l'accesso o continuare come utente ospite.</p>
     </template>
   </b-modal>
 </template>

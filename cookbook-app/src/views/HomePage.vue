@@ -1,6 +1,6 @@
 <template>
   <b-container fluid>
-    <b-skeleton-wrapper :loading="isNotLoaded">
+    <b-skeleton-wrapper :loading="processing">
       <template #loading>
         <b-card
           v-for="i in skeletons"
@@ -56,6 +56,7 @@
       </template>
 
       <b-container
+        v-if="docs.length > 0"
         fluid
         class="recipe-post-container px-0"
       >
@@ -194,6 +195,16 @@
           />
         </b-row>
       </b-container>
+      <b-container v-else>
+        <b-card>
+          <b-card-body class="text-center">
+            <b-card-text class="welcome-text">
+              Benvenuto su
+            </b-card-text>
+            <logo />
+          </b-card-body>
+        </b-card>
+      </b-container>
     </b-skeleton-wrapper>
   </b-container>
 </template>
@@ -212,6 +223,7 @@ export default {
     data() {
         return {
             skeletons: 5,
+            processing: true,
 
             newArrivals: {
                 toRead: 0,
@@ -229,9 +241,6 @@ export default {
         }
     },
     computed: {
-        isNotLoaded() {
-            return this.docs.length === 0
-        },
         areOthers() {
             return this.docs.length > 0 && this.docs.length < this.total
         },
@@ -308,6 +317,7 @@ export default {
                     if (currentPage) this.loadOther = false
                     this.pendingRequests.remove(_id)
                 })
+                .finally(() => this.processing = false)
         },
         others() {
             console.debug("Altri "+this.optionsPagination.limit+" ricette ...")
@@ -368,6 +378,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.welcome-text {
+  font-size: 30pt;
+  font-style: italic;
+}
+
 .recipe-post-container {
   .new-recipes {
     position: sticky;

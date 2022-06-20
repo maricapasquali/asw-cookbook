@@ -126,7 +126,7 @@ export default function (bus) {
         switch (err.response?.status) {
             case 400: return _badRequestString(err)
             case 401: return "Sessione scaduta."
-            case 403: return "Non sei autorizzato a resettare la password diquesto utente."
+            case 403: return "Non sei autorizzato a resettare la password di questo utente."
             case 404: return "Utente non trovato."
             default: return serverError(err, false)
         }

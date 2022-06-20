@@ -81,7 +81,7 @@
               class="read-new-messages"
             >
               <b-badge variant="light">
-                {{ newMessages.length }} <span class="sr-only"> nuovi messagi </span>
+                {{ newMessages.length }} <span class="sr-only"> nuovi messaggi </span>
               </b-badge>
               <b-button
                 pill
