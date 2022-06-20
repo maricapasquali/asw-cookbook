@@ -11,5 +11,5 @@ export interface ILike extends Document {
 
 export const LikeSchema: Schema<ILike> = new Schema<ILike>({
     user: { type: Schema.Types.ObjectId, default: undefined, required: false, ref: "User" },
-    timestamp: { type: Number, required: true, default: Date.now() }
+    timestamp: { type: Number, required: true, default: () => Date.now() }
 })

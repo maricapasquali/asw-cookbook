@@ -11,5 +11,5 @@ export interface IReport extends Document {
 
 export const ReportSchema: Schema<IReport> = new Schema<IReport>({
     user: { type: Schema.Types.ObjectId, default: undefined, required: false, ref: "User" },
-    timestamp: { type: Number, required: true, default: Date.now() }
+    timestamp: { type: Number, required: true, default: () => Date.now() }
 })

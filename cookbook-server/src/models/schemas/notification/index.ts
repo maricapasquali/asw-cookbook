@@ -46,7 +46,7 @@ export const NotificationSchema: Schema<INotification> = new Schema<INotificatio
     },
     type: { type: String, required: true, enum: Notification.Type.values() },
     content: { type: String, required: true },
-    timestamp: { type: Number, required: false, default: Date.now() },
+    timestamp: { type: Number, required: false, default: () => Date.now() },
     read: { type: Boolean, required: false, default: false },
     otherInfo: { type: Schema.Types.Mixed, required: false, default: false }
 })

@@ -27,12 +27,12 @@ export const MessageSchema: Schema<IMessage> = new Schema<IMessage>({
             return !this.content
         }
     },
-    timestamp: { type: Number, required: false, default: Date.now() },
+    timestamp: { type: Number, required: false, default: () => Date.now() },
     read: {
         type: [{
             _id: false,
             user: { type: Types.ObjectId, required: true, ref: "User" },
-            timestamp: { type: Number, required: false, default: Date.now() }
+            timestamp: { type: Number, required: false, default: () => Date.now() }
         }],
         required: false,
         default: []

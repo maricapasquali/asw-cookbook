@@ -76,7 +76,7 @@ export const UserSchema: Schema<IUser> = new Schema<IUser>({
         },
         enum: SignUp.State.values()
     },
-    createdAt: { type: Number, required: false, default: Date.now() },
+    createdAt: { type: Number, required: false, default: () => Date.now() },
     information: {
         img: {
             type: String,

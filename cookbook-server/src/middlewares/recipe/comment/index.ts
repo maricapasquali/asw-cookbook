@@ -92,6 +92,8 @@ export function update(): Middlewares {
         retrieveComment(),
         function (req, res, next) {
             switch (req.query.action as UpdateAction) {
+                case UpdateAction.REPORT:
+                    break
                 case UpdateAction.UN_REPORT:
                     if (req.locals.comment.reported.length === 0) return next({ status: 404, description: "Comment is not found" })
                     break

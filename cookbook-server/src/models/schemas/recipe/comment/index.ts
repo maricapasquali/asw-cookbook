@@ -26,7 +26,7 @@ export interface IComment extends Document {
 
 export const CommentSchema: Schema<IComment> = new Schema<IComment>({
     user: { type: Schema.Types.ObjectId, required: false, default: undefined, ref: "User" },
-    timestamp: { type: Number, required: false, default: Date.now() },
+    timestamp: { type: Number, required: false, default: () => Date.now() },
     content: { type: String, required: false },
     reported: { type: [ReportSchema], required: false, default: [] },
     likes: { type: [LikeSchema], required: false, default: [] },

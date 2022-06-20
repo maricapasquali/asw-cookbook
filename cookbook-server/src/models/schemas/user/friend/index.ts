@@ -37,8 +37,8 @@ export const FriendSchema: Schema<IFriend> = new Schema<IFriend>({
     from: { type: Schema.Types.ObjectId, required: true, ref: "User" },
     to: { type: Schema.Types.ObjectId, required: true, ref: "User" },
     state: { type: String, required: false, default: FriendShip.State.PENDING, enum: FriendShip.State.values() },
-    createdAt: { type: Number, required: false, default: Date.now() },
-    updatedAt: { type: Number, required: false, default: Date.now() }
+    createdAt: { type: Number, required: false, default: () => Date.now() },
+    updatedAt: { type: Number, required: false, default: () => Date.now() }
 })
 
 FriendSchema.index({ from: 1, to: 1 }, { unique: true, name: "friend-ship" })

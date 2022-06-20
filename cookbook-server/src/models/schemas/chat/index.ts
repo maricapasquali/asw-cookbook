@@ -67,7 +67,7 @@ export const ChatSchema: Schema<IChat> = new Schema<IChat>({
             _id: false,
             user: { type: Types.ObjectId, required: true, ref: "User" },
             role: { type: String, required: false, default: IChat.Role.WRITER, enum: IChat.Role.values() },
-            enteredAt: { type: Number, required: false, default: Date.now() },
+            enteredAt: { type: Number, required: false, default: () => Date.now() },
             exitedAt: { type: Number, required: false, default: undefined }
         }],
         required: true,

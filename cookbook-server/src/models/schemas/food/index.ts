@@ -44,7 +44,7 @@ export const FoodSchema: Schema<IFood> = new Schema<IFood>({
         salt: { type: Number, required: false, default: 0 }
     },
     owner: { type: Schema.Types.ObjectId, required: true, ref: "User" },
-    createdAt: { type: Number, required: false, default: Date.now() }
+    createdAt: { type: Number, required: false, default: () => Date.now() }
 })
 
 FoodSchema.pre(["find", "findOne"], function () {

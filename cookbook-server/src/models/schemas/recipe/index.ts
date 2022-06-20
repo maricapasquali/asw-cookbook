@@ -64,8 +64,8 @@ export const RecipeSchema: Schema<IRecipe> = new Schema<IRecipe>({
             return [{ user: this.owner, granted: GrantedType.ROOT }]
         }
     },
-    createdAt: { type: Number, required: false, default: Date.now() },
-    updatedAt: { type: Number, required: false, default: Date.now() },
+    createdAt: { type: Number, required: false, default: () => Date.now() },
+    updatedAt: { type: Number, required: false, default: () => Date.now() },
     category: {
         type: String,
         required: true,
