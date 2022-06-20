@@ -32,7 +32,7 @@ export function listFoods(req, res) {
     Pagination.ofQueryDocument(
         Food.find(req.locals.filters)
             .collation({ locale: "en" } /* sort case insensitive */)
-            .sort({ createdAt: -1 }),
+            .sort({ _id: -1, createdAt: -1 }),
         page && limit ? { page: +page, limit: +limit } : undefined
     )
         .then(
