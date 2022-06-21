@@ -4,25 +4,43 @@ import { RBAC } from "../libs/rbac"
 import Operation = RBAC.Operation
 import Resource = RBAC.Resource
 
-function _extractAuthorization(req) {
-    req.locals = req.locals || {}
-    if (req.headers.authorization) {
-        const [type, value] = req.headers.authorization.split(" ")
-        switch (type) {
-            case "Basic": {
-                const [userID, password] = Buffer.from(value, "base64")
-                    .toString("utf-8")
-                    .split(":")
-                req.locals.userID = userID
-                req.locals.password = password
+type AuthOption = { operation: Operation, resource: Resource, others?: (decodedToken: DecodedTokenType, paramId: string) => boolean, ignoreValidationParamId?: boolean }
+
+export type CallbackNext = (err?: any) => any
+
+export type Middleware = (req: any, res: any, next: CallbackNext) => void
+
+export type Middlewares = Middleware | Middleware[]
+
+/**
+ * @return middleware to extract credential from header _authorization_
+ */
+export function extractAuthorization(): Middleware {
+    return function (req, res, next) {
+        try {
+            req.locals = req.locals || {}
+            if (req.headers.authorization) {
+                const [type, value] = req.headers.authorization.split(" ")
+                switch (type) {
+                    case "Basic": {
+                        const [userID, password] = Buffer.from(value, "base64")
+                            .toString("utf-8")
+                            .split(":")
+                        req.locals.userID = userID
+                        req.locals.password = password
+                    }
+                        break
+                    case "Bearer": {
+                        req.locals.access_token = value
+                    }
+                        break
+                    default:
+                        throw new Error(`Headers Authorization '${type}' not implemented.`)
+                }
             }
-                break
-            case "Bearer": {
-                req.locals.access_token = value
-            }
-                break
-            default:
-                throw new Error(`Headers Authorization '${type}' not implemented.`)
+            next()
+        } catch (e) {
+            next(e)
         }
     }
 }
@@ -46,28 +64,6 @@ function checkAndDecode(options?: AuthOption): Middleware {
             next()
         } else {
             next({ status: 401, description: "User is not authenticated" })
-        }
-    }
-}
-
-type AuthOption = { operation: Operation, resource: Resource, others?: (decodedToken: DecodedTokenType, paramId: string) => boolean, ignoreValidationParamId?: boolean }
-
-export type CallbackNext = (err?: any) => any
-
-export type Middleware = (req: any, res: any, next: CallbackNext) => void
-
-export type Middlewares = Middleware | Middleware[]
-
-/**
- * @return middleware to extract credential from header _authorization_
- */
-export function extractAuthorization(): Middleware {
-    return function (req, res, next) {
-        try {
-            _extractAuthorization(req)
-            next()
-        } catch (e) {
-            next(e)
         }
     }
 }

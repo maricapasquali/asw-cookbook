@@ -208,6 +208,7 @@ export function erase(): Middlewares {
             const { id, recipeID } = req.params
             if (!Types.ObjectId.isValid(id))  return next({ status: 400, description: "Required a valid 'id'" })
             if (!Types.ObjectId.isValid(recipeID))  return next({ status: 400, description: "Required a valid 'recipeID'" })
+            next()
         }
     ]
 }
