@@ -344,11 +344,17 @@ export default {
         },
 
         setRecipes(val) {
-            if (Array.isArray(val)) {
-                let _diff = diff(val, this.recipes_.map(i => i.recipe)).map(recipe => this._remapping(recipe))
-                if (_diff.length) {
-                    let itemLastOfDiff = lastOf(_diff)
-                    let firstItem = this.recipes_[0]
+            let _diff = diff(val, this.recipes_.map(i => i.recipe)).map(recipe => this._remapping(recipe))
+            if (_diff.length) {
+                let itemLastOfDiff = lastOf(_diff)
+                let firstItem = this.recipes_[0]
+
+                if (this.isLovedTab) {
+                    // eslint-disable-next-line func-style
+                    let myLikeTimestamp = recipe => recipe.likes.find(l => l.user?._id === this.userIdentifier)?.timestamp
+                    if (firstItem && myLikeTimestamp(itemLastOfDiff.recipe) > myLikeTimestamp(firstItem.recipe)) this.recipes_.unshift(... _diff)
+                    else this.recipes_.push(..._diff)
+                } else {
                     if (firstItem && itemLastOfDiff.recipe.updatedAt > firstItem.recipe.updatedAt) this.recipes_.unshift(... _diff)
                     else this.recipes_.push(..._diff)
                 }
