@@ -3,7 +3,7 @@
     <!-- ADD FOODS --->
     <b-modal
       v-model="addFood.show"
-      title="Nuovo ingrediente"
+      title="Nuovo alimento"
       hide-footer
     >
       <food-form
@@ -82,12 +82,11 @@
         <b-button
           title="Aggiungi alimento"
           variant="primary"
-          pill
           @click="addFood.show = true"
         >
           <font-awesome-icon
-            icon="plus-circle"
-            class="icon"
+            icon="plus"
+            class="icon pb-1"
           />
         </b-button>
       </b-col>

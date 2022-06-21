@@ -17,6 +17,17 @@
       />
     </b-modal>
     <b-row>
+      <b-col>
+        <b-alert
+          :show="error_.show"
+          variant="danger"
+          dismissible
+        >
+          {{ error_.text }}
+        </b-alert>
+      </b-col>
+    </b-row>
+    <b-row>
       <b-form-file
         v-show="false"
         :id="id"
@@ -51,21 +62,30 @@
           v-if="isCancellable"
           title="Annulla modifiche"
           variant="secondary"
+          :disabled="loading"
           @click="cancelChanges"
         >
           <font-awesome-icon icon="undo" />
         </b-button>
         <b-button
-          title="Carica"
+          :title="loading ? 'Caricamento preview ...' : 'Carica'"
           variant="primary"
+          :disabled="loading"
           @click="clickLoad"
         >
           <b-icon-upload />
+          <b-spinner
+            v-if="loading"
+            class="ml-2"
+            label="Caricamento preview ..."
+            small
+          />
         </b-button>
         <b-button
           v-if="isRemovable"
-          title="Cancella immagine"
+          title="Cancella"
           variant="danger"
+          :disabled="loading"
           @click="removeImage"
         >
           <b-icon-trash-fill />
@@ -108,9 +128,15 @@ export default {
 
     data() {
         return {
+            file: new File([], ""),
             load_file_preview: "",
             zoom: false,
-            remove: false
+            remove: false,
+            loading: false,
+            error_: {
+                show: false,
+                text: ""
+            }
         }
     },
     computed: {
@@ -163,7 +189,19 @@ export default {
         },
         notFound(event) {
             console.error(this.fileType + " (" + event?.target?.src + ") not found.. ")
-            this.load_file_preview = null
+            this.loading = false
+            let error = event.target.error
+            switch (error.code) {
+                case error.MEDIA_ERR_SRC_NOT_SUPPORTED: {
+                    let ext = lastOf(this.file?.name?.split(".")) || ""
+                    this.error_.text = "Formato del file (" + ext + ") non è supportato dal browser."
+                }
+                    break
+                default:
+                    this.error_.text = "Si è verificato un errore sconosciuto."
+            }
+            this.error_.show = true
+            this.cancelChanges()
         },
 
         // CANCEL
@@ -175,16 +213,41 @@ export default {
         },
         // UPLOAD
         loadFile(e) {
-            const file = e.target.files[0]
-            if (this.imageType) return ReaderStreamImage.read(file, this.setFile.bind(this, file))
-            if (this.videoType) return ReaderStreamVideo.read(file, this.setFile.bind(this, file))
+            this.file = e.target.files[0]
+            const KILOBYTE = 1024 // bytes
+            const MEGABYTE = KILOBYTE * KILOBYTE
+            if (this.file.size > 512 * MEGABYTE) {
+                this.error_.show = true
+                this.error_.text = "Il file troppo grande. Deve essere < 512 MB."
+            } else {
+                console.debug("File = " , this.file)
+                this.loading = true
+                if (this.imageType) return ReaderStreamImage.read(this.file, this.setFile.bind(this), this.errorHandler.bind(this))
+                if (this.videoType) return ReaderStreamVideo.read(this.file, this.setFile.bind(this), this.errorHandler.bind(this))
+            }
+            this.loading = false
         },
-        setFile(file, result) {
-            console.debug("File = " , file)
-            this.$emit("selectFile", file)
-            console.debug(`Load file ${file.type} preview...`)
-            this.load_file_preview = result
-            this.remove = false
+        setFile(result) {
+            this.loading = false
+            if (result) {
+                console.debug(`Load file ${this.file.type} preview...`)
+                this.load_file_preview = result
+                this.$emit("selectFile", this.file)
+                // console.debug("Preview data = ", result)
+                this.remove = false
+                this.error_.show = false
+            } else {
+                console.error(`Fail load file ${this.file.type}.`)
+                this.error_.show = true
+                this.error_.text = "Caricamento fallito."
+            }
+        },
+        errorHandler(error) {
+            console.error(error)
+            this.loading = false
+            this.error_.show = true
+            this.error_.text = `Il file non è un '${this.fileType}'.`
+            console.error(this.error_.text)
         },
 
         // REMOVE
@@ -192,7 +255,8 @@ export default {
             if (this.isRemovable) {
                 this.remove = true
                 this.load_file_preview = ""
-                this.$emit("selectFile", new File([], ""))
+                this.file = new File([], "")
+                this.$emit("selectFile", this.file)
             }
         },
     }

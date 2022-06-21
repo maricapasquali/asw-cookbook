@@ -24,12 +24,11 @@
               <b-button
                 :title="showFormFood ? 'Chiudi' : 'Aggiungi alimento'"
                 :variant="showFormFood? 'danger': 'primary'"
-                pill
                 @click="toggleFoodForm"
               >
                 <font-awesome-icon
-                  :icon="showFormFood ? 'times-circle': 'plus-circle'"
-                  class="icon"
+                  :icon="showFormFood ? 'times': 'plus'"
+                  class="icon pb-1"
                 />
               </b-button>
             </b-button-group>

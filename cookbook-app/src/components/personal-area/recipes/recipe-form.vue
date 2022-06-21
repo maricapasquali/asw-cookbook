@@ -97,11 +97,16 @@
                   cols="5"
                   align-self="center"
                 >
-                  <font-awesome-icon
-                    icon="minus"
-                    class="icon"
+                  <b-button
+                    title="Rimuovi ingrediente"
+                    variant="danger"
                     @click="removeIngredient(ind)"
-                  />
+                  >
+                    <font-awesome-icon
+                      icon="minus"
+                      class="icon pb-1"
+                    />
+                  </b-button>
                   <span class="ml-3">{{ ingredient.food.name }}</span>
                 </b-col>
                 <b-col cols="7">

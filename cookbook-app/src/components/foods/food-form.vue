@@ -1,6 +1,11 @@
 <template>
   <wrap-loading v-model="saving">
     <b-container fluid>
+      <b-row class="mb-3">
+        <b-col class="text-right">
+          <span> * = campi obbligatori </span>
+        </b-col>
+      </b-row>
       <b-row
         cols="1"
         cols-sm="1"
@@ -13,7 +18,7 @@
           >
             <b-col>
               <b-form-group
-                label="Nome"
+                label="Nome *"
                 label-for="f-name"
               >
                 <b-form-input
@@ -51,7 +56,7 @@
             >
               <b-col>
                 <b-form-group
-                  label="Energia"
+                  label="Energia *"
                   label-for="f-energy"
                 >
                   <b-input-group prepend="kcal">
@@ -356,6 +361,7 @@ export default {
                     } else if (this.updateMode) this.$socket.emit("food:update", data)
 
                     this.$emit("onSave", data)
+                    this.resetForm()
                 })
                 .catch(err => {
                     if (this.createMode) return this.$store.$api.errorsHandler.foods.createFood(err)

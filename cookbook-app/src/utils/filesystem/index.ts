@@ -20,16 +20,17 @@ interface IReader {
  */
 export class ReaderStream implements IReader {
     private readonly type: ReaderStream.Type
+    private readonly fileReader: FileReader
 
     constructor(type: ReaderStream.Type) {
         this.type = type
+        this.fileReader = new FileReader()
     }
 
     read(file: File, onLoad: (result: string | ArrayBuffer) => void, onError: (error: any) => void = e => console.error(e)): void {
         if(this.isValid(file)){
-            const fileReader = new FileReader()
-            fileReader.readAsDataURL(file)
-            fileReader.addEventListener("load", event => onLoad(event.target.result))
+            this.fileReader.readAsDataURL(file)
+            this.fileReader.addEventListener("load", event => onLoad(event.target.result))
         } else onError(new Error("File not valid"))
     }
 

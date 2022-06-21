@@ -9,6 +9,7 @@
       <b-row>
         <b-col>
           <StreamBarcodeReader
+            ref="stream-barcode"
             @loaded="onLoaded"
             @decode="onDecode"
             @error="onError"
@@ -90,6 +91,8 @@ export default {
             console.debug("show modal barcode ", val)
             if (!val) {
                 this.loadedScanner = false
+                let codeReader = this.$refs["stream-barcode"]?.codeReader
+                codeReader && codeReader.reset()
                 this.$emit("close")
             }
         }
