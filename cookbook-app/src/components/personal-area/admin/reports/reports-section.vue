@@ -1,5 +1,16 @@
 <template>
   <b-container fluid>
+    <b-modal
+      v-model="action.show"
+      :title="action.title"
+      centered
+      ok-only
+      @ok="modalOk"
+    >
+      <template #default>
+        {{ action.message }}
+      </template>
+    </b-modal>
     <b-row cols="1">
       <b-col class="my-4">
         <strong>Commenti segnalati</strong>
@@ -65,14 +76,14 @@
                   <b-button
                     title="Annulla segnalazione"
                     variant="secondary"
-                    @click="unreported(index)"
+                    @click="openModalUnreported(index)"
                   >
                     <font-awesome-icon icon="undo" />
                   </b-button>
                   <b-button
                     title="Cancella"
                     variant="danger"
-                    @click="deleteComment(index)"
+                    @click="openModalDeleted(index)"
                   >
                     <b-icon-trash-fill />
                   </b-button>
@@ -146,7 +157,15 @@ export default {
         return {
             processing: false,
             docsReported: [],
-            docsDeleted: []
+            docsDeleted: [],
+
+            action: {
+                show: false,
+                title: "",
+                message: "",
+                index: -1,
+                type: ""
+            }
         }
     },
     computed:{
@@ -202,31 +221,62 @@ export default {
                 })
         },
 
-        deleteComment(index) {
-            let comment = this.docsReported[index]
-            let recipe = comment.recipe
-            this.$store.dispatch("comments/remove", { ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id })
-                .then(({ data }) => {
-                    console.debug(data)
-                    this.docsDeleted.push(this.docsReported[index])
-                    this.docsReported.splice(index, 1)
-
-                    this.$socket.emit("comment:delete", comment._id)
-                    if (comment.user) this.$socket.emit("user:strike", comment.user._id)
-                })
-                .catch(this.$store.$api.errorsHandler.comments.deleteComment)
+        openModalDeleted(index) {
+            this.action.show = true
+            this.action.title = "Cancellazione commento"
+            this.action.message = "Sei sicura/o di cancellare questo commento?"
+            this.action.index = index
+            this.action.type = "delete"
         },
-        unreported(index) {
-            let comment = this.docsReported[index]
-            let recipe = comment.recipe
-            this.$store.dispatch("comments/un-report", { ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id })
-                .then(({ data }) => {
-                    console.debug(data)
-                    this.docsReported.splice(index, 1)
+        openModalUnreported(index) {
+            this.action.show = true
+            this.action.title = "Annullamento segnalazione"
+            this.action.message = "Sei sicura/o di annullare la segnalazione di questo commento?"
+            this.action.index = index
+            this.action.type = "cancel"
+        },
+        modalOk() {
+            switch (this.action.type) {
+                case "cancel":
+                    this.unreported()
+                    break
+                case "delete":
+                    this.deleteComment()
+                    break
+            }
+        },
+        deleteComment() {
+            let index = this.action.index
+            if (index !== -1) {
+                let comment = this.docsReported[index]
+                let recipe = comment.recipe
+                this.$store.dispatch("comments/remove", { ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id })
+                    .then(({ data }) => {
+                        console.debug(data)
+                        this.docsDeleted.push(this.docsReported[index])
+                        this.docsReported.splice(index, 1)
 
-                    this.$socket.emit("comment:unreport", comment._id)
-                })
-                .catch(this.$store.$api.errorsHandler.comments.updateComment)
+                        this.$socket.emit("comment:delete", comment._id)
+                        if (comment.user) this.$socket.emit("user:strike", comment.user._id)
+                    })
+                    .catch(this.$store.$api.errorsHandler.comments.deleteComment)
+            }
+        },
+
+        unreported() {
+            let index = this.action.index
+            if (index !== -1) {
+                let comment = this.docsReported[index]
+                console.log("Comment unreported ", comment)
+                let recipe = comment.recipe
+                this.$store.dispatch("comments/un-report", { ownerID: recipe.owner._id, recipeID: recipe._id, commentID: comment._id })
+                    .then(({ data }) => {
+                        console.debug(data)
+                        this.docsReported.splice(index, 1)
+                        this.$socket.emit("comment:unreport", comment._id)
+                    })
+                    .catch(this.$store.$api.errorsHandler.comments.updateComment)
+            }
         },
 
         /*Listeners update*/

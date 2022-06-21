@@ -41,20 +41,24 @@
           >
             <b-icon-arrow-clockwise
               v-if="inDelivered"
+              title="In consegna"
               animation="spin"
               aria-label="in consegna"
             />
             <b-icon-check-all
               v-else-if="isRead"
+              title="Letto"
               aria-label="letto"
             />
             <b-icon-check
               v-else-if="isDelivered"
+              title="Consegnato"
               aria-label="consegnato"
             />
             <b-icon-exclamation-triangle-fill
               v-else-if="isNotSend"
               variant="danger"
+              title="Non consegnato"
               aria-label="non consegnato"
               @click="reSend"
             />
