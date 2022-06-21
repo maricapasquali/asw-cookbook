@@ -115,7 +115,7 @@ export default {
                 total: 0,
                 paginationOptions:  {
                     page: 1,
-                    limit: 2, //todo: change pagination limit  from 2 to 10,
+                    limit: 3,
                     skip: 0
                 }
             }
@@ -263,7 +263,10 @@ export default {
         },
         _addRecipeInTab(tabName, recipe) {
             let tab = this.tabs.find(tab => tab.type === tabName)
-            if (tab && tab.itemsRecipes.length && tab.total) prependIfAbsent(tab.itemsRecipes, recipe)
+            if (tab && tab.itemsRecipes.length && tab.total) {
+                this.setDefaultValueOn(recipe)
+                prependIfAbsent(tab.itemsRecipes, recipe, rec => rec._id === recipe._id)
+            }
         },
         _updateAndPrependRecipeInTab(tabName, recipe) {
             let tab = this.tabs.find(tab => tab.type === tabName)

@@ -236,7 +236,7 @@ export default {
             total: 0,
             optionsPagination: {
                 page: 1,
-                limit: 2 //TODO: CHANGE 2 TO 5
+                limit: 5
             }
         }
     },
@@ -387,7 +387,7 @@ export default {
   .new-recipes {
     position: sticky;
     z-index: 100;
-    top: 8%;
+    top: 14%;
     left: 50%;
     margin-bottom: 15px;
 

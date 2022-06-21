@@ -423,7 +423,7 @@ export default {
             this.validation.preparation = preparation.trim().length > 0
         },
         onInputRecipeCategory(category) {
-            this.validation.category = category.trim().length > 0
+            if (isDefined(category)) this.validation.category = category.trim().length > 0
         },
         onRecipeIngredient(ingredients) {
             this.validation.ingredients = ingredients.length > 0

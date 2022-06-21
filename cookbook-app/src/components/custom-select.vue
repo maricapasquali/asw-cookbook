@@ -290,7 +290,8 @@ export default {
         },
 
         select(opt) {
-            if (!opt.disabled) {
+            console.debug("Select option : ", opt)
+            if (opt && !opt.disabled) {
                 if (isString(opt)) opt = this.options_.find(o => o.value === opt)
 
                 let _option = opt || this.defaultValue

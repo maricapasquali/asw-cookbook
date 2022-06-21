@@ -218,7 +218,7 @@ export default {
             total: 0,
             pagination: {
                 page: 1,
-                limit: 4 //TODO: CHANGE
+                limit: 4
             },
             processingOthers: false
 

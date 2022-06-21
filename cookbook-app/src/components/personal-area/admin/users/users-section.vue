@@ -171,7 +171,7 @@ export default {
                 isBusy: false,
                 currentPage: 1,
                 totals: 0,
-                for_page: 4, //TODO: CHANGE 4 -> 10
+                for_page: 5,
                 show: false
             },
 

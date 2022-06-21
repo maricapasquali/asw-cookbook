@@ -161,7 +161,7 @@ export default {
             recipes: [],
             recipePaginationOptions: {
                 page: 1,
-                limit: 1 //todo: change pagination limit from 1 to 10
+                limit: 3
             },
             recipesProcessing: false,
 
@@ -170,7 +170,7 @@ export default {
             friends: [],
             friendsPaginationOptions: {
                 page: 1,
-                limit: 1 //todo: change pagination limit from 1 to 10
+                limit: 3
             },
             friendsProcessing: false,
         }

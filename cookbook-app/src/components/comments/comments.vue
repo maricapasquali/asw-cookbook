@@ -137,7 +137,7 @@ export default {
 
         /* Listeners notification */
         onAddCommentListener(notification, comment) {
-            if (comment) pushIfAbsent(this.value, comment)
+            if (comment && comment.recipe === this.recipe._id) pushIfAbsent(this.value, comment)
         }
     }
 }

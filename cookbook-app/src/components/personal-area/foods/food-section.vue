@@ -396,7 +396,7 @@ export default {
 
             pagination: {
                 currentPage: 1,
-                for_page: 3, //TODO: CHANGE IN 10
+                for_page: 5,
                 totals: 0,
                 isBusy: false
             },
