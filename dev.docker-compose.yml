@@ -1,0 +1,61 @@
+version: "3.5"
+
+services:
+
+  client-app-dev:
+    container_name: client-app-dev
+    image: marica/web-app-client-dev
+    build:
+      context: .
+      target: dev-client
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/cookbook-shared/node_modules
+      - /app/cookbook-app/node_modules
+      - /app/cookbook-server/node_modules
+      - /app/cookbook-server/static/node_modules
+    networks:
+      - cookbook-dev
+    depends_on:
+      - server-app-dev
+
+  server-app-dev:
+    container_name: server-app-dev
+    image: marica/web-app-server-dev
+    build:
+      context: .
+      target: dev-server
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/cookbook-shared/node_modules
+      - /app/cookbook-app/node_modules
+      - /app/cookbook-server/node_modules
+      - /app/cookbook-server/static/node_modules
+    environment:
+      - DATABASE_URI=mongodb://database-app-dev/cookbook
+      - DATABASE_TEST_URI=mongodb://database-app-dev/cookbook-test
+    networks:
+      - cookbook-dev
+    links:
+      - mongo
+
+  mongo:
+    container_name: database-app-dev
+    image: mongo
+    volumes:
+      - ./data/db:/data/db
+    ports:
+      - "27018:27017"
+    networks:
+      - cookbook-dev
+
+networks:
+  cookbook-dev:
+    driver: bridge
+    name: asw-cookbook-dev

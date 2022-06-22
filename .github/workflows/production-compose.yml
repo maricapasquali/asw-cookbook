@@ -1,0 +1,19 @@
+name: Production DockerCompose
+
+on:
+  push:
+    branches: [ "develop", "master" ]
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Docker Compose Action
+        uses: isbang/compose-action@v1.1.0
+        with:
+          compose-file: "prod.docker-compose.yml"
+          down-flags: "--volumes"

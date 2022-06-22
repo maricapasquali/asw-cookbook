@@ -1,0 +1,62 @@
+@import "variables/application";
+@import "components/scrollbar";
+
+.hidden {
+  display: none;
+}
+
+.text-through {
+  text-decoration: line-through;
+}
+
+.icon {
+  cursor: pointer;
+
+  &:focus {
+    outline: none !important;
+  }
+}
+
+.no-clickable {
+  cursor: auto;
+}
+
+.mt-6 {
+  margin-top: 6rem !important;
+}
+
+.mb-8 {
+  margin-bottom: 8rem !important;
+}
+
+.rounded-left {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.rounded-right {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.no-rounded {
+  border-radius: 0;
+}
+
+fieldset.bordered {
+  border: 1px solid lightgray;
+  border-radius: 10px;
+  padding: 10px;
+
+  & > legend {
+    width: fit-content;
+    padding-right: 5px;
+    padding-left: 5px;
+  }
+}
+
+@media screen and (max-width: $screen-small) {
+  .mt-6 {
+    margin-top: 10rem !important;
+  }
+}

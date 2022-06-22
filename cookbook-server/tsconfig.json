@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["./src/libs/@global", "@types/mocha", "@types/chai"]
+  },
+  "include": [
+    "src",
+    "index.ts",
+    "static/index.ts",
+    "../cookbook-shared/**/*"
+  ]
+}

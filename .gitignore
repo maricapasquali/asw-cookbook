@@ -1,7 +1,7 @@
 .idea
-design
 node_modules
-cookbook-app/dist
+*.env
 
-modules/**/*.js
-modules/**/*.js.map
+data/*
+!data/db-example.archive
+!data/init.sh

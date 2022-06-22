@@ -1,0 +1,6 @@
+dist
+
+src/utils/**/*.js
+!src/utils/index.js
+
+src/services/**/*.js

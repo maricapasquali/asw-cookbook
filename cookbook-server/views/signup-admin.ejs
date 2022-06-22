@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <link rel="icon" href="/images/logo/favicon.ico">
+        <title>  <%=appName%> Server - Signup Administrator</title>
+        <!-- Bootstrap CSS -->
+        <link href="/libs/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+        <!-- Bootstrap Icons -->
+        <link href="/libs/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <!-- jQuery Script --->
+        <script src="/libs/jquery/dist/jquery.js"></script>
+        <!-- my scripts -->
+        <script type="text/javascript" src="/js/signup-admin.js"></script>
+    </head>
+
+    <body class="bg-primary">
+        <div class="container align-self-center">
+            <form class="needs-validation" novalidate>
+                <div class="card my-2">
+                    <div class="card-header row ">
+                        <div class="col-12 col-md-3"> <h1> <img src="/images/logo/light-logo.png" alt="<%=appName%>" class="w-100"/> </h1> </div>
+                        <div class="col-12 col-md-auto align-self-center">  <h2> Registrazione Amministratore</h2></div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="alert alert-success" role="alert">
+                            <p> <strong>Successo</strong></p>
+                            <p>Registrazione avvenuta correttamente.</p>
+                            <p>E' stata inviata l'email con le credenziali.</p>
+                        </div>
+                        <div class="alert alert-warning" role="alert">
+                            <p> <strong>Attenzione!</strong></p>
+                            <span></span>
+                        </div>
+                        <div class="alert alert-danger" role="alert">
+                            <p><strong>Errore</strong></p>
+                            <span></span>
+                        </div>
+
+                        <!-- IMAGE PROFILE -->
+                        <div class="mt-3">
+                            <div class="upload-preview mt-3 mb-2 text-center">
+                                <i class="bi bi-person-circle" style="font-size: 6rem"></i>
+                                <img class="rounded-circle" height="150px" width="150px"/>
+                            </div>
+
+                            <div class="text-center">
+                                <label for="image-profile" class="form-label visually-hidden sr-only">Immagine profilo</label>
+                                <input id="image-profile" class="form-control file visually-hidden" type="file" name="img" accept="image/*"/>
+                                <button title="Rimuovi imagine" id="reset-preview" class="btn btn-danger"><i class="bi bi-trash-fill"></i></button>
+                                <button title="Carica immagine" id="load-preview" class="btn btn-primary"><i class="bi bi-upload"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-sm-1 ">
+                            <!-- NAME -->
+                            <div class="mt-3">
+                                <label for="firstname" class="form-label">Nome *</label>
+                                <input id="firstname" class="form-control" type="text" name="firstname" placeholder="Enter firstname" required/>
+                                <div class="invalid-feedback">
+                                    Inserisci nome.
+                                </div>
+                            </div>
+                            <!-- LASTNAME -->
+                            <div class="mt-3">
+                                <label for="lastname" class="form-label">Cognome *</label>
+                                <input id="lastname" class="form-control" type="text" name="lastname" placeholder="Enter lastname" required/>
+                                <div class="invalid-feedback">
+                                    Inserisci cognome.
+                                </div>
+                            </div>
+
+                            <!-- EMAIL -->
+                            <div class="mt-3">
+                                <label for="email" class="form-label">E-mail *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input id="email" class="form-control" type="email" name="email" placeholder="Enter email" required/>
+                                    <div class="invalid-feedback">
+                                        Inserisci email.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TEL NUMBER -->
+                            <div class="mt-3">
+                                <label for="num_tel" class="form-label">Numero di telefono </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                    <input id="num_tel" class="form-control" type="tel" name="tel_number" placeholder="Enter telephone number"/>
+                                </div>
+
+                            </div>
+
+                            <!-- BIRTH DATE -->
+                            <div class="mt-3">
+                                <label for="birth_date" class="form-label">Data di nascita </label>
+                                <input id="birth_date" class="form-control" type="date" name="birth_date" placeholder="Enter birth date"/>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between">
+                        <button id="reset-btn" class="btn btn-secondary"> Reset </button>
+                        <button id="submit-btn" class="btn btn-primary" type="submit">
+                            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                            Inserisci
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </body>
+</html>
