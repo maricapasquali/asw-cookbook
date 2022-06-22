@@ -6,7 +6,7 @@ import {
 } from "../../request-options"
 import { MethodsAxios } from "../../methods"
 
-export default function (methods: MethodsAxios){
+export default function (methods: MethodsAxios) {
 
     function getFriendOf(user: string, token?: string, queryOptions?: object, paginationOptions?: PaginationOptions, options?: OptionsRequestType): Promise<AxiosResponse> {
         return methods.get("/users/:id/friends", {

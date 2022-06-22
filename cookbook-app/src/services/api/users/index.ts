@@ -9,10 +9,10 @@ import {
 } from "../request-options"
 import { MethodsAxios } from "../methods"
 
-export default function (methods: MethodsAxios){
+export default function (methods: MethodsAxios) {
 
-    function setImageUrl(user: any){
-        if(user.information.img){
+    function setImageUrl(user: any) {
+        if (user.information.img) {
             user.information.img = methods.info.images.path(user.information.img)
             console.debug("image = " + user.information.img)
         }
@@ -40,21 +40,21 @@ export default function (methods: MethodsAxios){
         return methods.put("/users", data)
     }
 
-    function getUser(id: string, token?: string, options?: OptionsRequestType){
+    function getUser(id: string, token?: string, options?: OptionsRequestType) {
         return methods.get("/users/:id", {
             headers: getHeaderBearerAuthorization(token),
             cancelToken: options?.cancelToken,
             urlParams:{
                 id: id
             }
-        }).then(response =>{
+        }).then(response => {
             setImageUrl(response.data)
             return response
         })
     }
 
     //use token  (interceptors)
-    function updateUserInfo(id: string, info: object,  token: string){
+    function updateUserInfo(id: string, info: object,  token: string) {
         return methods.patch("/users/:id", info, {
             headers: {
                 authorization: "Bearer " + token,
@@ -63,8 +63,8 @@ export default function (methods: MethodsAxios){
             urlParams:{
                 id: id
             }
-        }).then(response =>{
-            if(response.data.info.img){
+        }).then(response => {
+            if (response.data.info.img) {
                 response.data.info.img =  methods.info.images.path(response.data.info.img)
                 console.debug("image = " + response.data.info.img)
             }
@@ -73,7 +73,7 @@ export default function (methods: MethodsAxios){
     }
 
     //use token  (interceptors)
-    function deleteAccount(id: string, token: string){
+    function deleteAccount(id: string, token: string) {
         return methods.erase("/users/:id", {
             headers: {
                 authorization: "Bearer " + token,
@@ -85,7 +85,7 @@ export default function (methods: MethodsAxios){
     }
 
     //use token  (interceptors)
-    function changeCredential(type: {name: "userID" | "password"}, id: string, data: object, token: string, reset = false){
+    function changeCredential(type: {name: "userID" | "password"}, id: string, data: object, token: string, reset = false) {
         return methods.patch("/users/:id/credentials", data, {
             headers: {
                 authorization: "Bearer " + token,
@@ -100,15 +100,15 @@ export default function (methods: MethodsAxios){
         })
     }
 
-    function changeUserID(id: string, data: object, token: string){
+    function changeUserID(id: string, data: object, token: string) {
         return changeCredential({ name: "userID" }, id, data, token)
     }
 
-    function changeOldPassword(id: string, data: object, token: string, reset = false){
+    function changeOldPassword(id: string, data: object, token: string, reset = false) {
         return changeCredential({ name: "password" }, id, data, token, reset)
     }
 
-    function checkLinkResetPassword(key: string){
+    function checkLinkResetPassword(key: string) {
         return methods.get("/reset-password/check-link", {
             params: { // QUERY
                 key: key
@@ -116,7 +116,7 @@ export default function (methods: MethodsAxios){
         })
     }
 
-    function getUserFromNickname(nickname: string, key: string){
+    function getUserFromNickname(nickname: string, key: string) {
         return methods.get("/reset-password/users",{
             params: { // QUERY
                 nickname,
@@ -125,7 +125,7 @@ export default function (methods: MethodsAxios){
         })
     }
 
-    function getUsers(query?: UserQueryOptions, token?: string, paginationOptions?: PaginationOptions, options?: OptionsRequestType): Promise<AxiosResponse>{
+    function getUsers(query?: UserQueryOptions, token?: string, paginationOptions?: PaginationOptions, options?: OptionsRequestType): Promise<AxiosResponse> {
         return methods.get("/users", {
             cancelToken: options?.cancelToken,
             headers: getHeaderBearerAuthorization(token),

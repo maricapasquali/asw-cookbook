@@ -1,7 +1,7 @@
 import { AxiosResponse } from "axios"
 import { MethodsAxios } from "../../methods"
 
-export default function (methods: MethodsAxios){
+export default function (methods: MethodsAxios) {
 
     //use token
     function login(credential: {userID: string, password: string}): Promise<AxiosResponse> {
@@ -14,7 +14,7 @@ export default function (methods: MethodsAxios){
         })
     }
 
-    function newAccessToken(id: string, data: { refresh_token: string }, token: string){
+    function newAccessToken(id: string, data: { refresh_token: string }, token: string) {
         return methods.put("/users/:id/refresh-token", data,{
             headers: {
                 authorization: "Bearer " + token,
@@ -26,7 +26,7 @@ export default function (methods: MethodsAxios){
     }
 
     //use token  (interceptors)
-    function logout(id: string, token: string){
+    function logout(id: string, token: string) {
         return methods.erase("/users/:id/logout", {
             headers: {
                 authorization: "Bearer " + token,

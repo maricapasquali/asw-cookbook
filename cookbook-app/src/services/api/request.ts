@@ -37,7 +37,7 @@ export class QueuePendingRequests implements IQueuePendingRequests {
 
     push(id: string, request: CancelTokenSource): void {
         const _request = this.find(id)
-        if(!_request) {
+        if (!_request) {
             this._pendingRequests.push({ _id: id, request })
             console.debug("Queue Request push : ", this._pendingRequests)
         }
@@ -45,7 +45,7 @@ export class QueuePendingRequests implements IQueuePendingRequests {
 
     remove(id: string): void {
         const index = this.findIndex(id)
-        if(index) {
+        if (index) {
             this._pendingRequests.splice(index)
             console.debug("Queue Request remove : ", this._pendingRequests)
         }
@@ -53,7 +53,7 @@ export class QueuePendingRequests implements IQueuePendingRequests {
 
     cancel(id: string, message?: string): void {
         const request = this.find(id)
-        if(request) {
+        if (request) {
             request.cancel(message || this.MESSAGE_DEFAULT)
             console.debug("Queue Request cancel : ", this._pendingRequests)
             this.remove(id)
@@ -61,7 +61,7 @@ export class QueuePendingRequests implements IQueuePendingRequests {
     }
 
     cancelAll(message?: string): void {
-        if(this._pendingRequests.length){
+        if (this._pendingRequests.length) {
             this._pendingRequests.forEach(p => p.request.cancel(message || this.MESSAGE_DEFAULT))
             this._pendingRequests.splice(0)
             console.debug("Queue Request cancel-all : ", this._pendingRequests)
@@ -71,7 +71,7 @@ export class QueuePendingRequests implements IQueuePendingRequests {
 
 export namespace QueuePendingRequests {
     export function makeOptions(pendingRequests: QueuePendingRequests, _id: string, cancelOptions?: boolean | { message?: string } ): { cancelToken: CancelToken } {
-        if(cancelOptions) {
+        if (cancelOptions) {
             let _message
             if (!isBoolean(cancelOptions)) _message = (cancelOptions as any)?.message
             pendingRequests.cancel(_id, _message)
@@ -84,6 +84,6 @@ export namespace QueuePendingRequests {
 
 export function isAbortError(err: any): boolean {
     const isAbort = axios.isCancel(err)
-    if(isAbort) console.error("Request canceled : ", err.message)
+    if (isAbort) console.error("Request canceled : ", err.message)
     return isAbort
 }

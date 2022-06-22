@@ -8,7 +8,7 @@ import chats from "./chats"
 
 import methods, { MethodsAxios } from "./methods"
 
-export default function ({ serverConfiguration, store }){
+export default function ({ serverConfiguration, store }) {
     const _methods: MethodsAxios = methods(serverConfiguration, store)
 
     return {

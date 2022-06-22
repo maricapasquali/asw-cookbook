@@ -12,7 +12,7 @@ declare module "socket.io-client" {
     }
 }
 
-Socket.prototype.updateAuthorization = function (socketAuthorization: SocketAuthorization){
+Socket.prototype.updateAuthorization = function (socketAuthorization: SocketAuthorization) {
     this.auth = socketAuthorization
     this.disconnect().connect()
     console.debug("Socket: set authentication data & connect ...")

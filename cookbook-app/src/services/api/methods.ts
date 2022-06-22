@@ -28,13 +28,13 @@ export default function (serverConfiguration: any, store: any): MethodsAxios {
         },
         images: {
             pathname: subDomain.images.pathname,
-            path: function (endPoint){
+            path: function (endPoint) {
                 return _path(this.pathname, endPoint)
             }
         },
         videos: {
             pathname: subDomain.videos.pathname,
-            path: function (endPoint){
+            path: function (endPoint) {
                 return _path(this.pathname, endPoint)
             }
         }
@@ -46,7 +46,7 @@ export default function (serverConfiguration: any, store: any): MethodsAxios {
         },
     })
 
-    instance.interceptors.request.use(config=> {
+    instance.interceptors.request.use(config => {
         if (!config.url) return config
         let pathname = config.url
         Object.entries(config.urlParams || {}).forEach(([k, v]) => pathname = pathname.replace(`:${k}`, encodeURIComponent(v)))
@@ -72,7 +72,7 @@ export default function (serverConfiguration: any, store: any): MethodsAxios {
             return store.dispatch("session/requestNewAccessToken")
                 .then(res => {
                     console.debug("Interceptors : result request  ", res)
-                    if(res?.status === 200 || res?.status === 204) {
+                    if (res?.status === 200 || res?.status === 204) {
                         console.debug(
                             res?.status === 200 ? "Interceptors : Access token has been updated."
                                 : (res?.status === 204 ? "Interceptors : Access token is still valid." : "")
@@ -88,33 +88,33 @@ export default function (serverConfiguration: any, store: any): MethodsAxios {
     }
     )
 
-    function head(pathname: string, config?: AxiosRequestConfig): Promise<AxiosResponse>{
+    function head(pathname: string, config?: AxiosRequestConfig): Promise<AxiosResponse> {
         return instance.head(_serverInfo.api.pathname + pathname, config)
     }
 
-    function get(pathname: string, config?: AxiosRequestConfig): Promise<AxiosResponse>{
+    function get(pathname: string, config?: AxiosRequestConfig): Promise<AxiosResponse> {
         return instance.get(_serverInfo.api.pathname + pathname, config)
     }
 
-    function post(pathname: string, data: any, config?: AxiosRequestConfig): Promise<AxiosResponse>{
+    function post(pathname: string, data: any, config?: AxiosRequestConfig): Promise<AxiosResponse> {
         return instance.post(_serverInfo.api.pathname + pathname, data, config)
     }
 
-    function patch(pathname: string, data: any, config?: AxiosRequestConfig): Promise<AxiosResponse>{
+    function patch(pathname: string, data: any, config?: AxiosRequestConfig): Promise<AxiosResponse> {
         return instance.patch(_serverInfo.api.pathname + pathname, data, config)
     }
 
-    function put(pathname: string, data: any, config?: AxiosRequestConfig): Promise<AxiosResponse>{
+    function put(pathname: string, data: any, config?: AxiosRequestConfig): Promise<AxiosResponse> {
         return instance.put(_serverInfo.api.pathname + pathname, data, config)
     }
 
-    function erase(pathname: string, config?: AxiosRequestConfig): Promise<AxiosResponse>{
+    function erase(pathname: string, config?: AxiosRequestConfig): Promise<AxiosResponse> {
         return instance.delete(_serverInfo.api.pathname + pathname, config)
     }
 
 
     function _path(origin: string, endPoint: string): string {
-        if(endPoint.search(origin) !== -1) return endPoint
+        if (endPoint.search(origin) !== -1) return endPoint
         return `${origin}/${endPoint}`
     }
 

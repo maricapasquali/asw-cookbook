@@ -28,14 +28,14 @@ export class ReaderStream implements IReader {
     }
 
     read(file: File, onLoad: (result: string | ArrayBuffer) => void, onError: (error: any) => void = e => console.error(e)): void {
-        if(this.isValid(file)){
+        if (this.isValid(file)) {
             this.fileReader.readAsDataURL(file)
             this.fileReader.addEventListener("load", event => onLoad(event.target.result))
         } else onError(new Error("File not valid"))
     }
 
     toFile(url: string): Promise<File> {
-        if(!url) return Promise.reject("Url not valid")
+        if (!url) return Promise.reject("Url not valid")
         return fetch(url)
             .then(res => res.blob())
             .then(blob => {
@@ -44,7 +44,7 @@ export class ReaderStream implements IReader {
             })
     }
 
-    private isValid(file: File){
+    private isValid(file: File) {
         return file && new RegExp(`${this.type}/.*`).test(file.type)
     }
 }

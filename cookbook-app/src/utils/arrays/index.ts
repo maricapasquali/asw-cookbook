@@ -22,7 +22,7 @@ export function pushIfAbsent(v1: any[], val: any, predicate?: (v: any) => boolea
     const index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(val)
     const isAbsent: boolean = index === -1 && index1 === -1
     console.debug("pushIfAbsent: found ", !isAbsent)
-    if(isAbsent) return v1.push(val) > _oldLen
+    if (isAbsent) return v1.push(val) > _oldLen
     return false
 }
 
@@ -38,7 +38,7 @@ export function prependIfAbsent(v1: any[], val: any, predicate?: (v: any) => boo
     const index1: number = isCallable(predicate) ? v1.findIndex(predicate) : v1.indexOf(val)
     const isAbsent: boolean = index === -1 && index1 === -1
     console.debug("prependIfAbsent: found ", !isAbsent)
-    if(isAbsent) return v1.unshift(val) > _oldLen
+    if (isAbsent) return v1.unshift(val) > _oldLen
     return false
 }
 
@@ -52,7 +52,7 @@ export function removeIfPresent(v1: any[], predicate: (v: any) => boolean | any)
     const index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
     const isPresent: boolean = index !== -1 || index1 != -1
     console.debug("removeIfPresent: found ", isPresent)
-    if(isPresent) return v1.splice(index,1).pop()
+    if (isPresent) return v1.splice(index,1).pop()
 }
 
 /**
@@ -66,7 +66,7 @@ export function replaceIfPresent(v1: any[], predicate: (v: any) => boolean | any
     const index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
     const isPresent: boolean = index !== -1 || index1 !== -1
     console.debug("replaceIfPresent: found ", isPresent)
-    if(isPresent) return v1.splice(index,1, newVal).pop()
+    if (isPresent) return v1.splice(index,1, newVal).pop()
 }
 
 /**
@@ -79,7 +79,7 @@ export function moveInFirstPosition(v1: any[], predicate: (v: any) => boolean | 
     const index1: number = isCallable(predicate) ? v1.findIndex(predicate): v1.indexOf(predicate)
     const isPresent: boolean = index !== -1 || index1 !== -1
     console.debug("moveInFirstPosition: found ", isPresent)
-    if(isPresent) prepend(v1, index)
+    if (isPresent) prepend(v1, index)
 }
 
 /**
@@ -88,9 +88,9 @@ export function moveInFirstPosition(v1: any[], predicate: (v: any) => boolean | 
  * @param index index of value to move
  */
 export function prepend(v1: any[], index: number): void {
-    if(index >= 0 && index < v1.length) {
+    if (index >= 0 && index < v1.length) {
         const val = v1.splice(index, 1).pop()
-        if(val) v1.unshift(val)
+        if (val) v1.unshift(val)
     }
 }
 
@@ -183,7 +183,7 @@ export function lastOf(v1: any[], filter?: (v: any) => boolean | any): any {
  */
 export function flatten(vector: object[], field: string): object[] {
     function mapper(obj: object): object[] | object {
-        if(!obj[field] || !obj[field].length) return obj
+        if (!obj[field] || !obj[field].length) return obj
         return [obj, _.flatMapDeep(obj[field], mapper)]
     }
     return _.flatMapDeep(vector, mapper)
@@ -312,7 +312,7 @@ export function visitUntil(vector: object[], child: object, options: VisitOption
 
     function _visit(vector1: object[], _child: object, accumulator: object[] = []): object[] {
         const foundParent = vector1.find(v => v[flatterField]?.find(vv => vv[finderField] === _child[finderField]))
-        if(foundParent) {
+        if (foundParent) {
             accumulator.unshift(foundParent)
             return _visit(vector1, foundParent, accumulator)
         }
@@ -320,15 +320,15 @@ export function visitUntil(vector: object[], child: object, options: VisitOption
     }
 
     const _flattenVector = flatten(vector, flatterField)
-    if(child && !child[finderField]) {
+    if (child && !child[finderField]) {
         const _copyChild = child
         child = {}
         child[finderField] = _copyChild
     }
     const _pathResult = _visit(_flattenVector, child || {})
-    if(child && includeChild){
+    if (child && includeChild) {
         const _child = _flattenVector.find(v => v[finderField] === child[finderField])
-        if(_child) _pathResult.push(_child)
+        if (_child) _pathResult.push(_child)
     }
     return mapperField && _pathResult.some(v => v[mapperField]) ? _pathResult.map(v => v[mapperField]) : _pathResult
 }

@@ -16,12 +16,12 @@ export default function (methods: MethodsAxios) {
     const comments = _comments(methods)
 
 
-    function setUrlPath(recipe: any){
-        if(recipe?.img) {
+    function setUrlPath(recipe: any) {
+        if (recipe?.img) {
             recipe.img = methods.info.images.path(recipe.img)
             console.debug("image = " + recipe.img)
         }
-        if(recipe?.tutorial) {
+        if (recipe?.tutorial) {
             recipe.tutorial = methods.info.videos.path(recipe.tutorial)
             console.debug("tutorial = " + recipe.tutorial)
         }
@@ -46,7 +46,7 @@ export default function (methods: MethodsAxios) {
         })
     }
 
-    function createRecipe(user: string, data: any, token: string): Promise<AxiosResponse>{
+    function createRecipe(user: string, data: any, token: string): Promise<AxiosResponse> {
         return methods.post("/users/:userID/recipes", data, {
             headers: {
                 authorization: "Bearer " + token,
@@ -100,7 +100,7 @@ export default function (methods: MethodsAxios) {
             })
     }
 
-    function updateRecipe(user: string, id: string, data: object, token: string): Promise<AxiosResponse>{
+    function updateRecipe(user: string, id: string, data: object, token: string): Promise<AxiosResponse> {
         return methods.patch("/users/:userID/recipes/:recipeID", data, {
             headers: {
                 authorization: "Bearer " + token,
@@ -117,7 +117,7 @@ export default function (methods: MethodsAxios) {
             })
     }
 
-    function deleteRecipe(user: string, id: string, token: string){
+    function deleteRecipe(user: string, id: string, token: string) {
         return methods.erase("/users/:userID/recipes/:recipeID", {
             headers: {
                 authorization: "Bearer " + token
@@ -129,7 +129,7 @@ export default function (methods: MethodsAxios) {
         })
     }
 
-    function updatePermission(user: string, recipeID: string, permission: { user: string, granted?: string }[], token: string): Promise<AxiosResponse>{
+    function updatePermission(user: string, recipeID: string, permission: { user: string, granted?: string }[], token: string): Promise<AxiosResponse> {
         return methods.patch("/users/:userID/recipes/:recipeID", { permission }, {
             headers: {
                 authorization: "Bearer " + token

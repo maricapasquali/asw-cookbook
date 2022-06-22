@@ -34,7 +34,7 @@ function childrenFlatten(elems: HTMLElement[]): HTMLElement[] {
 
 function parentSearch(elements: HTMLElement[], elem: HTMLElement): HTMLElement {
     function recursiveSearch(v1: HTMLElement[], v: HTMLElement, field: string): any {
-        if(v1.find(p => p == v)) return v
+        if (v1.find(p => p == v)) return v
         return recursiveSearch(v1, v[field], field)
     }
     return recursiveSearch(elements, elem, "parentElement")
@@ -46,14 +46,14 @@ function isScrollable(elem: HTMLElement): boolean {
 
 function preventDefault(e) {
     const target: HTMLElement = e.target
-    if(scrollingElements.find(t => t == target)) {
-        if(!isScrollable(target)){
+    if (scrollingElements.find(t => t == target)) {
+        if (!isScrollable(target)) {
             e.preventDefault()
         }
     } else {
-        if(childrenFlatten(scrollingElements).find(t => t == target)){
+        if (childrenFlatten(scrollingElements).find(t => t == target)) {
             const parent = parentSearch(scrollingElements, target)
-            if(parent && !isScrollable(parent)){
+            if (parent && !isScrollable(parent)) {
                 e.preventDefault()
             }
         } else {
@@ -77,7 +77,7 @@ try {
             supportsPassive = true
         }
     }))
-} catch(e) { /*ignored*/ }
+} catch (e) { /*ignored*/ }
 
 const wheelOpt = supportsPassive ? { passive: false } : false
 

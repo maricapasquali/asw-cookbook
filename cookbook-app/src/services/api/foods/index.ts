@@ -7,7 +7,7 @@ import {
 } from "../request-options"
 import { MethodsAxios } from "../methods"
 
-export default function (methods: MethodsAxios){
+export default function (methods: MethodsAxios) {
 
     function createFood(food: object, token: string): Promise<AxiosResponse>  {
         return methods.post("/foods", food, {

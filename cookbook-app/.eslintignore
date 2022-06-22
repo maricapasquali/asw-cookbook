@@ -1,8 +1,6 @@
 dist
 
-src/utils/*
+src/utils/**/*.js
 !src/utils/index.js
-!src/utils/**/*.ts
 
-src/services/*
-!src/services/**/*.ts
+src/services/**/*.js
