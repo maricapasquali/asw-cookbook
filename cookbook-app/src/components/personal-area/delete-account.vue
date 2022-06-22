@@ -38,7 +38,7 @@ export default {
     props:{
         id: { //user identifier
             type: String,
-            required: true
+            default: undefined,
         },
         value: Boolean
     },
@@ -83,19 +83,21 @@ export default {
         eraseAccount(e) {
             e.preventDefault()
 
-            this.processing = true
-            this.$store.dispatch("users/erase", this.id)
-                .then(({ data }) => {
-                    console.debug(data)
-                    this.$socket.emit("user:delete", this.id)
-                    this.$emit("onDeleteAccount", data)
-                    this.show = false
-                })
-                .catch(err => {
-                    let message = this.$store.$api.errorsHandler.users.deleteAccount(err)
-                    if (message) this.error = { show: true, message }
-                })
-                .finally(() => this.processing = false)
+            if (this.id) {
+                this.processing = true
+                this.$store.dispatch("users/erase", this.id)
+                    .then(({ data }) => {
+                        console.debug(data)
+                        this.$socket.emit("user:delete", this.id)
+                        this.$emit("onDeleteAccount", data)
+                        this.show = false
+                    })
+                    .catch(err => {
+                        let message = this.$store.$api.errorsHandler.users.deleteAccount(err)
+                        if (message) this.error = { show: true, message }
+                    })
+                    .finally(() => this.processing = false)
+            }
         }
     }
 }
