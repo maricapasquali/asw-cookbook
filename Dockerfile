@@ -45,10 +45,10 @@ RUN npm run build
 CMD [ "npm", "run", "start:server" ]
 
 FROM mongo as prod-database
-## todo: Decomment when adding the example database
-#COPY ./data/db-example.archive /data
 
-#ADD ./data/init.sh /docker-entrypoint-initdb.d
+COPY ./data/db-example.archive /data
+
+ADD ./data/init.sh /docker-entrypoint-initdb.d
 
 CMD docker-entrypoint.sh mongod
 

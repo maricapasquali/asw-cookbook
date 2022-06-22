@@ -58,7 +58,7 @@ The platform aims to offer the exchange of recipes (traditional or customized) o
      docker-compose -f ./dev.docker-compose.yml down -v
   ```
 
-# Using NPM
+# Using NPM v7 or later
 
 **Note**: In this case database is hosted in _localhost_. After installation and building to populate database, look at the [_**Database Population (Example)**_](#database-population-example).
 
@@ -103,6 +103,17 @@ Requirement: [_mongorestore_](https://www.mongodb.com/try/download/database-tool
 ```
 
 Using _**Docker**_ : `<database-uri-connection> = mongodb://localhost:27018`
+
+### Some credentials
+
+| userID       | password | role   |
+|--------------|----------|--------|
+| jason-admin  | admin    | admin  |
+| Marica-admin | admin    | admin  |
+| hannah-green | Ciao$111 | signed |
+| marcoverdi   | Ciao$111 | signed |
+| janedoe01    | CookBook#01# | signed |
+
 
 # Report
 
