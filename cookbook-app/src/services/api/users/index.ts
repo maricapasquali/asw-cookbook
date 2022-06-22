@@ -40,7 +40,7 @@ export default function (methods: MethodsAxios) {
         return methods.put("/users", data)
     }
 
-    function getUser(id: string, token?: string, options?: OptionsRequestType) {
+    function getUser(id: string, token?: string, options?: OptionsRequestType): Promise<AxiosResponse> {
         return methods.get("/users/:id", {
             headers: getHeaderBearerAuthorization(token),
             cancelToken: options?.cancelToken,
@@ -54,7 +54,7 @@ export default function (methods: MethodsAxios) {
     }
 
     //use token  (interceptors)
-    function updateUserInfo(id: string, info: object,  token: string) {
+    function updateUserInfo(id: string, info: object,  token: string): Promise<AxiosResponse> {
         return methods.patch("/users/:id", info, {
             headers: {
                 authorization: "Bearer " + token,
@@ -73,7 +73,7 @@ export default function (methods: MethodsAxios) {
     }
 
     //use token  (interceptors)
-    function deleteAccount(id: string, token: string) {
+    function deleteAccount(id: string, token: string): Promise<AxiosResponse> {
         return methods.erase("/users/:id", {
             headers: {
                 authorization: "Bearer " + token,
@@ -85,7 +85,7 @@ export default function (methods: MethodsAxios) {
     }
 
     //use token  (interceptors)
-    function changeCredential(type: {name: "userID" | "password"}, id: string, data: object, token: string, reset = false) {
+    function changeCredential(type: {name: "userID" | "password"}, id: string, data: object, token: string, reset = false): Promise<AxiosResponse> {
         return methods.patch("/users/:id/credentials", data, {
             headers: {
                 authorization: "Bearer " + token,
@@ -100,15 +100,15 @@ export default function (methods: MethodsAxios) {
         })
     }
 
-    function changeUserID(id: string, data: object, token: string) {
+    function changeUserID(id: string, data: object, token: string): Promise<AxiosResponse> {
         return changeCredential({ name: "userID" }, id, data, token)
     }
 
-    function changeOldPassword(id: string, data: object, token: string, reset = false) {
+    function changeOldPassword(id: string, data: object, token: string, reset = false): Promise<AxiosResponse> {
         return changeCredential({ name: "password" }, id, data, token, reset)
     }
 
-    function checkLinkResetPassword(key: string) {
+    function checkLinkResetPassword(key: string): Promise<AxiosResponse> {
         return methods.get("/reset-password/check-link", {
             params: { // QUERY
                 key: key
@@ -116,7 +116,7 @@ export default function (methods: MethodsAxios) {
         })
     }
 
-    function getUserFromNickname(nickname: string, key: string) {
+    function getUserFromNickname(nickname: string, key: string): Promise<AxiosResponse> {
         return methods.get("/reset-password/users",{
             params: { // QUERY
                 nickname,

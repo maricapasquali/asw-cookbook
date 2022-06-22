@@ -117,7 +117,7 @@ export default function (methods: MethodsAxios) {
             })
     }
 
-    function deleteRecipe(user: string, id: string, token: string) {
+    function deleteRecipe(user: string, id: string, token: string): Promise<AxiosResponse> {
         return methods.erase("/users/:userID/recipes/:recipeID", {
             headers: {
                 authorization: "Bearer " + token

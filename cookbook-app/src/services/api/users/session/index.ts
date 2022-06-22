@@ -14,7 +14,7 @@ export default function (methods: MethodsAxios) {
         })
     }
 
-    function newAccessToken(id: string, data: { refresh_token: string }, token: string) {
+    function newAccessToken(id: string, data: { refresh_token: string }, token: string): Promise<AxiosResponse> {
         return methods.put("/users/:id/refresh-token", data,{
             headers: {
                 authorization: "Bearer " + token,
@@ -26,7 +26,7 @@ export default function (methods: MethodsAxios) {
     }
 
     //use token  (interceptors)
-    function logout(id: string, token: string) {
+    function logout(id: string, token: string): Promise<AxiosResponse> {
         return methods.erase("/users/:id/logout", {
             headers: {
                 authorization: "Bearer " + token,
